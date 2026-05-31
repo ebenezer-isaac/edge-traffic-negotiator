@@ -1,0 +1,37 @@
+# ---- Dependencies / envs ----
+**/node_modules/
+**/.venv/
+**/venv/
+**/env/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+
+# ---- Build outputs ----
+**/dist/
+**/build/
+**/.vite/
+**/*.tsbuildinfo
+
+# ---- Secrets / runtime ----
+**/.env
+!**/.env.example
+**/*.log
+.claude/scheduled_tasks.lock
+
+# ---- Heavy regenerable third-party clones (re-clone from upstream) ----
+03-implementation/_feasibility/
+
+# ---- Model weights (large binaries) ----
+02-experiments/models/
+**/*.onnx
+**/*.safetensors
+**/*.gguf
+**/*.bin
+**/*.pt
+**/*.pth
+
+# ---- Research PDF cache (regenerable via 06-literary-survey/prompt*-urls.txt) ----
+06-literary-survey/papers/*.pdf
+STSD/*.pdf

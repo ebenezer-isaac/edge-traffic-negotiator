@@ -2,7 +2,7 @@
 
 **Status:** Architecture locked for the reframed project (2026-05-31), pending supervisor sign-off. Mirrors `03-implementation/PROJECT-DECISION-BRIEF.md`, the single source of truth.
 
-> **This document supersedes the prior "Edge Negotiator — Locked Architecture Synthesis" (the equity-audit / Gini / CoT-faithfulness-probe / Besu-vs-Tessera framing).** That earlier synthesis is **stale and must not be acted on**. The pre-pivot state is recoverable at git commit `effd4d5`. The dissertation pivoted on 2026-05-31; everything below reflects the new project.
+> **This document supersedes the prior "Edge Negotiator — Locked Architecture Synthesis" (the equity-audit / Gini / CoT-faithfulness-probe / Besu-vs-Tessera framing).** That earlier synthesis is **stale and must not be acted on**. The pre-pivot state is recoverable at git commit `bcd06cb`. The dissertation pivoted on 2026-05-31; everything below reflects the new project.
 
 **Working title (retained, reframed):** *The Edge Negotiator: Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control.*
 

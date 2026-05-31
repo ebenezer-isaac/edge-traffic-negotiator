@@ -2,7 +2,7 @@
 
 > **Direction note (2026-05-31).** The dissertation has **pivoted**. The single source of truth is now
 > [`../03-implementation/PROJECT-DECISION-BRIEF.md`](../03-implementation/PROJECT-DECISION-BRIEF.md), which supersedes the
-> equity-audit framing in `00-SCOPE-LOCKIN.md` (supervisor sign-off pending). The new spine —
+> equity-audit framing in `00-SCOPE-LOCKIN.md` (supervisor-approved 2026-05-31). The new spine —
 > *The Edge Negotiator: Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control* —
 > pairs **authenticated agent identity** (Ed25519/ECDSA signatures + an on-chain permissioned registry with
 > `revoke()`) and a **vehicle-conservation plausibility check** for spoof/fault detection with **SLM (Phi-4-mini)

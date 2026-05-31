@@ -17,8 +17,8 @@ The one defensible thesis claim: *authenticated, plausibility-checked cross-junc
 In strict order:
 
 1. **`03-implementation/PROJECT-DECISION-BRIEF.md`** — **THE single source of truth.** Decisions locked 2026-05-31. Where anything else (including `00-SCOPE-LOCKIN.md`) diverges, this brief wins. Covers what we are building, the locked decisions table, challenges/mitigations from the code audit, the ~3-month build plan, the terse-output (CoT) justification, what we can/cannot claim, baselines/metrics, and open action items.
-2. **`C:\Users\Ebenezer\.claude\projects\e--assignments-dissertation\memory\MEMORY.md`** — index to the memory entries (`working-style`, `dissertation-direction`). Already loaded by the runtime, but skim for orientation.
-3. **`00-SCOPE-LOCKIN.md`** at the repo root — the locked-scope file. **Note:** its original framing is the old equity-audit scope; the decision brief formally supersedes it pending a clean rewrite. Read it for repo context and for whatever it has been updated to say, but treat the brief as authoritative on any conflict.
+2. **`C:\Users\Ebenezer\.claude\projects\e--assignments-edge-traffic-negotiator\memory\MEMORY.md`** — index to the memory entries (`working-style`, `dissertation-direction`). Already loaded by the runtime, but skim for orientation.
+3. **`00-SCOPE-LOCKIN.md`** at the repo root — the locked-scope file, **rewritten 2026-05-31** to the new (verified-source coordination) scope. Treat the decision brief as authoritative on any conflict.
 4. **`06-literary-survey/INDEX.md`** — map of the literature survey. Its technical surveys ground the new direction (the CoT-faithfulness chapter is now design justification, not an experiment).
 
 ## Where the project is right now
@@ -27,10 +27,10 @@ In strict order:
 - **Literature review** in `04-writing/` submits **~2026-06-03**. It is Edge-Negotiator-framed and **still holds** — its technical surveys (incl. the §2.6 CoT-faithfulness material) ground the new direction. **Do not rewrite it.**
 - **28 new identity/detection papers** gathered (Prompt 9), currently staged in `prompt9-*-urls.txt` and not yet catalogued into the registry.
 - **Build NOT yet started.**
-- **Supervisor sign-off on the pivot is PENDING** (Akin: SUMO/MaxPressure/stats; Lee: Foundry/Phi/identity).
+- **Supervisor sign-off on the pivot: APPROVED** (Lee Stott greenlit by text 2026-05-31; Akin assumed approving).
 
 **Next concrete step — one of:**
-1. Draft the **supervisor one-pager** to obtain sign-off on the reframe; or
+1. Scaffold the **Wk 1-2 grid pipeline** (sumo-rl + a Phi-4-mini terse agent via Foundry Local + the TraCI loop on a 2×2 grid); or
 2. **Scaffold the Wk 1–2 grid pipeline** — sumo-rl on a 2×2 synthetic grid, TraCI loop, MaxPressure baseline, and a single Phi-4-mini terse agent via Foundry Local returning `{"phase": N}` with pause-sim timing.
 
 ## Hard rules for any agent picking this up

@@ -1,6 +1,6 @@
 # The Edge Negotiator — Architecture Synthesis
 
-**Status:** Architecture locked for the reframed project (2026-05-31), pending supervisor sign-off. Mirrors `03-implementation/PROJECT-DECISION-BRIEF.md`, the single source of truth.
+**Status:** Architecture locked for the reframed project (2026-05-31), supervisor-approved (Lee greenlit by text; Akin assumed). Mirrors `03-implementation/PROJECT-DECISION-BRIEF.md`, the single source of truth.
 
 > **This document supersedes the prior "Edge Negotiator — Locked Architecture Synthesis" (the equity-audit / Gini / CoT-faithfulness-probe / Besu-vs-Tessera framing).** That earlier synthesis is **stale and must not be acted on**. The pre-pivot state is recoverable at git commit `bcd06cb`. The dissertation pivoted on 2026-05-31; everything below reflects the new project.
 

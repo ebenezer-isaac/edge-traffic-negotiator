@@ -1,6 +1,6 @@
 # The Edge Negotiator — Project Decision Brief
 
-**Status:** Decisions locked 2026-05-31 (supersedes the equity-audit framing in `00-SCOPE-LOCKIN.md`, pending supervisor sign-off). Title retained, reframed.
+**Status:** Decisions locked 2026-05-31, supervisor-approved (Lee Stott greenlit by text; Akin assumed). Supersedes the equity-audit framing in `00-SCOPE-LOCKIN.md`. Title retained, reframed.
 
 **Working title:** *The Edge Negotiator: Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control.*
 
@@ -46,7 +46,7 @@ A corridor of **small-language-model agents (Phi-4-mini 3.8B via Microsoft Found
 | Threats | What we demonstrate | **(1) spoofed traffic-state report [primary], (2) faulty sensor [secondary], (3) optional Sybil count-inflation** | Detection agent: conservation check catches insider FDI + faults; auth catches impersonation/replay |
 | Admin key | Registry governance | **Single city-authority key** (multisig = optional hardening) | Identity agent: defensible for one-operator pilot |
 | Old scope | Equity audit + CoT probe | **Dropped as contributions.** CoT literature repurposed as design justification (§5); equity dropped | User |
-| Process | Supervisors / lit review | **Project may evolve past the submitted lit review; title retained, reframed.** Supervisor sign-off pending | User |
+| Process | Supervisors / lit review | **Project may evolve past the submitted lit review; title retained, reframed.** Supervisor sign-off APPROVED (Lee by text 2026-05-31; Akin assumed) | User |
 
 ---
 
@@ -102,7 +102,7 @@ The SLM emits a **single terse phase decision with no chain-of-thought**, by des
 
 ## 8. Open items requiring action
 
-- [ ] Supervisor sign-off (Akin: SUMO/MaxPressure/stats; Lee: Foundry/Phi/identity) on this reframe.
+- [x] Supervisor sign-off on this reframe — APPROVED (Lee Stott by text 2026-05-31; Akin assumed approving).
 - [ ] Formally supersede / update `00-SCOPE-LOCKIN.md` once signed off.
 - [ ] Catalogue the 28 Prompt-9 papers into the registry (currently staged in `prompt9-*-urls.txt`).
 - [ ] Decide multisig vs single admin key (default: single).

@@ -57,6 +57,16 @@ class MaxPressureController:
                     p -= halting(st["out_lanes"][i])
         return p
 
+    def green_halting(self, st: dict, gi: int) -> int:
+        """Total upstream halting vehicles the green phase `gi` would serve (SLM input)."""
+        halting = self.c.lane.getLastStepHaltingNumber
+        return sum(halting(st["in_lanes"][i]) for i, ch in enumerate(st["green"][gi])
+                   if ch in "Gg" and st["in_lanes"][i])
+
+    def decide(self, tl: str, st: dict) -> int:
+        """Choose which green phase to serve. Default = max pressure; subclasses may override."""
+        return max(range(len(st["green"])), key=lambda gi: self._pressure(st, gi))
+
     def step(self) -> None:
         """Advance every controlled TLS by one simulated second."""
         for tl, st in self.tls.items():
@@ -67,7 +77,7 @@ class MaxPressureController:
                     st["mode"], st["t"] = "green", 0
             else:  # green phase running
                 if st["t"] >= self.min_green:
-                    best = max(range(len(st["green"])), key=lambda gi: self._pressure(st, gi))
+                    best = self.decide(tl, st)
                     if best != st["cur"]:
                         # show the clearing yellow for the phase we are leaving
                         self.c.trafficlight.setRedYellowGreenState(tl, st["yellow"][st["cur"]])

@@ -1,169 +1,124 @@
-# Edge Negotiator — Locked Architecture Synthesis
+# The Edge Negotiator — Architecture Synthesis
 
-**Status:** Research phase complete. All seven deep-research prompts run, evaluated, and integrated. Architecture is fully locked. Ready for implementation.
+**Status:** Architecture locked for the reframed project (2026-05-31), pending supervisor sign-off. Mirrors `03-implementation/PROJECT-DECISION-BRIEF.md`, the single source of truth.
 
-**Last updated:** 2026-04-16
+> **This document supersedes the prior "Edge Negotiator — Locked Architecture Synthesis" (the equity-audit / Gini / CoT-faithfulness-probe / Besu-vs-Tessera framing).** That earlier synthesis is **stale and must not be acted on**. The pre-pivot state is recoverable at git commit `effd4d5`. The dissertation pivoted on 2026-05-31; everything below reflects the new project.
+
+**Working title (retained, reframed):** *The Edge Negotiator: Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control.*
+
+**Programme context:** UCL MSc SEIOT. Supervisors: Akin Delibasi (SUMO / MaxPressure / statistics) and Lee Stott (Foundry Local / Phi / identity). Hardware: RTX 4050 8GB laptop. Constraint: 90-day build, SUMO-on-laptop, executed from India.
 
 ---
 
 ## The Pitch
 
-The Edge Negotiator is a decentralised traffic signal architecture combining edge-deployed Small Language Models with cryptographic audit via permissioned blockchain. The dissertation evaluates it in SUMO simulation on commodity hardware. Two original empirical contributions:
+A corridor of **small-language-model agents — Phi-4-mini (3.8B) via Microsoft Foundry Local, one per signalised junction** — that **coordinate signal timing by sharing predicted traffic state** with their neighbours, evaluated in **Eclipse SUMO on a real Lambeth corridor** (Brixton → Elephant & Castle). Every agent holds a **cryptographic identity**; inter-junction messages are **signed and verified against a permissioned-ledger registry of approved agents**; and a **vehicle-conservation plausibility check** flags neighbour reports physically inconsistent with observed flow (spoofed or faulty). A tamper-evident ledger records every decision and every identity/registry change. A deterministic **MaxPressure shield** validates or overrides every SLM decision and runs alone at quiet junctions.
 
-1. **Cost-benefit profile of permissioned blockchain audit (Hyperledger Besu QBFT) vs append-only Merkle logging (Tessera)** for AI decision provenance at municipal scale
-2. **Faithfulness profile of Chain-of-Thought reasoning logs from a 4B-parameter SLM (Qwen3-4B) operating in a decide-first-justify-after architecture**, evaluated as a monitorability signal — addressing an evidence gap in sub-7B safety-adjacent control loops
+The architecture has two paths:
+
+- **Fast path (real-time):** Agent A signs `state + forecast` and sends it to neighbour B over MQTT; Phi-4-mini proposes a phase; the MaxPressure shield acts. Signatures are verified against the registry.
+- **Trust path (async, off the control loop):** Hyperledger Besu permissioned ledger holds the on-chain registry of approved identities with `revoke()`, runs the conservation reconciliation, and stores the tamper-evident audit log (provenance, non-repudiation).
+
+**The one defensible claim (the thesis is staked on this):**
+> *Authenticated, plausibility-checked cross-junction coordination for SLM-driven traffic control — verifiable agent identity (signatures + on-chain registry) plus a vehicle-conservation consistency check yield spoofing/fault detection and a non-repudiable audit trail, with no claim of game-theoretic incentive-compatibility.*
 
 ---
 
 ## Locked Architecture
 
-| Layer | Decision | ADR | Source |
-|-------|----------|-----|--------|
-| Primary SLM | Qwen3-4B (Apache 2.0, dual thinking modes) | 001 | Prompt 1 |
-| Comparison SLM | Phi-4-mini (MIT, 3.8B) | 001 | Prompt 1 |
-| Benchmark anchor | Traffic-R1 Public 0.1 (cite, don't deploy) | 001 | Prompts 1, 5 |
-| Primary ledger | Hyperledger Besu QBFT (Docker dev mode, web3.py) | 002 | Prompt 2 |
-| Comparator ledger | Tessera Merkle log (POSIX, single instance) | 002 | Prompt 2 |
-| Hardware | Developer laptop (RTX 3060/4060), SUMO simulation | 003 | Supervisor-approved |
-| Safety verifier | Z3 SMT for hard safety constraints | 004 | Prompt 3 |
-| Safety fallback | MaxPressure (Varaiya 2013), always logged alongside | 004 | Prompts 1, 3 |
-| Hot-path output | Single-token phase ID + CFG-constrained JSON via XGrammar | 005 | Prompts 1, 3 |
-| Audit-path output | Structured CoT, labelled `trace_type: "post_hoc_justification"` | 006 | Prompt 3 |
-| Communication | MQTT (Mosquitto Docker container) | 007 | Prompt 7 |
-| Threat model | Hybrid STRIDE × NIST AI RMF | §B | Prompt 7 |
-| Network | Lambeth/Southwark 5×5 km, OSM-derived | — | Prompts 4, 6 |
-| Audit area | Same network, IMD 2019 + ONS 2021 | — | Prompt 4 |
+| Component | Decision | Basis |
+|---|---|---|
+| Primary SLM | **Phi-4-mini 3.8B only**, via Foundry Local (INT4, inference-only) | Qwen edge irrelevant for the terse phase task; 8GB VRAM, no training |
+| Optional SLM ablation | **Qwen3-4B** — late "model-agnostic" ablation *only* if a clean 1-2 wk buffer exists | Not co-primary; conversion is fiddly, edge unclear |
+| SLM output | **Terse action only (`{"phase": N}`), no chain-of-thought** | CoT-faithfulness literature (design justification, §"Why terse") + latency budget |
+| SLM role in loop | **Hybrid: SLM proposes, MaxPressure shield disposes; event-gated (skip quiet junctions)** | SafeLight SUMO precedent; event-trigger precedent (Amanullah/Keijzer) |
+| MaxPressure shield | Deterministic (Varaiya 2013) — validates/overrides every SLM decision; runs alone at quiet junctions | Provides a safe, always-available fallback |
+| Agent identity | **Ed25519/ECDSA signatures + small on-chain allowlist + `revoke()`.** DID/VC is future work | DID/VC is 3-5× the work and brittle for a single domain |
+| Blockchain role | **Hyperledger Besu (QBFT) — async only: registry + audit log + conservation-check contract.** Never in the control loop (~1-2s finality) | Besu agent: async only; fast path is signed MQTT messages |
+| Integrity comparison | **Besu permissioned ledger vs plain signed append-only log** | Quantifies what the chain buys over plain signing |
+| Conservation check | Vehicle-conservation reconciliation: did A's claimed outflow match B's observed inflow within the travel-time window? | Catches insider FDI (spoofed reports) + faulty sensors |
+| Communication | Signed neighbour-message bus over **MQTT** | Fast path transport |
+| Registry governance | **Single city-authority admin key** (multisig = optional hardening) | Defensible for a one-operator pilot |
+| Corridor scale | **~6 SLM-controlled junctions** (headroom to 8-10) within a **~10-13-junction real Lambeth corridor**; remaining junctions on MaxPressure | ~3 wk sweep at N=6 including re-run tax |
+| Simulation base | **sumo-rl** (MIT, arbitrary nets) — reimplement the neighbour-message algorithm | NOT CoLLMLight/CityFlow (welded to CityFlow, not SUMO) |
+| Network | Real Lambeth corridor (Brixton → Elephant & Castle), OSM-derived in netedit; demand from DfT AADF + assumed peak profile + SUMO `routeSampler`/calibrators | Real-corridor anchor with cited demand-synthesis method |
+| Threats demonstrated | **(1) spoofed traffic-state report [primary], (2) faulty sensor [secondary], (3) optional Sybil count-inflation** | Conservation check catches insider FDI + faults; auth catches impersonation/replay |
 
 ---
 
-## Five Codes of Conduct (STSD coursework, now operationalised)
+## Contributions
 
-1. **Algorithmic Transparency & Accountability** — implemented via blockchain audit + structured CoT
-2. **Fail-Safe Manual Override** — implemented via Z3 verifier + MaxPressure fallback + hardware kill switch
-3. **Data Sovereignty & Edge-First Processing** — architectural pattern (anonymised structured descriptions, not raw video)
-4. **Equitable Service Provision** — implemented via quarterly Gini-of-delays audit against IMD deciles
-5. **Adversarial Robustness** — implemented via architectural separation (object detection separate from semantic reasoning)
+1. **Authenticated, plausibility-checked cross-junction coordination for SLM-driven signal control** — the integrative novelty: verifiable agent identity (Ed25519/ECDSA + on-chain registry with revocation) fused with a vehicle-conservation consistency check, atop an SLM coordination platform.
+2. **Spoofing/fault detection from the conservation check** — demonstrated against a spoofed neighbour report (primary), a faulty sensor (secondary), and optionally Sybil count-inflation.
+3. **A non-repudiable, tamper-evident audit trail** for every decision and identity/registry change, with a head-to-head **Besu-vs-plain-signed-log** cost/benefit characterisation.
+4. **Evidence that small off-the-shelf SLMs can coordinate a corridor** versus classical and uncoordinated baselines.
 
----
-
-## Two Empirical Contributions
-
-### Contribution 1: Besu QBFT vs Tessera Cost-Benefit
-- Workload: ~3.2M tx/day at TfL scale (~37 TPS sustained, 100 TPS bursts), 2KB signed decision proofs, 60s finality target
-- Both backends implemented; replay identical decision streams through both
-- **Metrics**: write latency distribution, finality time, proof size, storage growth, query latency for quarterly equity audit, operational complexity
-- **Threat model dimension**: what each defends against (operator compromise, validator collusion, split-view attacks, censorship, key compromise)
-- **Result type**: quantification of architectural commitment, not litigation of whether to commit
-
-### Contribution 2: Qwen3-4B CoT Faithfulness Probe
-- **Evidence gap**: no published study has tested CoT faithfulness for sub-7B SLMs in safety-adjacent control loops
-- **Primary method**: Turpin et al. biasing-features methodology
-- **Secondary method**: Lanham truncation probe
-- **Comparisons**: Qwen3-4B thinking-mode vs non-thinking-mode; Qwen vs Phi-4-mini
-- **Operationalised threshold**: CoT correlates with at least 3 of 5 observable state variables at r > 0.5; below threshold, downgrade to decorative
-- **Position taken**: CoT is conditionally valuable as monitorability, structurally post-hoc by architecture — five design conditions specified
+*Note:* the CoT-faithfulness literature is now **design justification only** (it motivates terse output), not a contribution. Equity audit (Gini/Rawlsian/counterfactual demographic re-run) is **dropped**. Incentive-compatibility is **not** claimed (`Tian2025` is motivation only).
 
 ---
 
-## Experimental Design Summary
+## Build Plan (~3 months)
 
-- **Network**: 5×5 km Lambeth/Southwark corridor (Elephant & Castle to Brixton)
-- **Scenarios**: AM peak, off-peak, PM peak, incident perturbation
-- **Conditions**: 16 (2⁴ factorial: CoT × Z3 × MaxPressure × thinking mode) + 2 single-factor swaps (Qwen vs Phi, Besu vs Tessera) = 18
-- **Seeds**: 30 pre-registered per condition × 4 scenarios = 2,160 simulation runs
-- **Statistical tests**: Welch's t / Mann-Whitney U, Cohen's d, BCa bootstrap (B=10,000), Holm-Bonferroni at q=0.10
-- **Pre-specified primary endpoints**: ATT (traffic), Gini (equity), fallback rate (safety)
+1. **Wk 1-2 — Pipeline on a 2×2 synthetic grid (sumo-rl).** TraCI loop, MaxPressure baseline, a single SLM agent via Foundry Local returning a terse phase decision, pause-sim inference timing. *In parallel:* begin extracting and cleaning the real Lambeth network in netedit (long-pole, no code dependency).
+2. **Wk 3-4 — Cross-junction coordination.** Signed neighbour-message bus (MQTT); event-gated SLM coordination across the grid; MaxPressure shield/override. **Milestone: the "it coordinates" demo.**
+3. **Wk 5-6 — Identity + ledger.** Besu QBFT in Docker; Ed25519 signing; on-chain allowlist + `revoke()`; web3.py glue; async audit log of every decision.
+4. **Wk 7-8 — Conservation-check contract + attacks.** Vehicle-conservation reconciliation; inject (1) spoofed report, (2) faulty sensor, (3) optional Sybil; measure detection.
+5. **Wk 9-10 — Swap in Lambeth network + full sweep.** ~6 SLM junctions, 30 seeds × 4 scenarios; BCa bootstrap, Holm-Bonferroni.
+6. **Wk 11-12 — Write-up + viva prep.** Optional Qwen3-4B model-agnostic ablation *only* if buffered.
 
----
-
-## Six Baselines
-
-| Method | Type | Notes |
-|--------|------|-------|
-| Fixed-time (Webster's) | Classical | Optimised cycle from calibrated flows |
-| Actuated SOTL | Classical | Gap-based phase extension |
-| MaxPressure | Classical | Also serves as always-on fallback |
-| CoLight | RL | Canonical MARL baseline, retrained on study network |
-| Traffic-R1 Public 0.1 | LLM | Benchmark anchor; CityFlow-trained, SUMO-evaluated with caveat |
-| Edge Negotiator (full) | Proposed | Qwen3-4B + Z3 + MaxPressure fallback + Besu ledger |
+Everything after Milestone 2 (end Wk 4) is the integrity contribution and its evaluation.
 
 ---
 
-## Honesty Clauses (Pre-Drafted Defensive Language)
+## Why Terse Output (Design Justification, Not a Contribution)
 
-The Prompt 6 output includes ready-to-paste defensive language for five non-claims:
-
-1. **No real-world deployment claim**: "This work evaluates the Edge Negotiator architecture in a simulated environment using SUMO. No traffic signals were controlled in the physical world."
-2. **No edge-hardware claim**: "The 'Edge' in Edge Negotiator denotes architectural topology — decision-making co-located with intersection controllers rather than centralised in a cloud — not a specific hardware platform."
-3. **No causal safety claim**: "Surrogate safety measures (TTC, PET) computed in SUMO are accepted proxies for conflict severity but are not crash predictions."
-4. **No equity deployment claim**: "Equity metrics are computed on simulated delay distributions joined to IMD 2019 deciles at LSOA granularity. SUMO's pedestrian model lacks demographic fidelity."
-5. **No CoT-as-explanation claim**: "Post-hoc CoT generated in the audit path is labelled `trace_type: post_hoc_justification` and treated as a monitorability signal, not as a faithful explanation."
+The SLM emits a single terse phase decision with **no chain-of-thought**, by design. The faithfulness literature (Lit-Review §2.6) shows explicit CoT traces are **post-hoc rationalisations, not faithful causal records** (Turpin et al. 2023, biasing-features methodology; Lanham et al. 2023, causal-intervention battery; consistent across the sub-7B corpus). Emitting reasoning would add latency and token cost while providing **no trustworthy interpretability benefit**. Accountability is instead provided structurally — by the signed, tamper-evident audit log — not by the model's self-narration. This repurposes an already-written lit-review chapter as architectural justification, not a separate experiment.
 
 ---
 
-## Threat Model (Hybrid STRIDE × NIST AI RMF)
+## Baselines & Metrics
 
-First-page entries:
+**Baselines:**
+- **Fixed-time** (Webster)
+- **MaxPressure** (also the shield)
+- **Uncoordinated-SLM vs coordinated-SLM**
+- **Optional CoLight** (canonical MARL baseline)
 
-| ID | Threat | STRIDE | NIST AI RMF | Mitigation |
-|----|--------|--------|-------------|------------|
-| TM-001 | Adversarial inputs to SLM perception | Tampering | Confabulation, InfoSec | Z3 verification, MaxPressure fallback |
-| TM-002 | SLM hallucination / post-hoc rationalisation | Repudiation | Confabulation | CoT as monitoring signal, not explanation |
-| TM-003 | Compromised audit log | Tampering, Repudiation | Value Chain Integration | Besu QBFT multi-validator consensus |
-| TM-004 | Communication compromise | Spoofing, InfoDisclosure | InfoSec | TLS on MQTT, signed messages |
-| TM-005 | Insider key compromise | Spoofing, ElevationOfPrivilege | InfoSec | HSM key storage, BFT validator separation |
+Classical baselines are reimplemented (~30 lines each, MIT-clean) rather than vendoring GPL RESCO.
 
----
-
-## What's Next (Implementation Phase)
-
-### Build order (suggested)
-1. SUMO Lambeth/Southwark network (Steps 1–4 of equity protocol)
-2. SLM inference wrapper (Qwen3-4B + Phi-4-mini) with structured output via XGrammar
-3. Besu in Docker dev mode + AuditLog.sol contract
-4. Tessera as second backend (POSIX, single-instance)
-5. Z3 verifier with NEMA constraint set
-6. MaxPressure as fallback + always-on baseline
-7. TraCI ↔ agent ↔ ledger loop
-8. Ablation harness with pre-registered seeds
-
-### Realistic timeline (post-research)
-- 4 weeks: implementation + initial runs
-- 2 weeks: full experimental sweep (2,160 runs)
-- 4 weeks: writing
-- 2 weeks: revision + viva prep
+**Metrics:**
+- **Traffic:** average travel time (ATT), average queue, throughput.
+- **Detection:** precision / recall / F1 at a **fixed false-alarm rate**; detection latency in control cycles.
+- **Integrity overhead:** signing latency, ledger commit latency, and the **Besu-vs-plain-signed-log** comparison.
 
 ---
 
-## File Map
+## What We Can / Cannot Claim
 
-```
-e:\desktop\assignments\dissertation\
-├── 01-research\
-│   ├── prompt-outputs\          ← all 7 deep-research PDFs + SLM field guide
-│   ├── conversations\           ← 11 renamed convo logs (project history)
-│   ├── synthesis.md             ← this document
-│   └── project-proposal.pdf
-├── 02-experiments\              ← Lee Stott repo investigations
-│   ├── router-demo-app\
-│   ├── modelrouter-routelens\
-│   ├── FLPerformance\
-│   ├── local-cag\
-│   ├── local-rag\
-│   └── findings\                ← per-repo analysis docs
-├── 03-implementation\           ← code, runs, results (future)
-├── 04-writing\                  ← dissertation chapters (future)
-├── 05-supervision\              ← supervisor sign-offs, compliance
-└── STSD\                        ← STSD coursework (delivered)
-```
+**Can claim:**
+- Message authenticity — the report came from a currently-approved, registered member.
+- Tamper-evident on-chain registration/revocation and a non-repudiable audit trail.
+- Detection of *inconsistent* (uncoordinated-spoof or faulty) neighbour reports.
+- That small off-the-shelf SLMs can coordinate a corridor versus the baselines.
+
+**Cannot claim:**
+- That the blockchain "creates trust" or "prevents lying" — it provides **provenance and identity, not truth** (it faithfully records garbage-in).
+- **Incentive-compatibility** — type-incoherent for frozen LLMs; `Tian2025` is motivation only.
+- Which of two disagreeing junctions is the wrong one.
+- Defence against a *coordinated, conservation-respecting* attacker — the **`Xiao2026` evasion limit**, acknowledged by us, which is precisely what the auth layer complements.
+
+We also retain the **Traffic-R1 cited-claim hedge**: Traffic-R1 is cited as a benchmark anchor, not deployed.
 
 ---
 
-## Open Questions for Lee (industry supervisor)
+## Key Engineering Constraints (from the code audit)
 
-1. **Edge experimentation scope** — what specifically does "explore things that can be done on the edge" entail for this dissertation? Beyond MaxPressure fallback and single-token hot path, what other edge-friendly patterns are worth investigating?
-2. **CPU-only inference target** — Beaver mentioned for full-CPU inference. Is this for benchmarking comparison, fallback option, or candidate model swap?
-3. **Foundry Local fit** — does the Foundry Local Model Router make sense as an architectural pattern for the Edge Negotiator's SLM stack (route between Qwen3 thinking/non-thinking modes, fallback to smaller model under load)?
-4. **RAG/CAG integration** — is local-rag / local-cag a candidate for the audit-path or future work pointer?
-
-These are open lines for the next supervision check-in.
+| Constraint | Mitigation |
+|---|---|
+| Foundry Local serialises inference (~2-8s/call, no batching) | Terse output (~2s); pause SUMO during inference; event-gate; ≤6-8 SLM junctions; state caching |
+| sumo-rl, not CoLLMLight/CityFlow | Reimplement the neighbour-message algorithm on sumo-rl; do not port CityFlow code |
+| Blockchain too slow for control (1-2s finality) | Ledger is async registry + audit only; fast path = signed MQTT; batch commits |
+| Consistency ≠ truth | Scope the threat model to uncoordinated spoofs + faults; cite `Xiao2026` ourselves; auth layer is the complement |
+| No structured-output enforcement in Foundry Local | Prompt-and-parse + JSON validation/retry; MaxPressure fallback on parse failure |
+| Coarse real Lambeth demand data | DfT AADF as link anchors + assumed peak profile + SUMO `routeSampler`/calibrators (method cited) |
+| 8GB VRAM | Phi-4-mini INT4, inference-only, no training |

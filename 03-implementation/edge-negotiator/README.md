@@ -7,7 +7,9 @@ Build for *The Edge Negotiator: Verified-Source Cross-Junction Coordination for 
 - ✅ 2×2 SUMO grid scenario (`sumo/`) — 4 signalised junctions (`A0,A1,B0,B1`), seeded random demand.
 - ✅ Deterministic controllers (`src/controllers.py`) — **MaxPressure** (baseline + safety shield) and Fixed-time.
 - ✅ End-to-end TraCI runner (`src/run_baseline.py`) — verified: MaxPressure beats fixed-time (lower waiting, higher throughput).
-- ⏳ Next: SLM junction agent (Phi-4-mini via Foundry Local, terse `{"phase": N}` output) + hybrid SLM-proposes/shield-disposes loop.
+- ✅ SLM junction agent (`src/slm_agent.py`) — Phi-4-mini via Foundry Local, terse `{"phase": N}`, turnkey endpoint discovery. Validated: 90 live decisions at A0, 0 failures.
+- ✅ Hybrid controller (`src/hybrid_controller.py` + `src/run_hybrid.py`) — SLM proposes, MaxPressure shield disposes, event-gated. Runs end-to-end.
+- ⏳ Next: cross-junction coordination (neighbour state sharing), then the identity/audit layer + spoof/fault detection.
 
 ## Setup
 
@@ -22,6 +24,15 @@ Requires **SUMO 1.20+** with `SUMO_HOME` set, and **Microsoft Foundry Local** (f
 ```bash
 .venv/Scripts/python src/run_baseline.py --controller maxpressure
 .venv/Scripts/python src/run_baseline.py --controller fixed --gui   # watch it
+```
+
+## Run the SLM hybrid loop
+
+Requires Foundry Local running with the model pulled (`foundry model download phi-4-mini`).
+
+```bash
+.venv/Scripts/python src/smoke_slm.py             # agent round-trip test
+.venv/Scripts/python src/run_hybrid.py --slm A0   # SLM controls A0; rest = MaxPressure
 ```
 
 ## Regenerate the scenario (deterministic, seed 42)

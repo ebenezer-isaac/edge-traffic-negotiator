@@ -15,28 +15,47 @@ import re
 from openai import OpenAI
 
 SYSTEM = (
-    "You are a traffic-signal controller for a single junction. "
-    "Choose the green phase that best reduces waiting. "
-    'Reply with ONLY compact JSON {"phase": <index>} — no words, no explanation.'
+    "You control one traffic-signal junction. "
+    "Pick the green phase with the MOST waiting vehicles, to clear the longest queue. "
+    'Reply with ONLY JSON {"phase": <index>} and nothing else.'
 )
 
 
-def discover_endpoint(alias: str = "phi-4-mini") -> tuple[str, str]:
-    """Return (base_url, model_id) for the running Foundry Local service.
+def _service_endpoint() -> str | None:
+    """Parse `foundry service status` for the running OpenAI-compatible endpoint."""
+    import subprocess
 
-    Order: explicit env vars -> Foundry Local SDK -> default local port.
-    Env override is handy when the SDK/catalog is unavailable but a model is loaded.
-    """
-    base = os.environ.get("FOUNDRY_LOCAL_ENDPOINT")
-    if base:
-        return base, os.environ.get("FOUNDRY_LOCAL_MODEL", alias)
     try:
-        from foundry_local_sdk import FoundryLocalManager  # type: ignore
-
-        mgr = FoundryLocalManager(alias)
-        return mgr.endpoint, mgr.get_model_info(alias).id
+        out = subprocess.run(["foundry", "service", "status"], capture_output=True,
+                             text=True, timeout=15).stdout
+        m = re.search(r"127\.0\.0\.1:(\d+)", out)
+        return f"http://127.0.0.1:{m.group(1)}/v1" if m else None
     except Exception:
-        return "http://127.0.0.1:5273/v1", os.environ.get("FOUNDRY_LOCAL_MODEL", alias)
+        return None
+
+
+def _first_model(base: str) -> str | None:
+    """Return the first model id the local service is currently serving."""
+    import json
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(f"{base}/models", timeout=10) as resp:
+            return json.load(resp)["data"][0]["id"]
+    except Exception:
+        return None
+
+
+def discover_endpoint(alias: str = "phi-4-mini") -> tuple[str, str]:
+    """Resolve (base_url, model_id): env vars -> `foundry service status` -> defaults.
+
+    The Foundry Local port changes when the service restarts, so we auto-detect it.
+    Env vars FOUNDRY_LOCAL_ENDPOINT / FOUNDRY_LOCAL_MODEL override discovery.
+    """
+    base = (os.environ.get("FOUNDRY_LOCAL_ENDPOINT")
+            or _service_endpoint() or "http://127.0.0.1:5273/v1")
+    model = os.environ.get("FOUNDRY_LOCAL_MODEL") or _first_model(base) or alias
+    return base, model
 
 
 class SLMAgent:
@@ -55,9 +74,9 @@ class SLMAgent:
     def choose_phase(self, junction_id: str, num_phases: int,
                      halting_per_phase: list[int]) -> int | None:
         """Ask the SLM which green phase to serve. None on any failure (-> shield)."""
-        user = (f"Junction {junction_id}, phases 0..{num_phases - 1}. "
-                f"Halting vehicles each phase would serve: {halting_per_phase}. "
-                'Reply ONLY {"phase": N}.')
+        per_phase = ", ".join(f"phase {i} = {n}" for i, n in enumerate(halting_per_phase))
+        user = (f"Junction {junction_id}. Waiting vehicles per phase: {per_phase}. "
+                'Which phase should get green now? Reply ONLY {"phase": <index>}.')
         try:
             resp = self.client.chat.completions.create(
                 model=self.model, temperature=0, max_tokens=self.max_tokens,

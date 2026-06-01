@@ -1,85 +1,97 @@
-"""Generate the Edge Negotiator proposal + status deck (5 slides) as a .pptx."""
+"""Generate the Edge Negotiator project-pitch deck as a .pptx.
+
+Built for a 3-minute pitch (~30s/slide) and the marking rubric:
+Problem (25), Literature (35), Methodology + Evaluation (20), Presentation (20).
+Glanceable one-line bullets, natural language, no em dashes.
+"""
 from pptx import Presentation
-from pptx.util import Pt
+from pptx.util import Pt, Inches
 
 prs = Presentation()
-prs.slide_width = Pt(960)
-prs.slide_height = Pt(540)
+# Standard PowerPoint 16:9 widescreen
+prs.slide_width = Inches(13.333)
+prs.slide_height = Inches(7.5)
 
 
-def bullets(title, items, sub_color=False):
-    """items: list of (text, level) tuples."""
+def bullets(title, items):
     slide = prs.slides.add_slide(prs.slide_layouts[1])
-    slide.shapes.title.text = title
-    tf = slide.placeholders[1].text_frame
+    t = slide.shapes.title
+    t.text = title
+    t.left, t.top, t.width, t.height = Inches(0.6), Inches(0.4), Inches(12.1), Inches(1.1)
+    body = slide.placeholders[1]
+    body.left, body.top, body.width, body.height = Inches(0.6), Inches(1.7), Inches(12.1), Inches(5.3)
+    tf = body.text_frame
     tf.word_wrap = True
-    for i, (text, level) in enumerate(items):
+    for i, text in enumerate(items):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.text = text
-        p.level = level
         for r in p.runs:
-            r.font.size = Pt(20 if level == 0 else 17)
-            if text.endswith(":"):
-                r.font.bold = True
+            r.font.size = Pt(20)
     return slide
 
 
-# Slide 1 — Title
+# Slide 1 - Title (clean)
 s = prs.slides.add_slide(prs.slide_layouts[0])
-s.shapes.title.text = "The Edge Negotiator"
-sub = s.placeholders[1].text_frame
+st = s.shapes.title
+st.text = "The Edge Negotiator"
+st.left, st.top, st.width, st.height = Inches(0.8), Inches(2.1), Inches(11.7), Inches(1.3)
+subph = s.placeholders[1]
+subph.left, subph.top, subph.width, subph.height = Inches(0.8), Inches(3.5), Inches(11.7), Inches(3.4)
+sub = subph.text_frame
 sub.text = "Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control"
 for line in [
-    "UCL MSc Systems Engineering for IoT  —  Project Proposal & Status",
-    "Student 25153651  ·  Supervisors: Dr Akin Delibasi (UCL), Lee Stott (Microsoft)",
-    "Small language-model agents that coordinate traffic lights, verify who they talk to,",
-    "and catch faulty/spoofed data — evaluated in SUMO on a real London corridor.",
+    "UCL MSc Systems Engineering for IoT. Project pitch.",
+    "Student 25153651, Ebenezer Veeraraju. Supervisors: Dr Akin Delibasi (UCL) and Lee Stott (Microsoft).",
 ]:
     p = sub.add_paragraph()
     p.text = line
     for r in p.runs:
-        r.font.size = Pt(16)
+        r.font.size = Pt(15)
 
-# Slide 2 — Proposal
-bullets("What we're building & why", [
-    ("Problem: traffic signals decide blind to neighbours; multi-agent coordination needs trustworthy data.", 0),
-    ("Per-junction SLM agents (Phi-4-mini via Microsoft Foundry Local) coordinate signal timing in Eclipse SUMO.", 0),
-    ("Deterministic MaxPressure shield validates / overrides every SLM decision — safety first.", 0),
-    ("Cryptographic agent identity (Ed25519 + on-chain permissioned registry) — verify the source.", 0),
-    ("Vehicle-conservation check flags spoofed / faulty neighbour reports; tamper-evident audit log.", 0),
-    ("Novelty (integrative): authenticated identity + conservation check beneath SLM cross-junction coordination — no published precedent.", 0),
+# Slide 2 - Problem (Rubric I)
+bullets("The problem", [
+    "Traffic signals act blind to their neighbours, leaving coordination gains unused.",
+    "When junctions share data to coordinate, nothing confirms that data is genuine or correct.",
+    "Signals are safety-critical infrastructure: AI control is deployable only if inputs are trusted and auditable.",
+    "Originality: securing language-model coordination with verifiable identity and a physics-based check has no published precedent.",
 ])
 
-# Slide 3 — Status
-bullets("Current status — built & validated", [
-    ("Scope pivoted & locked (supervisor-approved); single source-of-truth decision brief.", 0),
-    ("Literature base: 175 papers (incl. 28 new on agent identity & spoof / fault detection).", 0),
-    ("DONE: SUMO 2x2 grid + MaxPressure baseline — beats fixed-time (waiting 52 s vs 66 s).", 0),
-    ("DONE: SLM-in-the-loop — Phi-4-mini drives a junction live: 90 decisions, 0 failures, shield + event-gating working.", 0),
-    ("Reproducible public repo — code, scenario, docs, all committed.", 0),
+# Slide 3 - Literature (Rubric II, 35 pts)
+bullets("Background and the gap", [
+    "Mature but separate strands: language-model traffic control, MaxPressure control, cooperative-ITS spoof and fault detection, decentralized identity and blockchain PKI, and chain-of-thought faithfulness.",
+    "Evidence base: 175 peer-reviewed sources, with 28 added for agent identity and spoof or fault detection.",
+    "The gap: nobody places authenticated identity and a vehicle-conservation check beneath language-model cross-junction coordination.",
+    "Research question: can authenticated, plausibility-checked agents coordinate a corridor while detecting spoofed or faulty inputs?",
+    "Honest limit: a consistency-respecting attacker can evade conservation checks (Xiao, 2026), so identity is a separate layer.",
 ])
 
-# Slide 4 — Next steps + confidence
-bullets("Next steps  ·  what we're confident about", [
-    ("Next steps:", 0),
-    ("Cross-junction coordination — share predicted neighbour state (the novel core).", 1),
-    ("Identity + audit layer — Ed25519 signatures + Hyperledger Besu allowlist / revoke.", 1),
-    ("Spoof / fault detection + adversarial scenarios; then real Lambeth corridor + evaluation sweep.", 1),
-    ("Confident about:", 0),
-    ("End-to-end pipeline runs — SUMO + TraCI + SLM + shield all validated.", 1),
-    ("Phi-4-mini serves on a consumer laptop; MaxPressure shield is provably stable.", 1),
-    ("Identity mechanism is literature-backed and buildable within the timeline.", 1),
+# Slide 4 - Methodology (Rubric III, method)
+bullets("Methodology", [
+    "Per-junction Phi-4-mini agents (Microsoft Foundry Local) coordinate signals in SUMO on a real Lambeth corridor.",
+    "A MaxPressure shield validates or overrides every decision: the model proposes, the shield disposes.",
+    "Signed messages plus a permissioned Hyperledger Besu registry verify the sender and revoke compromised junctions.",
+    "A vehicle-conservation check flags physically impossible reports; every decision is logged tamper-evidently.",
+    "The model outputs only a phase number, not reasoning, because chain-of-thought is an unfaithful explanation.",
 ])
 
-# Slide 5 — Challenges & mitigations
-bullets("Challenges & how we tackle them", [
-    ("SLM latency (Foundry serial, ~2-8 s/decision)  ->  terse output, pause-sim, event-gating, keep to ~6-8 SLM junctions.", 0),
-    ("Consistency check is not truth (a consistent liar evades it)  ->  scope to uncoordinated spoofs / faults; identity layer complements; cite the limit (Xiao 2026).", 0),
-    ("Blockchain too slow for the control loop  ->  async audit / registry only, never in the hot path.", 0),
-    ("Real-corridor demand data is coarse  ->  DfT traffic counts + SUMO routeSampler calibration.", 0),
-    ("SLM decision quality  ->  deterministic shield underneath; explicit-prompt engineering (already validated).", 0),
+# Slide 5 - Evaluation + progress (Rubric III, evaluation)
+bullets("Evaluation and progress so far", [
+    "Baselines: fixed-time, MaxPressure, and uncoordinated versus coordinated agents.",
+    "Metrics: travel time, queue and throughput; detection precision, recall and latency; trust-layer overhead.",
+    "Rigour: pre-registered seeds, bootstrap confidence intervals, multiple-comparison correction.",
+    "Already working: MaxPressure beats fixed-time, and a live language-model junction ran 90 decisions with zero failures.",
+    "All code, scenario and documentation sit in a reproducible public repository.",
 ])
 
-out = __file__.rsplit("\\", 1)[0].rsplit("/", 1)[0] + "/Edge-Negotiator-Proposal-Status.pptx"
+# Slide 6 - Roadmap, confidence, risks
+bullets("Roadmap, confidence, and risks", [
+    "Next: cross-junction coordination, then identity and audit, then adversarial evaluation on the real corridor.",
+    "Confident: pipeline runs end to end; Phi-4-mini runs on a laptop; the shield is provably stable; identity is literature-backed.",
+    "Latency risk: terse output, pause while thinking, skip quiet junctions, cap model-controlled junctions.",
+    "Trust risk: scope claims to clumsy or faulty data; the identity layer covers deliberate attacks.",
+    "Data risk: calibrate demand from Department for Transport counts using SUMO routeSampler.",
+])
+
+out = __file__.rsplit("\\", 1)[0].rsplit("/", 1)[0] + "/25153651_EbenezerVeeraraju_ADelibasi_COMP0234_SysIoT_Pitch_2324.pptx"
 prs.save(out)
-print("saved:", out)
+print("saved:", out, "| slides:", len(prs.slides._sldIdLst))

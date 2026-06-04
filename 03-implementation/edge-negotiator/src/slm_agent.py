@@ -72,11 +72,20 @@ class SLMAgent:
                              api_key=os.environ.get("FOUNDRY_LOCAL_API_KEY", "local"))
 
     def choose_phase(self, junction_id: str, num_phases: int,
-                     halting_per_phase: list[int]) -> int | None:
-        """Ask the SLM which green phase to serve. None on any failure (-> shield)."""
+                     halting_per_phase: list[int],
+                     neighbor_note: str = "") -> int | None:
+        """Ask the SLM which green phase to serve. None on any failure (-> shield).
+
+        ``neighbor_note`` (optional) is a concise coordination hint from adjacent
+        junctions (e.g. "Neighbours about to send ~7 vehicles toward you."). When
+        non-empty it is appended to the user prompt so cross-junction coordination
+        can influence the choice; default "" leaves the prompt identical to before.
+        """
         per_phase = ", ".join(f"phase {i} = {n}" for i, n in enumerate(halting_per_phase))
         user = (f"Junction {junction_id}. Waiting vehicles per phase: {per_phase}. "
                 'Which phase should get green now? Reply ONLY {"phase": <index>}.')
+        if neighbor_note:
+            user = f"{user} {neighbor_note}"
         try:
             resp = self.client.chat.completions.create(
                 model=self.model, temperature=0, max_tokens=self.max_tokens,

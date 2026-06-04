@@ -104,5 +104,11 @@ The SLM emits a **single terse phase decision with no chain-of-thought**, by des
 
 - [x] Supervisor sign-off on this reframe — APPROVED (Lee Stott by text 2026-05-31; Akin assumed approving).
 - [ ] Formally supersede / update `00-SCOPE-LOCKIN.md` once signed off.
-- [ ] Catalogue the 28 Prompt-9 papers into the registry (currently staged in `prompt9-*-urls.txt`).
+- [x] Catalogue the Prompt-9 papers — 23 catalogued (sha256 + title-source) in `06-literary-survey/prompt9-registry-additions.json`; unverifiable fields left `null` (not invented). Pending: editorial merge into `registry.json` + relevance tags.
 - [ ] Decide multisig vs single admin key (default: single).
+
+### Build progress (as of 2026-06-04)
+- **Milestone 1 (Wk 1-2) ✅** — 2×2 grid pipeline, MaxPressure beats fixed-time, terse Phi-4-mini hybrid.
+- **Milestone 2 (Wk 3-4) ✅ mechanism** — authenticated cross-junction coordination: Ed25519 identity, permissioned registry + hash-chained audit, signed neighbour-message bus, vehicle-conservation check, coordinated controller (Channel-A prompt + Channel-B deterministic). **120 tests pass** (incl. adversarial). Live-verified over a 3-seed sweep (`edge-negotiator/results/`). Honest finding: prompt-only coordination had *zero* causal effect on a terse temp-0 SLM; the deterministic Channel-B term (`coord_weight`) restores a causal pathway (ablatable), but the 2×2 travel-time gain is survivorship-confounded — performance claim deferred to the corridor (Wk 9-10).
+- **Lambeth corridor (long-pole) — started** — 9-TLS net over the A23/A3 spine extracted from OSM, AADF-calibrated to GEH<5 at 100% of anchors, smoke-clean on light demand (`edge-negotiator/sumo/lambeth/`, `LAMBETH-EXTRACTION.md`). Risk: full-peak demand gridlocks → needs OD/turn-ratio + TLS-split tuning.
+- **Supporting artifacts** — `THREAT-MODEL-ANALYSIS.md` (code-grounded; weakest point = coordinated insider collusion, `Xiao2026` arXiv:2602.10162 verified), `COORDINATION-ALGORITHM-SPEC.md` (CoLLMLight/CoLight-grounded), `edge-negotiator/src/stats.py` (BCa bootstrap + Holm-Bonferroni for the Wk 9-10 sweep).

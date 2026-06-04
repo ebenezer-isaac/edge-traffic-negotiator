@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Lambeth A23/A3 spine corridor (9 TLS). De-risking config for the Wk9-10 SLM swap.
+     Demand intensity is set via the <scale> knob (1.0 == base.rou.xml as generated:
+     ~3600 veh/h, randomTrips period=1.0, fringe-factor=30, seed=1).
+     time-to-teleport is set to 300s so gridlock is reported HONESTLY as teleports
+     (the gridlock signal) rather than vehicles silently vanishing or the sim hanging. -->
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+    <input>
+        <net-file value="lambeth_spine.net.xml"/>
+        <route-files value="base.rou.xml"/>
+    </input>
+    <time>
+        <begin value="0"/>
+        <end value="3600"/>
+    </time>
+    <processing>
+        <time-to-teleport value="300"/>
+        <scale value="1.0"/>
+    </processing>
+    <report>
+        <no-step-log value="true"/>
+        <no-warnings value="true"/>
+    </report>
+</configuration>

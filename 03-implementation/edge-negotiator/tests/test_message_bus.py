@@ -250,3 +250,62 @@ def test_rejected_log_is_copy():
     snapshot = bus.rejected
     snapshot.append({"bogus": True})
     assert len(bus.rejected) == 1      # internal log unaffected
+
+
+# --------------------------------------------------------------------------- #
+# P2: inbox() is not O(n^2) -- the rejected log must not grow quadratically when
+# the bus is rescanned each round over an ever-growing published buffer.
+# --------------------------------------------------------------------------- #
+
+def test_inbox_rejected_log_not_quadratic_over_rounds():
+    """Simulate the controller's per-round usage: each round A1 publishes a fresh
+    tick and A0 reads its inbox. Before P2, every inbox() rescanned the WHOLE
+    buffer and re-rejected every already-delivered message as `replay`, so the
+    rejected log grew ~O(rounds^2). After P2 a delivered message is logged as
+    replay AT MOST ONCE, so the log grows at most linearly in rounds."""
+    registry, idents, bus = _fresh()
+    rounds = 60
+    for t in range(rounds):
+        bus.publish(idents["A1"], t=t, payload={"p": t})
+        delivered = bus.inbox("A0")
+        assert len(delivered) == 1            # the fresh tick is delivered each round
+        assert delivered[0].t == t
+
+    # Quadratic rescans would give ~ rounds*(rounds-1)/2 = 1770 replay entries.
+    # P2 bounds it: each (A0, A1, t) is logged as replay at most once, and a
+    # freshly delivered tick is never re-logged in the SAME round it arrived.
+    replays = [r for r in bus.rejected if r["reason"] == "replay"]
+    assert len(replays) <= rounds, (
+        f"replay log grew non-linearly: {len(replays)} entries over {rounds} rounds")
+    # Concretely it should be far below the quadratic count.
+    assert len(replays) < rounds * (rounds - 1) // 2
+
+
+def test_inbox_index_still_detects_replay_on_immediate_reread():
+    """The index must NOT lose the security guarantee: an immediate re-read of an
+    already-delivered message is still rejected as `replay` exactly once."""
+    registry, idents, bus = _fresh()
+    bus.publish(idents["A1"], t=0, payload={"p": 1})
+    assert len(bus.inbox("A0")) == 1
+    assert bus.rejected == []
+    assert bus.inbox("A0") == []
+    assert _reasons(bus) == ["replay"]
+    # A further re-read does NOT pile up more replay entries (bounded log).
+    assert bus.inbox("A0") == []
+    assert _reasons(bus) == ["replay"]
+
+
+def test_inbox_index_survives_direct_buffer_replacement():
+    """If a caller REPLACES _published (the adversarial-test injection pattern),
+    the cursor must reset and the new buffer be scanned correctly."""
+    registry, idents, bus = _fresh()
+    bus.publish(idents["A1"], t=0, payload={"p": 1})
+    assert len(bus.inbox("A0")) == 1
+    # Replace the buffer with a different, shorter message (forged-injection style).
+    forged = NeighborMessage(sender="B1", t=0, payload={"p": 1},
+                             signature=b"\x00" * 64)
+    bus._published = [forged]
+    assert bus.inbox("A0") == []
+    # B1 is not a neighbour of A0 -> the replacement is scanned from scratch.
+    assert any(r["reason"] == "not_neighbour" and r["sender"] == "B1"
+               for r in bus.rejected)

@@ -96,6 +96,91 @@ def _split_edge(edge_id: str, junctions: frozenset[str]) -> tuple[str, str] | No
     return None
 
 
+def edge_map_from_net(net, mode: str = "chain"
+                      ) -> tuple[dict[str, list[str]], dict[tuple[str, str], str]]:
+    """Derive ``(adjacency, edge_map)`` for ANY sumolib net (grid or real OSM).
+
+    This is the reusable lift of the corridor runner's ``derive_topology`` so any
+    net -- grid or real -- can hand the controller an explicit ``edge_map`` that
+    maps ``(src_junction, dst_junction) -> edge_id`` (the edge ENTERING ``dst``
+    that carries traffic released by ``src``) instead of relying on the grid
+    ``f"{src}{dst}"`` string convention (which silently no-ops on real nets).
+
+    ``net`` is a ``sumolib.net.Net`` (read via ``sumolib.net.readNet``).
+
+    ``mode == "single"``: strict -- two TLS are neighbours iff a SINGLE edge
+    directly connects a node of ``src`` to a node of ``dst``.
+    ``mode == "chain"`` (default): two TLS are neighbours iff a directed path of
+    only NON-signalised interior nodes connects them with no intervening TLS; the
+    in-edge is the LAST edge on that path (the edge entering ``dst``).
+
+    Returns a fresh ``(adjacency, edge_map)`` and never mutates ``net``. The grid
+    fallback path needs neither; this is for real nets (or for deriving a grid map
+    explicitly to exercise the same code path in tests).
+    """
+    from collections import deque
+
+    def _node_to_tls() -> dict[str, str]:
+        out: dict[str, str] = {}
+        for t in net.getTrafficLights():
+            for in_lane, _o, _i in t.getConnections():
+                out[in_lane.getEdge().getToNode().getID()] = t.getID()
+        return out
+
+    def _tls_nodes() -> dict[str, set[str]]:
+        out: dict[str, set[str]] = {}
+        for t in net.getTrafficLights():
+            out[t.getID()] = {in_lane.getEdge().getToNode().getID()
+                              for in_lane, _o, _i in t.getConnections()}
+        return out
+
+    node_to_tls = _node_to_tls()
+    tls_node_set = set(node_to_tls)
+    tls_nodes = _tls_nodes()
+    edges = [e for e in net.getEdges() if not e.getID().startswith(":")]
+    out_edges_of: dict[str, list] = {}
+    for e in edges:
+        out_edges_of.setdefault(e.getFromNode().getID(), []).append(e)
+
+    adjacency: dict[str, set[str]] = {t: set() for t in tls_nodes}
+    edge_map: dict[tuple[str, str], str] = {}
+
+    if mode == "single":
+        for e in edges:
+            f = node_to_tls.get(e.getFromNode().getID())
+            t = node_to_tls.get(e.getToNode().getID())
+            if f and t and f != t:
+                adjacency[f].add(t)
+                adjacency[t].add(f)
+                edge_map[(f, t)] = e.getID()
+        return ({k: sorted(v) for k, v in adjacency.items()}, edge_map)
+
+    if mode != "chain":
+        raise ValueError(f"mode must be 'chain' or 'single', got {mode!r}")
+
+    for src_tls, nodes in tls_nodes.items():
+        for start in nodes:
+            q: deque[tuple] = deque(
+                (e, e.getID(), 0) for e in out_edges_of.get(start, ()))
+            visited: set[str] = set()
+            while q:
+                e, entry_edge, depth = q.popleft()
+                tnode = e.getToNode().getID()
+                dst_tls = node_to_tls.get(tnode)
+                if dst_tls and dst_tls != src_tls:
+                    adjacency[src_tls].add(dst_tls)
+                    adjacency[dst_tls].add(src_tls)
+                    edge_map.setdefault((src_tls, dst_tls), e.getID())
+                    continue
+                if tnode in tls_node_set or tnode in visited or depth > 8:
+                    continue
+                visited.add(tnode)
+                for nxt in out_edges_of.get(tnode, ()):
+                    q.append((nxt, entry_edge, depth + 1))
+
+    return ({k: sorted(v) for k, v in adjacency.items()}, edge_map)
+
+
 class CoordinatedController(HybridController):
     """Hybrid controller + authenticated neighbour coordination & reconciliation."""
 
@@ -107,7 +192,11 @@ class CoordinatedController(HybridController):
                  checker: ConservationChecker | None = None,
                  slm_junctions=None, gate: int = 2,
                  min_green: int = 10, yellow: int = 3,
-                 coord_weight: float = 1.0):
+                 coord_weight: float = 1.0,
+                 edge_map: dict[tuple[str, str], str] | None = None,
+                 coord_override: bool = False,
+                 coord_override_threshold: float = 0.0,
+                 reconcile_silent_neighbours: bool = False):
         super().__init__(conn, tls_ids, agent, slm_junctions=slm_junctions,
                          gate=gate, min_green=min_green, yellow=yellow)
         # Read-only references; we never mutate the caller's structures.
@@ -117,6 +206,8 @@ class CoordinatedController(HybridController):
         self.adjacency = {k: tuple(v) for k, v in adjacency.items()}
         self.checker = checker if checker is not None else ConservationChecker()
         self.detections: list[Detection] = []
+        # Set by decide() each call so edge_map resolvers know the deciding junction.
+        self._current_tl: str | None = None
         # Lambda for the deterministic Channel-B coordination term (spec §2.2).
         # Validate at the boundary; coord_weight == 0.0 must reproduce today's
         # plain MaxPressure choice exactly (clean ablation / regression baseline).
@@ -150,6 +241,66 @@ class CoordinatedController(HybridController):
         # message gets a fresh tick (the bus replay guard keys on (recip,sender,t)).
         self._tick = 0
 
+        # P1 -- generalised edge resolution. When an explicit edge_map is given
+        # (maps (src_junction, dst_junction) -> edge_id, the edge ENTERING dst
+        # from src) we resolve toward/observed/per-phase via the map instead of
+        # the grid f"{src}{dst}" string convention. When None we FALL BACK to the
+        # grid name-parsing (existing behaviour unchanged). This makes coordination
+        # work on real OSM nets whose edge ids are not junction-id concatenations.
+        if edge_map is not None:
+            if not isinstance(edge_map, dict):
+                raise TypeError("edge_map must be a dict or None")
+            for key, eid in edge_map.items():
+                if (not isinstance(key, tuple) or len(key) != 2
+                        or not all(isinstance(p, str) for p in key)):
+                    raise TypeError(
+                        f"edge_map key must be a (src: str, dst: str) tuple, got {key!r}")
+                if not isinstance(eid, str):
+                    raise TypeError(
+                        f"edge_map[{key!r}] must be an edge-id str, got {type(eid).__name__}")
+            self._edge_map: dict[tuple[str, str], str] | None = dict(edge_map)
+            # Invert: per junction, edge-id -> downstream neighbour it leads to.
+            # The in-edge of (tl -> nb) is exactly an edge tl releases toward nb.
+            out_to_nb: dict[str, dict[str, str]] = {}
+            for (src, dst), eid in self._edge_map.items():
+                out_to_nb = {**out_to_nb,
+                             src: {**out_to_nb.get(src, {}), eid: dst}}
+            self._out_edge_to_neighbour = {k: dict(v) for k, v in out_to_nb.items()}
+        else:
+            self._edge_map = None
+            self._out_edge_to_neighbour = {}
+
+        # P4 -- Channel-B override. When True, if the coordination-adjusted choice
+        # disagrees with a valid SLM proposal by more than the threshold (in
+        # adjusted-pressure units), the shield's coordination choice WINS (true
+        # "shield disposes"). Default False preserves today's behaviour exactly.
+        if not isinstance(coord_override, bool):
+            raise TypeError("coord_override must be a bool")
+        if (isinstance(coord_override_threshold, bool)
+                or not isinstance(coord_override_threshold, (int, float))):
+            raise TypeError("coord_override_threshold must be a number")
+        if (coord_override_threshold != coord_override_threshold
+                or coord_override_threshold in (float("inf"), float("-inf"))):
+            raise ValueError("coord_override_threshold must be finite")
+        if coord_override_threshold < 0:
+            raise ValueError("coord_override_threshold must be >= 0")
+        self.coord_override = coord_override
+        self.coord_override_threshold = float(coord_override_threshold)
+        # Count of decisions where coord_override actually flipped the realized
+        # decision away from a valid SLM proposal (proof the override is causal).
+        self.coord_override_decisions = 0
+
+        # P3 -- sensor-outage / silent-neighbour reconciliation. OPT-IN (default
+        # False) so existing wiring and the as-built attack-report scenarios are
+        # UNCHANGED. When True, decide() additionally feeds an observed-only edge
+        # to the ConservationChecker for every registered, approved neighbour that
+        # SHOULD have sent a claim this round but went silent AND on whose in-edge
+        # traffic is actually observed -- so a fully-silent neighbour (no claim)
+        # is reconciled and `missing_claim` becomes reachable live.
+        if not isinstance(reconcile_silent_neighbours, bool):
+            raise TypeError("reconcile_silent_neighbours must be a bool")
+        self.reconcile_silent_neighbours = reconcile_silent_neighbours
+
     def _incoming_per_phase(self, st: dict, incoming_by_neighbour: dict[str, int],
                             tl: str) -> list[int]:
         """Attribute each neighbour's incoming release to the green phases serving it.
@@ -172,7 +323,12 @@ class CoordinatedController(HybridController):
         for nb, amount in incoming_by_neighbour.items():
             if amount <= 0:
                 continue
-            in_edge = f"{nb}{tl}"  # edge neighbour -> this junction
+            if self._edge_map is not None:
+                in_edge = self._edge_map.get((nb, tl))  # explicit nb -> tl edge
+                if in_edge is None:
+                    continue
+            else:
+                in_edge = f"{nb}{tl}"  # grid: edge neighbour -> this junction
             # Movement indices whose in-lane sits on this neighbour's in-edge.
             served_movements = {
                 i for i, in_lane in enumerate(st["in_lanes"])
@@ -200,6 +356,11 @@ class CoordinatedController(HybridController):
         conservation check. It is NOT a forecast.
         """
         halting = self.c.lane.getLastStepHaltingNumber
+        # Resolver: out-lane edge -> downstream neighbour. With an explicit
+        # edge_map use the inverted out-edge map for this junction; otherwise
+        # fall back to grid name-parsing via _split_edge.
+        out_map = (self._out_edge_to_neighbour.get(self._current_tl, {})
+                   if self._edge_map is not None else None)
         toward: dict[str, int] = {}
         state = st["green"][gi]
         for i, ch in enumerate(state):
@@ -209,10 +370,15 @@ class CoordinatedController(HybridController):
             in_lane = st["in_lanes"][i]
             if not out_lane or not in_lane:
                 continue
-            split = _split_edge(_edge_of_lane(out_lane), self._junctions)
-            if split is None:
-                continue  # movement exits the grid (dead-end) -> no neighbour
-            neighbour = split[1]
+            if out_map is not None:
+                neighbour = out_map.get(_edge_of_lane(out_lane))
+                if neighbour is None:
+                    continue  # movement does not lead to a signalised neighbour
+            else:
+                split = _split_edge(_edge_of_lane(out_lane), self._junctions)
+                if split is None:
+                    continue  # movement exits the grid (dead-end) -> no neighbour
+                neighbour = split[1]
             toward = {**toward, neighbour: toward.get(neighbour, 0)
                       + halting(in_lane)}
         return toward
@@ -227,14 +393,21 @@ class CoordinatedController(HybridController):
         halting = self.c.lane.getLastStepHaltingNumber
         observed: dict[str, int] = {}
         for nb in neighbours:
-            edge = f"{nb}{recipient}"  # edge nb -> recipient
+            if self._edge_map is not None:
+                edge = self._edge_map.get((nb, recipient))  # explicit nb -> recipient
+            else:
+                edge = f"{nb}{recipient}"  # grid: edge nb -> recipient
             count = 0
-            for lane_id in self._edge_lanes.get(edge, ()):
-                count += halting(lane_id)
+            if edge is not None:
+                for lane_id in self._edge_lanes.get(edge, ()):
+                    count += halting(lane_id)
             observed = {**observed, nb: count}
         return observed
 
     def decide(self, tl: str, st: dict) -> int:
+        # Record the deciding junction so the (edge_map) resolvers know which
+        # junction's out-edge map to use. Harmless for the grid fallback path.
+        self._current_tl = tl
         mp_choice = super(HybridController, self).decide(tl, st)  # MaxPressure
         if tl not in self.slm:
             return mp_choice
@@ -339,18 +512,61 @@ class CoordinatedController(HybridController):
         proposal = self.agent.choose_phase(tl, len(st["green"]), halting, neighbor_note=note)
         # Shield disposes: SLM proposal if valid else the coordination-adjusted choice.
         used = proposal if proposal is not None else coord_choice
+        # P4 -- Channel-B override. By default a VALID SLM proposal always wins, so
+        # the coordination-aware deterministic choice can never override a reliable
+        # SLM (coordination is inert). With coord_override=True, if the coordinated
+        # choice disagrees with a valid proposal AND its adjusted pressure exceeds
+        # the proposal's by more than the threshold, the shield's coordination
+        # choice wins (true "shield disposes"). This only triggers when there is a
+        # genuine coordination signal (coord_weight > 0 and the choices differ).
+        coord_overrode = False
+        if (self.coord_override and proposal is not None
+                and 0 <= coord_choice < len(adj_halting)
+                and 0 <= proposal < len(adj_halting)
+                and coord_choice != proposal):
+            margin = adj_halting[coord_choice] - adj_halting[proposal]
+            if margin > self.coord_override_threshold:
+                used = coord_choice
+                coord_overrode = True
+                self.coord_override_decisions += 1
 
         # (d) Reconcile claims vs observed inflows; stash Detections.
+        #
+        # P3 -- sensor-outage / silent-neighbour reconciliation. A neighbour that
+        # SHOULD have sent a claim this round but went fully silent (no verified
+        # message -> no claim) would never be reconciled if we only observed the
+        # claim sources. So we observe EVERY registered, approved neighbour's
+        # in-edge: a neighbour with observed inflow but NO claim yields a
+        # `missing_claim` Detection (it withheld / faulted while traffic arrived).
+        # Neighbours that are silent AND show no inflow contribute nothing (no
+        # spurious detections from a genuinely-idle approach).
         new_detections: list[Detection] = []
-        if claims:
-            claim_srcs = {src for (src, _dst) in claims.keys()}
-            observed_by_nb = self._observed_inflows(tl, claim_srcs)
-            observed = {(src, tl): observed_by_nb.get(src, 0) for src in claim_srcs}
-            try:
-                new_detections = self.checker.evaluate(claims, observed)
-            except Exception:
-                new_detections = []
-            self.detections = [*self.detections, *new_detections]
+        claim_srcs = {src for (src, _dst) in claims.keys()}
+        if self.reconcile_silent_neighbours:
+            # Registered, currently-approved neighbours we expected a claim from.
+            expected_srcs = {
+                nb for nb in neighbours
+                if nb in self.identities and self.registry.is_approved(nb)
+            }
+        else:
+            expected_srcs = set()  # legacy: only reconcile edges that have a claim
+        observe_srcs = claim_srcs | expected_srcs
+        if observe_srcs:
+            observed_by_nb = self._observed_inflows(tl, observe_srcs)
+            # Feed claim edges always; for silent (no-claim) neighbours feed an
+            # observed-only edge ONLY where there is ACTUAL inflow, so a genuinely
+            # quiet approach is not flagged as a missing claim every round.
+            observed = {
+                (src, tl): observed_by_nb.get(src, 0)
+                for src in observe_srcs
+                if src in claim_srcs or observed_by_nb.get(src, 0) > 0
+            }
+            if claims or observed:
+                try:
+                    new_detections = self.checker.evaluate(claims, observed)
+                except Exception:
+                    new_detections = []
+                self.detections = [*self.detections, *new_detections]
 
         self.events.append({
             "tls": tl, "halting": halting,
@@ -363,6 +579,7 @@ class CoordinatedController(HybridController):
             "mp_choice": mp_choice,
             "coord_choice": coord_choice,
             "coord_changed": coord_changed,
+            "coord_overrode": coord_overrode,
             "received": received,
             "neighbor_note": note,
             "detections": [

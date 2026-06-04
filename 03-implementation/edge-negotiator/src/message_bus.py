@@ -97,6 +97,29 @@ class MessageBus:
         # Append-only rejection log.
         self._rejected: list[dict] = []
 
+        # -- P2: per-recipient scan index (removes the O(n^2) full rescan) ----
+        # On a full (t is None) scan, ``_scan_pos[recipient]`` is how many of the
+        # ``_published`` entries this recipient has ALREADY examined. A later
+        # inbox(recipient) only examines the suffix that appeared since, so a run
+        # of R rounds over a buffer that grows to N messages costs O(N) total per
+        # recipient instead of O(N^2).
+        self._scan_pos: dict[str, int] = {}
+        # Replay logging is bounded: a message already delivered to a recipient is
+        # recorded as ``replay`` AT MOST ONCE per (recipient, sender, t). The first
+        # genuine re-read of the SAME message still logs one ``replay`` (security
+        # semantics + existing tests preserved); subsequent rescans of that same
+        # old message do NOT re-log it, so the rejected log cannot grow quadratically
+        # from repeated rescans. Genuine fresh rejections are unaffected.
+        self._replay_logged: set[tuple[str, str, int]] = set()
+        # Same bounding for permanent (non-replay) rejections, keyed by
+        # (recipient, sender, t, reason) -- a stable verdict logged once.
+        self._reject_logged: set[tuple[str, str, int, str]] = set()
+        # Snapshot of the buffer length last time we scanned, so we can detect a
+        # caller that REPLACES/truncates ``self._published`` directly (the
+        # adversarial tests inject forged messages this way) and safely rescan
+        # from the start rather than trusting a now-stale cursor.
+        self._scanned_len: int = 0
+
     # -- publish -------------------------------------------------------------
 
     def publish(
@@ -147,15 +170,40 @@ class MessageBus:
         neighbours = self._neighbours.get(recipient, frozenset())
         delivered: list[NeighborMessage] = []
 
-        for message in self._published:
+        # P2 index. For the common full scan (t is None -- the controller's path)
+        # start from where this recipient last finished, so we never re-walk the
+        # whole ever-growing buffer. Detect a caller that REPLACED or truncated
+        # ``_published`` directly (adversarial tests inject forged messages this
+        # way) and fall back to a full rescan from 0 so correctness never depends
+        # on a now-stale cursor. The tick-filtered path (t is not None) always
+        # scans from 0 -- it is only used in small, explicit test calls.
+        published = self._published
+        buf_len = len(published)
+        if t is None:
+            start = self._scan_pos.get(recipient, 0)
+            if buf_len < self._scanned_len or start > buf_len:
+                start = 0  # buffer was replaced/truncated -> rescan safely
+            self._scanned_len = buf_len
+        else:
+            start = 0
+
+        # We may need to keep the cursor pinned at the first not-yet-finalised
+        # message: a freshly delivered message must remain re-scannable so a later
+        # call still records exactly one ``replay`` for it (security semantics +
+        # existing tests). Track the lowest index that is NOT yet finalised.
+        first_unfinalised = buf_len if t is None else None
+
+        for idx in range(start, buf_len):
+            message = published[idx]
             if t is not None and message.t != t:
                 continue
 
             sender = message.sender
+            key = (recipient, sender, message.t)
 
             # 1) Topology: sender must be an adjacency neighbour of recipient.
             if sender not in neighbours:
-                self._reject(recipient, sender, message.t, _REASON_NOT_NEIGHBOUR)
+                self._reject_once(recipient, sender, message.t, _REASON_NOT_NEIGHBOUR)
                 continue
 
             # 2) Membership: sender must be currently approved.
@@ -168,7 +216,7 @@ class MessageBus:
                     if self._was_ever_registered(sender)
                     else _REASON_UNKNOWN_SENDER
                 )
-                self._reject(recipient, sender, message.t, reason)
+                self._reject_once(recipient, sender, message.t, reason)
                 continue
 
             # 3) Crypto: signature must verify over the canonical bytes. This
@@ -177,17 +225,28 @@ class MessageBus:
             #    that does not match A1's registered public key.
             expected = canonical_bytes(sender, message.t, message.payload)
             if not verify(public_key, expected, message.signature):
-                self._reject(recipient, sender, message.t, _REASON_BAD_SIGNATURE)
+                self._reject_once(recipient, sender, message.t, _REASON_BAD_SIGNATURE)
                 continue
 
             # 4) Replay: same (recipient, sender, t) must not deliver twice.
-            key = (recipient, sender, message.t)
             if key in self._delivered:
-                self._reject(recipient, sender, message.t, _REASON_REPLAY)
+                # Log the replay AT MOST ONCE per (recipient, sender, t): the first
+                # genuine re-read records it; rescans of the same old message in
+                # later rounds do not, so the log can't grow quadratically.
+                if key not in self._replay_logged:
+                    self._reject(recipient, sender, message.t, _REASON_REPLAY)
+                    self._replay_logged.add(key)
                 continue
 
             self._delivered.add(key)
             delivered.append(message)
+            # Pin the cursor at this freshly delivered message so a later scan
+            # re-encounters it once (to log its single replay) before skipping on.
+            if t is None and first_unfinalised == buf_len:
+                first_unfinalised = idx
+
+        if t is None:
+            self._scan_pos[recipient] = first_unfinalised
 
         return delivered
 
@@ -208,6 +267,23 @@ class MessageBus:
             *self._rejected,
             {"recipient": recipient, "sender": sender, "t": t, "reason": reason},
         ]
+
+    def _reject_once(self, recipient: str, sender: str, t: int, reason: str) -> None:
+        """Record a PERMANENT (non-replay) rejection at most once per message.
+
+        Topology / membership / signature verdicts are stable for a given
+        (recipient, sender, t, reason): a message rejected for one of these
+        reasons will be rejected for the SAME reason on every rescan. Logging it
+        once keeps the rejection reason and security guarantee intact while
+        preventing the ``rejected`` log from growing unboundedly when the bus is
+        rescanned each round (P2). The first occurrence is recorded exactly as
+        before; genuine fresh rejections of NEW messages are unaffected.
+        """
+        marker = (recipient, sender, t, reason)
+        if marker in self._reject_logged:
+            return
+        self._reject_logged.add(marker)
+        self._reject(recipient, sender, t, reason)
 
     def _was_ever_registered(self, junction_id: str) -> bool:
         """True iff ``junction_id`` appears as a registration in the audit log.

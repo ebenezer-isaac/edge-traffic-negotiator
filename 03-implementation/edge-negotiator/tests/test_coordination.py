@@ -25,6 +25,7 @@ if _SRC not in sys.path:
 from conservation import ConservationChecker, Detection  # noqa: E402
 from coordinated_controller import (  # noqa: E402
     CoordinatedController, StubAgent, _split_edge, _edge_of_lane,
+    edge_map_from_net,
 )
 from identity import JunctionIdentity  # noqa: E402
 from message_bus import MessageBus  # noqa: E402
@@ -393,3 +394,321 @@ def _run_fake_controller_once(claim: int, observe: int, tolerance: int):
     st = ctrl.tls["A0"]
     ctrl.decide("A0", st)
     return list(ctrl.detections)
+
+
+# --------------------------------------------------------------------------- #
+# P1 -- generalised edge resolution: an OSM-style edge_map (ids that are NOT
+# junction-id concatenations) must resolve toward/observed and deliver verified
+# messages > 0, where the grid f"{src}{dst}" convention would no-op.
+# --------------------------------------------------------------------------- #
+
+# Real-net-style ids: TLS clusters and OSM way ids that break the grid convention.
+_OSM_J = "cluster_AAA"      # the deciding junction
+_OSM_N = "cluster_BBB"      # its neighbour
+_OSM_K = "cluster_CCC"      # a second neighbour (phase 1 approach)
+_OSM_ADJ = {_OSM_J: [_OSM_N, _OSM_K], _OSM_N: [_OSM_J], _OSM_K: [_OSM_J]}
+# in-edge map: (src, dst) -> OSM way id entering dst from src.
+_OSM_EDGE_MAP = {
+    (_OSM_N, _OSM_J): "-634042794#2",   # N -> J  (phase-0 in-edge)
+    (_OSM_J, _OSM_N): "325568663#0",    # J -> N  (phase-0 out-edge)
+    (_OSM_K, _OSM_J): "243976865",      # K -> J  (phase-1 in-edge)
+    (_OSM_J, _OSM_K): "-905990664",     # J -> K  (phase-1 out-edge)
+}
+
+
+class _OsmFakeTL:
+    """Fake TL whose lane/edge ids are OSM way ids (NOT junction concatenations)."""
+
+    class _Phase:
+        def __init__(self, state):
+            self.state = state
+
+    class _Logic:
+        def __init__(self, phases):
+            self.phases = phases
+
+    def __init__(self):
+        self._phases = [
+            self._Phase("Gr"), self._Phase("yr"),
+            self._Phase("rG"), self._Phase("ry"),
+        ]
+        # movement 0: in N->J, out J->N (phase 0); movement 1: in K->J, out J->K.
+        self._links = [
+            [("-634042794#2_0", "325568663#0_0", "")],
+            [("243976865_0", "-905990664_0", "")],
+        ]
+
+    def getAllProgramLogics(self, tl):
+        return [self._Logic(self._phases)]
+
+    def getControlledLinks(self, tl):
+        return self._links
+
+    def setRedYellowGreenState(self, tl, state):
+        return None
+
+
+class _OsmFakeConn:
+    def __init__(self, halting):
+        self.lane = _FakeLane(halting)
+        self.trafficlight = _OsmFakeTL()
+
+
+def _build_osm_controller(observe_n: int, observe_k: int = 0,
+                          tolerance: int = 2, coord_weight: float = 1.0):
+    """CoordinatedController on an OSM-style net via the explicit edge_map (P1)."""
+    halting = {
+        "-634042794#2_0": observe_n,   # N -> J in-edge (phase 0 / observation)
+        "243976865_0": observe_k,      # K -> J in-edge (phase 1)
+        "325568663#0_0": 0,            # J -> N out-edge
+        "-905990664_0": 0,             # J -> K out-edge
+    }
+    conn = _OsmFakeConn(halting)
+    tls = [_OSM_J, _OSM_N, _OSM_K]
+    identities = {jid: JunctionIdentity(jid) for jid in tls}
+    registry = Registry()
+    for jid, ident in identities.items():
+        registry.register(jid, ident.public_key)
+    bus = MessageBus(registry, _OSM_ADJ)
+    checker = ConservationChecker(tolerance=tolerance)
+    ctrl = CoordinatedController(
+        conn, [_OSM_J], StubAgent(), identities=identities, registry=registry,
+        bus=bus, adjacency=_OSM_ADJ, checker=checker, slm_junctions=[_OSM_J],
+        gate=0, coord_weight=coord_weight, edge_map=_OSM_EDGE_MAP,
+    )
+    return ctrl, bus, identities
+
+
+def test_edge_map_resolves_toward_on_osm_ids():
+    """With an explicit edge_map, `toward` resolves the downstream neighbour from
+    OSM out-lane ids that the grid `_split_edge` parse could never split."""
+    ctrl, _bus, _idents = _build_osm_controller(observe_n=7)
+    ctrl._current_tl = _OSM_J
+    st = ctrl.tls[_OSM_J]
+    # phase 0 serves movement 0 (in N->J, halting 7; out J->N) -> releases toward N.
+    toward = ctrl._toward_counts(st, 0)
+    assert toward == {_OSM_N: 7}, toward
+    # The grid parse would have found NO neighbour on these OSM ids (proves the map).
+    assert _split_edge("325568663#0", frozenset({_OSM_J, _OSM_N, _OSM_K})) is None
+
+
+def test_edge_map_observed_inflows_on_osm_ids():
+    """`_observed_inflows` reads the OSM in-edge via the map (not f'{nb}{tl}')."""
+    ctrl, _bus, _idents = _build_osm_controller(observe_n=4, observe_k=9)
+    observed = ctrl._observed_inflows(_OSM_J, {_OSM_N, _OSM_K})
+    assert observed == {_OSM_N: 4, _OSM_K: 9}, observed
+
+
+def test_edge_map_delivers_verified_messages_and_reconciles():
+    """End-to-end on OSM ids: a neighbour's signed claim is delivered (verified
+    messages > 0) and reconciled against the mapped observation."""
+    ctrl, bus, identities = _build_osm_controller(observe_n=5, tolerance=2)
+    bus.publish(identities[_OSM_N], 0,
+                {"toward": {_OSM_J: {"release": 5, "queue_forecast": 5}}})
+    ctrl.decide(_OSM_J, ctrl.tls[_OSM_J])
+    ev = ctrl.events[-1]
+    assert ev["expected_incoming"] == 5, ev
+    assert len(ev["received"]) == 1 and ev["received"][0]["from"] == _OSM_N
+    # Verified-messages metric (as the runners compute it) is > 0.
+    verified = sum(len(e.get("received", [])) for e in ctrl.events
+                   if isinstance(e.get("received"), list))
+    assert verified > 0
+    # Reconciliation used the mapped in-edge: claim 5 vs observed 5 -> ok, not flagged.
+    edge = [d for d in ctrl.detections if (d.src, d.dst) == (_OSM_N, _OSM_J)]
+    assert edge and edge[0].claimed == 5 and edge[0].observed == 5
+    assert not edge[0].flagged
+
+
+def test_edge_map_none_keeps_grid_behaviour_identical():
+    """With NO edge_map the grid path is byte-for-byte unchanged: the standard
+    grid fake controller still delivers and reconciles exactly as before."""
+    dets_map_off = _run_fake_controller_once(claim=99, observe=0, tolerance=2)
+    flagged = [d for d in dets_map_off if d.flagged and d.reason == "inflated"]
+    assert flagged and (flagged[0].src, flagged[0].dst) == ("A1", "A0")
+
+
+def test_edge_map_validates_keys_and_values():
+    """edge_map is validated at the boundary (tuple[str,str] -> str)."""
+    conn = _FakeConn({"A1A0_0": 0, "B0A0_0": 1, "A0A1_0": 0, "A0B0_0": 0})
+    identities = {jid: JunctionIdentity(jid) for jid in ("A0", "A1", "B0", "B1")}
+    registry = Registry()
+    for jid, ident in identities.items():
+        registry.register(jid, ident.public_key)
+    bus = MessageBus(registry, ADJACENCY)
+    for bad in ({("A", "B", "C"): "e"}, {("A", "B"): 5}, {"AB": "e"}, [("A", "B")]):
+        with pytest.raises(TypeError):
+            CoordinatedController(
+                conn, ["A0"], StubAgent(), identities=identities, registry=registry,
+                bus=bus, adjacency=ADJACENCY, slm_junctions=["A0"], edge_map=bad,
+            )
+
+
+# --------------------------------------------------------------------------- #
+# P3 -- sensor-outage / silent-neighbour reconciliation (opt-in).
+# --------------------------------------------------------------------------- #
+
+def test_silent_neighbour_with_inflow_yields_missing_claim_when_enabled():
+    """A registered neighbour that stops publishing while traffic still arrives on
+    its in-edge is reconciled -> a flagged `missing_claim` detection (P3)."""
+    # A0 observes inflow on edge A1->A0 but A1 publishes NOTHING this round.
+    halting = {"A1A0_0": 6, "B0A0_0": 0, "A0A1_0": 0, "A0B0_0": 0}
+    conn = _FakeConn(halting)
+    tls = ["A0", "A1", "B0", "B1"]
+    identities = {jid: JunctionIdentity(jid) for jid in tls}
+    registry = Registry()
+    for jid, ident in identities.items():
+        registry.register(jid, ident.public_key)
+    bus = MessageBus(registry, ADJACENCY)
+    checker = ConservationChecker(tolerance=2)
+    ctrl = CoordinatedController(
+        conn, ["A0"], StubAgent(), identities=identities, registry=registry,
+        bus=bus, adjacency=ADJACENCY, checker=checker, slm_junctions=["A0"],
+        gate=0, coord_weight=0.0, reconcile_silent_neighbours=True,
+    )
+    ctrl.decide("A0", ctrl.tls["A0"])
+    a1 = [d for d in ctrl.detections if (d.src, d.dst) == ("A1", "A0")]
+    assert a1, "silent neighbour with inflow must be reconciled"
+    assert a1[0].reason == "missing_claim"
+    assert a1[0].flagged and a1[0].claimed == 0 and a1[0].observed == 6
+
+
+def test_silent_neighbour_default_off_is_unchanged():
+    """Default (flag off): a silent neighbour is NOT reconciled (legacy behaviour,
+    preserving the as-built attack-report gap)."""
+    halting = {"A1A0_0": 6, "B0A0_0": 0, "A0A1_0": 0, "A0B0_0": 0}
+    conn = _FakeConn(halting)
+    tls = ["A0", "A1", "B0", "B1"]
+    identities = {jid: JunctionIdentity(jid) for jid in tls}
+    registry = Registry()
+    for jid, ident in identities.items():
+        registry.register(jid, ident.public_key)
+    bus = MessageBus(registry, ADJACENCY)
+    ctrl = CoordinatedController(
+        conn, ["A0"], StubAgent(), identities=identities, registry=registry,
+        bus=bus, adjacency=ADJACENCY, slm_junctions=["A0"], gate=0,
+        coord_weight=0.0,  # reconcile_silent_neighbours defaults False
+    )
+    ctrl.decide("A0", ctrl.tls["A0"])
+    assert not any((d.src, d.dst) == ("A1", "A0") for d in ctrl.detections)
+
+
+def test_silent_but_quiet_neighbour_not_flagged_when_enabled():
+    """A silent neighbour with NO observed inflow is a genuinely idle approach and
+    must NOT be flagged as a missing claim (no spurious detections)."""
+    halting = {"A1A0_0": 0, "B0A0_0": 0, "A0A1_0": 0, "A0B0_0": 0}
+    conn = _FakeConn(halting)
+    tls = ["A0", "A1", "B0", "B1"]
+    identities = {jid: JunctionIdentity(jid) for jid in tls}
+    registry = Registry()
+    for jid, ident in identities.items():
+        registry.register(jid, ident.public_key)
+    bus = MessageBus(registry, ADJACENCY)
+    ctrl = CoordinatedController(
+        conn, ["A0"], StubAgent(), identities=identities, registry=registry,
+        bus=bus, adjacency=ADJACENCY, slm_junctions=["A0"], gate=0,
+        coord_weight=0.0, reconcile_silent_neighbours=True,
+    )
+    ctrl.decide("A0", ctrl.tls["A0"])
+    assert ctrl.detections == []
+
+
+# --------------------------------------------------------------------------- #
+# P4 -- Channel-B override: the coordination choice can dispose over a valid SLM
+# proposal when coord_override=True.
+# --------------------------------------------------------------------------- #
+
+class _FixedAgent:
+    """Agent that always proposes a fixed phase (a 'reliable' SLM stand-in)."""
+
+    model = "fixed-agent"
+
+    def __init__(self, phase: int):
+        self._phase = phase
+
+    def choose_phase(self, junction_id, num_phases, halting_per_phase,
+                     neighbor_note: str = ""):  # noqa: ARG002
+        return self._phase
+
+
+def _build_override_controller(coord_override: bool, threshold: float = 0.0):
+    """A0 where plain MaxPressure prefers phase 1; the SLM always proposes phase 1
+    too; a big incoming platoon on phase 0 makes the coordinated choice phase 0."""
+    halting = {"A1A0_0": 1, "B0A0_0": 8, "A0A1_0": 0, "A0B0_0": 0}
+    conn = _FakeConn(halting)
+    tls = ["A0", "A1", "B0", "B1"]
+    identities = {jid: JunctionIdentity(jid) for jid in tls}
+    registry = Registry()
+    for jid, ident in identities.items():
+        registry.register(jid, ident.public_key)
+    bus = MessageBus(registry, ADJACENCY)
+    checker = ConservationChecker(tolerance=2)
+    ctrl = CoordinatedController(
+        conn, ["A0"], _FixedAgent(1), identities=identities, registry=registry,
+        bus=bus, adjacency=ADJACENCY, checker=checker, slm_junctions=["A0"],
+        gate=0, coord_weight=10.0, coord_override=coord_override,
+        coord_override_threshold=threshold,
+    )
+    return ctrl, bus, identities
+
+
+def test_coord_override_changes_realized_decision_vs_slm():
+    """coord_override=True + a strong incoming forecast: the coordination choice
+    OVERRIDES the (valid) SLM proposal, changing the realized decision."""
+    ctrl, bus, identities = _build_override_controller(coord_override=True)
+    bus.publish(identities["A1"], 0,
+                {"toward": {"A0": {"release": 50, "queue_forecast": 50}}})
+    ctrl.decide("A0", ctrl.tls["A0"])
+    ev = ctrl.events[-1]
+    assert ev["slm_phase"] == 1                 # SLM proposed phase 1
+    assert ev["coord_choice"] == 0              # coordination prefers phase 0
+    assert ev["used"] == 0                      # override disposed -> phase 0
+    assert ev["coord_overrode"] is True
+    assert ctrl.coord_override_decisions == 1
+
+
+def test_coord_override_off_keeps_slm_proposal():
+    """Default (override off): a valid SLM proposal ALWAYS wins, even when the
+    coordination choice disagrees (today's behaviour preserved)."""
+    ctrl, bus, identities = _build_override_controller(coord_override=False)
+    bus.publish(identities["A1"], 0,
+                {"toward": {"A0": {"release": 50, "queue_forecast": 50}}})
+    ctrl.decide("A0", ctrl.tls["A0"])
+    ev = ctrl.events[-1]
+    assert ev["slm_phase"] == 1
+    assert ev["coord_choice"] == 0
+    assert ev["used"] == 1                       # SLM proposal kept
+    assert ev["coord_overrode"] is False
+    assert ctrl.coord_override_decisions == 0
+
+
+def test_coord_override_respects_threshold():
+    """A high threshold suppresses the override when the margin is below it."""
+    # margin = adj[0]-adj[1] = (1 + 10*50) - 8 = 493; threshold above that blocks it.
+    ctrl, bus, identities = _build_override_controller(
+        coord_override=True, threshold=1000.0)
+    bus.publish(identities["A1"], 0,
+                {"toward": {"A0": {"release": 50, "queue_forecast": 50}}})
+    ctrl.decide("A0", ctrl.tls["A0"])
+    ev = ctrl.events[-1]
+    assert ev["used"] == 1                       # below threshold -> no override
+    assert ev["coord_overrode"] is False
+
+
+def test_coord_override_validation():
+    """coord_override and its threshold are validated at the boundary."""
+    conn = _FakeConn({"A1A0_0": 0, "B0A0_0": 1, "A0A1_0": 0, "A0B0_0": 0})
+    identities = {jid: JunctionIdentity(jid) for jid in ("A0", "A1", "B0", "B1")}
+    registry = Registry()
+    for jid, ident in identities.items():
+        registry.register(jid, ident.public_key)
+    bus = MessageBus(registry, ADJACENCY)
+    with pytest.raises(TypeError):
+        CoordinatedController(
+            conn, ["A0"], StubAgent(), identities=identities, registry=registry,
+            bus=bus, adjacency=ADJACENCY, slm_junctions=["A0"], coord_override="yes")
+    for bad in (-1.0, float("nan"), float("inf")):
+        with pytest.raises((ValueError, TypeError)):
+            CoordinatedController(
+                conn, ["A0"], StubAgent(), identities=identities, registry=registry,
+                bus=bus, adjacency=ADJACENCY, slm_junctions=["A0"],
+                coord_override=True, coord_override_threshold=bad)

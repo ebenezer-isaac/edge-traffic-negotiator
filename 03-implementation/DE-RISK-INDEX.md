@@ -107,5 +107,11 @@ Artifacts: `edge-negotiator/sumo/grid3x3/`, `edge-negotiator/sumo/grid4x4/`, `ed
 - TLS 4/9/16: controller wall 5.78/12.56/21.93 s; per-decision 16.0/18.5/23.3 ms. **4× junctions → 3.80× wall (sub-linear); inbox() now amortised-O(1)** (microbench: per-call flat, total linear in rounds — the O(n²) is gone). **23 ms/decision @16 TLS vs 1 s tick = >40× headroom; stack is not the scaling bottleneck.**
 - ⚠️ Risks (not compute): `rejected_messages` grows super-linearly (all-pairs neighbour test) → shard bus per-neighbourhood at hundreds of junctions; fixed demand confounds cross-size traffic (2×2 gridlocks @31%, 4×4 free-flows @86%) → **scale demand to network capacity** (reinforces §3).
 
+## 11. Full 30-seed evaluation matrix — ✅ (properly powered)
+Artifacts: `edge-negotiator/results/evaluation_matrix.{md,json}` via `src/run_evaluation.py` (StubAgent, throughput-controlled, n=30).
+- **MaxPressure is the strongest controller, significantly** (Holm-rejected, perm-p ≤ 3e-4 on all metrics): throughput 127.8 / completion 0.333 / mnd 541.0. Fixed (109.0/0.299/570.6) and the greedy StubAgent hybrid (103.2/0.288/580.7) both **significantly worse**; coordinated≡uncoordinated (StubAgent Channel-B inert).
+- **Properly-powered confirmation:** on honest metrics the SLM approach does NOT beat MaxPressure on the oversaturated grid ⇒ **integrity is the contribution, not traffic performance.** Caveat: "SLM" rows use the deterministic StubAgent proxy; the real-Phi-4 Channel-A effect is the separate underpowered-at-n=4 (directionally +vs-uncoordinated) quantity — needs a slow real-SLM n=30 run to resolve.
+- Detection table (same harness): spoof P=1.0/R=0.67, faulty P=1.0/R=0.60, sybil P=1.0/R=1.0.
+
 ## 5. Milestone-2 baseline (already committed)
 See `edge-negotiator/results/milestone2_report.md`. Mechanism live (974 verified signed msgs, 937 reconciliations); 120 tests; R2 causal pathway ablatable; coordinated travel-time gain survivorship-confounded (not claimed).

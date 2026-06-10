@@ -61,7 +61,7 @@ def _build_coordination(tls):
 
 
 def run(mode: str, slm_junctions=None, seed: int = 42, end: int = 1000,
-        agent=None, coord_weight: float = 1.0) -> dict:
+        agent=None, coord_weight: float = 1.0, flow_window: float = 30.0) -> dict:
     """Run one simulation in ``mode`` and return traffic + coordination metrics.
 
     ``mode`` in {fixed, maxpressure, uncoordinated, coordinated}. For the SLM
@@ -99,7 +99,7 @@ def run(mode: str, slm_junctions=None, seed: int = 42, end: int = 1000,
             ctrl = CoordinatedController(
                 traci, tls, used_agent, identities=identities, registry=registry,
                 bus=bus, adjacency=ADJACENCY, checker=checker, slm_junctions=sl,
-                coord_weight=coord_weight,
+                coord_weight=coord_weight, flow_window=flow_window,
             )
 
         step = 0

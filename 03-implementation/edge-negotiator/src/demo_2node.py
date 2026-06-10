@@ -289,18 +289,32 @@ def _make_agent(kind: str):
 
 
 def run(gui: bool = True, agent_kind: str = "stub", delay: float = 0.2,
-        seed: int = 42, end: int = 1000, verbose: bool = True) -> dict:
+        seed: int = 42, end: int = 1000, verbose: bool = True,
+        scale: float = 0.4) -> dict:
     """Run the 2-node coordinated demo and return a small summary dict.
 
     A0 and A1 are the SLM-coordinated pair (slm_junctions=DEMO_PAIR); B0/B1 run
     plain MaxPressure. coord_weight=1.0 so the deterministic coordination term is
     live (a neighbour's announced incoming traffic can actually move the shield's
     reference choice), making the on-screen story meaningful.
+
+    ``scale`` is SUMO's global demand multiplier (``--scale``). The committed
+    grid2x2 route file injects 1000 trips (one/second) onto a tiny 2x2 grid --
+    demand FAR above the grid's capacity, which deadlocks by ~t=700 (a saturated
+    network, not a bug). We DEFAULT scale to 0.4: the largest multiplier that
+    keeps the grid free-flowing for the whole 1000-step demo (running vehicles
+    stay flat ~30 and halting stays low, vs. a monotonically growing backlog at
+    0.5+). The route files are NOT edited -- demand is throttled purely here.
     """
     agent = _make_agent(agent_kind)
+    if isinstance(scale, bool) or not isinstance(scale, (int, float)):
+        raise TypeError(f"scale must be a number, got {type(scale).__name__}")
+    if not (scale > 0):
+        raise ValueError(f"scale must be > 0, got {scale}")
 
     binary = checkBinary("sumo-gui" if gui else "sumo")
-    cmd = [binary, "-c", CFG, "--seed", str(seed), "--no-warnings", "true"]
+    cmd = [binary, "-c", CFG, "--seed", str(seed), "--no-warnings", "true",
+           "--scale", str(float(scale))]
     if gui:
         # Auto-start and auto-quit so the supervisor sees motion immediately and
         # the window closes cleanly at the end. --delay paces SUMO's own loop too.
@@ -330,6 +344,11 @@ def run(gui: bool = True, agent_kind: str = "stub", delay: float = 0.2,
             adjacency=DEMO_ADJACENCY, checker=checker,
             slm_junctions=pair,          # ONLY A0 + A1 are SLM-coordinated
             coord_weight=1.0,
+            # WINDOWED ACTUAL-FLOW conservation feed: claim and observation are
+            # the SAME matched-window vehicle throughput on edge src->dst, so a
+            # benign run conserves (≈zero flags) while a real spoof/fault still
+            # diverges. 30 s spans the demo's min-green decision cadence.
+            flow_window=30.0,
             demo_pair=tuple(pair), verbose=verbose,
         )
 
@@ -341,7 +360,7 @@ def run(gui: bool = True, agent_kind: str = "stub", delay: float = 0.2,
                   f"{[j for j in all_tls if j not in pair]}")
             print(f"  Agent            : {agent_kind} (model={getattr(agent, 'model', '?')})")
             print(f"  GUI              : {'sumo-gui' if gui else 'headless'}"
-                  f"   delay={delay}s/step   seed={seed}")
+                  f"   delay={delay}s/step   seed={seed}   scale={scale}")
             print(f"  In sumo-gui: right-click the {pair[0]} or {pair[1]} traffic "
                   f"light -> 'Show Parameter' to watch the live decision story.")
             print("-" * 78)
@@ -400,6 +419,11 @@ def _build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--seed", type=int, default=42, help="SUMO RNG seed")
     ap.add_argument("--steps", type=int, default=1000,
                     help="max simulation steps to run")
+    ap.add_argument("--scale", type=float, default=0.4,
+                    help="SUMO global demand multiplier (--scale). Default 0.4 "
+                         "keeps the oversaturated grid2x2 route file "
+                         "free-flowing for the whole demo (no gridlock). "
+                         "Raise toward 1.0 to reproduce the saturated deadlock.")
     ap.add_argument("--quiet", action="store_true",
                     help="suppress the per-decision live log")
     return ap
@@ -410,5 +434,9 @@ if __name__ == "__main__":
     if args.delay < 0:
         print("ERROR: --delay must be >= 0", file=sys.stderr)
         sys.exit(2)
+    if args.scale <= 0:
+        print("ERROR: --scale must be > 0", file=sys.stderr)
+        sys.exit(2)
     run(gui=args.gui, agent_kind=args.agent, delay=args.delay,
-        seed=args.seed, end=args.steps, verbose=not args.quiet)
+        seed=args.seed, end=args.steps, verbose=not args.quiet,
+        scale=args.scale)

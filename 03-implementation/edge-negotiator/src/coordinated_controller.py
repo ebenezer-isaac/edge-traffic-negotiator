@@ -52,9 +52,17 @@ provided so coordinated/uncoordinated runs are CI-able without Foundry Local.
 from __future__ import annotations
 
 from conservation import ConservationChecker, Detection
+from flow_accounting import FlowWindow
+from flow_conservation import EdgeMeasurement, FlowConservationDetector
 from hybrid_controller import HybridController
 from identity import JunctionIdentity
 from message_bus import MessageBus
+# Topology helpers live in net_topology (file-size limit). edge_map_from_net is
+# RE-EXPORTED for backward compatibility: callers still import it from this
+# module. The two private grid helpers keep their leading-underscore names here.
+from net_topology import edge_map_from_net  # noqa: F401
+from net_topology import edge_of_lane as _edge_of_lane
+from net_topology import split_edge as _split_edge
 from registry import Registry
 
 
@@ -74,113 +82,6 @@ class StubAgent:
         return max(range(len(halting_per_phase)), key=lambda i: halting_per_phase[i])
 
 
-def _edge_of_lane(lane_id: str) -> str:
-    """Edge id of a lane id (``"A0A1_0"`` -> ``"A0A1"``)."""
-    return lane_id.rsplit("_", 1)[0]
-
-
-def _split_edge(edge_id: str, junctions: frozenset[str]) -> tuple[str, str] | None:
-    """Split a grid edge id ``src+dst`` into (src, dst) using known junction ids.
-
-    Edge ids are the concatenation of two junction ids (e.g. ``"A0A1"`` =>
-    ``("A0", "A1")``). Edges touching dead-ends (``"left0A0"``, ``"A0left0"``)
-    have one endpoint that is not a signalised junction; for those we return the
-    split only when *both* endpoints are known junctions, else None. We test the
-    prefix against the known-junction set so variable-length ids stay correct.
-    """
-    for jid in junctions:
-        if edge_id.startswith(jid):
-            rest = edge_id[len(jid):]
-            if rest in junctions:
-                return jid, rest
-    return None
-
-
-def edge_map_from_net(net, mode: str = "chain"
-                      ) -> tuple[dict[str, list[str]], dict[tuple[str, str], str]]:
-    """Derive ``(adjacency, edge_map)`` for ANY sumolib net (grid or real OSM).
-
-    This is the reusable lift of the corridor runner's ``derive_topology`` so any
-    net -- grid or real -- can hand the controller an explicit ``edge_map`` that
-    maps ``(src_junction, dst_junction) -> edge_id`` (the edge ENTERING ``dst``
-    that carries traffic released by ``src``) instead of relying on the grid
-    ``f"{src}{dst}"`` string convention (which silently no-ops on real nets).
-
-    ``net`` is a ``sumolib.net.Net`` (read via ``sumolib.net.readNet``).
-
-    ``mode == "single"``: strict -- two TLS are neighbours iff a SINGLE edge
-    directly connects a node of ``src`` to a node of ``dst``.
-    ``mode == "chain"`` (default): two TLS are neighbours iff a directed path of
-    only NON-signalised interior nodes connects them with no intervening TLS; the
-    in-edge is the LAST edge on that path (the edge entering ``dst``).
-
-    Returns a fresh ``(adjacency, edge_map)`` and never mutates ``net``. The grid
-    fallback path needs neither; this is for real nets (or for deriving a grid map
-    explicitly to exercise the same code path in tests).
-    """
-    from collections import deque
-
-    def _node_to_tls() -> dict[str, str]:
-        out: dict[str, str] = {}
-        for t in net.getTrafficLights():
-            for in_lane, _o, _i in t.getConnections():
-                out[in_lane.getEdge().getToNode().getID()] = t.getID()
-        return out
-
-    def _tls_nodes() -> dict[str, set[str]]:
-        out: dict[str, set[str]] = {}
-        for t in net.getTrafficLights():
-            out[t.getID()] = {in_lane.getEdge().getToNode().getID()
-                              for in_lane, _o, _i in t.getConnections()}
-        return out
-
-    node_to_tls = _node_to_tls()
-    tls_node_set = set(node_to_tls)
-    tls_nodes = _tls_nodes()
-    edges = [e for e in net.getEdges() if not e.getID().startswith(":")]
-    out_edges_of: dict[str, list] = {}
-    for e in edges:
-        out_edges_of.setdefault(e.getFromNode().getID(), []).append(e)
-
-    adjacency: dict[str, set[str]] = {t: set() for t in tls_nodes}
-    edge_map: dict[tuple[str, str], str] = {}
-
-    if mode == "single":
-        for e in edges:
-            f = node_to_tls.get(e.getFromNode().getID())
-            t = node_to_tls.get(e.getToNode().getID())
-            if f and t and f != t:
-                adjacency[f].add(t)
-                adjacency[t].add(f)
-                edge_map[(f, t)] = e.getID()
-        return ({k: sorted(v) for k, v in adjacency.items()}, edge_map)
-
-    if mode != "chain":
-        raise ValueError(f"mode must be 'chain' or 'single', got {mode!r}")
-
-    for src_tls, nodes in tls_nodes.items():
-        for start in nodes:
-            q: deque[tuple] = deque(
-                (e, e.getID(), 0) for e in out_edges_of.get(start, ()))
-            visited: set[str] = set()
-            while q:
-                e, entry_edge, depth = q.popleft()
-                tnode = e.getToNode().getID()
-                dst_tls = node_to_tls.get(tnode)
-                if dst_tls and dst_tls != src_tls:
-                    adjacency[src_tls].add(dst_tls)
-                    adjacency[dst_tls].add(src_tls)
-                    edge_map.setdefault((src_tls, dst_tls), e.getID())
-                    continue
-                if tnode in tls_node_set or tnode in visited or depth > 8:
-                    continue
-                visited.add(tnode)
-                for nxt in out_edges_of.get(tnode, ()):
-                    q.append((nxt, entry_edge, depth + 1))
-
-    return ({k: sorted(v) for k, v in adjacency.items()}, edge_map)
-
-
 class CoordinatedController(HybridController):
     """Hybrid controller + authenticated neighbour coordination & reconciliation."""
 
@@ -196,7 +97,8 @@ class CoordinatedController(HybridController):
                  edge_map: dict[tuple[str, str], str] | None = None,
                  coord_override: bool = False,
                  coord_override_threshold: float = 0.0,
-                 reconcile_silent_neighbours: bool = False):
+                 reconcile_silent_neighbours: bool = False,
+                 flow_window: float = 0.0):
         super().__init__(conn, tls_ids, agent, slm_junctions=slm_junctions,
                          gate=gate, min_green=min_green, yellow=yellow)
         # Read-only references; we never mutate the caller's structures.
@@ -300,6 +202,139 @@ class CoordinatedController(HybridController):
         if not isinstance(reconcile_silent_neighbours, bool):
             raise TypeError("reconcile_silent_neighbours must be a bool")
         self.reconcile_silent_neighbours = reconcile_silent_neighbours
+        # WINDOWED ACTUAL-FLOW ACCOUNTING (the false-positive fix). When
+        # flow_window > 0 the LIVE feed compares LIKE-FOR-LIKE actual flow: the
+        # `release` toward a neighbour is the distinct vehicles that ENTERED edge
+        # (self->neighbour) over the window, reconciled by the intelligent
+        # detector (built below). When flow_window == 0 (DEFAULT) the legacy
+        # instantaneous-halting feed + flat ConservationChecker run verbatim, so
+        # the offline attack harness and every existing test stay byte-for-byte
+        # unchanged. Live runners (demo_2node, run_coordinated) opt in.
+        if isinstance(flow_window, bool) or not isinstance(flow_window, (int, float)):
+            raise TypeError(
+                f"flow_window must be a number, got {type(flow_window).__name__}")
+        if flow_window != flow_window or flow_window in (float("inf"), float("-inf")):
+            raise ValueError("flow_window must be finite")
+        if flow_window < 0:
+            raise ValueError(f"flow_window must be >= 0, got {flow_window}")
+        self.flow_window_s = float(flow_window)
+        # The sliding-window accumulator is only built (and only fed in step())
+        # when windowing is enabled. Immutable: step() swaps the reference.
+        self._flow: FlowWindow | None = (
+            FlowWindow(window=self.flow_window_s) if self.flow_window_s > 0 else None)
+        # INTELLIGENT DETECTOR (Part A): in windowed mode the live feed reconciles
+        # via the mass-balance + adaptive-band + CUSUM persistence detector
+        # (flow_conservation), one instance tracking all watched edges by edge id.
+        self._fc_detector: FlowConservationDetector | None = (
+            FlowConservationDetector() if self._flow is not None else None)
+        # Edges we watch for entry events: every in-edge (peer->junction) and
+        # out-edge (junction->peer) implied by the adjacency, resolved once.
+        self._watched_edges = self._resolve_watched_edges()
+        # Per-edge congestion metadata for the windowed detector's spillback test:
+        # edge_id -> (occupancy_fraction, mean_speed_m_s, free_speed_m_s). Empty
+        # until step() refreshes it; the legacy path never reads it. Free speed is
+        # read ONCE from each watched edge's lanes (best-effort, transport-safe).
+        self._edge_meta: dict[str, tuple[float, float, float]] = {}
+        self._edge_free_speed: dict[str, float] = {}
+        if self._flow is not None:
+            self._edge_free_speed = self._read_free_speeds()
+
+    def _edge_id(self, src: str, dst: str) -> str | None:
+        """Edge id carrying traffic released by ``src`` toward ``dst`` (or None).
+
+        Uses the explicit edge_map when present, else the grid ``f"{src}{dst}"``
+        convention. Returns None when no such edge is known.
+        """
+        if self._edge_map is not None:
+            return self._edge_map.get((src, dst))
+        return f"{src}{dst}"
+
+    def _resolve_watched_edges(self) -> tuple[str, ...]:
+        """All directed edges between a coordinated junction and its neighbours.
+
+        We watch both directions (in and out) for every (junction, neighbour)
+        pair so a junction can report its own out-edge release AND observe each
+        peer's in-edge arrival. Fresh, deduplicated, sorted tuple.
+        """
+        edges: set[str] = set()
+        for tl, nbs in self.adjacency.items():
+            if tl not in self.slm:
+                continue
+            for nb in nbs:
+                for a, b in ((tl, nb), (nb, tl)):
+                    eid = self._edge_id(a, b)
+                    if eid:
+                        edges.add(eid)
+        return tuple(sorted(edges))
+
+    def _read_free_speeds(self) -> dict[str, float]:
+        """Best-effort free-flow speed (m/s) per watched edge, read once.
+
+        Free speed is the max allowed lane speed on the edge. We read it via the
+        edge's known lanes (``_edge_lanes``); when an edge has no known lanes or
+        the read errors we leave it absent (the detector then falls back to the
+        occupancy-only spillback test for that edge). Never raises.
+        """
+        out: dict[str, float] = {}
+        get_max = getattr(getattr(self.c, "lane", None), "getMaxSpeed", None)
+        if get_max is None:
+            return out
+        for eid in self._watched_edges:
+            best = 0.0
+            for lane in self._edge_lanes.get(eid, ()):
+                try:
+                    best = max(best, float(get_max(lane)))
+                except Exception:
+                    continue
+            if best > 0:
+                out[eid] = best
+        return out
+
+    def step(self) -> None:
+        """Advance the TLS one second AND fold this step into the flow window.
+
+        When windowing is enabled we snapshot the vehicle ids on every watched
+        edge via TraCI and accumulate entry events BEFORE delegating to the
+        parent step (the parent only re-times phases; the flow read must happen
+        every simulated second to catch each entry exactly once). Transport
+        errors never kill the sim -- a failed read leaves the window untouched
+        for that edge this step.
+        """
+        if self._flow is not None and self._watched_edges:
+            snapshot: dict[str, frozenset[str]] = {}
+            get_ids = self.c.edge.getLastStepVehicleIDs
+            for eid in self._watched_edges:
+                try:
+                    snapshot[eid] = frozenset(get_ids(eid))
+                except Exception:
+                    continue  # unknown/erroring edge: skip it this step
+            if snapshot:
+                now = float(self.c.simulation.getTime())
+                self._flow = self._flow.observe(now, snapshot)
+            # Refresh per-edge congestion metadata (occupancy / speed) so the
+            # detector can classify spillback. Each read is independent; a failed
+            # read leaves that edge's metadata untouched for this step. Stored as
+            # the LATEST snapshot (a frozen, per-edge tuple) -- never mutated.
+            self._refresh_edge_meta()
+        super().step()
+
+    def _refresh_edge_meta(self) -> None:
+        """Snapshot last-step occupancy / mean-speed / free-speed per watched edge.
+
+        Used only by the windowed detector's spillback test. Transport errors per
+        edge are swallowed (the sim must never die on a presentation read); the
+        edge simply keeps its previous metadata. Rebuilds the dict immutably.
+        """
+        meta = dict(self._edge_meta)
+        for eid in self._watched_edges:
+            try:
+                occ = float(self.c.edge.getLastStepOccupancy(eid))
+                spd = float(self.c.edge.getLastStepMeanSpeed(eid))
+            except Exception:
+                continue
+            free = self._edge_free_speed.get(eid, 0.0)
+            meta = {**meta, eid: (occ, spd, free)}
+        self._edge_meta = meta
 
     def _incoming_per_phase(self, st: dict, incoming_by_neighbour: dict[str, int],
                             tl: str) -> list[int]:
@@ -346,15 +381,25 @@ class CoordinatedController(HybridController):
         return per_phase
 
     def _toward_counts(self, st: dict, gi: int) -> dict[str, int]:
-        """Vehicles this junction is about to release toward each neighbour.
+        """Vehicles this junction released toward each neighbour (for the claim).
 
-        For the green phase ``gi`` about to be served, sum the upstream halting
-        count on each served movement's *in-lane* and attribute it to the
-        neighbour the movement's *out-lane edge* leads to. Returns a fresh dict.
+        WINDOWED MODE (``flow_window > 0``): the ``release`` toward each
+        neighbour is the number of DISTINCT vehicles that actually ENTERED edge
+        ``self->neighbour`` over the last ``flow_window`` seconds -- an ACTUAL
+        flow over a matched window, the like-for-like quantity the neighbour
+        independently re-measures on the same edge. This is what removes the
+        benign false positives.
 
-        This is the ACTUAL ``release`` (today's outflow), fed verbatim into the
-        conservation check. It is NOT a forecast.
+        LEGACY MODE (``flow_window == 0``, default): for the green phase ``gi``
+        about to be served, sum the upstream halting count on each served
+        movement's *in-lane* and attribute it to the neighbour the movement's
+        *out-lane edge* leads to (the original instantaneous feed). Preserved
+        verbatim so the controlled attack harness is unchanged.
+
+        Returns a fresh dict either way; never a forecast.
         """
+        if self._flow is not None:
+            return self._windowed_toward_counts(st, gi)
         halting = self.c.lane.getLastStepHaltingNumber
         # Resolver: out-lane edge -> downstream neighbour. With an explicit
         # edge_map use the inverted out-edge map for this junction; otherwise
@@ -383,15 +428,78 @@ class CoordinatedController(HybridController):
                       + halting(in_lane)}
         return toward
 
-    def _observed_inflows(self, recipient: str, neighbours) -> dict[str, int]:
-        """Observed halting vehicles on each in-edge ``neighbour->recipient``.
+    def _windowed_toward_counts(self, st: dict, gi: int) -> dict[str, int]:
+        """Windowed actual-flow ``release`` toward each neighbour (flow mode).
 
-        Returns ``{neighbour_id: halting_on_edge(neighbour->recipient)}``: the
-        independent observation ``recipient`` makes of traffic arriving from each
-        neighbour, used to reconcile that neighbour's claim. Fresh dict.
+        For each neighbour this junction's served movements lead to, the release
+        is the count of distinct vehicles that ENTERED edge ``self->neighbour``
+        over the last ``flow_window`` seconds (an actual, matched-window flow).
+        We resolve the served neighbours exactly as the legacy path does (so the
+        attribution is identical), then read the windowed entry count per edge
+        rather than instantaneous halting. Returns a fresh dict.
         """
+        flow = self._flow
+        assert flow is not None  # only called when windowing is enabled
+        now = float(self.c.simulation.getTime())
+        out_map = (self._out_edge_to_neighbour.get(self._current_tl, {})
+                   if self._edge_map is not None else None)
+        neighbours: set[str] = set()
+        state = st["green"][gi]
+        for i, ch in enumerate(state):
+            if ch not in "Gg":
+                continue
+            out_lane = st["out_lanes"][i]
+            in_lane = st["in_lanes"][i]
+            if not out_lane or not in_lane:
+                continue
+            if out_map is not None:
+                nb = out_map.get(_edge_of_lane(out_lane))
+                if nb is None:
+                    continue
+            else:
+                split = _split_edge(_edge_of_lane(out_lane), self._junctions)
+                if split is None:
+                    continue
+                nb = split[1]
+            neighbours.add(nb)
+        toward: dict[str, int] = {}
+        for nb in neighbours:
+            edge = self._edge_id(self._current_tl, nb)
+            if edge is None:
+                continue
+            toward = {**toward, nb: flow.released_in_window(edge, now)}
+        return toward
+
+    def _observed_inflows(self, recipient: str, neighbours,
+                          meas_t: dict[str, int] | None = None) -> dict[str, int]:
+        """Independent observation of arrivals on each in-edge ``neighbour->recipient``.
+
+        WINDOWED MODE (``flow_window > 0``): the observation is the count of
+        distinct vehicles that ENTERED edge ``neighbour->recipient`` over the
+        window ending at the SENDER's measurement time (``meas_t[nb]``, clamped
+        to <= now), falling back to ``now`` when the sender gave none. Aligning
+        the observation window to the sender's claim window removes the
+        decision-tick misalignment, so benign flow conserves to ~zero residual.
+
+        LEGACY MODE (default): instantaneous halting summed over the in-edge's
+        lanes (the original feed), preserved for the controlled attack harness.
+
+        Returns ``{neighbour_id: count}`` (fresh dict) either way.
+        """
+        if self._flow is not None:
+            now = float(self.c.simulation.getTime())
+            mt = meas_t or {}
+            observed: dict[str, int] = {}
+            for nb in neighbours:
+                edge = self._edge_id(nb, recipient)
+                # Reconcile over the sender's window when supplied (clamped so a
+                # stale/forged future timestamp cannot reach beyond the present).
+                ref_t = float(min(mt[nb], now)) if nb in mt else now
+                observed = {**observed, nb: (
+                    self._flow.released_in_window(edge, ref_t) if edge else 0)}
+            return observed
         halting = self.c.lane.getLastStepHaltingNumber
-        observed: dict[str, int] = {}
+        observed = {}
         for nb in neighbours:
             if self._edge_map is not None:
                 edge = self._edge_map.get((nb, recipient))  # explicit nb -> recipient
@@ -404,9 +512,67 @@ class CoordinatedController(HybridController):
             observed = {**observed, nb: count}
         return observed
 
+    def _windowed_reconcile(self, tl: str, claims: dict[tuple[str, str], int],
+                            observed: dict[tuple[str, str], int],
+                            claim_meas_t: dict[str, int]) -> list[Detection]:
+        """Run the intelligent mass-balance detector on this window's edges.
+
+        For each reconciled directed edge ``src->tl`` we build an
+        :class:`EdgeMeasurement`:
+
+          * ``entered``     = the sender's reconciled `release` (the claim) --
+            distinct vehicles that ENTERED edge ``src->tl`` over the sender's
+            window. This is the count-inflation surface: a spoof inflates it.
+          * ``exited``      = distinct vehicles that LEFT edge ``src->tl`` over
+            the matched window (arrived at ``tl``) -- the downstream side of the
+            balance, read from the flow window's exit log.
+          * ``storage_now`` = vehicles CURRENTLY on edge ``src->tl`` (in transit)
+            so released-but-not-yet-arrived cars are NOT a discrepancy.
+          * occupancy / speed for the spillback test.
+
+        Each :class:`EdgeVerdict` maps to a :class:`Detection` (``claimed`` =
+        entered, ``observed`` = exited) so every existing consumer is unchanged.
+        Returns a fresh list; never mutates inputs.
+        """
+        flow = self._flow
+        det = self._fc_detector
+        assert flow is not None and det is not None
+        now = float(self.c.simulation.getTime())
+        measurements: dict[str, EdgeMeasurement] = {}
+        edge_to_key: dict[str, tuple[str, str]] = {}
+        for (src, dst) in sorted(set(claims.keys()) | set(observed.keys())):
+            edge = self._edge_id(src, dst)
+            if edge is None:
+                continue
+            ref_t = float(min(claim_meas_t[src], now)) if src in claim_meas_t else now
+            ref_t = max(0.0, ref_t)
+            entered_n = int(claims.get((src, dst), 0))
+            exited_n = int(flow.exited_in_window(edge, ref_t))
+            storage = int(flow.storage_now(edge))
+            occ_pct, spd, free = self._edge_meta.get(edge, (0.0, 0.0, 0.0))
+            # SUMO occupancy is a percentage; the detector wants a [0,1] fraction.
+            occ = max(0.0, min(1.0, occ_pct / 100.0))
+            measurements[edge] = EdgeMeasurement(
+                edge_id=edge, entered=entered_n, exited=exited_n,
+                storage_now=storage, occupancy=occ, mean_speed=max(0.0, spd),
+                free_speed=max(0.0, free))
+            edge_to_key[edge] = (src, dst)
+        if not measurements:
+            return []
+        verdicts = det.update_many(measurements)
+        out: list[Detection] = []
+        for v in verdicts:
+            src, dst = edge_to_key[v.edge_id]
+            claimed = int(measurements[v.edge_id].entered)
+            obs = int(measurements[v.edge_id].exited)
+            out.append(Detection(
+                src=src, dst=dst, claimed=claimed, observed=obs,
+                delta=claimed - obs, flagged=v.flagged, reason=v.reason))
+        return out
+
     def decide(self, tl: str, st: dict) -> int:
-        # Record the deciding junction so the (edge_map) resolvers know which
-        # junction's out-edge map to use. Harmless for the grid fallback path.
+        # Record the deciding junction so the edge_map resolvers know whose
+        # out-edge map to use (harmless for the grid fallback path).
         self._current_tl = tl
         mp_choice = super(HybridController, self).decide(tl, st)  # MaxPressure
         if tl not in self.slm:
@@ -430,8 +596,17 @@ class CoordinatedController(HybridController):
         #     (R1 / spec §4.1). queue_forecast is a documented PLACEHOLDER equal to
         #     release today -- no real roll-forward model yet (spec §6.2).
         toward_release = self._toward_counts(st, mp_choice)
+        # In windowed mode the claim is an ACTUAL flow over a window ending NOW;
+        # we stamp that measurement time into the signed payload so the receiver
+        # can reconcile over the SAME window (removing decision-tick misalignment,
+        # the residual benign false-positive source). meas_t is an int second so
+        # it stays inside the canonical-JSON signing contract. In legacy mode the
+        # field is absent and the receiver falls back to its own window.
+        meas_t = int(self.c.simulation.getTime()) if self._flow is not None else None
         toward_payload = {
-            nb: {"release": rel, "queue_forecast": rel}  # placeholder: forecast == release
+            nb: ({"release": rel, "queue_forecast": rel, "meas_t": meas_t}
+                 if meas_t is not None
+                 else {"release": rel, "queue_forecast": rel})
             for nb, rel in toward_release.items()
         }
         published = None
@@ -449,6 +624,9 @@ class CoordinatedController(HybridController):
         expected_incoming = 0
         incoming_by_neighbour: dict[str, int] = {}
         claims: dict[tuple[str, str], int] = {}
+        # Per-source sender measurement time (windowed mode only) so the observed
+        # side reconciles over the SAME window the claim was measured over.
+        claim_meas_t: dict[str, int] = {}
         try:
             for m in self.bus.inbox(tl):
                 sender_toward = m.payload.get("toward", {})
@@ -465,6 +643,13 @@ class CoordinatedController(HybridController):
                     continue  # reject malformed/hostile release at the boundary
                 if isinstance(forecast, bool) or not isinstance(forecast, int) or forecast < 0:
                     forecast = 0  # forecast is advisory only; clamp hostile values
+                # Sender's measurement time (windowed mode); validated, else ignored.
+                mt = entry.get("meas_t")
+                windowed = (self._flow is not None
+                            and isinstance(mt, int) and not isinstance(mt, bool)
+                            and mt >= 0)
+                if windowed:
+                    claim_meas_t = {**claim_meas_t, m.sender: mt}
                 expected_incoming += amount
                 incoming_by_neighbour = {
                     **incoming_by_neighbour,
@@ -474,8 +659,20 @@ class CoordinatedController(HybridController):
                                         "release": amount, "queue_forecast": forecast}]
                 # Claim: sender claims it released `amount` toward us (edge sender->tl).
                 # CONSERVATION CONSUMES ONLY `release` (actual), never the forecast.
+                #
+                # In WINDOWED mode each message's `release` is an ABSOLUTE count of
+                # vehicles over the sender's sliding window, so two messages read in
+                # one inbox scan are overlapping windowed snapshots, NOT additive
+                # increments: the LATEST message's count (paired with its meas_t)
+                # is the claim to reconcile. Summing them would double-count the
+                # window overlap and spuriously inflate the claim (the residual
+                # benign false positive). In LEGACY mode releases are per-decision
+                # increments and remain additive (attack harness semantics intact).
                 key = (m.sender, tl)
-                claims = {**claims, key: claims.get(key, 0) + amount}
+                if windowed:
+                    claims = {**claims, key: amount}  # latest absolute snapshot
+                else:
+                    claims = {**claims, key: claims.get(key, 0) + amount}
         except Exception as exc:
             received = [{"error": type(exc).__name__}]
 
@@ -552,7 +749,7 @@ class CoordinatedController(HybridController):
             expected_srcs = set()  # legacy: only reconcile edges that have a claim
         observe_srcs = claim_srcs | expected_srcs
         if observe_srcs:
-            observed_by_nb = self._observed_inflows(tl, observe_srcs)
+            observed_by_nb = self._observed_inflows(tl, observe_srcs, claim_meas_t)
             # Feed claim edges always; for silent (no-claim) neighbours feed an
             # observed-only edge ONLY where there is ACTUAL inflow, so a genuinely
             # quiet approach is not flagged as a missing claim every round.
@@ -563,7 +760,18 @@ class CoordinatedController(HybridController):
             }
             if claims or observed:
                 try:
-                    new_detections = self.checker.evaluate(claims, observed)
+                    if self._fc_detector is not None:
+                        # WINDOWED (Part A): principled mass-balance + adaptive
+                        # band + CUSUM persistence detector. `claims` is the
+                        # sender's reconciled `entered` (release) per edge over
+                        # its window; the flow window supplies `exited`, current
+                        # storage, and metadata for spillback.
+                        new_detections = self._windowed_reconcile(
+                            tl, claims, observed, claim_meas_t)
+                    else:
+                        # LEGACY (flow_window == 0): flat ConservationChecker --
+                        # the frozen offline-harness contract, byte-for-byte.
+                        new_detections = self.checker.evaluate(claims, observed)
                 except Exception:
                     new_detections = []
                 self.detections = [*self.detections, *new_detections]

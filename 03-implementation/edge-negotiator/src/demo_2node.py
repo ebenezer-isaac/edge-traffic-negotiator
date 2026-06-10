@@ -384,7 +384,10 @@ def run(gui: bool = True, agent_kind: str = "stub", delay: float = 0.2,
             len(e.get("received", [])) for e in ctrl.events
             if isinstance(e.get("received"), list)
             and all("error" not in r for r in e.get("received", []))),
-        "rejected_messages": len(ctrl.bus.rejected),
+        "security_rejections": sum(
+            1 for r in ctrl.bus.rejected if not _is_routine_rejection(r)),
+        "routine_bookkeeping (self-echo/replay-dedup, benign)": sum(
+            1 for r in ctrl.bus.rejected if _is_routine_rejection(r)),
         "coord_changed_decisions": sum(
             1 for e in ctrl.events if e.get("coord_changed")),
         "conservation_checks": sum(

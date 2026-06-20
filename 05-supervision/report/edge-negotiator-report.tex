@@ -30,7 +30,7 @@
 %==================== TITLE ====================
 \begin{center}
 {\Large\bfseries\color{nbblue} The Edge Negotiator}\\[1pt]
-{\bfseries Traffic lights that coordinate with a small AI --- and keep working when a neighbour lies}\\[2pt]
+{\bfseries Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control}\\[2pt]
 {\footnotesize Progress report $\cdot$ UCL MSc Systems Engineering for IoT (25153651) $\cdot$ Supervisors: Dr A.\ Delibasi (UCL), L.\ Stott (Microsoft) $\cdot$ 2026-06-20}
 \end{center}
 \vspace{-4pt}
@@ -39,7 +39,7 @@
 
 %==================== SCOPE ====================
 \section{1.\ What the project is}
-A row of traffic junctions, each run by a small AI model (\textbf{Phi-4-mini}, running locally on \textbf{Microsoft Foundry Local}, never retrained). The junctions tell each other what they are about to do over a channel that is digitally signed and sanity-checked, on top of a fast classical controller (\emph{MaxPressure}$^{[1]}$) that stays in charge by default and acts as a safety net. The real goal is \textbf{graceful failure under a lying neighbour}: if a junction's messages are tampered with, or the junction itself is hijacked, the system notices the story does not add up and falls back safely instead of believing it. Raw traffic speed is a secondary, honestly-reported result --- the AI only steps in for the one judgement a fixed rule cannot make: telling a genuine incident apart from a faked emergency, using what the neighbours report.
+A row of traffic junctions, each run by a small AI model (\textbf{Phi-4-mini}, running locally on \textbf{Microsoft Foundry Local}, never retrained). The junctions tell each other what they are about to do over a channel that is digitally signed and sanity-checked, on top of a fast classical controller (\emph{MaxPressure}$^{[1]}$) that stays in charge by default. A \textbf{deterministic safety net always makes the final, safety-critical call}. The real goal is \textbf{graceful failure under a lying neighbour}: if a junction's messages are tampered with, or the junction itself is hijacked, the system notices the story does not add up and falls back safely instead of believing it. In this demo, clearing a real ambulance and refusing a faked one is done by that deterministic safety net: it grants priority only with real physical evidence the vehicle exists, not on a valid signature alone. The AI assists with ordinary coordination today; its distinctive job, reasoning over genuinely ambiguous multi-junction situations, is what we evaluate next.
 
 %==================== TWO COLUMNS: diagram + chart ====================
 \vspace{2pt}
@@ -50,17 +50,17 @@ A row of traffic junctions, each run by a small AI model (\textbf{Phi-4-mini}, r
   font=\scriptsize,
   box/.style={draw,rounded corners=2pt,align=center,inner sep=3pt,minimum height=7mm},
   >=Latex]
-\node[box,fill=nbblue!12] (mp) {Classical controller\\+ safety net};
-\node[box,fill=nbteal!15,right=8mm of mp] (slm) {Small AI\\(only on odd events)};
+\node[box,fill=nbblue!12] (mp) {Classical controller\\+ safety net (decides)};
+\node[box,fill=nbteal!15,right=8mm of mp] (slm) {Small AI\\(suggests a phase)};
 \node[box,fill=nbblue!8,below=6mm of mp,text width=3.0cm] (bus) {Signed messages\\between junctions$^{[2]}$};
-\node[box,fill=nbred!10,below=6mm of slm,text width=3.0cm] (gate) {Sanity +\\evidence check$^{[3]}$};
-\draw[->] (mp) -- node[above,font=\tiny]{unusual} (slm);
-\draw[->] (slm) to[bend left=18] node[below,font=\tiny]{safety net checks} (mp);
+\node[box,fill=nbred!10,below=6mm of slm,text width=3.0cm] (gate) {Evidence check\\(refuses fake alerts)$^{[3]}$};
+\draw[->] (mp) -- node[above,font=\tiny]{when busy} (slm);
+\draw[->] (slm) to[bend left=18] node[below,font=\tiny]{net decides} (mp);
 \draw[->] (bus) -- (mp);
 \draw[->] (bus) -- (gate);
-\draw[->] (gate) -- (slm);
+\draw[->] (gate) -- (mp);
 \node[below=3mm of bus,font=\tiny,text width=6.3cm,align=center,color=nbgrey]
-  {By default the classical controller runs things. On an unusual event the AI suggests a move; the safety net can overrule it. Every message from a neighbour is signed and sanity-checked before it can change a decision.};
+  {The classical controller runs things, with the AI suggesting a phase when busy. A deterministic safety net makes the final call. Every neighbour message is signed; a faked emergency fails the evidence check and is refused.};
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.47\textwidth}
@@ -96,9 +96,9 @@ A row of traffic junctions, each run by a small AI model (\textbf{Phi-4-mini}, r
 \begin{multicols}{2}
 \begin{itemize}
 \item \hd{Built and tested:} signed messaging between junctions, an approved-senders list, the classical controller with its safety net, a check that flags neighbour reports that do not match the traffic actually on the road, and a four-junction simulated corridor.
-\item \hd{Emergency handling:} a junction clears an ambulance only when it has real evidence the vehicle exists --- not just a valid signature --- so a faked emergency is refused.
-\item \hd{Live attack-and-defence demo:} a hijacked junction sends a signed but fake ``ambulance coming'' alert; it is refused. A real ambulance is cleared at every junction. Measured against a system that trusts everything and against the plain classical controller.
-\item \hd{Evidence (30 runs):} emergency handling clears the ambulance \textbf{31\,s faster} than having none; the defence blocks an attack that would otherwise add \textbf{16\,s} to the worst side-street wait; insisting on evidence costs \textbf{8\,s} versus blindly trusting --- a deliberate, measured trade-off.
+\item \hd{Emergency handling:} a junction clears an ambulance only when it has real evidence the vehicle exists, not just a valid signature, so a faked emergency is refused.
+\item \hd{Live attack-and-defence demo:} a hijacked junction sends a signed but fake ``ambulance coming'' alert and it is refused. A real ambulance is cleared at every junction. Measured against a system that trusts everything and against the plain classical controller.
+\item \hd{Evidence (30 runs):} emergency handling clears the ambulance \textbf{31\,s faster} than having none; the defence blocks an attack that would otherwise add \textbf{16\,s} to the worst side-street wait; insisting on evidence costs \textbf{8\,s} versus blindly trusting, a deliberate and measured trade-off.
 \item \hd{Independent check:} an automated audit of our written specification found \emph{no made-up sources}; a few over-stated citations were corrected. Every result can be reproduced from its settings.
 \end{itemize}
 \end{multicols}
@@ -112,7 +112,7 @@ No existing system has been tested as a multi-junction, AI-coordinated traffic c
 \section{6.\ Next steps}
 \begin{multicols}{2}
 \begin{itemize}
-\item Bigger evaluation: more traffic levels and a real London (Lambeth) road, many repeated runs with error ranges --- extending the 30-run result we already have.
+\item Bigger evaluation: more traffic levels and a real London (Lambeth) road, many repeated runs with error ranges, extending the 30-run result we already have.
 \item Find the breaking point: grow the size of the lie until detection fails, and report exactly where that happens.
 \item Heavier traffic, where both the ambulance benefit and the attack damage are largest.
 \item Run the real Phi-4-mini on Foundry Local and confirm it answers consistently.
@@ -123,7 +123,7 @@ No existing system has been tested as a multi-junction, AI-coordinated traffic c
 %==================== HONESTY ====================
 \vspace{-1pt}
 \section{7.\ What we do and do not claim}
-{\footnotesize \textbf{We claim:} trustworthy messaging between junctions; reliable detection of faked or faulty neighbour reports, with a measured reliability curve; a guaranteed safety floor; and a fair attack-and-defence test. \textbf{We do not claim:} new cryptography; that the AI beats the classical controller on ordinary traffic; defence against two or more junctions colluding, or a stolen master key; or that simulator results transfer straight to real hardware (that is future work).}
+{\footnotesize \textbf{We claim:} trustworthy messaging between junctions; reliable detection of faked or faulty neighbour reports, with a measured reliability curve; a guaranteed safety floor; and a fair attack-and-defence test. \textbf{We do not claim:} new cryptography; that the AI beats the classical controller on ordinary traffic; that the on-device AI yet improves the emergency decision (it is deterministic today; the AI's value on ambiguous cases is evaluated next); defence against two or more junctions colluding, or a stolen master key; or that simulator results transfer straight to real hardware (future work).}
 
 %==================== REFS ====================
 \vspace{2pt}
@@ -131,9 +131,9 @@ No existing system has been tested as a multi-junction, AI-coordinated traffic c
 \vspace{2pt}
 {\scriptsize\color{nbgrey}
 \textbf{References.}
-[1] Varaiya, \emph{Transp.\ Res.\ C} 36 (2013) --- MaxPressure control.
-[2] Bernstein et al.\ (2012) --- Ed25519 signatures; approved-sender registry.
-[3] Lighthill \& Whitham, \emph{Proc.\ R.\ Soc.\ A} 229 (1955); Richards, \emph{Oper.\ Res.} 4 (1956) --- the traffic conservation law the sanity check rests on.
+[1] Varaiya, MaxPressure control, \emph{Transp.\ Res.\ C} 36 (2013).
+[2] Bernstein et al., Ed25519 signatures (2012); approved-sender registry.
+[3] Lighthill \& Whitham, \emph{Proc.\ R.\ Soc.\ A} 229 (1955); Richards, \emph{Oper.\ Res.} 4 (1956): the traffic conservation law behind the sanity check.
 [4] Lopez et al., Microscopic Traffic Simulation using SUMO, \emph{IEEE ITSC} (2018).
 [5] Yuan et al., CoLLMLight, arXiv:2503.11739 (2025).
 [6] Wang et al., VLMLight, arXiv:2505.19486 (2025).

@@ -59,7 +59,7 @@ bullets("The problem", [
 # Slide 3 - Literature (Rubric II, 35 pts)
 bullets("Background and the gap", [
     "Mature but separate strands: language-model traffic control, MaxPressure control, cooperative-ITS spoof and fault detection, decentralized identity and blockchain PKI, and chain-of-thought faithfulness.",
-    "Evidence base: 175 peer-reviewed sources, with 28 added for agent identity and spoof or fault detection.",
+    "175 sources reviewed across the field, with 28 added for agent identity and spoof or fault detection.",
     "The gap: nobody places authenticated identity and a vehicle-conservation check beneath language-model cross-junction coordination.",
     "Research question: can authenticated, plausibility-checked agents coordinate a corridor while detecting spoofed or faulty inputs?",
     "Honest limit: a consistency-respecting attacker can evade conservation checks (Xiao, 2026), so identity is a separate layer.",

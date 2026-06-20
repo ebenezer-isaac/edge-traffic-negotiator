@@ -1,10 +1,16 @@
-\documentclass[10pt]{article}
-\usepackage[a4paper,margin=1.05cm]{geometry}
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{microtype}
+\usepackage[a4paper,margin=1.4cm]{geometry}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usetikzlibrary{arrows.meta,positioning}
-\usepackage{xcolor}
+\usepackage[table]{xcolor}
 \usepackage{enumitem}
 \usepackage{multicol}
 \usepackage{titlesec}
@@ -14,84 +20,89 @@
 
 \definecolor{nbblue}{HTML}{1F4E79}
 \definecolor{nbteal}{HTML}{2E8B8B}
-\definecolor{nbred}{HTML}{C0392B}
-\definecolor{nbgrey}{HTML}{595959}
+\definecolor{nbred}{HTML}{B83227}
+\definecolor{nbgrey}{HTML}{555555}
+\definecolor{nbband}{HTML}{EAF0F6}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
 \titlespacing{\section}{0pt}{5pt}{2pt}
-\titleformat{\section}{\normalfont\bfseries\color{nbblue}\small}{}{0pt}{}
-\setlist[itemize]{leftmargin=1.1em,itemsep=0pt,topsep=1pt,parsep=0pt}
+\titleformat{\section}{\sffamily\bfseries\color{nbblue}\normalsize}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.2em,itemsep=0.5pt,topsep=1pt,parsep=0pt}
 \pagestyle{empty}
-\renewcommand{\arraystretch}{1.1}
+\renewcommand{\arraystretch}{1.12}
 
 \newcommand{\hd}[1]{{\color{nbblue}\textbf{#1}}}
 
 \begin{document}
-\small
 
 %==================== TITLE ====================
 \begin{center}
-{\Large\bfseries\color{nbblue} The Edge Negotiator}\\[1pt]
-{\bfseries Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control}\\[2pt]
-{\footnotesize Progress report $\cdot$ UCL MSc Systems Engineering for IoT (25153651) $\cdot$ Supervisors: Dr A.\ Delibasi (UCL), L.\ Stott (Microsoft) $\cdot$ 2026-06-20}
+{\sffamily\bfseries\LARGE\color{nbblue} The Edge Negotiator}\\[3pt]
+{\sffamily\large Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control}\\[5pt]
+{\small\color{nbgrey} Progress report \quad$\vert$\quad UCL MSc Systems Engineering for IoT (25153651) \quad$\vert$\quad Supervisors: Dr A.\ Delibasi (UCL), L.\ Stott (Microsoft) \quad$\vert$\quad 2026-06-20}
 \end{center}
-\vspace{-3pt}
-\hrule height 1pt
-\vspace{4pt}
+\vspace{2pt}
+{\color{nbblue}\hrule height 1.2pt}
+\vspace{8pt}
 
 %==================== SCOPE ====================
 \section{1.\ The project and its goal}
-The system is a corridor of traffic junctions on one arterial. Each junction runs a fast classical controller (\emph{MaxPressure}$^{[1]}$) by default, which is also the safety floor. Alongside it runs a small AI model (\textbf{Phi-4-mini}, on the junction itself via \textbf{Microsoft Foundry Local}, never retrained), called in only for hard cases. Junctions share what they are about to do over a channel that is digitally signed and checked for plausibility.
+The system is a corridor of traffic junctions on one arterial. Each junction runs a fast classical controller (\emph{MaxPressure}\,$^{[1]}$) by default, which is also the safety floor. Alongside it runs a small AI model (\textbf{Phi-4-mini}, on the junction itself via \textbf{Microsoft Foundry Local}, never retrained), called in only for hard cases. Junctions share what they are about to do over a channel that is digitally signed and checked for plausibility.
 
 The goal: coordinate well in normal traffic, and fail safely when a neighbour lies. If a junction's messages are tampered with or the junction is hijacked, the system detects that the reports do not match reality and falls back to local control. A deterministic safety net always makes the clear-cut calls: clear an ambulance a junction can physically detect, refuse a claim it cannot verify; safety never depends on the AI. The AI handles only what a fixed rule cannot settle: when an alert is flagged but the evidence is partial or conflicting, it weighs the neighbours' reports to judge a real incident from a spoofed grab. Whether that beats a well-tuned fixed rule is the central question we measure, and we report it either way.
 
 %==================== TWO COLUMNS: diagram + chart ====================
-\vspace{2pt}
+\vspace{3pt}
 \begin{minipage}[t]{0.50\textwidth}
 \section{2.\ How it works}
+\vspace{4pt}
 \centering
 \begin{tikzpicture}[
-  font=\scriptsize,
-  box/.style={draw,rounded corners=2pt,align=center,inner sep=3pt,minimum height=7mm},
+  font=\sffamily\scriptsize,
+  box/.style={draw=nbblue!55,line width=0.5pt,rounded corners=2.5pt,align=center,inner sep=4pt,minimum height=8mm},
   >=Latex]
 \node[box,fill=nbblue!12] (mp) {Classical controller\\+ safety net (final say)};
-\node[box,fill=nbteal!15,right=8mm of mp] (slm) {Small AI\\(only the hard cases)};
-\node[box,fill=nbblue!8,below=6mm of mp,text width=3.0cm] (bus) {Signed messages\\between junctions$^{[2]}$};
-\node[box,fill=nbred!10,below=6mm of slm,text width=3.0cm] (gate) {Plausibility +\\evidence check$^{[3]}$};
-\draw[->] (mp) -- node[above,font=\tiny]{flagged \& unclear} (slm);
-\draw[->] (slm) to[bend left=18] node[below,font=\tiny]{net validates} (mp);
+\node[box,fill=nbteal!16,right=9mm of mp] (slm) {Small AI\\(only the hard cases)};
+\node[box,fill=nbblue!7,below=7mm of mp,text width=3.1cm] (bus) {Signed messages\\between junctions\,$^{[2]}$};
+\node[box,draw=nbred!55,fill=nbred!9,below=7mm of slm,text width=3.1cm] (gate) {Plausibility +\\evidence check\,$^{[3]}$};
+\draw[->] (mp) -- node[above,font=\sffamily\tiny]{flagged \& unclear} (slm);
+\draw[->] (slm) to[bend left=20] node[below,font=\sffamily\tiny]{net validates} (mp);
 \draw[->] (bus) -- (mp);
 \draw[->] (bus) -- (gate);
 \draw[->] (gate) -- (mp);
-\node[below=3mm of bus,font=\tiny,text width=6.3cm,align=center,color=nbgrey]
+\node[below=4mm of bus,font=\scriptsize,text width=6.5cm,align=center,color=nbgrey]
   {The classical controller runs by default and has the final say on every safety call. Only a flagged, unclear alert goes to the AI. Every message is signed and checked first.};
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.47\textwidth}
 \section{3.\ Measured effects (30 runs each)}
+\vspace{4pt}
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-  width=6.7cm,height=3.9cm,font=\scriptsize,
-  xbar,xmin=0,xmax=42,bar width=6pt,enlarge y limits=0.16,
-  xlabel={seconds (mean; bars show 95\% range)},xlabel style={font=\tiny},
+  width=7.0cm,height=4.3cm,font=\sffamily\scriptsize,
+  xbar,xmin=0,xmax=50,bar width=7pt,enlarge y limits=0.18,
+  axis line style={nbgrey},tick style={nbgrey},
+  xtick={0,10,20,30,40},
+  xlabel={seconds (mean; bars show 95\% range)},xlabel style={font=\sffamily\tiny},
   ytick={0,1,2,3},
   yticklabels={Cost: slower than blind trust,Gain: worst side-st.\ wait avoided,Gain: avg side-st.\ delay avoided,Gain: ambulance cleared faster},
-  yticklabel style={font=\tiny,align=right},
-  nodes near coords,nodes near coords style={font=\tiny},
-  every node near coord/.append style={xshift=6pt}]
+  yticklabel style={font=\sffamily\tiny,align=right},
+  nodes near coords,
+  nodes near coords style={font=\sffamily\tiny,color=nbgrey,anchor=west},
+  every node near coord/.append style={xshift=24pt}]
 \addplot+[draw=nbblue,fill=nbblue!55,error bars/.cd,x dir=both,x explicit] coordinates {
   (16.05,1)+-(4.47,0) (4.63,2)+-(1.37,0) (31.1,3)+-(5.55,0)};
-\addplot+[draw=nbred,fill=nbred!50,error bars/.cd,x dir=both,x explicit] coordinates {
+\addplot+[draw=nbred,fill=nbred!55,error bars/.cd,x dir=both,x explicit] coordinates {
   (8.0,0)+-(4.39,0)};
 \end{axis}
-\end{tikzpicture}\\[-1pt]
-{\scriptsize SUMO$^{[4]}$, 30 paired runs. Gains (blue) vs the no-defence baselines; cost (red) vs blindly trusting. Every 95\% range excludes zero.}
+\end{tikzpicture}\\[2pt]
+{\scriptsize\color{nbgrey} SUMO\,$^{[4]}$, 30 paired runs. Gains (blue) vs the no-defence baselines; cost (red) vs blindly trusting. Every 95\% range excludes zero.}
 \end{minipage}
 
 %==================== PROGRESS ====================
-\vspace{1pt}
+\vspace{4pt}
 \section{4.\ What we have built, and what it shows}
 \begin{multicols}{2}
 \begin{itemize}
@@ -104,20 +115,20 @@ The goal: coordinate well in normal traffic, and fail safely when a neighbour li
 \end{multicols}
 
 %==================== SURVEY ====================
-\vspace{-1pt}
+\vspace{2pt}
 \section{5.\ Where it sits in the literature}
 To our knowledge, no prior system has been evaluated as a multi-junction, AI-coordinated controller in which a junction's messages can be faked by an insider that still holds a valid key. The parts exist; the combination, tested under that threat, does not.
 
-\vspace{2pt}
-{\scriptsize\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{>{\raggedright\arraybackslash}p{2.0cm} >{\raggedright\arraybackslash}p{4.9cm} c c >{\raggedright\arraybackslash}p{7.0cm}}
-\toprule
+\vspace{4pt}
+{\scriptsize\setlength{\tabcolsep}{4pt}
+\rowcolors{2}{nbband}{white}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.0cm} >{\raggedright\arraybackslash}p{4.7cm} >{\centering\arraybackslash}p{0.9cm} >{\centering\arraybackslash}p{0.9cm} >{\raggedright\arraybackslash}p{6.6cm}}
+\rowcolor{nbblue!18}
 \textbf{Work (year)} & \textbf{What it does} & \textbf{Coord?} & \textbf{Trust?} & \textbf{How we differ} \\
-\midrule
 CoLLMLight (2025) & Cooperative LLM junctions share state; fine-tuned 8B & Yes & No & Frozen 3.8B; signed + plausibility-checked channel \\
-VLMLight (2025) & Fast-classical + slow-LLM, safety-critical cases & No (1 junction) & No & Multi-junction; small on-device model; compromised-channel test \\
-LA-Light (2024) & LLM calls rule/RL for rare events; cloud GPT-4 & Multi (tested) & No & On-device; faults are adversarial and signed, not benign \\
-iLLM-TSC (2024) & LLM refines an RL controller under noisy comms & No & Noise only & Malicious (spoofed) messages, not random noise \\
+VLMLight (2025) & Fast-classical + slow-LLM, safety-critical cases & 1 junc. & No & Multi-junction; small on-device model; compromised-channel test \\
+LA-Light (2024) & LLM calls rule/RL for rare events; cloud GPT-4 & Multi & No & On-device; faults are adversarial and signed, not benign \\
+iLLM-TSC (2024) & LLM refines an RL controller under noisy comms & No & Noise & Malicious (spoofed) messages, not random noise \\
 LLMLight (2023/25) & Single LLM controls one junction; fine-tuned & No & No & Multi-junction coordination + trust layer \\
 EMVLight (2022) & Trained MARL for emergency-vehicle preemption & Yes & No & No retraining; handles novel incidents; trust layer \\
 REG-TSC (2025) & RAG + fine-tuned 8B agents, emergencies & Yes & No & Frozen 3.8B; RAG optional; signed + checked \\
@@ -126,38 +137,37 @@ MaxPressure (2013) & Throughput-optimal classical control & Local & No & Adopted
 SafeLight (2023) & Trained RL + rule-based safety override & No & No & No training; defends against spoofed inputs \\
 Blockchain-TSC (2019) & Blockchain secures vehicle$\rightarrow$signal data & No & Yes & Lightweight signed log; secures signal$\leftrightarrow$signal \\
 proofmember23 (2023) & Device-identity / membership proof (IoT) & No & Yes & Applied to junctions + a content plausibility check \\
-Derhab (2020) & Flow-conservation check for sensor-network attacks & n/a & Yes & Ported to vehicle conservation across junctions \\
+Derhab (2020) & Flow-conservation check for sensor-net attacks & n/a & Yes & Ported to vehicle conservation across junctions \\
 Keijzer (2021) & Theory-only detection of coordination attacks & Yes & Yes & A measured detection-vs-attacker-strength curve; identity + audit \\
-\bottomrule
 \end{tabular}}
 
-\vspace{3pt}
+\vspace{5pt}
 \hd{Why this direction.} Racing the classical controller on normal traffic is a dead end (it is throughput-optimal and microsecond-fast), so performance is a secondary, honestly-reported axis. The AI earns its place only as a guarded exception handler on hard cases. The headline is robustness: detecting and degrading safely under an authenticated-but-lying neighbour, which signatures alone cannot catch. We use SUMO (it models emergency vehicles and lane blockage), a signed hash-chained log rather than a heavyweight blockchain (one city authority, one trust domain), and a permissioned key registry rather than full decentralised identity.
 
 %==================== VALUE / KPIs ====================
-\vspace{1pt}
+\vspace{3pt}
 \section{6.\ Value and how we measure success}
 The deployable angle: a safety-critical demonstration of edge AI (Foundry Local, Phi-4, no cloud, no retraining) with verifiable agent identity, the same trust problem as Entra Agent ID, made physical and measurable. Success is judged on:
 
-\vspace{2pt}
-{\scriptsize
-\begin{tabular}{>{\raggedright\arraybackslash}p{5.2cm} >{\raggedright\arraybackslash}p{12.6cm}}
-\toprule
+\vspace{3pt}
+{\scriptsize\setlength{\tabcolsep}{5pt}
+\rowcolors{2}{nbband}{white}
+\begin{tabular}{>{\raggedright\arraybackslash}p{5.2cm} >{\raggedright\arraybackslash}p{12.4cm}}
+\rowcolor{nbblue!18}
 \textbf{Indicator} & \textbf{Target / acceptance} \\
-\midrule
 Spoofed-emergency resistance & Every uncorroborated emergency claim refused; no false preemption \\
 Emergency-vehicle delay & Reduced versus no-preemption (measured: 31\,s faster over 30 runs) \\
 No-harm guarantee & The security layer does not slow normal traffic beyond a pre-registered margin \\
 Attack-detection quality & Precision / recall / detection-latency reported across a sweep of lie sizes \\
-Edge feasibility & Phi-4-mini decision within budget on Foundry Local; gated so a corridor stays within it \\
+Edge feasibility & Phi-4-mini decision within budget on Foundry Local; gated to keep a corridor within it \\
 Auditability & Tamper-evident log of every signed message and decision \\
-\bottomrule
 \end{tabular}}
 
 %==================== NEXT + HONESTY ====================
-\vspace{2pt}
-\begin{minipage}[t]{0.49\textwidth}
+\vspace{6pt}
+\begin{minipage}[t]{0.48\textwidth}
 \section{7.\ Next steps}
+\vspace{2pt}
 \begin{itemize}
 \item Central experiment: on flagged, unclear alerts, does the AI beat a well-tuned fixed rule? Measure and report either way, including a null.
 \item Make normal-traffic coordination steer decisions, not only verify them, then measure the green-wave benefit.
@@ -166,24 +176,25 @@ Auditability & Tamper-evident log of every signed message and decision \\
 \item Run the real Phi-4-mini on Foundry Local; confirm repeatable decisions.
 \end{itemize}
 \end{minipage}\hfill
-\begin{minipage}[t]{0.49\textwidth}
+\begin{minipage}[t]{0.48\textwidth}
 \section{8.\ What we do and do not claim}
-{\footnotesize \textbf{Claim:} authenticated messaging between junctions; detection of faked or faulty reports with a measured reliability curve; a deterministic safety floor; a fair attack-and-defence comparison.\\[2pt]
+\vspace{2pt}
+{\footnotesize \textbf{Claim:} authenticated messaging between junctions; detection of faked or faulty reports with a measured reliability curve; a deterministic safety floor; a fair attack-and-defence comparison.\\[3pt]
 \textbf{Do not claim:} new cryptography; that the AI beats the classical controller on ordinary traffic; that the AI yet improves the ambiguous decisions (measured next); that coordination yet steers normal traffic (verified, not yet causal); defence against colluding insiders or a stolen master key; or that simulator results transfer directly to hardware.}
 \end{minipage}
 
 %==================== REFS ====================
+\vspace{8pt}
+{\color{nbblue!40}\hrule}
 \vspace{3pt}
-\hrule
-\vspace{2pt}
 {\scriptsize\color{nbgrey}
-\textbf{References.}
+\textbf{References.}\enspace
 [1] Varaiya, Max-pressure control, \emph{Transp.\ Res.\ C} 36 (2013).
 [2] Bernstein et al., Ed25519, \emph{J.\ Cryptogr.\ Eng.} (2012).
 [3] Lighthill \& Whitham, \emph{Proc.\ R.\ Soc.\ A} 229 (1955); Richards, \emph{Oper.\ Res.} 4 (1956) (vehicle-conservation law).
 [4] Lopez et al., SUMO, \emph{IEEE ITSC} (2018).
 [5] Yuan et al., CoLLMLight, arXiv:2503.11739 (2025).
 [6] Wang et al., VLMLight, arXiv:2505.19486 (2025).
-[7] Wang et al., LA-Light, arXiv:2403.08337 (2024). Also: iLLM-TSC arXiv:2407.06025; LLMLight arXiv:2312.16044; EMVLight arXiv:2206.13441; REG-TSC arXiv:2510.26242; CoLight arXiv:1905.05717; SafeLight arXiv:2211.10871; Blockchain-TSC arXiv:1906.02628; proofmember arXiv:2310.08163; Derhab \emph{Sensors} 20(21):6106 (2020); Keijzer \emph{ECC} (2021).
+[7] Wang et al., LA-Light, arXiv:2403.08337 (2024). Further: iLLM-TSC 2407.06025; LLMLight 2312.16044; EMVLight 2206.13441; REG-TSC 2510.26242; CoLight 1905.05717; SafeLight 2211.10871; Blockchain-TSC 1906.02628; proofmember 2310.08163; Derhab \emph{Sensors} 20(21):6106 (2020); Keijzer \emph{ECC} (2021).
 }
 \end{document}

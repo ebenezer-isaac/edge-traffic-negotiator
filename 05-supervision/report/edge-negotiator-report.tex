@@ -1,5 +1,5 @@
 \documentclass[10pt]{article}
-\usepackage[a4paper,margin=1.15cm]{geometry}
+\usepackage[a4paper,margin=1.0cm]{geometry}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
@@ -38,10 +38,10 @@
 \vspace{4pt}
 
 %==================== SCOPE ====================
-\section{1.\ The project, and where it is headed}
-Picture a row of traffic junctions. Each one is run by a small AI model (\textbf{Phi-4-mini}) on the junction itself, through \textbf{Microsoft Foundry Local}, never retrained. The junctions tell each other what they are about to do, over a channel that is digitally signed and sanity-checked. Underneath sits a fast classical controller (\emph{MaxPressure}$^{[1]}$). It is the default, and it is the safety floor.
+\section{1.\ The project and its goal}
+The system is a corridor of traffic junctions on one arterial. Each junction runs a fast classical controller (\emph{MaxPressure}$^{[1]}$) by default, which is also the safety floor. Alongside it runs a small AI model (\textbf{Phi-4-mini}, on the junction itself via \textbf{Microsoft Foundry Local}, never retrained), called in only for hard cases. Junctions share what they are about to do over a channel that is digitally signed and checked for plausibility.
 
-The goal is simple to state. Coordinate well in normal traffic, and \textbf{fail gracefully when a neighbour lies}. If a junction's messages are tampered with, or the junction itself is hijacked, the system should notice and fall back safely instead of believing it. A deterministic safety net always makes the clear-cut safety calls: clear an ambulance it can actually see, and refuse a claim it cannot verify. Safety never depends on the AI. \textbf{The AI handles only the hard cases a fixed rule cannot settle.} When an alert is flagged but the evidence is mixed, it weighs what the neighbours report and judges: real incident, or faked grab? Whether that on-device reasoning beats a well-tuned fixed rule is the central question we measure. We will report the answer honestly, even if the rule turns out to be enough.
+The goal: coordinate well in normal traffic, and fail safely when a neighbour lies. If a junction's messages are tampered with or the junction is hijacked, the system detects that the reports do not match reality and falls back to local control. A deterministic safety net always makes the clear-cut calls: clear an ambulance a junction can physically detect, refuse a claim it cannot verify; safety never depends on the AI. The AI handles only what a fixed rule cannot settle: when an alert is flagged but the evidence is partial or conflicting, it weighs the neighbours' reports to judge a real incident from a spoofed grab. Whether that beats a well-tuned fixed rule is the central question we measure, and we report it either way.
 
 %==================== TWO COLUMNS: diagram + chart ====================
 \vspace{2pt}
@@ -55,77 +55,79 @@ The goal is simple to state. Coordinate well in normal traffic, and \textbf{fail
 \node[box,fill=nbblue!12] (mp) {Classical controller\\+ safety net (final say)};
 \node[box,fill=nbteal!15,right=8mm of mp] (slm) {Small AI\\(only the hard cases)};
 \node[box,fill=nbblue!8,below=6mm of mp,text width=3.0cm] (bus) {Signed messages\\between junctions$^{[2]}$};
-\node[box,fill=nbred!10,below=6mm of slm,text width=3.0cm] (gate) {Evidence /\\sanity check$^{[3]}$};
+\node[box,fill=nbred!10,below=6mm of slm,text width=3.0cm] (gate) {Plausibility +\\evidence check$^{[3]}$};
 \draw[->] (mp) -- node[above,font=\tiny]{flagged \& unclear} (slm);
 \draw[->] (slm) to[bend left=18] node[below,font=\tiny]{net validates} (mp);
 \draw[->] (bus) -- (mp);
 \draw[->] (bus) -- (gate);
 \draw[->] (gate) -- (mp);
 \node[below=3mm of bus,font=\tiny,text width=6.3cm,align=center,color=nbgrey]
-  {Normally the classical controller runs. The safety net has the final say on every safety call: clear a real ambulance, refuse a claim it cannot verify. When an alert is flagged but unclear, the AI weighs neighbour reports to judge real versus fake. Every message is signed and checked first.};
+  {The classical controller runs by default and has the final say on every safety call: clear an ambulance it can detect, refuse a claim it cannot verify. Only a flagged, unclear alert goes to the AI, which weighs neighbour reports to judge real versus fake. Every message is signed and checked first.};
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.47\textwidth}
-\section{3.\ Main result (measured over 30 runs)}
+\section{3.\ Measured effects (30 runs each)}
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-  width=6.6cm,height=4.0cm,font=\scriptsize,
+  width=6.7cm,height=4.0cm,font=\scriptsize,
   xbar,xmin=0,xmax=42,
   bar width=6pt,
-  enlarge y limits=0.18,
-  xlabel={seconds saved (average, with error range)},
+  enlarge y limits=0.16,
+  xlabel={seconds (mean; bars show 95\% range)},
   xlabel style={font=\tiny},
   ytick={0,1,2,3},
-  yticklabels={Ambulance cleared faster,Cost of demanding proof,Cross-traffic delay avoided,Worst-case wait avoided},
+  yticklabels={Cost: slower than blind trust,Gain: worst side-st.\ wait avoided,Gain: avg side-st.\ delay avoided,Gain: ambulance cleared faster},
   yticklabel style={font=\tiny,align=right},
   nodes near coords,nodes near coords style={font=\tiny},
   every node near coord/.append style={xshift=6pt}]
 \addplot+[draw=nbblue,fill=nbblue!55,
   error bars/.cd,x dir=both,x explicit] coordinates {
-  (31.1,0) +- (5.55,0)
-  (8.0,1)  +- (4.39,0)
-  (4.63,2) +- (1.37,0)
-  (16.05,3)+- (4.47,0)};
+  (16.05,1)+-(4.47,0)
+  (4.63,2) +-(1.37,0)
+  (31.1,3) +-(5.55,0)};
+\addplot+[draw=nbred,fill=nbred!50,
+  error bars/.cd,x dir=both,x explicit] coordinates {
+  (8.0,0)  +-(4.39,0)};
 \end{axis}
 \end{tikzpicture}\\[-1pt]
-{\scriptsize Our system against two baselines, on the same traffic (SUMO$^{[4]}$ simulator). All four results are clearly above zero.}
+{\scriptsize SUMO$^{[4]}$, 30 paired runs. Gains (blue) are versus the no-defence baselines: no preemption, or trust-everything under attack. The cost (red) is versus blindly trusting. Every 95\% range excludes zero.}
 \end{minipage}
 
 %==================== PROGRESS ====================
 \vspace{1pt}
-\section{4.\ What we have done}
+\section{4.\ What we have built}
 \begin{multicols}{2}
 \begin{itemize}
-\item \hd{Built and tested:} signed messaging between junctions, an approved-senders list, the classical controller with its safety net, a check that flags neighbour reports that do not match the real traffic, and a four-junction simulated road.
-\item \hd{Emergency handling:} a junction clears an ambulance only when it has real proof the vehicle exists. A valid signature is not enough. So a faked emergency is refused.
-\item \hd{Live attack-and-defence demo:} a hijacked junction sends a signed but fake ``ambulance coming'' alert. It is refused. A real ambulance is cleared at every junction. We compare against a trust-everything system and the plain classical controller.
-\item \hd{Evidence (30 runs):} emergency handling clears the ambulance \textbf{31\,s faster} than having none. The defence blocks an attack that would otherwise add \textbf{16\,s} to the worst side-street wait. Demanding proof costs \textbf{8\,s} versus blindly trusting; that cost is deliberate.
-\item \hd{Independent check:} an automated audit of our written spec found \emph{no made-up sources}. A few over-stated citations were fixed. Every result can be reproduced from its settings.
+\item \hd{Working and tested:} signed messaging between junctions, an approved-senders registry, the classical controller and its safety net, a check that flags neighbour reports inconsistent with the traffic actually on the road, and a four-junction simulated corridor.
+\item \hd{Emergency handling:} a junction clears an ambulance only with physical evidence the vehicle exists. A valid signature is not enough, so a faked emergency is refused.
+\item \hd{Attack-and-defence demo (runs live):} a hijacked junction sends a signed but fake ``ambulance approaching'' alert and it is refused; a real ambulance is cleared at every junction. Measured against a trust-everything controller and the plain classical controller.
+\item \hd{Evidence (30 runs, Section 3):} with emergency handling the ambulance clears 31\,s faster than with none. Under the spoof attack our system holds the worst side-street wait 16\,s below the trust-everything controller. Requiring evidence costs 8\,s of ambulance time versus blindly trusting, a price we accept.
+\item \hd{Independent check:} an automated audit of our written specification found no fabricated sources; a few over-stated citations were corrected. Every result is reproducible from its settings.
 \end{itemize}
 \end{multicols}
 
 %==================== NOVELTY ====================
 \vspace{-2pt}
-\section{5.\ Why it is new}
-No one has tested a setup like this: many junctions, coordinated by AI, where a junction's messages can be \emph{faked by an insider that still holds a valid key}. The parts exist separately. The combination does not. Closest work: \textbf{CoLLMLight}$^{[5]}$ (AI junctions that coordinate, but trust each other completely); \textbf{VLMLight}$^{[6]}$ (fast-classical plus slow-AI, one junction, very large models, no trust); \textbf{LA-Light}$^{[7]}$ (AI for rare events, cloud-based, no malicious faults); \textbf{Keijzer\,2021}$^{[8]}$ (detects coordination attacks, but only in theory). Our difference: a small on-device AI, a \emph{measured} picture of how detection holds up as the attack grows, verifiable identity, and a tamper-proof log.
+\section{5.\ What is new}
+To our knowledge, no prior system has been evaluated as a multi-junction, AI-coordinated controller in which a junction's messages can be \emph{faked by an insider that still holds a valid key}. The individual parts exist; the combination, tested under that threat, does not. Nearest work: \textbf{CoLLMLight}$^{[5]}$ (AI junctions coordinate, but trust each other completely); \textbf{VLMLight}$^{[6]}$ (fast-classical plus slow-AI, single junction, very large models, no trust); \textbf{LA-Light}$^{[7]}$ (AI for rare events, cloud-based, no malicious faults); \textbf{Keijzer\,2021}$^{[8]}$ (detects coordination attacks, but only in theory, with no measurement against attacker strength). Our contribution: a small on-device AI, a \emph{measured} curve of how detection holds up as the attack grows, verifiable identity, and a tamper-proof log.
 
 %==================== NEXT ====================
 \section{6.\ Next steps}
 \begin{multicols}{2}
 \begin{itemize}
-\item \hd{The central experiment:} on flagged, unclear cases, does the AI actually beat a well-tuned fixed rule? We measure this and report it either way.
-\item Bigger evaluation: more traffic levels and a real London (Lambeth) road, with many repeated runs and error ranges.
-\item Find the breaking point: grow the lie until detection fails, and report where.
-\item Heavier traffic, where the ambulance benefit and the attack damage are largest.
-\item Run the real Phi-4-mini on Foundry Local and confirm it answers consistently.
+\item \hd{Central experiment:} on flagged, unclear alerts, does the AI beat a well-tuned fixed rule? Measure it; report it either way, including a null.
+\item Larger evaluation: more demand levels and a real London (Lambeth) arterial, with many paired runs and confidence ranges.
+\item Detection limit: increase the size of the lie until detection fails, and report where that point is.
+\item Heavier traffic, where the preemption benefit and the attack damage are largest.
+\item Run the real Phi-4-mini on Foundry Local and confirm its decisions are repeatable.
 \end{itemize}
 \end{multicols}
 
 %==================== HONESTY ====================
 \vspace{-1pt}
 \section{7.\ What we do and do not claim}
-{\footnotesize \textbf{We claim:} trustworthy messaging between junctions; reliable detection of faked or faulty reports, with a measured reliability curve; a guaranteed safety floor; and a fair attack-and-defence test. \textbf{We do not claim:} new cryptography; that the AI beats the classical controller on ordinary traffic; that the AI already improves the hard-case decisions (we measure that next); defence against two or more junctions working together, or a stolen master key; or that simulator results carry straight over to real hardware (future work).}
+{\footnotesize \textbf{We claim:} authenticated messaging between junctions; detection of faked or faulty neighbour reports with a measured reliability curve; a deterministic safety floor; and a fair attack-and-defence comparison. \textbf{We do not claim:} new cryptography; that the AI beats the classical controller on ordinary traffic; that the AI yet improves the hard, ambiguous decisions (measured next); defence against two or more junctions colluding, or against a stolen master key; or that simulator results transfer directly to real hardware (future work).}
 
 %==================== REFS ====================
 \vspace{2pt}
@@ -133,13 +135,13 @@ No one has tested a setup like this: many junctions, coordinated by AI, where a 
 \vspace{2pt}
 {\scriptsize\color{nbgrey}
 \textbf{References.}
-[1] Varaiya, MaxPressure control, \emph{Transp.\ Res.\ C} 36 (2013).
-[2] Bernstein et al., Ed25519 signatures (2012); approved-sender registry.
-[3] Lighthill \& Whitham, \emph{Proc.\ R.\ Soc.\ A} 229 (1955); Richards, \emph{Oper.\ Res.} 4 (1956): the traffic conservation law behind the sanity check.
-[4] Lopez et al., Microscopic Traffic Simulation using SUMO, \emph{IEEE ITSC} (2018).
+[1] Varaiya, Max-pressure control, \emph{Transp.\ Res.\ C} 36 (2013).
+[2] Bernstein et al., Ed25519, \emph{J.\ Cryptogr.\ Eng.} (2012).
+[3] Lighthill \& Whitham, \emph{Proc.\ R.\ Soc.\ A} 229 (1955); Richards, \emph{Oper.\ Res.} 4 (1956) (vehicle-conservation law).
+[4] Lopez et al., SUMO, \emph{IEEE ITSC} (2018).
 [5] Yuan et al., CoLLMLight, arXiv:2503.11739 (2025).
 [6] Wang et al., VLMLight, arXiv:2505.19486 (2025).
 [7] Wang et al., LA-Light, arXiv:2403.08337 (2024).
-[8] Keijzer et al., Detection of Cyber-Attacks in Collaborative Intersection Control, \emph{ECC} (2021).
+[8] Keijzer et al., collaborative-intersection attack detection, \emph{ECC} (2021).
 }
 \end{document}

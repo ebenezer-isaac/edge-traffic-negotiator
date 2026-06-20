@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+  <vType id="car" accel="2.6" decel="4.5" length="5.0" minGap="2.5" maxSpeed="13.89" sigma="0.5"/>
+  <route id="eb" edges="WJ0 J0J1 J1J2 J2J3 J3E"/>
+  <route id="wb" edges="EJ3 J3J2 J2J1 J1J0 J0W"/>
+  <flow id="art_eb" type="car" route="eb" begin="0" end="3600" period="exp(0.1800)" departLane="best" departSpeed="max"/>
+  <flow id="art_wb" type="car" route="wb" begin="0" end="3600" period="exp(0.1800)" departLane="best" departSpeed="max"/>
+  <route id="ns0" edges="N0J0 J0S0"/>
+  <route id="sn0" edges="S0J0 J0N0"/>
+  <flow id="cross_ns0" type="car" route="ns0" begin="0" end="3600" period="exp(0.0350)" departSpeed="max"/>
+  <flow id="cross_sn0" type="car" route="sn0" begin="0" end="3600" period="exp(0.0350)" departSpeed="max"/>
+  <route id="ns1" edges="N1J1 J1S1"/>
+  <route id="sn1" edges="S1J1 J1N1"/>
+  <flow id="cross_ns1" type="car" route="ns1" begin="0" end="3600" period="exp(0.0350)" departSpeed="max"/>
+  <flow id="cross_sn1" type="car" route="sn1" begin="0" end="3600" period="exp(0.0350)" departSpeed="max"/>
+  <route id="ns2" edges="N2J2 J2S2"/>
+  <route id="sn2" edges="S2J2 J2N2"/>
+  <flow id="cross_ns2" type="car" route="ns2" begin="0" end="3600" period="exp(0.0350)" departSpeed="max"/>
+  <flow id="cross_sn2" type="car" route="sn2" begin="0" end="3600" period="exp(0.0350)" departSpeed="max"/>
+  <route id="ns3" edges="N3J3 J3S3"/>
+  <route id="sn3" edges="S3J3 J3N3"/>
+  <flow id="cross_ns3" type="car" route="ns3" begin="0" end="3600" period="exp(0.0350)" departSpeed="max"/>
+  <flow id="cross_sn3" type="car" route="sn3" begin="0" end="3600" period="exp(0.0350)" departSpeed="max"/>
+</routes>

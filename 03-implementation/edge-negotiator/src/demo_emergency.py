@@ -47,6 +47,10 @@ from registry import Registry
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORRIDOR_CFG = os.path.normpath(
     os.path.join(HERE, "..", "sumo", "corridor", "corridor.sumocfg"))
+# GUI-only view settings (bigger vehicles + on-screen labels). Visual only:
+# never loaded headless, never affects the simulation or any measured metric.
+GUI_SETTINGS = os.path.normpath(
+    os.path.join(HERE, "..", "sumo", "corridor", "demo.gui.xml"))
 
 # Arterial line adjacency J0-J1-J2-J3 (edges follow the f"{src}{dst}" convention,
 # e.g. J0->J1 is edge "J0J1", so no explicit edge_map is needed).
@@ -105,6 +109,8 @@ def run(gui: bool = True, delay: float = 0.15, seed: int = 42, end: int = 600,
                 "--tripinfo-output.write-unfinished", "true"]
     if gui:
         cmd += ["--start", "--quit-on-end"]
+        if os.path.exists(GUI_SETTINGS):
+            cmd += ["--gui-settings-file", GUI_SETTINGS]
 
     traci.start(cmd)
     try:
@@ -144,9 +150,52 @@ def run(gui: bool = True, delay: float = 0.15, seed: int = 42, end: int = 600,
             print(f"  Real ambulance     : injected eastbound at t={ambulance_t}s")
             print("-" * 78)
 
+        # --- on-screen captions (GUI only) -------------------------------- #
+        # Mirror the emergency narration as coloured floating labels in
+        # sumo-gui, so the spoof-refused / preempt / corroborated story reads on
+        # one screen while recording. POIs are visual only: they never touch the
+        # simulation, so headless metrics are byte-identical (this whole block
+        # is a no-op when gui is False).
+        _cap = {"live": [], "n": 0}  # live: [(poi_id, expire_t)]
+        ORANGE, RED, GREEN, AMBER = ((255, 140, 0, 255), (220, 20, 20, 255),
+                                     (20, 170, 40, 255), (230, 170, 0, 255))
+
+        def _caption(anchor, text, color, now, hold=12):
+            if not gui:
+                return
+            try:
+                x, y = (traci.junction.getPosition(anchor)
+                        if isinstance(anchor, str) else anchor)
+            except Exception:
+                return
+            _cap["n"] += 1
+            for pid in (text, f"{text}  ({_cap['n']})"):  # 2nd form if id clashes
+                try:
+                    traci.poi.add(pid, x, y + 22.0, color, layer=10,
+                                  width=5.0, height=5.0)
+                    _cap["live"].append((pid, now + hold))
+                    return
+                except Exception:
+                    continue
+
+        def _expire_captions(now):
+            if not gui:
+                return
+            keep = []
+            for pid, exp in _cap["live"]:
+                if now >= exp:
+                    try:
+                        traci.poi.remove(pid)
+                    except Exception:
+                        pass
+                else:
+                    keep.append((pid, exp))
+            _cap["live"] = keep
+
         announced_attack = False
         injected_amb = False
         last_attack_inject = -999
+        ev_seen = 0
         step = 0
         while traci.simulation.getMinExpectedNumber() > 0 and step < end:
             traci.simulationStep()
@@ -158,6 +207,8 @@ def run(gui: bool = True, delay: float = 0.15, seed: int = 42, end: int = 600,
                 if not announced_attack:
                     print(f"[t={now}s] >>> ATTACK: compromised J1 signs a PHANTOM "
                           f"emergency claim to J2 (sustained to t={attack_end}s) <<<")
+                    _caption("J1", f"[t={now}s] ATTACK: J1 signs a PHANTOM "
+                             f"emergency to J2", ORANGE, now)
                     announced_attack = True
                 if now - last_attack_inject >= 10:
                     ctrl.inject_phantom_claim("J1", "J2", PHANTOM, "J1J2")
@@ -166,8 +217,27 @@ def run(gui: bool = True, delay: float = 0.15, seed: int = 42, end: int = 600,
             if not injected_amb and now >= ambulance_t:
                 print(f"[t={now}s] >>> REAL ambulance {REAL_AMB} enters eastbound <<<")
                 _inject_ambulance(REAL_AMB)
+                _caption("J0", f"[t={now}s] REAL ambulance enters (red)", RED, now)
                 injected_amb = True
             ctrl.step()
+            # Mirror any new EV decisions as captions at the acting junction.
+            for ev in ctrl.ev_events[ev_seen:]:
+                t, tl = ev["t"], ev["tl"]
+                if ev["source"] == "local_sensing" and ev["preempt_phase"] is not None:
+                    _caption(tl, f"[t={t}s] {tl}: ambulance SENSED -> PREEMPT",
+                             GREEN, now)
+                elif ev["source"] == "advance_claim" and ev["admissible"]:
+                    _caption(tl, f"[t={t}s] {tl}: claim CORROBORATED -> PREEMPT",
+                             GREEN, now)
+                elif ev["source"] == "advance_claim" and not ev["admissible"]:
+                    if ev["ev_id"] == PHANTOM:
+                        _caption(tl, f"[t={t}s] {tl}: SPOOFED claim REFUSED "
+                                 f"(no evidence)", RED, now)
+                    else:
+                        _caption(tl, f"[t={t}s] {tl}: real claim awaiting "
+                                 f"corroboration", AMBER, now)
+            ev_seen = len(ctrl.ev_events)
+            _expire_captions(now)
             step += 1
             if delay > 0:
                 time.sleep(delay)

@@ -111,31 +111,54 @@ def _shield_validate(tl, st, candidate, mp_choice, trig):
     #   These are STRUCTURAL: decide() only chooses a target phase; step() owns the
     #   min-green/yellow transition, so an SLM cannot create an unsafe transition.
 
+    # (V_starve) Anti-starvation (deterministic, independent of the SLM): if any approach has
+    #   been skipped > max_skip decisions, the shield FORCES the most-starved approach next
+    #   cycle. The only thing that may defer it is an ADMISSIBLE (corroborated) EV preemption,
+    #   and then by at most one min_green+yellow. Tracked via per-approach last-served tick.
+    starved = self._most_starved_approach(tl, st)         # None unless one exceeds max_skip
+    if starved is not None and not self._admissible_ev(trig):
+        return self._phase_serving(tl, starved)
+
     # (V3) Regime-specific acceptance:
     if trig is None:                                      # NORMAL
-        # Advisory coordination already folded in; accept candidate as-is.
-        return candidate
+        return candidate                                  # advisory coordination already folded in
     if trig.kind == "emergency_vehicle":
-        # Preemption: candidate MUST be the phase that greens the EV's approach.
-        ev_phase = self._phase_serving(tl, trig.approach_edge)
-        if candidate == ev_phase:
-            return candidate                              # SLM agreed with preemption
-        return ev_phase                                   # shield ENFORCES preemption (deterministic)
-    # incident / sensor_outage / abnormal_demand:
-    #   accept the SLM candidate UNLESS its served pressure is far worse than
-    #   MaxPressure's, i.e. it would STARVE a queue. Guard with a pressure floor:
+        # Preemption is admitted ONLY for a CORROBORATED EV (see _admissible_ev / 2.1):
+        #   local sensing (this junction's own vClass detector), OR an advance claim that is
+        #   auth-valid AND independently corroborated by an upstream junction's own sighting.
+        # An uncorroborated (phantom / spoofed) claim is NOT enforced -> MaxPressure stands.
+        if not self._admissible_ev(trig):
+            return mp_choice                              # spoofed/uncorroborated -> no preemption
+        return self._phase_serving(tl, trig.approach_edge)  # corroborated EV -> enforce
+    # (V4) Conservation gate: a candidate leaning on a claim flagged as a persistent anomaly
+    #   is recomputed with that claim zeroed (done in decide() before the shield); then:
+    # (V5) Pressure floor (incident / sensor_outage / abnormal_demand): accept the SLM
+    #   candidate UNLESS its served pressure is far worse than MaxPressure's (would STARVE).
     if self._pressure(st, candidate) < self._pressure(st, mp_choice) - self.shield_margin:
         return mp_choice                                  # candidate starves traffic -> veto
     return candidate
+
+def _admissible_ev(trig) -> bool:
+    if trig is None or trig.kind != "emergency_vehicle":
+        return False
+    if trig.source == "local_sensing":
+        return True                                       # own detector saw the EV -> trust
+    if trig.source == "advance_claim":
+        return trig.auth_valid and trig.corroborated      # signed + upstream-sensed (2.1)
+    return False
 ```
 
 `shield_margin` (default e.g. 8 vehicles of pressure) is a tunable: 0 = shield vetoes any
-candidate worse than MaxPressure (most conservative, "never regress"); larger = give the
-SLM more latitude on incident/demand triggers. Emergency-vehicle preemption is NOT subject
-to the pressure margin — clearing the EV is the objective, and the shield *enforces* it
-deterministically even if the SLM proposed something else (so a broken SLM cannot block an
-ambulance). This is the key safety property: **the deterministic layer guarantees
-preemption; the SLM only adds nuance (which non-EV phase to favour around it).**
+candidate worse than MaxPressure (most conservative, "never regress"); larger = gives the
+SLM more latitude on incident/demand triggers. A **corroborated** emergency preemption is
+not subject to the pressure margin: clearing the EV is the objective and the shield enforces
+it deterministically even if the SLM proposed otherwise, so a broken SLM cannot block a real
+ambulance. An **uncorroborated** emergency claim is never enforced (it falls back to
+MaxPressure), so a spoofed emergency cannot commandeer the signal. This is the safety
+property: **the deterministic layer guarantees preemption for a real, corroborated EV and
+refuses it for a phantom one; the SLM only adds nuance on the ambiguous middle** (which
+non-EV phase to favour around a real EV, how to weigh multiple simultaneous EVs, EV-plus-
+incident routing) where no clean deterministic rule decides.
 
 ### 1.4 Why this is safe AND causal
 
@@ -192,6 +215,23 @@ only the top one drives the regime; the prompt mentions all (see §7 multi-emerg
   signal does not flap if the EV momentarily drops off a detector.
 - **Under-trigger guard:** scan ALL in-edges (cross street included), not just the arterial,
   so a cross-street ambulance is not missed.
+- **Two trigger sources, different trust (`trig.source`):** (i) `local_sensing` — this
+  junction's own vClass scan of its in-edges, trustworthy (its own detector), admits
+  preemption directly. (ii) `advance_claim` — a signed `ev_claim` from the EV's registered
+  key or an upstream neighbour, used to pre-position green BEFORE the EV physically arrives
+  (green-wave preemption). An advance claim is spoofable, so it is admitted only if
+  **corroborated**.
+- **Corroboration (the anti-spoof basis; answers "how would an upstream junction know?"):**
+  a real EV physically traverses the corridor, so an upstream junction it has already passed
+  *independently sensed* it (that junction's OWN vClass detector, shared as signed
+  telemetry). An advance claim for EV `e` arriving at `tl` is `corroborated` iff some upstream
+  junction `U` on `e`'s route logged a `vClass=emergency` sighting on the edge toward `tl`
+  within `[now - route_traveltime - tol, now]`. A phantom claim that NO junction has sensed
+  anywhere is uncorroborated, and the shield refuses preemption (1.3, V3). The knowledge never
+  comes "from the claiming junction"; it comes from each junction's own physical sensing of
+  the EV as it passes. **Limit:** an EV entering mid-corridor with no instrumented upstream
+  junction gets only on-arrival (local) preemption, not advance; a colluding upstream junction
+  faking a sighting is the >=2-key collusion case, explicitly out of scope.
 
 ### 2.2 Incident / roadblock
 

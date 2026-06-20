@@ -1,0 +1,143 @@
+\documentclass[10pt]{article}
+\usepackage[a4paper,margin=1.15cm]{geometry}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{nbblue}{HTML}{1F4E79}
+\definecolor{nbteal}{HTML}{2E8B8B}
+\definecolor{nbred}{HTML}{C0392B}
+\definecolor{nbgrey}{HTML}{595959}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\titlespacing{\section}{0pt}{4pt}{2pt}
+\titleformat{\section}{\normalfont\bfseries\color{nbblue}\small}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.1em,itemsep=0pt,topsep=1pt,parsep=0pt}
+\pagestyle{empty}
+
+\newcommand{\hd}[1]{{\color{nbblue}\textbf{#1}}}
+
+\begin{document}
+\small
+
+%==================== TITLE ====================
+\begin{center}
+{\Large\bfseries\color{nbblue} The Edge Negotiator}\\[1pt]
+{\bfseries Traffic lights that coordinate with a small AI --- and keep working when a neighbour lies}\\[2pt]
+{\footnotesize Progress report $\cdot$ UCL MSc Systems Engineering for IoT (25153651) $\cdot$ Supervisors: Dr A.\ Delibasi (UCL), L.\ Stott (Microsoft) $\cdot$ 2026-06-20}
+\end{center}
+\vspace{-4pt}
+\hrule height 1pt
+\vspace{4pt}
+
+%==================== SCOPE ====================
+\section{1.\ What the project is}
+A row of traffic junctions, each run by a small AI model (\textbf{Phi-4-mini}, running locally on \textbf{Microsoft Foundry Local}, never retrained). The junctions tell each other what they are about to do over a channel that is digitally signed and sanity-checked, on top of a fast classical controller (\emph{MaxPressure}$^{[1]}$) that stays in charge by default and acts as a safety net. The real goal is \textbf{graceful failure under a lying neighbour}: if a junction's messages are tampered with, or the junction itself is hijacked, the system notices the story does not add up and falls back safely instead of believing it. Raw traffic speed is a secondary, honestly-reported result --- the AI only steps in for the one judgement a fixed rule cannot make: telling a genuine incident apart from a faked emergency, using what the neighbours report.
+
+%==================== TWO COLUMNS: diagram + chart ====================
+\vspace{2pt}
+\begin{minipage}[t]{0.50\textwidth}
+\section{2.\ How it works}
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  box/.style={draw,rounded corners=2pt,align=center,inner sep=3pt,minimum height=7mm},
+  >=Latex]
+\node[box,fill=nbblue!12] (mp) {Classical controller\\+ safety net};
+\node[box,fill=nbteal!15,right=8mm of mp] (slm) {Small AI\\(only on odd events)};
+\node[box,fill=nbblue!8,below=6mm of mp,text width=3.0cm] (bus) {Signed messages\\between junctions$^{[2]}$};
+\node[box,fill=nbred!10,below=6mm of slm,text width=3.0cm] (gate) {Sanity +\\evidence check$^{[3]}$};
+\draw[->] (mp) -- node[above,font=\tiny]{unusual} (slm);
+\draw[->] (slm) to[bend left=18] node[below,font=\tiny]{safety net checks} (mp);
+\draw[->] (bus) -- (mp);
+\draw[->] (bus) -- (gate);
+\draw[->] (gate) -- (slm);
+\node[below=3mm of bus,font=\tiny,text width=6.3cm,align=center,color=nbgrey]
+  {By default the classical controller runs things. On an unusual event the AI suggests a move; the safety net can overrule it. Every message from a neighbour is signed and sanity-checked before it can change a decision.};
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.47\textwidth}
+\section{3.\ Main result (measured over 30 runs)}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=6.6cm,height=4.0cm,font=\scriptsize,
+  xbar,xmin=0,xmax=42,
+  bar width=6pt,
+  enlarge y limits=0.18,
+  xlabel={seconds saved (average, with error range)},
+  xlabel style={font=\tiny},
+  ytick={0,1,2,3},
+  yticklabels={Ambulance cleared faster,Cost of demanding proof,Cross-traffic delay avoided,Worst-case wait avoided},
+  yticklabel style={font=\tiny,align=right},
+  nodes near coords,nodes near coords style={font=\tiny},
+  every node near coord/.append style={xshift=6pt}]
+\addplot+[draw=nbblue,fill=nbblue!55,
+  error bars/.cd,x dir=both,x explicit] coordinates {
+  (31.1,0) +- (5.55,0)
+  (8.0,1)  +- (4.39,0)
+  (4.63,2) +- (1.37,0)
+  (16.05,3)+- (4.47,0)};
+\end{axis}
+\end{tikzpicture}\\[-1pt]
+{\scriptsize Our system vs two baselines on identical traffic (SUMO$^{[4]}$ simulator). All four effects are clearly above zero.}
+\end{minipage}
+
+%==================== PROGRESS ====================
+\vspace{1pt}
+\section{4.\ What we have done}
+\begin{multicols}{2}
+\begin{itemize}
+\item \hd{Built and tested:} signed messaging between junctions, an approved-senders list, the classical controller with its safety net, a check that flags neighbour reports that do not match the traffic actually on the road, and a four-junction simulated corridor.
+\item \hd{Emergency handling:} a junction clears an ambulance only when it has real evidence the vehicle exists --- not just a valid signature --- so a faked emergency is refused.
+\item \hd{Live attack-and-defence demo:} a hijacked junction sends a signed but fake ``ambulance coming'' alert; it is refused. A real ambulance is cleared at every junction. Measured against a system that trusts everything and against the plain classical controller.
+\item \hd{Evidence (30 runs):} emergency handling clears the ambulance \textbf{31\,s faster} than having none; the defence blocks an attack that would otherwise add \textbf{16\,s} to the worst side-street wait; insisting on evidence costs \textbf{8\,s} versus blindly trusting --- a deliberate, measured trade-off.
+\item \hd{Independent check:} an automated audit of our written specification found \emph{no made-up sources}; a few over-stated citations were corrected. Every result can be reproduced from its settings.
+\end{itemize}
+\end{multicols}
+
+%==================== NOVELTY ====================
+\vspace{-2pt}
+\section{5.\ Why it is new}
+No existing system has been tested as a multi-junction, AI-coordinated traffic controller where messages between junctions can be \emph{faked by an authenticated but hijacked junction}. Each ingredient exists alone; the combination does not. Closest work: \textbf{CoLLMLight}$^{[5]}$ (AI junctions that coordinate but trust each other completely), \textbf{VLMLight}$^{[6]}$ (fast-classical plus slow-AI, single junction, very large models, no trust), \textbf{LA-Light}$^{[7]}$ (AI for rare events, cloud-based, no malicious faults), \textbf{Keijzer\,2021}$^{[8]}$ (detects coordination attacks, but only in theory). Our difference: a small on-device AI, a \emph{measured} picture of how well detection holds up as the attack grows, verifiable identity, and a tamper-proof log.
+
+%==================== NEXT ====================
+\section{6.\ Next steps}
+\begin{multicols}{2}
+\begin{itemize}
+\item Bigger evaluation: more traffic levels and a real London (Lambeth) road, many repeated runs with error ranges --- extending the 30-run result we already have.
+\item Find the breaking point: grow the size of the lie until detection fails, and report exactly where that happens.
+\item Heavier traffic, where both the ambulance benefit and the attack damage are largest.
+\item Run the real Phi-4-mini on Foundry Local and confirm it answers consistently.
+\item Separate the cost of demanding evidence from the rest of the policy (a clean side-by-side).
+\end{itemize}
+\end{multicols}
+
+%==================== HONESTY ====================
+\vspace{-1pt}
+\section{7.\ What we do and do not claim}
+{\footnotesize \textbf{We claim:} trustworthy messaging between junctions; reliable detection of faked or faulty neighbour reports, with a measured reliability curve; a guaranteed safety floor; and a fair attack-and-defence test. \textbf{We do not claim:} new cryptography; that the AI beats the classical controller on ordinary traffic; defence against two or more junctions colluding, or a stolen master key; or that simulator results transfer straight to real hardware (that is future work).}
+
+%==================== REFS ====================
+\vspace{2pt}
+\hrule
+\vspace{2pt}
+{\scriptsize\color{nbgrey}
+\textbf{References.}
+[1] Varaiya, \emph{Transp.\ Res.\ C} 36 (2013) --- MaxPressure control.
+[2] Bernstein et al.\ (2012) --- Ed25519 signatures; approved-sender registry.
+[3] Lighthill \& Whitham, \emph{Proc.\ R.\ Soc.\ A} 229 (1955); Richards, \emph{Oper.\ Res.} 4 (1956) --- the traffic conservation law the sanity check rests on.
+[4] Lopez et al., Microscopic Traffic Simulation using SUMO, \emph{IEEE ITSC} (2018).
+[5] Yuan et al., CoLLMLight, arXiv:2503.11739 (2025).
+[6] Wang et al., VLMLight, arXiv:2505.19486 (2025).
+[7] Wang et al., LA-Light, arXiv:2403.08337 (2024).
+[8] Keijzer et al., Detection of Cyber-Attacks in Collaborative Intersection Control, \emph{ECC} (2021).
+}
+\end{document}

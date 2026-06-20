@@ -55,6 +55,19 @@ Answer four questions with measured numbers:
 - **Attack harm on the victim** (`naive − defended`, cross-J2): +7.17 s mean time-loss per vehicle (+80%), worst case +49.4 s (69.5 vs 20.1 s), total +229.5 s. The gate avoids all of this.
 - **Cost of the gate** (`defended − naive`, ambulance): +11.0 s. The gate is more conservative because it waits for corroboration before preempting.
 
+### Powered replication (n = 30 paired seeds, 95% bootstrap CI)
+
+The single-seed numbers above were replicated across 30 seeds (paired; `python src/measure_emergency.py --multi --seeds=30`, raw output `results/emergency_metrics_n30.txt`). Every effect's CI excludes zero:
+
+| Effect (paired delta) | Mean (s) | 95% CI |
+|---|---|---|
+| EV preemption benefit (nopreempt − defended) | **31.1** | [25.4, 36.5] |
+| Cost of the gate (defended − naive) | **8.0** | [3.7, 12.5] |
+| Attack harm avoided, cross-J2 mean (naive − defended) | **4.63** | [3.25, 5.99] |
+| Attack worst-case avoided, cross-J2 max (naive − defended) | **16.05** | [11.51, 20.44] |
+
+Note the EV benefit is **much larger across seeds (31 s) than in the single seed reported above (8 s)**: seed 42 happened to be a low-congestion case where preemption barely helped. This is exactly why the powered run matters and why the single-seed figure must not be quoted alone.
+
 ## 4. What happens during the run, and why
 
 **t = 40–100 s — the attack.** J1 signs phantom claims to J2.

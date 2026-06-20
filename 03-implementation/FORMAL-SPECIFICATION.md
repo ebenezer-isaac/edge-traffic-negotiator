@@ -6,6 +6,10 @@
 
 ---
 
+## In plain terms (read this first)
+
+This document is the engineering rulebook: it fixes *every number* the system uses (timings, thresholds, statistical settings), says where each number comes from, and shows how the pieces fit together at run time. If the proposal is "what we are building and why", this is "exactly how, with all the constants nailed down". Each value is tagged `[D]` derived, `[C]` cited from the literature, `[K]` must be calibrated from data, or `[E]` an engineering choice. Specialist terms are translated in [`GLOSSARY.md`](GLOSSARY.md).
+
 ## 0. Citation-integrity and calibration registers (read first)
 
 **Citation integrity (re-verified 2026-06-20, 201-agent fact-check):**

@@ -23,6 +23,10 @@ an escalated tick.
 
 ---
 
+## In plain terms (read this first)
+
+This is the build plan: the concrete classes, files, and scenario changes that turn the proposal into running code, plus a register of edge cases and how each is handled. It is written for whoever implements it (including a future session). Where it disagrees with the code as it stands today, the plan is the target, not the code. Specialist terms are translated in [`GLOSSARY.md`](GLOSSARY.md).
+
 ## 0. The two regimes (the spine of the whole design)
 
 Every SLM junction, every decision tick, is in exactly one regime:

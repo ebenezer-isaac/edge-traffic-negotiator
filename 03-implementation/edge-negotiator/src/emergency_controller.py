@@ -51,12 +51,20 @@ class EmergencyController(CoordinatedController):
 
     def __init__(self, *args, ev_bus: MessageBus,
                  ev_horizon: float = 195.0, verbose: bool = True,
-                 narrate_junctions=None, **kwargs):
+                 narrate_junctions=None,
+                 corroboration_required: bool = True,
+                 preemption_enabled: bool = True, **kwargs):
         super().__init__(*args, **kwargs)
         # Independent signed channel for EV sightings + advance-claims.
         if not isinstance(ev_bus, MessageBus):
             raise TypeError("ev_bus must be a MessageBus")
         self.ev_bus = ev_bus
+        # Mode switches for the exploit-then-defend comparison:
+        #   defended  : corroboration_required=True,  preemption_enabled=True
+        #   naive     : corroboration_required=False, preemption_enabled=True  (victim)
+        #   nopreempt : preemption_enabled=False                               (plain MaxPressure)
+        self.corroboration_required = bool(corroboration_required)
+        self.preemption_enabled = bool(preemption_enabled)
         if isinstance(ev_horizon, bool) or not isinstance(ev_horizon, (int, float)):
             raise TypeError("ev_horizon must be a number")
         if not (ev_horizon > 0):
@@ -179,6 +187,8 @@ class EmergencyController(CoordinatedController):
         if source == "local_sensing":
             return True
         if source == "advance_claim":
+            if not self.corroboration_required:
+                return True  # naive victim: trusts any authenticated claim
             return self._corroborated(ev_id, claimer or "", tl, local_ev)
         return False
 
@@ -197,6 +207,8 @@ class EmergencyController(CoordinatedController):
         used = super().decide(tl, st)  # normal coordinated / MaxPressure choice
         if tl not in self.slm or tl not in self.identities:
             return used
+        if not self.preemption_enabled:
+            return used  # nopreempt mode: plain MaxPressure + coordination
 
         local_ev = self._sense_local_ev(tl, st)
         # Publish a signed sighting + advance-claims downstream when we see one.

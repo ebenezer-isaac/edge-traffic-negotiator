@@ -6,6 +6,14 @@
 
 ---
 
+## In plain terms (read this first)
+
+Traffic lights at neighbouring junctions increasingly coordinate (green waves, ambulance preemption). The moment they talk, a faulty or hijacked junction can lie, and a naive coordinator acts on the lie: wasted green, starved side streets, or a signal tricked into clearing the road for an ambulance that does not exist.
+
+This project puts a small AI (Phi-4-mini, running locally, never retrained) at each junction. The junctions coordinate over a channel that is **digitally signed and sanity-checked**, on top of a classical controller (MaxPressure) that stays in charge by default and acts as a safety net. The real question is *not* "can the AI beat the classical controller on normal traffic" (it cannot, and we say so plainly) but: **when a neighbour's signed messages are compromised, does the system notice and degrade safely instead of believing the lie?** The headline experiment spoofs a fake emergency to grab green time, and shows the system refuses it because preemption is gated on *physical corroboration*, not on the signature alone.
+
+Every specialist term below (MaxPressure, conservation check, CUSUM, BCa, GEH, and so on) is translated in plain language in [`GLOSSARY.md`](GLOSSARY.md).
+
 ## 1. One-line thesis
 
 > A traffic-signal control system in which a deterministic MaxPressure controller is the default and safety shield, neighbouring junctions coordinate over an **authenticated, plausibility-checked** channel, and a frozen edge SLM is a guarded exception handler, evaluated for the first time as a **statistically-powered characterisation of how SLM-coordinated signal control degrades, and is defended, when the coordination channel is compromised.**

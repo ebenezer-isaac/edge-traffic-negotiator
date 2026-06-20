@@ -71,19 +71,38 @@ def _inject_ambulance(veh_id: str) -> None:
               f"{type(exc).__name__}: {exc}", file=sys.stderr)
 
 
+_MODES = {
+    "defended": dict(corroboration_required=True, preemption_enabled=True),
+    "naive": dict(corroboration_required=False, preemption_enabled=True),
+    "nopreempt": dict(corroboration_required=True, preemption_enabled=False),
+}
+
+
 def run(gui: bool = True, delay: float = 0.15, seed: int = 42, end: int = 600,
         scale: float = 1.0, attack_t: int = 40, ambulance_t: int = 120,
-        verbose: bool = True) -> dict:
+        verbose: bool = True, mode: str = "defended",
+        attack_end: int | None = None, tripinfo_path: str | None = None) -> dict:
     """Run the exploit-then-defend corridor demo; return a small summary dict.
 
-    ``attack_t``: sim second at which the compromised J1 emits the phantom claim
-    to J2 (while no real ambulance is anywhere near, so the WITHHOLD is clean).
-    ``ambulance_t``: sim second at which the real eastbound ambulance is injected.
+    ``mode``: 'defended' (corroboration gate), 'naive' (trust-everything victim
+    that honours the signed phantom claim), or 'nopreempt' (plain MaxPressure,
+    ignores all EV triggers). ``attack_t``..``attack_end``: the window over which
+    the compromised J1 re-emits the signed phantom claim to J2 each decision
+    cadence (a SUSTAINED spoof, so a naive victim keeps preempting). ``ambulance_t``:
+    when the real eastbound ambulance is injected. ``tripinfo_path``: if set, SUMO
+    writes per-trip output there for offline metric extraction.
     """
+    if mode not in _MODES:
+        raise ValueError(f"mode must be one of {sorted(_MODES)}, got {mode!r}")
+    if attack_end is None:
+        attack_end = attack_t + 60
     agent = StubAgent()
     binary = checkBinary("sumo-gui" if gui else "sumo")
     cmd = [binary, "-c", CORRIDOR_CFG, "--seed", str(seed),
            "--no-warnings", "true", "--scale", str(float(scale))]
+    if tripinfo_path:
+        cmd += ["--tripinfo-output", tripinfo_path,
+                "--tripinfo-output.write-unfinished", "true"]
     if gui:
         cmd += ["--start", "--quit-on-end"]
 
@@ -110,10 +129,12 @@ def run(gui: bool = True, delay: float = 0.15, seed: int = 42, end: int = 600,
             identities=identities, registry=registry, bus=coord_bus,
             adjacency=ARTERIAL_ADJACENCY, checker=checker,
             slm_junctions=pair, coord_weight=0.5, flow_window=30.0,
-            ev_bus=ev_bus, ev_horizon=195.0, verbose=verbose)
+            ev_bus=ev_bus, ev_horizon=195.0, verbose=verbose,
+            **_MODES[mode])
 
         if verbose:
             print("=== Edge Negotiator: exploit-then-defend corridor demo ===")
+            print(f"  Mode               : {mode}")
             print(f"  Corridor junctions : {pair} (all SLM-coordinated, signed bus)")
             print(f"  Agent              : stub (deterministic, no Foundry)")
             print(f"  GUI                : {'sumo-gui' if gui else 'headless'}"
@@ -123,19 +144,24 @@ def run(gui: bool = True, delay: float = 0.15, seed: int = 42, end: int = 600,
             print(f"  Real ambulance     : injected eastbound at t={ambulance_t}s")
             print("-" * 78)
 
-        fired_attack = False
+        announced_attack = False
         injected_amb = False
+        last_attack_inject = -999
         step = 0
         while traci.simulation.getMinExpectedNumber() > 0 and step < end:
             traci.simulationStep()
             now = int(traci.simulation.getTime())
-            # Scripted compromised-insider attack: a signed phantom EV claim.
-            if not fired_attack and now >= attack_t:
-                if "J1" in pair and "J2" in pair:
+            # Scripted compromised-insider attack: a SUSTAINED signed phantom EV
+            # claim, re-emitted each decision cadence over [attack_t, attack_end)
+            # so a naive victim keeps preempting (a one-shot lie is read once).
+            if attack_t <= now < attack_end and "J1" in pair and "J2" in pair:
+                if not announced_attack:
                     print(f"[t={now}s] >>> ATTACK: compromised J1 signs a PHANTOM "
-                          f"emergency claim to J2 <<<")
+                          f"emergency claim to J2 (sustained to t={attack_end}s) <<<")
+                    announced_attack = True
+                if now - last_attack_inject >= 10:
                     ctrl.inject_phantom_claim("J1", "J2", PHANTOM, "J1J2")
-                fired_attack = True
+                    last_attack_inject = now
             # Real ambulance, injected once, after the attack is shown.
             if not injected_amb and now >= ambulance_t:
                 print(f"[t={now}s] >>> REAL ambulance {REAL_AMB} enters eastbound <<<")
@@ -185,8 +211,12 @@ def _build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--steps", type=int, default=600)
     ap.add_argument("--scale", type=float, default=1.0,
                     help="SUMO demand multiplier (corridor is sized for 1.0)")
+    ap.add_argument("--mode", choices=sorted(_MODES), default="defended",
+                    help="defended (gate) | naive (victim) | nopreempt (plain MaxPressure)")
+    ap.add_argument("--attack-end", type=int, default=None,
+                    help="sim second to stop the sustained phantom claim (default attack-t+60)")
     ap.add_argument("--attack-t", type=int, default=40,
-                    help="sim second to fire the phantom EV claim")
+                    help="sim second to start the sustained phantom EV claim")
     ap.add_argument("--ambulance-t", type=int, default=120,
                     help="sim second to inject the real ambulance")
     ap.add_argument("--quiet", action="store_true")
@@ -200,4 +230,4 @@ if __name__ == "__main__":
         sys.exit(2)
     run(gui=args.gui, delay=args.delay, seed=args.seed, end=args.steps,
         scale=args.scale, attack_t=args.attack_t, ambulance_t=args.ambulance_t,
-        verbose=not args.quiet)
+        verbose=not args.quiet, mode=args.mode, attack_end=args.attack_end)

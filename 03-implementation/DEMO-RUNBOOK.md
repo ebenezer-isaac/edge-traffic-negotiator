@@ -9,7 +9,7 @@ All commands run from `03-implementation/edge-negotiator/` using the project ven
 
 ## A. Headline demo — exploit-then-defend (record this)
 
-**What it shows:** a real ambulance is cleared through a 4-junction corridor by local preemption; a compromised-but-approved junction then sends a *signed* fake-emergency claim to grab green, and the system refuses it because preemption needs physical corroboration, not just a valid signature.
+**What it shows:** multiple junctions coordinate to clear a real ambulance through a 4-junction corridor, each sensing it locally and sharing corroborated advance claims so downstream junctions pre-position green. Then a compromised-but-approved junction sends a *signed* fake-emergency claim to grab green, and the system refuses it because preemption requires physical corroboration, not just a valid signature. The coordination works; the robustness layer makes it deployable.
 
 ### Run command (GUI, paced for video)
 
@@ -31,7 +31,7 @@ All commands run from `03-implementation/edge-negotiator/` using the project ven
 ### Narration script (beats keyed to the terminal lines)
 
 **Opening (before/at start):**
-> "This is a four-junction corridor. Each junction runs a small language-model agent on Foundry Local, coordinating with its neighbours over a *signed* channel, with a classical MaxPressure controller underneath as the safety net. Watch the terminal — every emergency decision prints one line."
+> "This is a four-junction corridor. Each junction runs a frozen Phi-4-mini agent on Foundry Local. Under normal conditions MaxPressure runs the show; when an emergency or incident is detected, the junctions coordinate to clear it together. The channel is signed so a compromised junction cannot poison that coordination. Watch the terminal — every emergency decision prints one line."
 
 **At `>>> ATTACK: compromised J1 signs a PHANTOM emergency claim to J2`:**
 > "Now a junction has been compromised. J1 still holds a valid key, so anything it signs passes authentication. It's sending J2 a signed message claiming an ambulance is approaching — but there is no ambulance. This is the spoofed-preemption attack: lie to grab green and starve the cross street."
@@ -49,7 +49,7 @@ All commands run from `03-implementation/edge-negotiator/` using the project ven
 > "And downstream junctions get a heads-up claim that's now *corroborated* by an upstream junction that genuinely saw the ambulance — so they pre-position the green. Real claim, corroborated, granted. Fake claim, uncorroborated, refused. Same gate, no need to guess intent."
 
 **At the end summary:**
-> "The summary: the phantom attack was blocked, the real ambulance got preemption at every junction. That's the thesis in one run — the system degrades trustworthily under a compromised channel."
+> "The summary: the junctions coordinated to clear the ambulance at every hop. The phantom attack was blocked without any special case, the same corroboration gate that enables legitimate advance preemption is what refuses the fake one. Coordination is the contribution; the robustness layer is what makes it safe to deploy."
 
 ### Quick verification before recording (headless, ~20 s)
 

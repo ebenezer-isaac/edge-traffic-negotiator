@@ -51,7 +51,7 @@ Audience: any technically literate reader (engineer, examiner) who is not a traf
 - **Adaptive band.** The tolerance around zero residual that counts as "normal" (sensors are noisy). It grows with traffic volume so a busy road is not falsely flagged.
 - **CUSUM (cumulative sum).** A statistical detector that adds up small deviations over time and alarms when the running total crosses a threshold — catching a sustained small lie that any single reading would miss.
 - **ARL (average run length).** CUSUM's tuning trade-off: ARL₀ = average time between false alarms when all is well (want it long); ARL₁ = average time to catch a real shift (want it short).
-- **Exploit-then-defend.** The headline experiment: build a competent victim that trusts its inputs, attack it, then show our layer detects and absorbs the same attack.
+- **Exploit-then-defend.** A secondary validation experiment: build a competent victim that trusts its inputs, attack it, then show the robustness layer detects and absorbs the same attack. It validates that coordination stays safe under a compromised junction, not the primary contribution.
 - **Fair victim / cooperative_naive.** The victim controller, made deliberately competent (not a strawman) so the comparison is fair. It is representative of the trust-everything cooperative class that CoLLMLight exemplifies.
 - **Detectability envelope / recall-collapse knee.** A plot of how reliably we catch a lie as the lie gets smaller. Big lies are always caught; below some size ("the knee") detection collapses. The result is *where* that boundary sits, not a yes/no claim.
 - **Lie-magnitude sweep.** Running the attack at many lie sizes (as multiples of the tolerance band) to trace that envelope.

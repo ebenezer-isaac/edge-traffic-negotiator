@@ -1,9 +1,10 @@
 # The Edge Negotiator — Methodology & Implementation Design (Build Plan)
 
-**Status:** prescriptive build plan, 2026-06-20. Locks down the methodology and the
-concrete code/scenario changes for the emergency-handling SLM controller, the
-exploit-then-defend headline, and the edge-case handling. Derived from a full read of
-`src/` and the canonical `PROJECT-PROPOSAL.md` + `FORMAL-SPECIFICATION.md`.
+**Status:** prescriptive build plan, 2026-06-21. Locks down the methodology and the
+concrete code/scenario changes for the coordinated multi-agent emergency-handling SLM
+controller, the exploit-then-defend robustness experiment, and the edge-case handling.
+Derived from a full read of `src/` and the canonical `PROJECT-PROPOSAL.md` +
+`FORMAL-SPECIFICATION.md`.
 
 This document is authoritative for *how to build it*. Where it conflicts with the
 as-built code, this is the target. Two as-built bugs it deliberately fixes:
@@ -391,16 +392,17 @@ live corridor. Defence: windowed conservation detector flags `inflated`; the
 
 ---
 
-## 4. Exploit-then-Defend (the headline)
+## 4. Exploit-then-Defend (the robustness differentiator experiment)
 
 ### 4.1 The fair victim baseline (addressing the reviewer concern)
 
-The reviewer's concern is real: *breaking an unauthenticated system is trivial and a
-strawman.* We make the victim baseline a controller **representative of the trust-everything
-cooperative class that CoLLMLight exemplifies** (CoLLMLight itself shares neighbour state via
-a spatiotemporal graph rather than signed messages; we model the same trust assumption over
-an explicit message channel, which is the surface that class implicitly trusts) — otherwise
-competent:
+This experiment demonstrates the robustness differentiator: the integrity layer that makes
+the coordinated emergency system deployable under a compromised peer. The reviewer's concern
+is real: *breaking an unauthenticated system is trivial and a strawman.* We make the victim
+baseline a controller **representative of the trust-everything cooperative class that
+CoLLMLight exemplifies** (CoLLMLight itself shares neighbour state via a spatiotemporal graph
+rather than signed messages; we model the same trust assumption over an explicit message
+channel, which is the surface that class implicitly trusts), otherwise competent:
 
 - **NEW mode `cooperative_naive`** in the runner: identical control logic to
   `coordinated` (same SLM, same Channel-B coordination term made **causal** in the
@@ -416,10 +418,11 @@ competent:
   authentication or plausibility check), not a deliberately broken one; (c) the attack is a
   *single compromised neighbour*, the weakest realistic adversary, not a flood.
 
-So the comparison is: **two equally-good coordinated controllers that differ only in
-whether they authenticate + plausibility-check inputs.** Under no attack: tie. Under one
+So the comparison is: **two equally-good coordinated emergency controllers that differ only
+in whether they authenticate + plausibility-check inputs.** Under no attack: tie. Under one
 compromised neighbour: the naive one breaks, the defended one does not. That isolates the
-contribution to the integrity layer, which is the defensible claim.
+contribution of the integrity layer, the secondary differentiator that makes the system
+deployable.
 
 ### 4.2 The exploit (quantifiable bad outcome)
 
@@ -455,12 +458,15 @@ The defended system (`emergency` mode with full integrity):
   band, so it evades conservation by construction — a named limit, contained by `revoke()` +
   audit, not detection. Stated, not hidden.
 
-### 4.4 Output of the headline experiment
+### 4.4 Output of the robustness experiment
 
 A single table: rows = {no-attack, phantom-preemption, phantom-incident, count-inflation};
 columns = naive KPIs vs defended KPIs (AETT/AEWT, non-priority delay, throughput,
 false-preemption rate, detection P/R/latency). The story: **identical under honest
-operation; naive collapses under a single lie; defended absorbs it.**
+operation; naive collapses under a single lie; defended absorbs it.** This demonstrates
+that the coordinated emergency system remains functional when a peer is compromised.
+The integrity layer is what separates a coordination scheme that works in a lab from one
+that can be deployed.
 
 ### 4.5 Files
 

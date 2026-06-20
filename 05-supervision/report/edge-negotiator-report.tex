@@ -39,8 +39,8 @@
 %==================== TITLE ====================
 \begin{center}
 {\sffamily\bfseries\LARGE\color{nbblue} The Edge Negotiator}\\[3pt]
-{\sffamily\large Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control}\\[5pt]
-{\small\color{nbgrey} Progress report \quad$\vert$\quad UCL MSc Systems Engineering for IoT (25153651) \quad$\vert$\quad Supervisors: Dr A.\ Delibasi (UCL), L.\ Stott (Microsoft) \quad$\vert$\quad 2026-06-20}
+{\sffamily\large Coordinated On-Device SLMs for Multi-Junction Emergency Response}\\[5pt]
+{\footnotesize\color{nbgrey} Progress report \,$\vert$\, MSc Systems Engineering for IoT, UCL (25153651) \,$\vert$\, Supervisors: Dr A.\ Delibasi (UCL), L.\ Stott (Microsoft) \,$\vert$\, 2026-06-21}
 \end{center}
 \vspace{2pt}
 {\color{nbblue}\hrule height 1.2pt}
@@ -48,9 +48,9 @@
 
 %==================== SCOPE ====================
 \section{1.\ The project and its goal}
-The system is a corridor of traffic junctions on one arterial. Each junction runs a fast classical controller (\emph{MaxPressure}\,$^{[1]}$) by default, which is also the safety floor. Alongside it runs a small AI model (\textbf{Phi-4-mini}, on the junction itself via \textbf{Microsoft Foundry Local}, never retrained), called in only for hard cases. Junctions share what they are about to do over a channel that is digitally signed and checked for plausibility.
+The system is a corridor of traffic junctions on one arterial. Its purpose is \textbf{coordinated emergency response}: when an ambulance crosses the corridor, or an incident blocks a lane, the junctions share what they see and clear a path together, instead of each reacting alone. Each junction runs a fast classical controller (\emph{MaxPressure}\,$^{[1]}$) by default, which is also the safety floor; a small AI model (\textbf{Phi-4-mini}, on the junction via \textbf{Microsoft Foundry Local}, never retrained) is called in only for the hard, ambiguous cases a fixed rule cannot settle.
 
-The goal: coordinate well in normal traffic, and fail safely when a neighbour lies. If a junction's messages are tampered with or the junction is hijacked, the system detects that the reports do not match reality and falls back to local control. A deterministic safety net always makes the clear-cut calls: clear an ambulance a junction can physically detect, refuse a claim it cannot verify; safety never depends on the AI. The AI handles only what a fixed rule cannot settle: when an alert is flagged but the evidence is partial or conflicting, it weighs the neighbours' reports to judge a real incident from a spoofed grab. Whether that beats a well-tuned fixed rule is the central question we measure, and we report it either way.
+Coordinating means acting on a neighbour's report, which is exactly what a compromised neighbour can abuse. So the enabling property, what makes the coordination safe to deploy, is \textbf{robust degradation}: if a junction is hijacked or its messages are tampered with, the system detects that the reports do not match the real traffic and falls back to local control. A deterministic safety net makes every clear-cut call (clear an ambulance a junction physically detects; refuse a claim it cannot verify); safety never depends on the AI. The central question we measure is whether the AI improves the genuinely ambiguous cases over a well-tuned fixed rule, and we report it either way.
 
 %==================== TWO COLUMNS: diagram + chart ====================
 \vspace{3pt}
@@ -98,7 +98,7 @@ The goal: coordinate well in normal traffic, and fail safely when a neighbour li
   (8.0,0)+-(4.39,0)};
 \end{axis}
 \end{tikzpicture}\\[2pt]
-{\scriptsize\color{nbgrey} SUMO\,$^{[4]}$, 30 paired runs. Gains (blue) vs the no-defence baselines; cost (red) vs blindly trusting. Every 95\% range excludes zero.}
+{\scriptsize\color{nbgrey} SUMO\,$^{[4]}$, 30 paired runs. Top: coordinated emergency preemption clears the ambulance faster than the same controller with preemption off. Below: the coordination stays safe under a spoofing neighbour, at a small honest cost. Every 95\% range excludes zero.}
 \end{minipage}
 
 %==================== PROGRESS ====================
@@ -106,10 +106,10 @@ The goal: coordinate well in normal traffic, and fail safely when a neighbour li
 \section{4.\ What we have built, and what it shows}
 \begin{multicols}{2}
 \begin{itemize}
-\item \hd{Working and tested:} signed messaging between junctions, an approved-senders registry, the classical controller and its safety net, a check that flags neighbour reports inconsistent with the real traffic, and a four-junction simulated corridor.
-\item \hd{Emergency handling:} a junction clears an ambulance only with physical evidence the vehicle exists; a valid signature is not enough, so a faked emergency is refused.
-\item \hd{Live attack-and-defence demo:} a hijacked junction sends a signed but fake ``ambulance approaching'' alert and it is refused; a real ambulance is cleared at every junction.
-\item \hd{Evidence (30 runs):} emergency handling clears the ambulance 31\,s faster than with none; under the spoof attack the worst side-street wait is held 16\,s below a trust-everything controller; requiring evidence costs 8\,s of ambulance time versus blindly trusting (a price we accept).
+\item \hd{Coordinated emergency handling (the core):} junctions share what they sense; a junction clears an ambulance it physically detects, and a downstream junction pre-clears for it once an upstream junction has independently confirmed the same vehicle.
+\item \hd{Working and tested:} the classical controller and its safety net, signed messaging between junctions, an approved-senders registry, a check that flags neighbour reports inconsistent with the real traffic, and a four-junction simulated corridor.
+\item \hd{Live demo:} a real ambulance is cleared across the junctions; a hijacked junction's signed-but-fake ``ambulance approaching'' alert is refused, so a compromised neighbour cannot hijack the coordination.
+\item \hd{Evidence (30 runs):} coordinated emergency preemption (6 local plus 7 corroborated-downstream clearances in one run) clears the ambulance 31\,s faster than with preemption off; under a spoofing neighbour the worst side-street wait is held 16\,s below a trust-everything controller; requiring physical evidence costs 8\,s of ambulance time (accepted).
 \item \hd{Independent check:} an automated audit of the write-up found no fabricated sources; a few over-stated citations were corrected. Every result is reproducible from its settings.
 \end{itemize}
 \end{multicols}
@@ -117,7 +117,7 @@ The goal: coordinate well in normal traffic, and fail safely when a neighbour li
 %==================== SURVEY ====================
 \vspace{2pt}
 \section{5.\ Where it sits in the literature}
-To our knowledge, no prior system has been evaluated as a multi-junction, AI-coordinated controller in which a junction's messages can be faked by an insider that still holds a valid key. The parts exist; the combination, tested under that threat, does not.
+To our knowledge, no prior system coordinates several junctions for emergency response using a frozen on-device SLM, and keeps that coordination trustworthy when an approved junction is compromised. The parts exist separately; this combination does not.
 
 \vspace{4pt}
 {\scriptsize\setlength{\tabcolsep}{4pt}
@@ -142,7 +142,7 @@ Keijzer (2021) & Theory-only detection of coordination attacks & Yes & Yes & A m
 \end{tabular}}
 
 \vspace{5pt}
-\hd{Why this direction.} Racing the classical controller on normal traffic is a dead end (it is throughput-optimal and microsecond-fast), so performance is a secondary, honestly-reported axis. The AI earns its place only as a guarded exception handler on hard cases. The headline is robustness: detecting and degrading safely under an authenticated-but-lying neighbour, which signatures alone cannot catch. We use SUMO (it models emergency vehicles and lane blockage), a signed hash-chained log rather than a heavyweight blockchain (one city authority, one trust domain), and a permissioned key registry rather than full decentralised identity.
+\hd{Why this direction.} The contribution is the combination: a frozen on-device SLM coordinating several junctions for emergencies and incidents, kept safe when a junction is compromised. Coordination alone is precedented (CoLLMLight: normal flow, cloud-scale, fine-tuned, no trust); emergency handling alone is precedented (VLMLight, LA-Light, EMVLight); the fusion on a frozen edge model under a compromised channel is ours. Racing the classical controller on ordinary traffic is a dead end (throughput-optimal, microsecond-fast), so raw performance is a secondary, honest axis; the AI earns its place on the hard cases, and robustness to a lying neighbour is what makes leaning on a neighbour's report safe. We use SUMO (it models emergency vehicles and lane blockage), a signed hash-chained log not a blockchain (one trust domain), and a permissioned key registry not decentralised identity.
 
 %==================== VALUE / KPIs ====================
 \vspace{3pt}
@@ -155,8 +155,8 @@ The deployable angle: a safety-critical demonstration of edge AI (Foundry Local,
 \begin{tabular}{>{\raggedright\arraybackslash}p{5.2cm} >{\raggedright\arraybackslash}p{12.4cm}}
 \rowcolor{nbblue!18}
 \textbf{Indicator} & \textbf{Target / acceptance} \\
+Coordinated emergency-vehicle delay & Reduced versus the same controller with preemption off (measured: 31\,s faster over 30 runs); incident reallocation to follow \\
 Spoofed-emergency resistance & Every uncorroborated emergency claim refused; no false preemption \\
-Emergency-vehicle delay & Reduced versus no-preemption (measured: 31\,s faster over 30 runs) \\
 No-harm guarantee & The security layer does not slow normal traffic beyond a pre-registered margin \\
 Attack-detection quality & Precision / recall / detection-latency reported across a sweep of lie sizes \\
 Edge feasibility & Phi-4-mini decision within budget on Foundry Local; gated to keep a corridor within it \\
@@ -164,7 +164,7 @@ Auditability & Tamper-evident log of every signed message and decision \\
 \end{tabular}}
 
 %==================== NEXT + HONESTY ====================
-\vspace{6pt}
+\vspace{2pt}
 \begin{minipage}[t]{0.48\textwidth}
 \section{7.\ Next steps}
 \vspace{2pt}
@@ -179,19 +179,19 @@ Auditability & Tamper-evident log of every signed message and decision \\
 \begin{minipage}[t]{0.48\textwidth}
 \section{8.\ What we do and do not claim}
 \vspace{2pt}
-{\footnotesize \textbf{Claim:} authenticated messaging between junctions; detection of faked or faulty reports with a measured reliability curve; a deterministic safety floor; a fair attack-and-defence comparison.\\[3pt]
-\textbf{Do not claim:} new cryptography; that the AI beats the classical controller on ordinary traffic; that the AI yet improves the ambiguous decisions (measured next); that coordination yet steers normal traffic (verified, not yet causal); defence against colluding insiders or a stolen master key; or that simulator results transfer directly to hardware.}
+{\footnotesize \textbf{Claim:} coordinated emergency preemption across junctions (a real ambulance cleared, a downstream junction pre-cleared on independent corroboration); authenticated messaging between junctions; detection of faked or faulty reports with a measured reliability curve; a deterministic safety floor; a fair attack-and-defence comparison.\\[3pt]
+\textbf{Do not claim:} new cryptography; that the AI beats the classical controller on ordinary traffic; that the AI yet improves the ambiguous decisions (measured next); that normal-traffic green-wave coordination yet steers decisions (it is verified end to end but not yet causal, the next build step); defence against colluding insiders or a stolen master key; or that simulator results transfer directly to hardware.}
 \end{minipage}
 
 %==================== REFS ====================
-\vspace{8pt}
+\vspace{4pt}
 {\color{nbblue!40}\hrule}
-\vspace{3pt}
+\vspace{2pt}
 {\scriptsize\color{nbgrey}
 \textbf{References.}\enspace
 [1] Varaiya, Max-pressure control, \emph{Transp.\ Res.\ C} 36 (2013).
 [2] Bernstein et al., Ed25519, \emph{J.\ Cryptogr.\ Eng.} (2012).
-[3] Lighthill \& Whitham, \emph{Proc.\ R.\ Soc.\ A} 229 (1955); Richards, \emph{Oper.\ Res.} 4 (1956) (vehicle-conservation law).
+[3] Lighthill, Whitham \& Richards (LWR vehicle-conservation model, 1955, 1956).
 [4] Lopez et al., SUMO, \emph{IEEE ITSC} (2018).
 [5] Yuan et al., CoLLMLight, arXiv:2503.11739 (2025).
 [6] Wang et al., VLMLight, arXiv:2505.19486 (2025).

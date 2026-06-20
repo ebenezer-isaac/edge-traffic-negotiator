@@ -1,3 +1,5 @@
+> **SUPERSEDED (2026-06-20) — historical record only.** This brief captures the 2026-05-31 pivot and an *earlier* framing (Hyperledger Besu allowlist as a core component, "verified-source coordination"). The project has since been locked to **trustworthy degradation of SLM-coordinated control under a compromised channel**, with blockchain demoted to an optional aside. For the current direction read `03-implementation/PROJECT-PROPOSAL.md` + `FORMAL-SPECIFICATION.md` (canon), and `05-supervision/AKIN-research-survey-and-direction.md` / `LEE-business-specification.md`. Kept only as the record of what was signed off.
+
 # Dissertation scope pivot — request for sign-off
 
 **Student:** 25153651 (UCL MSc Systems Engineering for IoT) · **Date:** 2026-05-31

@@ -1,3 +1,5 @@
+> **SUPERSEDED (2026-06-20) — do not onboard from this verbatim.** This handover predates the locked direction and points at deleted docs (`PROJECT-DECISION-BRIEF.md`, the `*-SPIKE.md` files) and an old framing (Besu allowlist as core, "verified-source coordination"). Current single source of truth: `03-implementation/PROJECT-PROPOSAL.md` + `FORMAL-SPECIFICATION.md` + `METHODOLOGY-AND-IMPLEMENTATION-DESIGN.md` + `VERIFICATION-REPORT.md`, and the project-spine-lock memory. Kept only for history.
+
 # Handover prompt — Edge Negotiator dissertation, fresh-session onboarding
 
 Paste this verbatim into a new Claude Code (or other agent) session in this repo. It is self-contained: a fresh agent reading it has everything it needs to continue without re-deriving prior decisions.

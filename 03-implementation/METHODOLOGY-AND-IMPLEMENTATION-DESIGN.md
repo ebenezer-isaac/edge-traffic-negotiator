@@ -1,4 +1,4 @@
-# The Edge Negotiator — Methodology & Implementation Design (Build Plan)
+# The Edge Negotiator: Methodology & Implementation Design (Build Plan)
 
 **Status:** prescriptive build plan, 2026-06-21. Locks down the methodology and the
 concrete code/scenario changes for the coordinated multi-agent emergency-handling SLM
@@ -9,12 +9,12 @@ Derived from a full read of `src/` and the canonical `PROJECT-PROPOSAL.md` +
 This document is authoritative for *how to build it*. Where it conflicts with the
 as-built code, this is the target. Two as-built bugs it deliberately fixes:
 
-- **B1 — inert coordination** (`coordinated_controller.py:711`): `used = proposal if proposal is not None else coord_choice`,
+- **B1: inert coordination** (`coordinated_controller.py:711`): `used = proposal if proposal is not None else coord_choice`,
   so the coordination/emergency term is only consulted on SLM fallback. A reliable agent
   never falls back, so the term is computed, counted, then discarded. The triggered-regime
   decision below makes the escalated output **causal**. (This is a prerequisite for the
   fair-victim experiment in §4: the benign "tie" claim only holds once coordination is causal.)
-- **B2 — silent edge no-op on OSM**: grid `f"{src}{dst}"` parsing returns None for
+- **B2: silent edge no-op on OSM**: grid `f"{src}{dst}"` parsing returns None for
   every real edge. Fixed by the existing `edge_map` injection path; emergency scenarios
   MUST pass an explicit `edge_map`.
 
@@ -34,8 +34,8 @@ Every SLM junction, every decision tick, is in exactly one regime:
 
 | Regime | Entry condition | Who decides the phase | Causal? |
 |---|---|---|---|
-| **NORMAL** | no trigger active for this junction | MaxPressure (+ optional Channel-B coordination term, advisory) | n/a — MaxPressure is the floor |
-| **TRIGGERED** | a trigger predicate fires (see §2) | SLM exception handler proposes; **safety shield validates and can override**; the *accepted* proposal is executed | YES — the emergency decision changes the executed phase, gated by the shield |
+| **NORMAL** | no trigger active for this junction | MaxPressure (+ optional Channel-B coordination term, advisory) | n/a (MaxPressure is the floor) |
+| **TRIGGERED** | a trigger predicate fires (formal gate A1-A3, see §2 and FORMAL-SPECIFICATION.md §8) | SLM exception handler proposes; **safety shield validates and can override**; the *accepted* proposal is executed | YES: the emergency decision changes the executed phase, gated by the shield |
 
 The bug B1 lives entirely in NORMAL regime, where coordination was advisory-only. We
 **keep it advisory in NORMAL** (correct: MaxPressure is throughput-optimal and we never
@@ -83,7 +83,7 @@ For each SLM junction `tl`, inside `decide(tl, st)`:
         used = proposal if proposal is not None else coord_choice
         return self._shield_validate(tl, st, used, mp_choice, trig=None)
 
-6.  else:                                                  # TRIGGERED regime — SLM is AUTHORITATIVE
+6.  else:                                                  # TRIGGERED regime: SLM is AUTHORITATIVE
         emergency_note = self._build_emergency_prompt(tl, st, trig, incoming_per_phase)
         proposal = agent.choose_phase(tl, n, halting, neighbor_note=emergency_note)
         candidate = proposal if proposal is not None else self._rule_fallback(tl, st, trig)
@@ -155,7 +155,7 @@ def _admissible_ev(trig) -> bool:
 ```
 
 `shield_margin` is a calibrated `[K]` parameter (no guessed default ships; sweep {0,2,4,8,16},
-report the 0 baseline and the selected value — see FORMAL-SPECIFICATION.md §1.1): 0 = shield
+report the 0 baseline and the selected value, see FORMAL-SPECIFICATION.md §1.1): 0 = shield
 vetoes any candidate worse than MaxPressure (most conservative, "never regress"); larger =
 gives the SLM more latitude on incident/demand triggers. A **corroborated** emergency preemption is
 not subject to the pressure margin: clearing the EV is the objective and the shield enforces
@@ -206,6 +206,21 @@ class Trigger:
 abnormal_demand`). Multiple simultaneous triggers are recorded in `evidence["also"]` but
 only the top one drives the regime; the prompt mentions all (see §7 multi-emergency).
 
+### 2.0 Formal escalation gate (A1-A3)
+
+The five trigger evaluators below implement the compact formal predicate stated canonically
+in `FORMAL-SPECIFICATION.md` §8 (Formal system properties): a tick escalates to the SLM iff
+A1 the conservation/CUSUM detector flags a neighbour claim this window (§2.5,
+`conservation_anomaly`), or A2 an authenticated emergency/incident claim has partial
+evidence, corroboration present but below the hard-accept threshold, or stale/inconsistent
+(§2.1 EV `advance_claim` corroboration, §2.2 incident partial confirmation), or A3 two
+authenticated reports about the same edge contradict beyond the tolerance band (handled
+structurally, not as a separate trigger: each contradicting claim is reconciled against
+local observation independently, so a contradiction surfaces as one or both claims flagging
+under A1, see E4). Fully corroborated and zero-evidence claims never escalate; they resolve
+deterministically in NORMAL regime. This is a gate, not a ranking: the priority order above
+then picks which fired trigger drives the regime.
+
 ### 2.1 Emergency vehicle (preemption)
 
 - **Signal:** an EV is on or approaching an in-lane of `tl`. Read via TraCI:
@@ -217,16 +232,16 @@ only the top one drives the regime; the prompt mentions all (see §7 multi-emerg
 - **Threshold:** fire when an EV is within `ev_horizon` metres of the stop line OR already
   halted on an in-approach. `ev_horizon = v_free·(min_green + yellow + processing)` (the
   canonical formula in FORMAL-SPECIFICATION.md §1.3; ≈195 m at 13.9 m/s), so the green can
-  be pre-positioned before arrival — long enough to hold the clearing phase, run the change
+  be pre-positioned before arrival, long enough to hold the clearing phase, run the change
   interval, and absorb the SLM round-trip.
-- **Over-trigger guard:** debounce — once preemption fires for an EV id it stays latched
+- **Over-trigger guard:** debounce: once preemption fires for an EV id it stays latched
   for that junction until the EV clears the junction (id leaves all in/out edges), so the
   signal does not flap if the EV momentarily drops off a detector.
 - **Under-trigger guard:** scan ALL in-edges (cross street included), not just the arterial,
   so a cross-street ambulance is not missed.
-- **Two trigger sources, different trust (`trig.source`):** (i) `local_sensing` — this
+- **Two trigger sources, different trust (`trig.source`):** (i) `local_sensing`: this
   junction's own vClass scan of its in-edges, trustworthy (its own detector), admits
-  preemption directly. (ii) `advance_claim` — a signed `ev_claim` from the EV's registered
+  preemption directly. (ii) `advance_claim`: a signed `ev_claim` from the EV's registered
   key or an upstream neighbour, used to pre-position green BEFORE the EV physically arrives
   (green-wave preemption). An advance claim is spoofable, so it is admitted only if
   **corroborated**.
@@ -254,7 +269,7 @@ only the top one drives the regime; the prompt mentions all (see §7 multi-emerg
   `>= incident_persist (3)` consecutive windows *while the serving phase is green*.
 - **Over-trigger guard:** the "while green and persistent" condition distinguishes a real
   blockage from a normal red-phase queue. Spillback from a downstream jam (occupancy high
-  but the edge IS draining when green) does NOT fire — that is honest congestion (§7).
+  but the edge IS draining when green) does NOT fire; that is honest congestion (§7).
 - **Under-trigger guard:** if a lane-area detector (E2) is configured on the approach, also
   fire on `jamLengthInVehicles` exceeding a fraction of edge length; gives earlier
   detection than occupancy alone.
@@ -287,9 +302,9 @@ only the top one drives the regime; the prompt mentions all (see §7 multi-emerg
 ### 2.5 Conservation anomaly (the integrity↔control unification)
 
 - **Signal:** a flagged `Detection` (`inflated` / `under_reported`) from the windowed
-  detector this round — i.e. a neighbour's claim is physically implausible. Per
-  `FORMAL-SPECIFICATION.md` §4/§8: the same detector that catches spoof/fault is the escalation
-  trigger.
+  detector this round (i.e. a neighbour's claim is physically implausible). This is
+  escalation predicate A1 (§2.0); per `FORMAL-SPECIFICATION.md` §4/§8/§9: the same detector
+  that catches spoof/fault is the escalation trigger.
 - **Handling:** escalate to the SLM but DISCOUNT the flagged neighbour's `incoming_per_phase`
   contribution to zero (do not coordinate on a claim we just judged implausible), and log
   the rejection. The shield's normal pressure-margin guard applies. This makes the defence
@@ -333,7 +348,7 @@ harness (§5) iterates them.
 - Expected: each junction in turn fires `emergency_vehicle`, shield enforces the arterial
   green phase as the EV approaches; KPI = AETT/AEWT for the EV vs a no-preemption run.
 
-**Attacked — fake preemption request:** a compromised neighbour signs a `toward` message
+**Attacked (fake preemption request):** a compromised neighbour signs a `toward` message
 with an `ev_claim` field (NEW optional payload field) asserting an EV inbound on an
 approach where there is **no EV**. Naive baseline (§4) preempts on the claim, starving the
 real traffic. Defence: preemption fires ONLY on **locally observed** EV vClass (the signed
@@ -355,7 +370,7 @@ vehicle-conservation check sees a claim with no matching observation).
 - KPI = incident recovery time (windows from block onset to network delay returning to
   within X% of pre-incident baseline).
 
-**Attacked — phantom accident report:** a compromised neighbour signs a message claiming a
+**Attacked (phantom accident report):** a compromised neighbour signs a message claiming a
 blockage on `J1J2` (e.g. `incident_claim` field) when the edge is flowing. Naive baseline
 reroutes/holds for a non-existent incident, wasting capacity. Defence: incident triggers
 fire on **locally observed** occupancy+speed, not on the claim; the phantom claim
@@ -372,7 +387,7 @@ contradicts local observation (edge is flowing) → flagged + ignored. Logged.
   (NFR-5). KPI = non-priority delay unchanged vs full-sensor baseline (graceful
   degradation), `missing_claim` recall/latency.
 
-**Attacked — spoofed sensor / neighbour message:** the silent neighbour is *replaced* by a
+**Attacked (spoofed sensor / neighbour message):** the silent neighbour is *replaced* by a
 spoofer that over-claims `release` (count-inflation) to mask the outage or to manipulate
 coordination. This is the existing `spoof` attack (`attacks.spoof_release`) lifted onto the
 live corridor. Defence: windowed conservation detector flags `inflated`; the
@@ -381,7 +396,7 @@ live corridor. Defence: windowed conservation detector flags `inflated`; the
 ### 3.4 Scenario build files (concrete)
 
 - NEW `sumo/corridor/scenarios/ev.rou.xml`, `ev.sumocfg` (+ `ev_attacked` twin via an
-  injected fake `ev_claim` at the message layer, not a new route file — the attack is on
+  injected fake `ev_claim` at the message layer, not a new route file; the attack is on
   the wire, so the twin shares `ev.rou.xml` and differs only in the runner's injector).
 - NEW `sumo/corridor/scenarios/incident.rou.xml` (background + the stopping blocker),
   `incident.add.xml` (rerouter for the multilane variant), `incident.sumocfg`.
@@ -406,13 +421,13 @@ channel, which is the surface that class implicitly trusts), otherwise competent
 
 - **NEW mode `cooperative_naive`** in the runner: identical control logic to
   `coordinated` (same SLM, same Channel-B coordination term made **causal** in the
-  triggered regime, same green-wave benefit) — it is a *good* coordinated controller. The
+  triggered regime, same green-wave benefit), it is a *good* coordinated controller. The
   ONLY difference: it consumes neighbour `release` / `ev_claim` / `incident_claim`
-  **without the integrity layer** — no signature verification, no registry membership
+  **without the integrity layer**: no signature verification, no registry membership
   check, no conservation plausibility check. It trusts every well-formed message.
 - This is fair because: (a) it gets the *same* coordination performance benefit as the
   defended system on honest scenarios (we show this with a no-attack run: the two modes are
-  statistically indistinguishable on AETT/throughput when nobody lies — note this benign tie
+  statistically indistinguishable on AETT/throughput when nobody lies; note this benign tie
   depends on coordination being *causal*, i.e. on the B1 fix being in place); (b) it reflects
   the trust assumption of the actual literature (CoLLMLight consumes neighbour state with no
   authentication or plausibility check), not a deliberately broken one; (c) the attack is a
@@ -447,7 +462,7 @@ The defended system (`emergency` mode with full integrity):
 
 - **Signing + registry:** the spoofer, if it forges another junction's identity, is rejected
   at `bad_signature` (KPI-4, 100% per de-risk §2). If it is a genuine compromised member
-  with a valid key, signing alone does NOT catch it — and we say so honestly.
+  with a valid key, signing alone does NOT catch it, and we say so honestly.
 - **Conservation plausibility:** the genuine-member spoof is caught by the windowed
   conservation detector: `ev_claim`/`incident_claim`/inflated `release` have **no matching
   local observation** → flagged (`inflated` / `missing_observation`), the
@@ -455,7 +470,7 @@ The defended system (`emergency` mode with full integrity):
   local EV confirmation (§3.1). Result: defended KPIs ≈ no-attack KPIs.
 - **Honest residual (first principles):** a *coordinated* attacker that inflates a claim AND
   supplies a colluding observation in lockstep keeps the mass-balance residual inside the
-  band, so it evades conservation by construction — a named limit, contained by `revoke()` +
+  band, so it evades conservation by construction; a named limit, contained by `revoke()` +
   audit, not detection. Stated, not hidden.
 
 ### 4.4 Output of the robustness experiment
@@ -472,15 +487,15 @@ that can be deployed.
 
 - NEW `src/run_exploit_defend.py` wires the `cooperative_naive` mode. The victim itself is a
   `CoordinatedController` subclass `NaiveCooperativeController` (defined alongside
-  `coordinated_controller.py`) that **bypasses** the bus's trust pipeline — reads
-  `bus._published` directly without verification — and ignores conservation flags. This is the
+  `coordinated_controller.py`) that **bypasses** the bus's trust pipeline (reads
+  `bus._published` directly without verification) and ignores conservation flags. This is the
   ONLY place trust is bypassed, clearly isolated and documented as the victim. (File manifest
   in §8 lists this under `run_coordinated.py`/`run_exploit_defend.py` consistently.)
 - NEW `src/attacks_live.py`: extend `attacks.py` with `ev_claim` / `incident_claim`
   injectors that ride the existing `MaliciousPublisher` (compose, do not edit
   `message_bus.py`).
 - Extend payload schema (validated at the boundary in `coordinated_controller.decide`'s
-  inbox loop) with optional `ev_claim: bool`, `incident_edge: str` — strict validation,
+  inbox loop) with optional `ev_claim: bool`, `incident_edge: str`; strict validation,
   reject malformed, never trust.
 
 ---
@@ -495,7 +510,7 @@ Wire as new `mode` strings recognised by the runners and `evaluation.TRAFFIC_MOD
 |---|---|---|
 | `fixed` | SUMO fixed-time (Webster stand-in) | yes |
 | `maxpressure` | classical MaxPressure / shield | yes |
-| `maxpressure_preempt` | MaxPressure + deterministic EV preemption rule (no SLM, no coordination) — **the fair non-AI emergency baseline** | NEW |
+| `maxpressure_preempt` | MaxPressure + deterministic EV preemption rule (no SLM, no coordination); **the fair non-AI emergency baseline** | NEW |
 | `cooperative_naive` | trust-everything coordinated SLM (the victim, §4.1) | NEW |
 | `coordinated` | authenticated coordinated SLM, no emergency triggers | yes |
 | `emergency` | the full system: authenticated coordination + SLM emergency handler + shield | NEW |
@@ -514,7 +529,7 @@ event logs:
 |---|---|---|
 | ATT / AWT / throughput / queue / completion / mean_network_delay | `metrics.py` (existing) | none |
 | matched-set travel-time | `metrics.matched_diff` (existing) | none |
-| **AETT / AEWT** (emergency vehicle travel/wait time) | tripinfo filtered to EV vType id | NEW `metrics.priority_class_times(run, vtype="ev")` — AETT = **horizon-penalised mean** over *departed* EVs (a stranded EV that never clears contributes `T_end − T_dep`, per FORMAL-SPECIFICATION.md §6, so non-completion is penalised not dropped); AEWT = mean `waitingTime` over EVs |
+| **AETT / AEWT** (emergency vehicle travel/wait time) | tripinfo filtered to EV vType id | NEW `metrics.priority_class_times(run, vtype="ev")`: AETT = **horizon-penalised mean** over *departed* EVs (a stranded EV that never clears contributes `T_end − T_dep`, per FORMAL-SPECIFICATION.md §6, so non-completion is penalised not dropped); AEWT = mean `waitingTime` over EVs |
 | **non-priority delay** | tripinfo excluding EV ids | NEW `metrics.non_priority_delay(run, priority_ids)` |
 | **incident recovery time** | per-step network-delay trace (NEW lightweight per-tick log) vs pre-incident baseline | NEW `metrics.recovery_time(trace, onset_t, tol)` |
 | detection precision/recall/latency | `run_attacks` / `evaluation.run_detection` (existing) | none for offline; live variant logs flags per scenario |
@@ -549,6 +564,37 @@ of a `RunRecord` + the controller's `escalation_events` list.
   `flow_accounting.py`, `message_bus.py`, `identity.py`, `registry.py`, `attacks.py`,
   `run_attacks.py`.
 
+### 5.5 SLM characterization dataset (ambiguous-case split)
+
+The escalated states (A1-A3, §2.0) are the only place the SLM's disambiguation judgment is
+evaluated. This is not a routine-phase-selection contest: MaxPressure already owns that task
+in NORMAL regime, and the SLM cannot get purchase there by construction. On the ambiguous
+set, the SLM is characterised against a well-tuned deterministic rule (`rule_disambiguator`:
+fixed thresholds on corroboration count, residual magnitude, CUSUM persistence, tuned on a
+development split) as a reference, measured relative to it, not raced against it. Winning is
+not required or guaranteed; a clean null is a valid, publishable finding, reported either way.
+
+The ambiguous test set is split before any SLM run:
+
+- **Anticipated cases:** the states `rule_disambiguator`'s thresholds are tuned on. Parity
+  between rule and SLM is the expected result here.
+- **Novel/unanticipated cases:** held out from rule tuning entirely, combinations the rule
+  was never fitted to, where a frozen reasoner could plausibly generalise beyond fixed
+  thresholds. This split is the differentiator versus trained-RL systems, which need
+  retraining to handle novelty at all.
+
+The curated hard-state micro-benchmark (hand-built flagged states with known-correct
+escalate/reject labels: real incident, spoofed preemption grab, within-tolerance partial
+lie, multiple simultaneous emergencies, EV-plus-incident) is built across both splits, plus
+harvested states from the demand-sweep runs labelled by injected ground truth.
+**Pre-committed headline decision rule:** a statistically and practically significant SLM
+result on the ambiguous set means the SLM leads the contribution; a null (within MDE) means
+the trust-preserving coordination layer leads, and that null is itself a scoped, informative
+finding, not a failure. See `PROJECT-PROPOSAL.md` §8 and
+`specs/001-edge-negotiator/experiment-1-slm-vs-rule.md` for the full experiment design; this
+build plan supplies the causal triggered-regime prerequisite (§1.2-1.3, the B1 fix) that
+experiment depends on.
+
 ---
 
 ## 6. Experience-RAG Ceiling (Qdrant)
@@ -564,16 +610,16 @@ never depends on it.
   Qdrant for the `k` (default 3) nearest past states, and appends the retrieved
   `good_action -> outcome` summaries to the emergency prompt as additional context. The SLM
   still emits only `{"phase": N}`; retrieval only enriches the prompt (no tool-calling, no
-  agentic loop). The shield still validates the result — retrieval can never bypass safety.
+  agentic loop). The shield still validates the result; retrieval can never bypass safety.
 - **Corpus generation (state→good-action→outcome):** run the deterministic ladder
   (`maxpressure`, `maxpressure_preempt`) across many seeds/scenarios offline; for each
   decision, record `(state_key, action_taken, realised_short_horizon_delta_delay)`. Label an
   action "good" if its realised delay delta beats the per-state median. Store the good ones
   as Qdrant points: vector = normalised state features, payload = `{action, outcome_delta,
-  scenario, trigger_kind}`. This is *experience without training* — in-context retrieval, the
+  scenario, trigger_kind}`. This is *experience without training*: in-context retrieval, the
   only learned-like route under the no-training / edge-budget constraint (PROJECT-PROPOSAL.md §3).
-- **Embedding:** a fixed, deterministic feature vector (no learned embedder) — the
-  normalised `(halting_per_phase, incoming_per_phase, trigger_kind one-hot, occupancy)` —
+- **Embedding:** a fixed, deterministic feature vector (no learned embedder), the
+  normalised `(halting_per_phase, incoming_per_phase, trigger_kind one-hot, occupancy)`,
   so retrieval is reproducible and needs no GPU.
 
 ### 6.2 KPI and honesty
@@ -593,8 +639,8 @@ way the safety + integrity claims are unaffected.
 
 ### 6.4 Retrieval-poisoning guard (forward-ref to §7)
 
-The corpus is built **only** from the trusted deterministic ladder offline — never from
-live, possibly-attacked runs — so an attacker cannot inject poisoned experiences at
+The corpus is built **only** from the trusted deterministic ladder offline, never from
+live, possibly-attacked runs, so an attacker cannot inject poisoned experiences at
 runtime. See edge case E13.
 
 ---
@@ -605,47 +651,47 @@ runtime. See edge case E13.
 |---|---|---|
 | E1 | **SLM parse failure / nondeterminism** | `SLMAgent.choose_phase` returns None on any parse/validity failure (existing). In TRIGGERED regime, None → `_rule_fallback` (deterministic preemption for EV, MaxPressure otherwise), then shield. Temperature=0 already; nondeterminism is bounded by the shield. Never crashes (FR-1). |
 | E2 | **SLM latency under load / Foundry serialization** | Foundry serialises calls; one endpoint serves ~18–20 decisions / 10 s (de-risk §7). Cap concurrent escalations: a global `max_escalations_per_tick` (default = #SLM junctions, but if Foundry round-trip would exceed the decision interval, the controller processes escalations in priority order and the un-served junctions take the deterministic `_rule_fallback` this tick). Latency never stalls control: the SLM call has a hard timeout (`SLMAgent` already wraps in try/except → None → shield). |
-| E3 | **Multi-simultaneous emergencies** | `_evaluate_trigger` returns the top-priority trigger per junction; each junction is independent. EV preemption is enforced per junction deterministically, so two EVs on different corridors both get cleared. Two EVs converging on ONE junction from conflicting approaches: shield picks the higher-severity (closer/halted) EV's phase; the other is served on the next min-green cycle (it cannot serve both greens simultaneously — physical constraint, logged). |
-| E4 | **Conflicting neighbour reports** | Two neighbours' claims about the same edge that disagree: conservation reconciles each against *local* observation independently; the implausible one(s) flag. The check proves consistency vs observation, not which neighbour is "right" — but since each claim is checked against the controller's OWN observation, a contradicting claim simply fails its own reconciliation. Logged; coordination contribution from any flagged claim is zeroed (§2.5). |
+| E3 | **Multi-simultaneous emergencies** | `_evaluate_trigger` returns the top-priority trigger per junction; each junction is independent. EV preemption is enforced per junction deterministically, so two EVs on different corridors both get cleared. Two EVs converging on ONE junction from conflicting approaches: shield picks the higher-severity (closer/halted) EV's phase; the other is served on the next min-green cycle (it cannot serve both greens simultaneously; physical constraint, logged). |
+| E4 | **Conflicting neighbour reports** | Two neighbours' claims about the same edge that disagree: conservation reconciles each against *local* observation independently; the implausible one(s) flag. The check proves consistency vs observation, not which neighbour is "right", but since each claim is checked against the controller's OWN observation, a contradicting claim simply fails its own reconciliation. Logged; coordination contribution from any flagged claim is zeroed (§2.5). |
 | E5 | **False alarm on honest congestion / spillback** | The incident trigger requires "high occupancy AND near-zero speed WHILE GREEN, persistent". Honest spillback (edge full but draining when green) does NOT meet "not draining while green". The windowed detector's spillback classifier (`_is_spillback`) already excludes jams from conservation flags. So honest congestion neither flags conservation nor fires an incident. |
 | E6 | **Emergency during a spoof** | A real EV is locally observed (vClass) while a spoofer sends a phantom `incident_claim` on the EV's path. Priority order: `emergency_vehicle > incident`, and EV preemption requires *local* confirmation (present), while the phantom incident lacks local confirmation (absent) → ignored + flagged. The EV is cleared; the spoof is logged. The two mechanisms do not interfere. |
 | E7 | **Zero-emergency seeds** | Many seeds will have no EV/incident. The system stays in NORMAL regime the whole run = exactly `coordinated` mode. The 30-seed matrix includes zero-emergency seeds; emergency KPIs are reported only over seeds where the event was injected (the EV/incident is injected deterministically per scenario, so "zero-emergency" is the honest-no-attack control, not an accident). |
-| E8 | **Gridlock** | On the oversaturated grid, MaxPressure (shield) is the floor; the SLM cannot make it worse (pressure-margin veto). EV preemption may be physically impossible if the EV's exit is jammed — the shield still greens the EV approach (best effort) and logs `preemption_ineffective`. We report incident recovery as "did not recover within horizon" honestly rather than masking it. Corridor substrate (not the gridlocked grid) is the primary emergency venue precisely to avoid confounding. |
+| E8 | **Gridlock** | On the oversaturated grid, MaxPressure (shield) is the floor; the SLM cannot make it worse (pressure-margin veto). EV preemption may be physically impossible if the EV's exit is jammed; the shield still greens the EV approach (best effort) and logs `preemption_ineffective`. We report incident recovery as "did not recover within horizon" honestly rather than masking it. Corridor substrate (not the gridlocked grid) is the primary emergency venue precisely to avoid confounding. |
 | E9 | **Min-green / yellow timing vs preemption** | `step()` owns transitions: a preemption target only takes effect after the current green's `min_green` and a clearing `yellow` (safety invariant V2). So preemption cannot create a sub-min-green or skip-yellow transition. Trade-off: worst-case preemption latency = `min_green + yellow`. We optionally lower `min_green` for the EV-approach phase via a per-trigger `ev_min_green` (still ≥ a safe floor, e.g. 5 s) to tighten preemption response, configurable and bounded. |
 | E10 | **Replay** | Bus replay guard keys on `(recipient, sender, t)` (existing). A replayed spoof message is dropped (`replay`) before it reaches conservation. Live scenarios increment the decision tick per publish, so a replayed `ev_claim` from a prior tick never re-triggers preemption. |
-| E11 | **Revoked agent mid-emergency** | If the city authority `revoke()`s a neighbour during a run, its subsequent messages reject at `revoked` (existing). Mid-emergency: the revoked neighbour's `ev_claim` is dropped, so it cannot trigger preemption — but a *locally observed* real EV still triggers (independent of messages). Registry read is from the locally-cached allowlist (NFR-2), so revoke takes effect without a ledger round-trip on the control loop. |
+| E11 | **Revoked agent mid-emergency** | If the city authority `revoke()`s a neighbour during a run, its subsequent messages reject at `revoked` (existing). Mid-emergency: the revoked neighbour's `ev_claim` is dropped, so it cannot trigger preemption, but a *locally observed* real EV still triggers (independent of messages). Registry read is from the locally-cached allowlist (NFR-2), so revoke takes effect without a ledger round-trip on the control loop. |
 | E12 | **Retrieval poisoning (if RAG on)** | Corpus built ONLY offline from the trusted deterministic ladder (§6.4); never from live/attacked runs. So no runtime injection path. Retrieved experiences are advisory prompt context; the shield still validates the SLM's resulting phase, so even a poisoned retrieval cannot produce an unsafe action. |
 | E13 | **Spoofed payload field bomb / malformed `ev_claim`** | Inbox loop validates every field at the boundary (existing pattern: reject non-int `release`, clamp hostile `queue_forecast`). New fields `ev_claim`/`incident_edge` are strictly type-checked; malformed → message ignored (not crashed). Max payload depth/size enforced by canonical-JSON signing (oversized payload changes the signed bytes → still must verify, but we also cap field count). |
 | E14 | **EV detector flap / EV momentarily off-edge** | Preemption latches per EV id until the EV clears the junction (§2.1 debounce), so a one-tick detector dropout does not drop preemption mid-clearance. |
-| E15 | **Two triggers, one neighbour both honest-flag and attack** | A neighbour can be both genuinely faulty (under-reporting) AND the target of our suspicion. Conservation reports the *reason* (`under_reported` vs `inflated`) distinctly; the trigger uses only the flag, not an attribution of intent. The audit log records reason + counts for post-hoc human review (the system never claims to know intent — PROJECT-PROPOSAL.md §11 honesty boundary). |
+| E15 | **Two triggers, one neighbour both honest-flag and attack** | A neighbour can be both genuinely faulty (under-reporting) AND the target of our suspicion. Conservation reports the *reason* (`under_reported` vs `inflated`) distinctly; the trigger uses only the flag, not an attribution of intent. The audit log records reason + counts for post-hoc human review (the system never claims to know intent (PROJECT-PROPOSAL.md §11 honesty boundary). |
 | E16 | **Coordination causally inert regression (B1) creeps back** | Regression guard: a CI assertion that in TRIGGERED regime with a StubAgent whose proposal differs from MaxPressure, `escalation_changed_decisions > 0` (the executed phase actually changed). If this hits zero with differing proposals, the inert-coordination bug has returned. Mirrors the `coord_adjusted_decisions` proof. |
 | E17 | **Edge-id parse silent no-op (B2) on the corridor** | The corridor uses `{from}{to}` ids that DO parse, but emergency scenarios MUST pass the explicit `edge_map` from `edge_map_from_net` anyway (so the same code path works if we move to a real OSM emergency net). A startup assertion: if `edge_map` is None on a non-grid net, refuse to run (fail loud, not silent no-op). |
-| E18 | **Shield veto thrash (SLM and shield disagree every tick)** | If the SLM proposes a starving phase and the shield vetoes repeatedly, the executed behaviour is just MaxPressure (safe) — but we log `shield_veto_rate`; a high rate means the SLM is unhelpful for that trigger and we report that honestly (it does not harm safety). |
+| E18 | **Shield veto thrash (SLM and shield disagree every tick)** | If the SLM proposes a starving phase and the shield vetoes repeatedly, the executed behaviour is just MaxPressure (safe), but we log `shield_veto_rate`; a high rate means the SLM is unhelpful for that trigger and we report that honestly (it does not harm safety). |
 
 ---
 
 ## 8. File-change summary (the build manifest)
 
 **NEW files:**
-- `src/emergency_controller.py` — `Trigger`, `EmergencyController` (regimes + shield).
-- `src/emergency_metrics.py` — AETT/AEWT, non-priority delay, recovery time, false-preemption rate.
-- `src/run_emergency.py` — emergency-mode runner (mirrors `run_coordinated.py`, passes `edge_map`).
-- `src/run_exploit_defend.py` — the headline experiment driver + report.
-- `src/attacks_live.py` — `ev_claim`/`incident_claim` injectors (compose on `MaliciousPublisher`).
-- `src/experience_rag.py`, `src/build_experience_corpus.py` — optional Qdrant ceiling.
+- `src/emergency_controller.py`: `Trigger`, `EmergencyController` (regimes + shield).
+- `src/emergency_metrics.py`: AETT/AEWT, non-priority delay, recovery time, false-preemption rate.
+- `src/run_emergency.py`: emergency-mode runner (mirrors `run_coordinated.py`, passes `edge_map`).
+- `src/run_exploit_defend.py`: the headline experiment driver + report.
+- `src/attacks_live.py`: `ev_claim`/`incident_claim` injectors (compose on `MaliciousPublisher`).
+- `src/experience_rag.py`, `src/build_experience_corpus.py`: optional Qdrant ceiling.
 - `sumo/corridor/scenarios/{ev,incident,outage}{,_attacked}.{rou.xml,add.xml,sumocfg}` + `manifest.json`.
 - `tests/test_emergency_controller.py`, `tests/test_emergency_metrics.py`,
   `tests/test_exploit_defend.py`, `tests/test_attacks_live.py`, `tests/test_experience_rag.py`.
 
 **CHANGED files:**
-- `src/coordinated_controller.py` — extract `_phase_serving` helper if needed; extend inbox
+- `src/coordinated_controller.py`: extract `_phase_serving` helper if needed; extend inbox
   field validation for optional `ev_claim`/`incident_edge`. No change to existing `decide` semantics.
-- `src/evaluation.py` — add new modes to `TRAFFIC_MODES`; add `emergency_tables` section.
-- `src/run_metrics_sweep.py` — `run_one` dispatches new modes + `scenario` arg; returns escalation log.
-- `src/run_coordinated.py` — add `NaiveCooperativeController` victim mode (clearly isolated trust-bypass).
-- `sumo/corridor/gen_routes.py` — `--scenario` flag appending EV/blocker trips.
+- `src/evaluation.py`: add new modes to `TRAFFIC_MODES`; add `emergency_tables` section.
+- `src/run_metrics_sweep.py`: `run_one` dispatches new modes + `scenario` arg; returns escalation log.
+- `src/run_coordinated.py`: add `NaiveCooperativeController` victim mode (clearly isolated trust-bypass).
+- `sumo/corridor/gen_routes.py`: `--scenario` flag appending EV/blocker trips.
 
-**FROZEN (must not change — protects 166+ tests + offline harness contract):**
+**FROZEN (must not change, protects 166+ tests + offline harness contract):**
 `metrics.py`, `stats.py`, `conservation.py`, `flow_conservation.py`, `flow_accounting.py`,
 `message_bus.py`, `identity.py`, `registry.py`, `attacks.py`, `run_attacks.py`,
 `net_topology.py`, `controllers.py` (MaxPressure shield untouched).

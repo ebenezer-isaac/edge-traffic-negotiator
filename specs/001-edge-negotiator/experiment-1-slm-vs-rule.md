@@ -1,7 +1,8 @@
-# Experiment 1 Scope: Does the SLM beat a well-tuned rule on flagged ambiguous cases?
+# Experiment 1 Scope: Characterizing the edge SLM against a reference rule on flagged ambiguous cases
 
 **Status**: Scope / design (not yet run)
 **Created**: 2026-06-21
+**Updated**: 2026-06-25 (characterization framing settled)
 **Decides**: the headline contribution (SLM vs the trust-preserving coordination layer), per Akin's and Lee's feedback.
 
 ---
@@ -10,12 +11,14 @@
 
 Both supervisors flagged the same gap: every measured result so far (31s / 16s / 8s) comes from the **deterministic** corroboration gate, so the SLM, the named novelty, is **unevaluated**. Akin: "the SLM, which is your named novelty, is not yet evaluated... decide and defend whether the headline contribution is the SLM or the trust-preserving coordination layer."
 
+**Settled framing (2026-06-25 decision, binding for future sessions):** this experiment characterizes the SLM, it does not compete it. The user's own words: "we are not competing against anything, we are seeing how the SLM performs in this environment; we will do our best to improve it, but we do not guarantee it wins." The SLM is measured against a well-tuned deterministic rule as a reference and a yardstick, not a bar it must clear. A clean null is a valid, publishable finding ("a tuned rule suffices; the value of edge reasoning is bounded"). Do not describe this work as the SLM needing to "beat the rule" or "outperform" it; describe it as characterised against a reference rule, measured relative to a well-tuned rule, reported either way including a null.
+
 **Honest current state (grounded in the code, not the canon's intent):**
-- `slm_agent.py` SYSTEM prompt tells Phi-4-mini to "pick the green phase with the MOST waiting vehicles." That is MaxPressure restated in natural language, so the SLM cannot beat MaxPressure on phase selection by construction.
+- `slm_agent.py` SYSTEM prompt tells Phi-4-mini to "pick the green phase with the MOST waiting vehicles." That is MaxPressure restated in natural language, so on phase selection the SLM's output is constructed to match MaxPressure, not positioned to differ from it.
 - `coordinated_controller.py:711` (`used = proposal if proposal is not None else coord_choice`): the SLM phase choice is causal, but it is choosing among queue lengths (the same task as the shield); the coordination term is the inert fallback (the B1 bug).
 - `emergency_controller.py`: emergency admissibility (`_admissible_ev`) is fully deterministic (local sensing trusted; advance claim needs corroboration). The SLM is never consulted on the real-vs-spoofed decision.
 
-**Conclusion:** the SLM currently makes no decision where it could plausibly beat a rule. Experiment 1 must first point it at a decision a fixed rule cannot cleanly settle, then evaluate it. This reframing is the core of the experiment.
+**Conclusion:** the SLM currently makes no decision on which a rule comparison would be informative. Experiment 1 must first point it at a decision a fixed rule cannot cleanly settle, then characterize it there. This reframing is the core of the experiment.
 
 ---
 
@@ -31,30 +34,34 @@ This is the triggered-regime decision path from `METHODOLOGY-AND-IMPLEMENTATION-
 
 ---
 
-## 2. The well-tuned rule baseline (the bar to beat)
+## 2. The reference rule (the yardstick)
 
 Two non-AI baselines, both using the SAME inputs the SLM gets:
 
 - **`rule_disambiguator`**: fixed thresholds on corroboration count, conservation residual magnitude, and CUSUM persistence. Example form: escalate-as-real iff (independent corroborations >= k) AND (residual within band) AND (persistence >= p); else reject. Thresholds tuned on a development split, reported.
 - **`maxpressure_preempt`**: MaxPressure plus the deterministic EV preemption rule, no SLM, no cross-junction reasoning (the emergency floor the canon prescribes in §5.1, **not yet built**). Shows how much benefit is the deterministic preemption alone vs the SLM nuance.
 
-The comparison must be SLM vs a *strong* rule, not a strawman, or the result is not defensible.
+The comparison must be the SLM against a *strong* reference rule, not a strawman, or the characterization is not credible.
 
 ---
 
 ## 3. Decision metric
 
-- **Primary:** classification quality on labelled flagged states, accuracy, F1, and false-preemption rate (escalations granted to a spoofed/non-existent event).
+- **Primary (classification quality):** accuracy, F1, and false-preemption rate (escalations granted to a spoofed/non-existent event) on labelled flagged states.
+- **Primary (behavioural characterization):** determinism (temp-0 run-to-run agreement), latency (per-decision wall-clock), shield-veto rate (proposals the deterministic shield overrides), and failure modes (how the SLM fails, not only whether it fails). These hold regardless of whether the classification comparison is a null, so a null still yields a real behavioural characterization of an edge SLM in a safety-critical loop.
 - **Decision-attribution breakdown** on states where rule and SLM disagree: agree / disagree-SLM-better / disagree-SLM-worse / shield-vetoed (`PROJECT-PROPOSAL.md` §8).
-- **Secondary (traffic outcome):** incident-recovery time and emergency-vehicle delay on the subset, so a classification win is tied to a real-world effect.
+- **Secondary (traffic outcome):** incident-recovery time and emergency-vehicle delay on the subset, so a classification difference is tied to a real-world effect.
 
 ---
 
 ## 4. Dataset (flagged states with ground truth)
 
 - **Curated hard-state micro-benchmark:** hand-built flagged states with known-correct labels, covering real incident, spoofed preemption grab, within-tolerance partial lie, multiple simultaneous emergencies, and EV-plus-incident. Each carries the correct escalate/reject decision.
-- **Harvested states:** flagged ticks collected from the demand-sweep runs (Experiment 2), labelled by the injected ground truth (we control which events are attacks).
-- **Split:** development split for tuning the rule thresholds and the prompt; held-out test split for the reported numbers. Sizes and the labelling protocol pre-registered before the test split is touched.
+- **Anticipated vs novel split (primary, decided before rule tuning):**
+  - **Anticipated split:** cases matching the patterns `rule_disambiguator` is designed for; the rule's thresholds are tuned on this split only. Parity between the SLM and the rule is the expected result here, since the rule was built for exactly this shape of case.
+  - **Novel / unanticipated split:** cases held out from rule tuning entirely, shaped so a frozen reasoner could plausibly generalise beyond the rule's fixed thresholds (novel combinations of corroboration pattern, residual shape, or multi-emergency conflict not represented in tuning). This is the split where a frozen, no-retraining SLM is meaningfully different from a trained-RL system, which would need retraining to handle the same novelty. Results on the two splits are reported separately, never pooled into one accuracy number.
+- **Harvested states:** flagged ticks collected from the demand-sweep runs (Experiment 2), labelled by the injected ground truth (we control which events are attacks); assigned to the anticipated/novel split by the same rule as the curated set.
+- **Split:** development split for tuning the rule thresholds and the prompt (anticipated cases only); held-out test split for the reported numbers (spans both anticipated and novel, reported separately per above). Sizes and the labelling protocol pre-registered before the test split is touched.
 
 ---
 
@@ -75,10 +82,10 @@ Paired on seed; BCa bootstrap + paired permutation + Holm (the existing `stats.p
 
 ## 7. Headline-decision logic (what Akin asked us to decide and defend)
 
-- **If the SLM beats the rule** (Holm-significant and practically meaningful) on the ambiguous set: the headline is the **SLM as cross-junction disambiguator**, the AI earns its place on the one decision a rule cannot make.
-- **If the result is null** (within MDE): the headline is the **trust-preserving coordination layer**, and the null is a scoped, informative finding ("a fixed rule suffices for spoofed-emergency disambiguation, bounding where edge reasoning adds value"). This is a publishable result, not a failure, and matches the project's stated epistemic humility.
+- **If the SLM shows significant and practically meaningful value** (Holm-significant and practically meaningful), primarily on the novel split of the ambiguous set: the headline is the **SLM as cross-junction disambiguator**, the AI earns its place on the one decision a rule cannot make.
+- **If the result is null** (within MDE): the headline is the **trust-preserving coordination layer**, and the null is a scoped, informative finding ("a tuned rule suffices for spoofed-emergency disambiguation, bounding where edge reasoning adds value"). This is a publishable result, not a failure, and matches the project's stated epistemic humility.
 
-Either outcome is defensible. The experiment is designed so the answer is a contribution either way.
+Pre-committed: significant and practical SLM value on the ambiguous set means the SLM leads the contribution; a null means the trust-preserving coordination layer leads. Either outcome is a contribution, reported either way; the experiment is designed to characterize the SLM, not to require it to win.
 
 ---
 
@@ -88,7 +95,7 @@ Either outcome is defensible. The experiment is designed so the answer is a cont
 |---|---|---|
 | P1 | Wire the SLM disambiguation decision causally in a triggered regime (shield-validated) | No (gate is deterministic today) |
 | P2 | `rule_disambiguator` + `maxpressure_preempt` baselines | No |
-| P3 | Labelled flagged-state dataset + harvester from sweep runs | No |
+| P3 | Labelled flagged-state dataset (anticipated/novel split) + harvester from sweep runs | No |
 | P4 | Determinism harness on the disambiguation prompt (extend `bench_slm.py`) | Partial (`bench_slm` exists for the phase prompt) |
 | P5 | New disambiguation prompt for `SLMAgent` (current prompt is queue-length only) | No |
 | P6 | B1 fix: the escalated proposal is the executed candidate, with an `escalation_changed_decisions` metric + regression test | No (B1 still inert) |
@@ -101,7 +108,7 @@ Either outcome is defensible. The experiment is designed so the answer is a cont
 - **SLM nondeterminism on longer prompts:** measure agreement first (§5); if low, the disambiguation result is itself a finding about edge-SLM reliability.
 - **Dataset labelling bias:** use injected ground truth and pre-register the protocol; do not pick the test split post-hoc.
 - **The decision may be one a rule handles fine:** a null is planned for and is a valid result (§7), not an excuse.
-- **Strawman risk:** the rule baseline must be tuned and strong, or a SLM win is not credible.
+- **Strawman risk:** the reference rule must be tuned and strong, or the characterization is not credible.
 
 ---
 
@@ -109,9 +116,9 @@ Either outcome is defensible. The experiment is designed so the answer is a cont
 
 1. P5 + P1: new disambiguation prompt and the causal triggered-regime decision path (+ P6 B1 fix and regression test).
 2. P2: the rule baselines.
-3. P3: the labelled dataset (curated micro-benchmark first; harvest from Experiment 2's sweep when that runs).
+3. P3: the labelled dataset, split into anticipated/novel (curated micro-benchmark first; harvest from Experiment 2's sweep when that runs).
 4. P4 + §5: determinism check on Foundry, then memoise.
-5. Run n=30, score with §6 stats, produce the decision-attribution breakdown.
+5. Run n=30, score with §6 stats, produce the decision-attribution breakdown, split by anticipated vs novel.
 6. Apply §7 to set the headline, and write it up including a clean null if that is the result.
 
-Experiment 1 depends on Experiment 2's demand sweep for the harvested dataset, but the curated micro-benchmark lets P1 to P6 and the first SLM-vs-rule run proceed in parallel.
+Experiment 1 depends on Experiment 2's demand sweep for the harvested dataset, but the curated micro-benchmark lets P1 to P6 and the first characterization run proceed in parallel.

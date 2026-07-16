@@ -1,6 +1,6 @@
 # edge-negotiator — implementation
 
-Build for *The Edge Negotiator: Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control*. See `../PROJECT-DECISION-BRIEF.md` for the locked design and `../../00-SCOPE-LOCKIN.md` for scope.
+Build for *The Edge Negotiator: Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control*. Canonical direction lives in `../PROJECT-PROPOSAL.md`; current status and plan are in `../../05-supervision/PROJECT-STATUS-AND-PLAN.md`.
 
 ## Status
 
@@ -13,13 +13,16 @@ Build for *The Edge Negotiator: Verified-Source Cross-Junction Coordination for 
 
 ### Wk 3-4 Milestone 2 — authenticated cross-junction coordination ✅ (mechanism)
 - ✅ **Cryptographic identity** (`src/identity.py`) — per-junction Ed25519 keypairs (DER pubkeys = the bytes that go on-chain later); `sign`/`verify`, hostile-input-safe.
-- ✅ **Permissioned registry** (`src/registry.py`) — approved-agent allowlist + `revoke()` + **hash-chained tamper-evident audit log** (`verify_chain()`); local stand-in for the Wk 5-6 Besu registry.
+- ✅ **Permissioned registry** (`src/registry.py`) — approved-agent allowlist + `revoke()` + **hash-chained tamper-evident audit log** (`verify_chain()`).
 - ✅ **Signed neighbour-message bus** (`src/message_bus.py`) — Ed25519-signed `{"toward": {nb: {release, queue_forecast}}}`; verifies sig + membership + topology + replay; rejects bad-sig / revoked / replay / non-neighbour.
 - ✅ **Vehicle-conservation check** (`src/conservation.py`) — reconciles claimed `release` vs observed inflow; flags `inflated` / `under_reported` / `missing_*`. Detection primitive (see `../THREAT-MODEL-ANALYSIS.md`).
 - ✅ **Coordinated controller** (`src/coordinated_controller.py`) — publishes signed state, consumes verified neighbour forecasts, folds per-phase incoming into a deterministic coordination-aware choice (**Channel B**, weight `coord_weight`) + the SLM prompt note (Channel A); MaxPressure shield still disposes.
 - ✅ **120 tests pass** (`tests/`) — incl. adversarial: tamper, revoke, replay, impersonation, spoof-flagging, chain-tamper.
 - ✅ **Live-verified** (`src/run_coordinated.py`, `src/collect_results.py`, `results/`): 974 verified signed msgs, 937 conservation reconciliations over a 3-seed sweep; R2 causal pathway ablatable (`coord_weight=0` ⇒ coordinated ≡ uncoordinated).
-- ⏳ Next (Wk 5-6+): Besu QBFT registry + web3.py glue; then attacks (spoof / fault / Sybil) with precision/recall (Wk 7-8); then swap in the real **Lambeth corridor** (`sumo/lambeth/`, already extracted, AADF-calibrated GEH<5) for the 30-seed throughput-controlled sweep (Wk 9-10).
+
+### Current status
+Built: signed coordination, the emergency/incident detector, a tamper-evident hash-chained audit log, the corroboration gate, the exploit-then-defend demo, and measured n=30 results.
+Next: SLM characterization against a well-tuned reference rule, the demand sweep, and the write-up.
 
 > **Honest results caveat (2×2 grid, n=3).** See `results/milestone2_report.md`. Coordinated-SLM (Channel B) shows lower avg travel time than MaxPressure (BCa CI excludes 0) **but** completes ~8 fewer trips; since avg travel time is over *completed* trips only, this is **survivorship-confounded** and is **not** claimed as a coordination win. Milestone 2's claim is the *integrity + coordination mechanism* and the *causal pathway*, not a toy-grid performance gain — that question is deferred to the real corridor with throughput-controlled metrics and 30 seeds.
 

@@ -1,4 +1,4 @@
-# The Edge Negotiator — Research Survey & Direction (for Dr Akin Delibasi)
+# The Edge Negotiator: Research Survey & Direction (for Dr Akin Delibasi)
 
 **Student:** 25153651 (UCL MSc Systems Engineering for IoT) · **Date:** 2026-06-21
 **Title:** *The Edge Negotiator: coordinated on-device SLMs for multi-junction emergency response, robust to a compromised coordination channel.*
@@ -9,11 +9,23 @@ This packet answers your two requests: (1) a research-survey table comparing the
 
 ## In one paragraph (plain language)
 
-A corridor of small language-model agents (Phi-4-mini, 3.8B, frozen, one per traffic junction) coordinate signal timing to clear ambulances and handle cross-junction incidents, on top of a classical **MaxPressure** controller that stays in charge by default and acts as a safety shield. The headline question is: **can a frozen, never-retrained edge SLM coordinate multiple junctions to handle emergencies and incidents better than isolated control?** The research question is not "can the AI beat the classical controller on normal traffic" (it cannot, and we say so). The secondary, deployability question is: when a neighbouring junction's messages are authenticated but compromised (a valid key in the wrong hands), how does coordination degrade, and how does it defend itself? The integrity layer uses signed channels, a conservation plausibility check, and a corroboration gate. Signing alone cannot catch an authenticated-but-lying peer; the conservation check and corroboration gate are what close that gap.
+A corridor of small language-model agents (Phi-4-mini, 3.8B, frozen, one per traffic junction) coordinate signal timing to clear ambulances and handle cross-junction incidents, on top of a classical **MaxPressure** controller that stays in charge by default and acts as a safety shield. The headline question is: **can a frozen, never-retrained edge SLM coordinate multiple junctions to handle emergencies and incidents better than isolated control?** The research question is not "can the AI beat the classical controller on normal traffic" (it cannot, and we say so). The secondary, deployability question is: when a neighbouring junction's messages are authenticated but compromised (a valid key in the wrong hands), how does coordination degrade, and how does it defend itself? The integrity layer uses signed channels, a conservation plausibility check, and a corroboration gate. Signing alone cannot catch an authenticated-but-lying peer; the conservation check and corroboration gate are what close that gap. Where the SLM's own value is measured on ambiguous cases, that measurement is a characterisation against a reference rule, not a competition (below).
 
 ---
 
-## Table 1 — Research survey: what each paper proposes vs what we do
+## SLM evaluation: characterised against a reference rule, not a competition
+
+The SLM is **characterised** against a well-tuned deterministic rule used as a reference/yardstick, not a bar it must clear. A clean null (the rule suffices on its own) is a valid, publishable finding, reported with the same weight as a positive result. We deliberately avoid "beat the rule" or "the bar to beat": the framing is diagnostic, not competitive.
+
+The held-out test set splits into **anticipated cases** (the kind the rule was tuned on, where SLM/rule parity is expected) and **novel/unanticipated cases** (held out from rule tuning, where a frozen reasoner may generalise beyond the rule's fixed thresholds). The novel split is the differentiator against trained-RL systems, which need retraining to handle novelty the SLM was never shown.
+
+**Pre-committed headline decision rule** (this directly answers your 2026-06-23 request to decide and defend whether the headline contribution is the SLM or the trust-preserving coordination layer): a significant and practically meaningful SLM advantage on the novel/ambiguous set makes the SLM the headline contribution; a null makes the trust-preserving coordination layer the headline. Both outcomes are pre-registered as informative, not as success or failure.
+
+`Robust degradation`, `ambiguous case`, and `safety floor`, used above and throughout this project, now have formal definitions (a bounded detection window, quarantine of a lying input's influence, a pre-registered performance margin, and the invariant set the classical controller enforces) in `03-implementation/FORMAL-SPECIFICATION.md`.
+
+---
+
+## Table 1. Research survey: what each paper proposes vs what we do
 
 Every paper below is real and verified (arXiv ID + venue checked). "Their gap" is stated honestly, including where the overlap is genuine and narrow.
 
@@ -31,14 +43,14 @@ Every paper below is real and verified (arXiv ID + venue checked). "Their gap" i
 | **SafeLight** (2211.10871, 2023) | Safety-enhanced residual RL (3DQN) + a rule-based safety override | Residual RL, trained | SUMO; synthetic + Cologne | No | Safety override, no adversarial model | Needs training; no spoofed-input defence (it already has a deterministic safety layer, so our delta is the adversarial-trust story, not "we add a shield") | Deterministic shield (no training) for action safety; trust handled separately |
 | **Blockchain-TSC** (1906.02628, 2019) | Blockchain validates connected-vehicle data vs spoofing | No model | I-SIG / CV pilot | No signal coordination | Yes (vehicle-data) | Permissioned (Hyperledger Fabric) consensus, heavier than needed; no SLM; secures vehicle→signal, not signal↔signal | Lightweight hash-chained audit + Ed25519 vs permissioned registry |
 | **proofmember23** (2310.08163, 2023) | DIDs + proof-of-membership to bootstrap IoT node trust | No model | Conceptual / IoT (Raspberry Pi) | No | Yes (identity) | Not traffic; no content plausibility check; full DID/VC heavier than needed | Permissioned key registry + signature verify + conservation check on content |
-| **Derhab2020** (Sensors 20(21):6106) | Relaxed flow-conservation to detect selective-routing attacks in WSNs | No model | WSN sim; two-hop monitoring | — | Yes (flow-conservation) | Domain is sensor-network routing, not vehicle flow | We port the flow-conservation idea to vehicle conservation across junctions |
+| **Derhab2020** (Sensors 20(21):6106) | Relaxed flow-conservation to detect selective-routing attacks in WSNs | No model | WSN sim; two-hop monitoring | None | Yes (flow-conservation) | Domain is sensor-network routing, not vehicle flow | We port the flow-conservation idea to vehicle conservation across junctions |
 | **Keijzer2021** (2104.03801, ECC 2021) | Model-based (sliding-mode-observer) residual detection of attacks in collaborative intersection control | Observer/residual, no LLM | Single-intersection V2V sim | Yes (V2V) | Yes (attack detection) | Formal detectability theorems but no empirical capability sweep; no SLM/identity/audit | Conservation check (lighter) + empirical detectability envelope + signatures + registry + audit |
 
 **Positioning.** Each axis is precedented; the unoccupied gap is the *conjunction*: a frozen no-training edge SLM as a guarded exception handler over a MaxPressure default+shield, where inter-junction coordination is cryptographically authenticated and screened by a vehicle-conservation plausibility check, evaluated in SUMO under a compromised channel. The three closest works are CoLLMLight (same coordination, but trusts shared state, fine-tunes), VLMLight (same dual-branch safety architecture, but 72B and no trust), and LA-Light (same exception-handler role, but cloud and benign faults).
 
 ---
 
-## Table 2 — Why this project direction (decision record)
+## Table 2: Why this project direction (decision record)
 
 Each row is a decision reached through analysis and adversarial review, with the reasoning that held. The table exists so the direction is not re-litigated.
 

@@ -1,4 +1,4 @@
-# Glossary — plain-language translations of every domain term
+# Glossary: plain-language translations of every domain term
 
 Audience: any technically literate reader (engineer, examiner) who is not a traffic-engineering, applied-statistics, or cryptography specialist. Each entry translates the jargon and keeps the concept precise. Grouped by area.
 
@@ -10,6 +10,7 @@ Audience: any technically literate reader (engineer, examiner) who is not a traf
 - **MaxPressure.** The classical signal-control rule we use as the baseline and safety net. It serves the phase with the most "pressure" = roughly (cars waiting upstream) − (cars stuck downstream). Proven to maximise throughput when stable. We implement the simplified vehicle-count form; the full theorem also weights by saturation flow and turning ratios.
 - **Throughput-optimal.** A property of MaxPressure: if any signal policy can keep the network's queues from blowing up at a given demand, MaxPressure can too. It does not mean "lowest delay", just "won't lose stability unnecessarily".
 - **Shield / deterministic shield.** A hard rule layer that checks (and can override) the AI's proposed phase, guaranteeing safety limits are never violated no matter what the AI says.
+- **Safety floor.** The fixed set of rules the AI can never override: minimum and maximum green, protected yellow and all-red clearance, no approach skipped too long (anti-starvation), and preemption granted only for a corroborated emergency. It holds every tick, attacked or not.
 - **Min green / max green.** The shortest and longest a phase is allowed to stay green. Min green stops the lights flickering; max green stops one direction hogging the junction.
 - **Yellow change interval / all-red clearance.** The yellow time (so approaching cars can stop) and the brief all-directions-red (so the junction empties) between one green and the next. Both are safety intervals that cannot be shortened.
 - **Lost time / start-up lost time.** Seconds per cycle where no useful traffic moves: drivers reacting at green onset (start-up) plus the change intervals. It reduces a junction's usable capacity.
@@ -27,6 +28,7 @@ Audience: any technically literate reader (engineer, examiner) who is not a traf
 - **Edge.** Computation on local roadside hardware rather than in a remote data centre. Matters for latency, cost, and not depending on a network link.
 - **Guarded exception handler.** The role of the SLM: the classical controller runs the normal case; the SLM is only invoked on an unusual event (an anomaly or emergency), and its answer is still checked by the shield.
 - **Trigger.** A condition that escalates from the classical controller to the SLM (e.g. a detected anomaly, an emergency vehicle, an incident, abnormal demand).
+- **Ambiguous case.** A decision tick the classical rule cannot settle cleanly on its own: a neighbour claim the detector has flagged, an emergency claim with partial-but-not-full evidence, or two claims about the same road that disagree beyond tolerance. Only these escalate to the SLM; fully clear-cut and fully zero-evidence cases are handled deterministically and never escalated.
 - **RAG (retrieval-augmented generation).** Letting a model look up relevant past cases and add them to its prompt. Optional here, never load-bearing.
 - **Channel A / Channel B.** Two ways neighbour information reaches a junction's decision: Channel A folds it into the SLM's prompt; Channel B adjusts the classical controller's scores directly. `coord_weight` is how strongly Channel B counts neighbour traffic.
 
@@ -46,10 +48,11 @@ Audience: any technically literate reader (engineer, examiner) who is not a traf
 - **Dolev-Yao.** The standard model of a network attacker who can read, drop, reorder, and replay messages but cannot break the cryptography.
 - **Compromised insider.** An attacker who holds a *valid* key (a junction that has been taken over). Signatures pass, so signing alone cannot stop it; this is the case our plausibility check targets.
 - **Corroboration (the corroboration gate).** Before granting an emergency claim, the junction requires independent physical evidence: it sensed the vehicle itself, or another junction did. A signed-but-spoofed claim has no such evidence, so it is refused. This is what stops a fake emergency even from a valid-key insider.
+- **Robust degradation.** The property that when a neighbour is compromised (a spoofed claim, an inflated or under-reported release, a replay, or silence), the system flags the deviation within a bounded window, stops that input from influencing control, and performs no meaningfully worse than plain local control (MaxPressure with no coordination), while the safety floor still holds throughout. A lie small enough to stay inside the tolerance band is undetected by construction: an acknowledged limit, not a failure of the property.
 - **Advance claim vs local sensing.** *Local sensing* = the junction's own detector sees the vehicle (trusted; you cannot spoof a real vehicle into a sensor). *Advance claim* = a neighbour says one is coming (only acted on if corroborated).
 - **Conservation check / mass-balance residual.** A plausibility test: vehicles entering a road minus vehicles leaving should match the change in vehicles stored on it. A neighbour claiming it released more cars than actually arrived produces a non-zero "residual" that flags the lie. (`residual = entered − exited − change-in-storage`.)
 - **Adaptive band.** The tolerance around zero residual that counts as "normal" (sensors are noisy). It grows with traffic volume so a busy road is not falsely flagged.
-- **CUSUM (cumulative sum).** A statistical detector that adds up small deviations over time and alarms when the running total crosses a threshold — catching a sustained small lie that any single reading would miss.
+- **CUSUM (cumulative sum).** A statistical detector that adds up small deviations over time and alarms when the running total crosses a threshold, catching a sustained small lie that any single reading would miss.
 - **ARL (average run length).** CUSUM's tuning trade-off: ARL₀ = average time between false alarms when all is well (want it long); ARL₁ = average time to catch a real shift (want it short).
 - **Exploit-then-defend.** A secondary validation experiment: build a competent victim that trusts its inputs, attack it, then show the robustness layer detects and absorbs the same attack. It validates that coordination stays safe under a compromised junction, not the primary contribution.
 - **Fair victim / cooperative_naive.** The victim controller, made deliberately competent (not a strawman) so the comparison is fair. It is representative of the trust-everything cooperative class that CoLLMLight exemplifies.

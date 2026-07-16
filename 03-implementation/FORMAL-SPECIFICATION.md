@@ -13,8 +13,8 @@ This document is the engineering rulebook: it fixes *every number* the system us
 ## 0. Citation-integrity and calibration registers (read first)
 
 **Citation integrity (re-verified 2026-06-20, 201-agent fact-check):**
-- The conservation law's primary grounding is the **LWR continuity equation** (Lighthill & Whitham 1955, *Proc. R. Soc. A* 229; Richards 1956, *Oper. Res.* 4 — both verified). **Derhab et al. 2020** (*Sensors* 20(21):6106, DOI 10.3390/s20216106) is a verified, correctly-described precedent: it uses relaxed flow-conservation as a one-class detector for selective-routing attacks in wireless sensor networks. We cite it for the conservation-residual idea and adopt LWR for the physics; the honest gap is the domain (WSN routing → vehicle flow). (An earlier draft wrongly flagged this citation as unverifiable; that flag was the error, not the citation.)
-- CUSUM concept grounded in Page (1954); the **tabular recursion** is Page (1961)/Lucas (1982)/Hawkins-Olwell (1998); ARL via Siegmund (1985) + Montgomery SQC. MaxPressure in Varaiya (2013) — note our `P_i` is the simplified halting-count form, not Varaiya's saturation-flow/turning-ratio-weighted rule (§2). Green-wave concept in Morgan & Little (1964)/Little (1966); the closed-form offset is a modern simplification of their MILP framework. All papers verified (Sources, §9).
+- The conservation law's primary grounding is the **LWR continuity equation** (Lighthill & Whitham 1955, *Proc. R. Soc. A* 229; Richards 1956, *Oper. Res.* 4, both verified). **Derhab et al. 2020** (*Sensors* 20(21):6106, DOI 10.3390/s20216106) is a verified, correctly-described precedent: it uses relaxed flow-conservation as a one-class detector for selective-routing attacks in wireless sensor networks. We cite it for the conservation-residual idea and adopt LWR for the physics; the honest gap is the domain (WSN routing → vehicle flow). (An earlier draft wrongly flagged this citation as unverifiable; that flag was the error, not the citation.)
+- CUSUM concept grounded in Page (1954); the **tabular recursion** is Page (1961)/Lucas (1982)/Hawkins-Olwell (1998); ARL via Siegmund (1985) + Montgomery SQC. MaxPressure in Varaiya (2013); note our `P_i` is the simplified halting-count form, not Varaiya's saturation-flow/turning-ratio-weighted rule (§2). Green-wave concept in Morgan & Little (1964)/Little (1966); the closed-form offset is a modern simplification of their MILP framework. All papers verified (Sources, §10).
 
 **Must-calibrate parameters `[K]` (no guessed values ship):** `coord_weight (λ)`, `shield_margin`, `gate`, `processing`, `outage_persist`, `escalation_cooldown`, `clock_skew_bound`, `sensing_latency`, and the empirical confirmation of `rel_frac` and CUSUM `h`. Each has a procedure below. The dissertation must report the calibrated value + the benign run it was selected on.
 
@@ -78,7 +78,7 @@ Units: s=seconds, m=metres, m/s, m/s², veh=vehicles, win=windows/decision-round
 | `incident_speed_frac` | incident speed ceiling (×free) | – | 0.10 | [D] | ≤ walking pace = stopped, not slow queue |
 | `incident_persist` | incident persistence | win | 3 | [E] | persistence guard against transient queues; value engineering-set (California-family algorithms use persistence logic but do not specify 3) |
 | `outage_persist` | missing_claim persistence | rounds | 3 | [K] | absorb transport jitter; calibrate to loss rate |
-| `abnormal_k` | demand sigma multiplier | σ | 3 | [C]/[E] | one-sided 3σ SPC (FA≈0.00135 under Gaussian; halting counts are Poisson/neg-binomial so realised FA is 2-4× higher — treat 0.00135 as a floor) |
+| `abnormal_k` | demand sigma multiplier | σ | 3 | [C]/[E] | one-sided 3σ SPC (FA≈0.00135 under Gaussian; halting counts are Poisson/neg-binomial so realised FA is 2-4× higher; treat 0.00135 as a floor) |
 | `S` | EWMA span | decisions | 20 | [E] | λ_ewma=2/(S+1)≈0.095; EWMA concept from Roberts 1959, the span↔λ conversion is a later moving-average convention; S=20 engineering-set |
 | `abnormal_persist` | demand persistence | win | 2 | [E] | guards single-tick noise |
 | `escalation_cooldown` | anti-flap | rounds | 1 | [K] | Foundry serialisation bound |
@@ -241,12 +241,40 @@ At λ=0, no trigger, no SLM override: reduces exactly to `mp_choice`.
 
 ---
 
-## 8. Relationships (the couplings)
-`yellow,r_ac → L_lost → C_opt → {max_green, max_skip → T_starve}`; `min_green = Δ`; `yellow+r_ac ≤ min_green`; `k = δ/2`, detection latency ≈ 6-7 win (`⌈h/(δ−k)⌉=6` zero-noise bound, Siegmund expected ≈6.4), ARL₀ via Siegmund; `band ≈ 1σ benign residual` so z is standardised and CUSUM tables apply; `λ` couples coordination to local queue (0 = decoupled); `shield_margin` bounds SLM↔MaxPressure divergence (orthogonal to λ); `ev_horizon = v_free·(min_green+yellow+processing)`; `tol = clock_skew_bound + sensing_latency`; the same signed `release` feeds both conservation and coordination (unification 1); the conservation flag is the SLM escalation trigger (unification 2).
+## 8. Formal system properties
+
+Testable, canonical statements of the properties invoked informally elsewhere in this document (the threat model, §5; the trigger predicates, §4; the shield, §7.2-7.3) and in `PROJECT-PROPOSAL.md` §5. Parameters in `[K: ...]` are calibrated/pre-registered per §0, not asserted values. Where a parameter already has a value in §1, that value is authoritative and cited here, not restated.
+
+**Robust degradation (testable systems property).** Under any single authenticated-but-compromised neighbour input (spoofed claim, inflated or under-reported release, replay, silence):
+- R1 Detection: a deviation exceeding the plausibility band (`band`, §3) is flagged within `[K: D]` decision windows (measured as detection latency vs lie magnitude). The CUSUM zero-noise bound is `⌈h/(δ-k)⌉=6` windows and the Siegmund expected value is ≈6.4 windows for a sustained 1-band lie (§3, §9 relationship), so `D` is calibrated around that order of magnitude, not asserted independently.
+- R2 Containment: a flagged input's influence on control is zeroed (the conservation_anomaly handling in §4 discounts the flagged neighbour's contribution to zero before recompute), and uncorroborated preemption claims are refused at all times (`admissible_ev`, §4).
+- R3 Bounded degradation: performance under attack stays within a pre-registered margin `[K: epsilon]` of the local-control (MaxPressure-only, λ=0) fallback. `epsilon` is a new calibrated parameter, not yet in the §1 master table; it is a build item pending the exploit-then-defend calibration run, not a guessed value.
+- R4 Safety invariance: the safety floor (below) holds at every tick, attacked or not.
+- Honest bounds: a within-band lie is undetected by construction (R3/R4 still bound its harm; see the sub-tolerance-lie row of the attack table, §5); in-band collusion defeats R1 and is out of scope (T4, §5), contained by revoke + audit, not detection.
+
+**Ambiguous case (deterministic escalation predicate).** A tick escalates to the SLM iff:
+- A1 the conservation/CUSUM detector (§3) flags a neighbour claim this window, or
+- A2 an authenticated emergency/incident claim has partial evidence (corroboration present but below the hard-accept threshold, or stale/inconsistent, e.g. a sighting older than the route travel-time tolerance `tol`, §4), or
+- A3 two authenticated reports about the same edge contradict beyond the tolerance band (`tol`, §4).
+
+Fully corroborated and zero-evidence claims never escalate; they resolve deterministically in NORMAL regime. The SLM output is a proposal, the shield (§7.2-7.3) validates it against the safety floor below. This predicate is the compact formal gate for the five trigger evaluators of §4 (`emergency_vehicle`, `incident`, `sensor_outage`, `abnormal_demand`, `conservation_anomaly`); `METHODOLOGY-AND-IMPLEMENTATION-DESIGN.md` §2 gives the per-trigger implementation detail.
+
+**Safety floor (invariant set, SLM-independent).** The executed action always satisfies:
+- S1 min/max green bounds (`min_green=10`, `max_green=64`, §1.1/§2).
+- S2 protected yellow + all-red clearance on every transition (`yellow=3`, `r_ac=2`, §1.1/§2).
+- S3 anti-starvation: no approach skipped more than `max_skip=8` consecutive decisions (§1.1/§2; worst-case wait `T_starve≤93 s`, §1.1/§2); a corroborated emergency may defer it by at most one min_green+yellow.
+- S4 preemption only for corroborated emergencies (`admissible_ev`, §4).
+
+A violating SLM proposal is replaced by the deterministic choice (`_shield_validate`, §7.2-7.3).
 
 ---
 
-## 9. Sources (verified this pass)
+## 9. Relationships (the couplings)
+`yellow,r_ac → L_lost → C_opt → {max_green, max_skip → T_starve}`; `min_green = Δ`; `yellow+r_ac ≤ min_green`; `k = δ/2`, detection latency ≈ 6-7 win (`⌈h/(δ−k)⌉=6` zero-noise bound, Siegmund expected ≈6.4), ARL₀ via Siegmund; `band ≈ 1σ benign residual` so z is standardised and CUSUM tables apply; `λ` couples coordination to local queue (0 = decoupled); `shield_margin` bounds SLM↔MaxPressure divergence (orthogonal to λ); `ev_horizon = v_free·(min_green+yellow+processing)`; `tol = clock_skew_bound + sensing_latency`; the same signed `release` feeds both conservation and coordination (unification 1); the conservation flag is the SLM escalation trigger (unification 2, formalised as predicate A1 in §8).
+
+---
+
+## 10. Sources (verified this pass)
 - Varaiya 2013, Max pressure control, Transp. Res. C 36:177-195.
 - Webster 1958, Traffic Signal Settings, RRTP 39.
 - ITE/NCHRP 03-95, change-interval; Gates et al. 2012 TRR 2298.

@@ -1,4 +1,4 @@
-# The Edge Negotiator — Specification (for Lee Stott, Microsoft)
+# The Edge Negotiator: Specification (for Lee Stott, Microsoft)
 
 **Student:** 25153651 (UCL MSc Systems Engineering for IoT) · **Date:** 2026-06-20
 **Product line:** Edge AI for safety-critical infrastructure · **Platform:** Microsoft Foundry Local + Phi-4-mini
@@ -10,11 +10,11 @@
 
 Traffic signals at adjacent junctions increasingly "talk" to coordinate green waves and emergency-vehicle preemption. Today that coordination either runs in the cloud at 8B–72B scale, or relies on isolated classical controllers that cannot handle cross-junction incidents. Neither path gives a city operator real-time, on-device coordination that clears an ambulance corridor without a cloud call.
 
-The Edge Negotiator is a coordinated multi-agent signal system where a small language model (**Phi-4-mini, 3.8B, running locally on Microsoft Foundry Local**, one agent per junction) coordinates multiple junctions to clear emergency vehicles and handle incidents. A classical MaxPressure controller stays in charge by default and acts as a deterministic safety shield. The SLM is invoked only as a guarded exception handler on hard or ambiguous cases (emergencies, anomalies, incidents) where pure classical control falls short.
+The Edge Negotiator is a coordinated multi-agent signal system where a small language model (**Phi-4-mini, 3.8B, running locally on Microsoft Foundry Local**, one agent per junction) coordinates multiple junctions to clear emergency vehicles and handle incidents. A classical MaxPressure controller stays in charge by default and acts as a deterministic safety shield. The SLM is invoked only as a guarded exception handler on hard or ambiguous cases (emergencies, anomalies, incidents) where pure classical control falls short. Where the SLM's added value on these ambiguous cases is measured, it is characterised against a well-tuned reference rule rather than raced to beat it; a clean null is reported as honestly as a win.
 
 What makes this coordination **deployable**: the inter-junction channel is signed and plausibility-checked, giving each agent verifiable identity for its neighbours. A junction whose messages fail corroboration is isolated automatically, so a single faulty node cannot corrupt the corridor. This is the same verifiable-agent-identity trust problem that Entra Agent ID addresses, here made physical and measurable.
 
-**Why Microsoft cares:** it is a concrete, safety-critical showcase of (a) edge SLM inference on Foundry Local with no cloud dependency and no fine-tuning, coordinating real cross-junction emergencies, and (b) verifiable agent identity for multi-agent systems — the Entra Agent ID trust problem in hardware.
+**Why Microsoft cares:** it is a concrete, safety-critical showcase of (a) edge SLM inference on Foundry Local with no cloud dependency and no fine-tuning, coordinating real cross-junction emergencies, and (b) verifiable agent identity for multi-agent systems: the Entra Agent ID trust problem in hardware.
 
 ---
 
@@ -63,7 +63,7 @@ What makes this coordination **deployable**: the inter-junction channel is signe
 | **Latency** | SLM decision budget consistent with measured ~0.5 s/call; SLM invoked only on triggers and gated per corridor. |
 | **Determinism** | Temperature-0; run-to-run agreement measured on the emergency prompts; decisions memoised by prompt-hash in evaluation. |
 | **Identity** | Ed25519 keys per junction; permissioned registry with `revoke()`; constant-time verification. |
-| **Safety envelope** | Hard min/max green, mandatory yellow + all-red clearance, anti-starvation bound — enforced deterministically, never overridable by the SLM. |
+| **Safety envelope** | Hard min/max green, mandatory yellow + all-red clearance, anti-starvation bound; enforced deterministically, never overridable by the SLM. |
 | **Simulator** | Eclipse SUMO (microscopic; supports `vClass=emergency` and lane blockage). |
 | **Reproducibility** | Pinned model hash, quantisation, Foundry version, decode params, and seeds; results reproducible from (config, seed, model-hash). |
 | **Threat scope (in)** | Outsider forgery, network replay/reorder (within session), a single compromised-but-approved insider lying above tolerance or spoofing an emergency. |
@@ -100,7 +100,7 @@ Neighbour messages ride a signed bus verified against a permissioned registry; a
 | M1 Coordination substrate | Signed bus + registry + MaxPressure shield, 2-node clickable demo | Built |
 | M2 Detection | Vehicle-conservation + CUSUM anomaly detector | Built |
 | M3 Emergency + corroboration | Emergency controller + corroboration gate; exploit-then-defend demo | Built (this session) |
-| M4 Evaluation | Full demand sweep + real Lambeth corridor, benign + attacked, n=30, statistics | In progress |
+| M4 Evaluation | Full demand sweep + real Lambeth corridor, benign + attacked, n=30, statistics; SLM-vs-reference-rule characterisation on the anticipated and novel/unanticipated case splits | In progress |
 | M5 Detectability envelope | Recall/latency vs lie-magnitude figure | Planned |
 | M6 Write-up | Dissertation + reproducibility package | Planned |
 
@@ -108,6 +108,6 @@ Neighbour messages ride a signed bus verified against a permissioned registry; a
 
 ## 9. What we can and cannot claim (honesty boundary)
 
-**Can claim:** coordinated multi-junction emergency response running on local hardware with no cloud dependency and no retraining; message authenticity from a currently-approved member; a tamper-evident, externally-auditable log; detection of inconsistent or spoofed neighbour reports with a measured envelope; a deterministic safety guarantee; a fair exploit-then-defend showing a competent cooperative controller is compromised and our layer defends it; an honest account of whether the edge SLM adds value on contested states.
+**Can claim:** coordinated multi-junction emergency response running on local hardware with no cloud dependency and no retraining; message authenticity from a currently-approved member; a tamper-evident, externally-auditable log; detection of inconsistent or spoofed neighbour reports with a measured envelope; a deterministic safety guarantee; a fair exploit-then-defend showing a competent cooperative controller is compromised and our layer defends it; an honest, pre-committed account of whether the edge SLM adds measurable value on ambiguous/contested states when characterised against a well-tuned reference rule, with a clean null reported as a valid finding.
 
 **Cannot/do not claim:** novel cryptography; that the SLM beats the classical controller on routine traffic; that the blockchain creates trust (it records faithfully, including lies); which of two disagreeing junctions is the liar; defence against ≥2-key collusion or a compromised admin key; absolute (vs in-simulator) traffic numbers; external validity beyond SUMO (future work: hardware-in-the-loop).

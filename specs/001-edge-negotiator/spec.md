@@ -109,7 +109,7 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 **Out of scope (this MVP; tracked as next steps):**
 - Making normal-traffic green-wave coordination steer decisions, not only verify them (currently verified end to end, not yet causal).
 - Coordinated incident reallocation around a blockage.
-- The real on-device model evaluation on Foundry Local (the demo uses a deterministic stand-in; the corroboration gate is deterministic, so the safety result is unchanged).
+- The real on-device model evaluation on Foundry Local (the demo uses a deterministic stand-in; the corroboration gate is deterministic, so the safety result is unchanged). When run, this is a characterization of the SLM against a well-tuned reference rule on ambiguous cases (Experiment 1), not a competition; a clean null, where the rule suffices, is a valid and reportable outcome.
 - A real-city arterial and a full demand sweep.
 - Defence against colluding insiders or a stolen administrative key.
 
@@ -119,7 +119,7 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 
 - **Built and measured**: signed coordination, registry, plausibility check, classical controller and safety net, the corroboration gate, the four-junction corridor, the exploit-then-defend demo, and the 30-run metrics. In one defended run: 6 local-sensing preemptions, 7 corroborated downstream preemptions, 6 phantom claims withheld.
 - **Verified but not yet causal**: normal-traffic green-wave coordination (next build step).
-- **Designed, not yet run**: real on-device model on Foundry Local; incident reallocation; real-city net and demand sweep.
+- **Designed, not yet run**: real on-device model on Foundry Local, characterized against a well-tuned reference rule on flagged ambiguous cases, reported either way including a null (see `experiment-1-slm-vs-rule.md`); incident reallocation; real-city net and demand sweep.
 
 ---
 

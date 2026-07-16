@@ -7,7 +7,7 @@ All commands run from `03-implementation/edge-negotiator/` using the project ven
 
 ---
 
-## A. Headline demo — exploit-then-defend (record this)
+## A. Headline demo: exploit-then-defend (record this)
 
 **What it shows:** multiple junctions coordinate to clear a real ambulance through a 4-junction corridor, each sensing it locally and sharing corroborated advance claims so downstream junctions pre-position green. Then a compromised-but-approved junction sends a *signed* fake-emergency claim to grab green, and the system refuses it because preemption requires physical corroboration, not just a valid signature. The coordination works; the robustness layer makes it deployable.
 
@@ -31,22 +31,22 @@ All commands run from `03-implementation/edge-negotiator/` using the project ven
 ### Narration script (beats keyed to the terminal lines)
 
 **Opening (before/at start):**
-> "This is a four-junction corridor. Each junction runs a frozen Phi-4-mini agent on Foundry Local. Under normal conditions MaxPressure runs the show; when an emergency or incident is detected, the junctions coordinate to clear it together. The channel is signed so a compromised junction cannot poison that coordination. Watch the terminal — every emergency decision prints one line."
+> "This is a four-junction corridor. Each junction runs a frozen Phi-4-mini agent on Foundry Local. Under normal conditions MaxPressure runs the show; when an emergency or incident is detected, the junctions coordinate to clear it together. The channel is signed so a compromised junction cannot poison that coordination. Watch the terminal: every emergency decision prints one line."
 
 **At `>>> ATTACK: compromised J1 signs a PHANTOM emergency claim to J2`:**
-> "Now a junction has been compromised. J1 still holds a valid key, so anything it signs passes authentication. It's sending J2 a signed message claiming an ambulance is approaching — but there is no ambulance. This is the spoofed-preemption attack: lie to grab green and starve the cross street."
+> "Now a junction has been compromised. J1 still holds a valid key, so anything it signs passes authentication. It's sending J2 a signed message claiming an ambulance is approaching, but there is no ambulance. This is the spoofed-preemption attack: lie to grab green and starve the cross street."
 
 **At the J2 `PREEMPTION WITHHELD` line:**
-> "J2 checks the signature — valid, approved member. But it asks for *corroboration*: has any independent junction actually seen this ambulance, or do I see it myself? Nothing. So preemption is withheld. The signal stays on MaxPressure, the cross street is not starved. Signing alone did not stop the insider — the corroboration gate did."
+> "J2 checks the signature: valid, approved member. But it asks for *corroboration*: has any independent junction actually seen this ambulance, or do I see it myself? Nothing. So preemption is withheld. The signal stays on MaxPressure, the cross street is not starved. Signing alone did not stop the insider; the corroboration gate did."
 
 **At `>>> REAL ambulance AMB-1 enters eastbound`:**
-> "Now a *real* ambulance enters — the red vehicle. Watch it move down the arterial."
+> "Now a *real* ambulance enters: the red vehicle. Watch it move down the arterial."
 
 **At each `EMERGENCY sensed LOCALLY ... PREEMPT` line (J0, then J1, J2, J3):**
-> "Each junction senses the ambulance on its own approach and preempts — clears it through. You can't spoof a physical vehicle into a junction's own sensor."
+> "Each junction senses the ambulance on its own approach and preempts, clearing it through. You can't spoof a physical vehicle into a junction's own sensor."
 
 **At the `CORROBORATED by independent sighting -> PREEMPT` lines:**
-> "And downstream junctions get a heads-up claim that's now *corroborated* by an upstream junction that genuinely saw the ambulance — so they pre-position the green. Real claim, corroborated, granted. Fake claim, uncorroborated, refused. Same gate, no need to guess intent."
+> "And downstream junctions get a heads-up claim that's now *corroborated* by an upstream junction that genuinely saw the ambulance, so they pre-position the green. Real claim, corroborated, granted. Fake claim, uncorroborated, refused. Same gate, no need to guess intent."
 
 **At the end summary:**
 > "The summary: the junctions coordinated to clear the ambulance at every hop. The phantom attack was blocked without any special case, the same corroboration gate that enables legitimate advance preemption is what refuses the fake one. Coordination is the contribution; the robustness layer is what makes it safe to deploy."
@@ -60,7 +60,7 @@ Expect: one `PHANTOM_attack_withheld` = 1, several `local_preemptions`, several 
 
 ---
 
-## B. Optional opener — 2-node coordination demo (context)
+## B. Optional opener: 2-node coordination demo (context)
 
 **What it shows:** two junctions coordinating over the signed bus, with every decision's MaxPressure proposal, AI proposal, neighbour message, signature check, and conservation check visible live.
 
@@ -74,7 +74,7 @@ In SUMO-GUI: right-click junction **A0** or **A1** → **Show Parameter** to wat
 
 ### Narration (30 seconds)
 
-> "Before the attack, here's the normal coordination. Two junctions exchange signed messages about traffic they're releasing toward each other. Right-click a junction and 'Show Parameter' — you can see, every decision, what MaxPressure wanted, what the AI proposed, what executed, the verified neighbour message, and the conservation check reconciling claimed-versus-observed traffic. This is the substrate the attack in the next demo targets."
+> "Before the attack, here's the normal coordination. Two junctions exchange signed messages about traffic they're releasing toward each other. Right-click a junction and 'Show Parameter': you can see, every decision, what MaxPressure wanted, what the AI proposed, what executed, the verified neighbour message, and the conservation check reconciling claimed-versus-observed traffic. This is the substrate the attack in the next demo targets."
 
 ---
 

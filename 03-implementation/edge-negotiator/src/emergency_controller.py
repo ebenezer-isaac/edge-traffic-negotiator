@@ -53,18 +53,36 @@ class EmergencyController(CoordinatedController):
                  ev_horizon: float = 195.0, verbose: bool = True,
                  narrate_junctions=None,
                  corroboration_required: bool = True,
-                 preemption_enabled: bool = True, **kwargs):
+                 preemption_enabled: bool = True,
+                 advance_claims_enabled: bool = True,
+                 disambiguator=None, **kwargs):
         super().__init__(*args, **kwargs)
         # Independent signed channel for EV sightings + advance-claims.
         if not isinstance(ev_bus, MessageBus):
             raise TypeError("ev_bus must be a MessageBus")
         self.ev_bus = ev_bus
         # Mode switches for the exploit-then-defend comparison:
-        #   defended  : corroboration_required=True,  preemption_enabled=True
-        #   naive     : corroboration_required=False, preemption_enabled=True  (victim)
-        #   nopreempt : preemption_enabled=False                               (plain MaxPressure)
+        #   defended          : corroboration_required=True,  preemption_enabled=True
+        #   naive             : corroboration_required=False, preemption_enabled=True (victim)
+        #   nopreempt         : preemption_enabled=False                             (plain MaxPressure)
+        #   maxpressure_preempt: advance_claims_enabled=False (local-sensing preemption
+        #                        only, NO cross-junction coordination; the non-AI floor)
         self.corroboration_required = bool(corroboration_required)
         self.preemption_enabled = bool(preemption_enabled)
+        self.advance_claims_enabled = bool(advance_claims_enabled)
+        # Optional disambiguator for the TRIGGERED regime: a callable
+        # (FlaggedCase -> "escalate_real"|"reject") that decides an ambiguous
+        # advance-claim in place of the deterministic gate. None (default) keeps
+        # admissibility fully deterministic, so all existing modes are unchanged.
+        # This is where the SLM (or the reference rule) becomes CAUSAL.
+        if disambiguator is not None and not callable(disambiguator):
+            raise TypeError("disambiguator must be callable or None")
+        self.disambiguator = disambiguator
+        # Causal-pathway metrics for the triggered regime (analogue of
+        # coord_adjusted_decisions): how often an escalated decision ran, and
+        # how often it actually changed the executed phase.
+        self.escalations = 0
+        self.escalation_changed_decisions = 0
         if isinstance(ev_horizon, bool) or not isinstance(ev_horizon, (int, float)):
             raise TypeError("ev_horizon must be a number")
         if not (ev_horizon > 0):
@@ -212,16 +230,19 @@ class EmergencyController(CoordinatedController):
 
         local_ev = self._sense_local_ev(tl, st)
         # Publish a signed sighting + advance-claims downstream when we see one.
+        # Advance-claims are the cross-junction coordination; maxpressure_preempt
+        # disables them (local-sensing preemption only).
         if local_ev is not None:
             ev_id, ev_edge = local_ev
             self._ev_publish(tl, {"sighting": {"ev_id": ev_id, "edge": ev_edge,
                                                "t": self._ev_tick}})
-            for nb in self.adjacency.get(tl, ()):  # pre-position neighbours
-                self._ev_publish(tl, {"ev_claim": {
-                    "ev_id": ev_id, "target": nb,
-                    "approach_edge": self._edge_id(tl, nb) or ""}})
+            if self.advance_claims_enabled:
+                for nb in self.adjacency.get(tl, ()):  # pre-position neighbours
+                    self._ev_publish(tl, {"ev_claim": {
+                        "ev_id": ev_id, "target": nb,
+                        "approach_edge": self._edge_id(tl, nb) or ""}})
 
-        claims = self._ingest_ev_inbox(tl)
+        claims = self._ingest_ev_inbox(tl) if self.advance_claims_enabled else []
 
         # Build the highest-priority admissible EV trigger. Local sensing wins.
         trig = None
@@ -236,15 +257,42 @@ class EmergencyController(CoordinatedController):
         if trig is None:
             return used
 
-        admissible = self._admissible_ev(
+        # Admissibility. Local sensing is always deterministic. An advance claim
+        # is decided by the disambiguator (SLM or reference rule) when one is
+        # configured AND this is a genuinely ambiguous case; otherwise by the
+        # deterministic corroboration gate. The shield still applies: the
+        # disambiguator can never force preemption the gate would refuse on
+        # zero evidence (it only arbitrates the ambiguous middle).
+        det_admissible = self._admissible_ev(
             trig["source"], trig["ev_id"], trig["claimer"], tl, local_ev)
+        escalated = False
+        if trig["source"] == "advance_claim" and self.disambiguator is not None:
+            escalated = True
+            self.escalations += 1
+            case = self._build_flagged_case(trig, tl, local_ev)
+            try:
+                decision = self.disambiguator(case)
+            except Exception:
+                decision = None
+            # SAFETY: the disambiguator arbitrates the ambiguous middle but can
+            # only WITHHOLD, never ADD preemption. A claim the deterministic gate
+            # refuses stays refused (a broken or hostile disambiguator can never
+            # force a phantom green); a gate-admitted claim it rejects is withheld.
+            # So preemption always still requires the deterministic gate.
+            admissible = det_admissible and (decision == "escalate_real")
+        else:
+            admissible = det_admissible
+
         preempt = (self._phase_serving(st, trig["approach_edge"])
                    if admissible else None)
         executed = preempt if preempt is not None else used
+        if escalated and executed != used:
+            self.escalation_changed_decisions += 1
 
         ev = {"tl": tl, "t": int(self._sim_time()), "source": trig["source"],
               "ev_id": trig["ev_id"], "claimer": trig["claimer"],
               "approach_edge": trig["approach_edge"], "admissible": admissible,
+              "escalated": escalated,
               "corroborated": (trig["source"] == "local_sensing"
                                or self._corroborated(trig["ev_id"],
                                                      trig["claimer"] or "", tl,
@@ -253,6 +301,26 @@ class EmergencyController(CoordinatedController):
         self.ev_events.append(ev)
         self._narrate_ev(ev)
         return executed
+
+    def _build_flagged_case(self, trig: dict, tl: str, local_ev):
+        """Assemble a FlaggedCase from the live EV state for the disambiguator.
+
+        Live EV triggers do not carry a conservation residual (that path is for
+        routine release claims), so residual/persistence are reported as 0; the
+        curated Experiment-1 dataset is where those features vary. split/label
+        are placeholders (deciders never read them)."""
+        from ambiguous_decision import FlaggedCase
+        seen = self._sightings.get(trig["ev_id"], {})
+        indep = [j for j in seen if j != (trig["claimer"] or "") and j != tl]
+        corr = len(indep)
+        return FlaggedCase(
+            case_id=f"live-{tl}-{trig['ev_id']}-{int(self._sim_time())}",
+            event_type="emergency_claim",
+            corroboration_count=corr,
+            residual=0.0, persistence=0,
+            neighbour_agreement=1.0 if corr > 0 else 0.0,
+            local_sensing=local_ev is not None and local_ev[0] == trig["ev_id"],
+            severity=0.5, split="novel", label="real")
 
     def _sim_time(self) -> float:
         try:

@@ -75,6 +75,11 @@ _MODES = {
     "defended": dict(corroboration_required=True, preemption_enabled=True),
     "naive": dict(corroboration_required=False, preemption_enabled=True),
     "nopreempt": dict(corroboration_required=True, preemption_enabled=False),
+    # The non-AI emergency floor: local-sensing preemption only, no cross-junction
+    # coordination (advance claims off). Isolates how much of the benefit is plain
+    # deterministic preemption vs the coordinated advance-clearing.
+    "maxpressure_preempt": dict(corroboration_required=True, preemption_enabled=True,
+                                advance_claims_enabled=False),
 }
 
 

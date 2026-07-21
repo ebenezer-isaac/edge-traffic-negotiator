@@ -1,6 +1,6 @@
 # UK Traffic Law: Fault Attribution at Signal-Controlled Junctions — Structured Knowledge Base for a Traffic-Simulation Model
 
-*(Research reference for an academic simulation model of a Lambeth signalised junction. NOT legal advice.)*
+*(Research reference for an academic simulation model of a signalised junction on Euston Road (A501), London. NOT legal advice.)*
 
 ## TL;DR
 - Fault in the model resolves along three axes with different evidential strength: (a) **driver fault** is anchored in hard statutory duties — running a red is a criminal offence under RTA 1988 s.36 read with TSRGD 2016 Schedule 14 Part 1 para 5(3), attracting a £100 fixed penalty and three penalty points (offence code TS10), rising to a fine of up to £1,000 on prosecution; (b) **signal-authority ("AI") fault** is legally *weak and unsettled* — under Gorringe v Calderdale [2004] UKHL 15 an authority is generally NOT liable for failing to sign/warn (nonfeasance), but CAN be liable for *misfeasance* (creating a trap, e.g. conflicting green signals) per Bird v Pearce; in London the authority is **Transport for London**, which operates circa 6,400 traffic-signal junctions across the Greater London boundary; (c) **emergency-vehicle fault** turns on a conditional exemption — blue-light vehicles may treat red as give-way (TSRGD 2016 Sch 14 Pt 1 para 5(4)-(6)) but still owe a duty of care (Griffin v Mersey, Keyse v Commissioner).
@@ -269,10 +269,10 @@
 ```
 {
   id: "HighwaysAct1980-s41",
-  source: "Highways Act 1980, s.41 (with s.58 defence)",
+  source: "Highways Act 1980, s.41 (with s.58 defence); scope confined by Goodes v East Sussex CC [2000] 1 WLR 1356 (HL)",
   plain_language: "The highway authority has a duty to maintain the fabric of the highway; s.58 gives a defence where reasonable care was taken.",
   binds: "traffic-authority",
-  fault_if_violated: "Per Gorringe/Lavis, s.41 does NOT extend to traffic signs or signals — it covers the physical road surface (Steyn LJ in Lavis v Kent CC: the s.41 duty 'is not capable of covering the erection of traffic signs'). So a signal fault is generally NOT actionable under s.41."
+  fault_if_violated: "Per Goodes v East Sussex CC [2000] 1 WLR 1356 (HL), the s.41 duty to 'maintain' is confined to keeping the fabric/surface of the highway in repair; it does NOT extend to traffic signs or signals. The related proposition that a highway authority owes no private-law duty to provide or erect signs/markings is Lord Hoffmann in Gorringe v Calderdale [2004] UKHL 15. (Earlier CA authority: Lavis v Kent CC (1992) 90 LGR 416.) So a signal fault is generally NOT actionable under s.41."
 }
 ```
 
@@ -283,6 +283,16 @@
   plain_language: "A highway authority's duty to 'maintain' under s.41 is confined to keeping the fabric of the road in repair and does not require signs/markings; broad public-law duties (RTA 1988 s.39) create no private-law duty of care; there is no liability for mere failure to warn.",
   binds: "traffic-authority",
   fault_if_violated: "Authority generally NOT liable for nonfeasance (failure to provide/repair a sign or warning). This is the core reason signal-authority fault is legally weak."
+}
+```
+
+```
+{
+  id: "Poole-BC-v-GN",
+  source: "Poole BC v GN [2019] UKSC 25; [2020] AC 780",
+  plain_language: "The modern UK Supreme Court restatement of the omissions principle: a public authority is generally under no duty of care to confer a benefit or protect from harm it did not create, absent an assumption of responsibility; liability attaches to positive acts that make things worse, not to failures to act.",
+  binds: "traffic-authority",
+  fault_if_violated: "Reinforces the misfeasance-only branch (aligned with Gorringe/Stovin): signal-authority fault turns on a positively-created dangerous/misleading state (e.g. conflicting greens), not on a signal merely failing. Cite alongside Stovin v Wise and Gorringe."
 }
 ```
 
@@ -330,9 +340,9 @@
 {
   id: "TfL-London-signals",
   source: "Greater London Authority Act 1999; Traffic Management Act 2004 (TfL as GLA functional body)",
-  plain_language: "Transport for London operates London's traffic-signal system — circa 6,400 traffic-signal junctions within the Greater London boundary, described by TfL as one of Europe's largest such networks — so for a Lambeth junction TfL is the signal-operating authority (the borough is highway authority for many local roads, but signals are TfL).",
+  plain_language: "Transport for London operates London's traffic-signal system — circa 6,400 traffic-signal junctions within the Greater London boundary, described by TfL as one of Europe's largest such networks. Euston Road (A501) is part of the Transport for London Road Network (TLRN, the 'red routes'), so TfL is BOTH the highway authority and the signal-operating authority for it — a stronger and less ambiguous controllership than a borough road, where signals are TfL but the carriageway is the borough's.",
   binds: "traffic-authority",
-  fault_if_violated: "Identifies the correct defendant for any signal-malfunction claim in London: TfL, not the London Borough of Lambeth."
+  fault_if_violated: "Identifies the correct defendant for any signal-malfunction claim on the A501: Transport for London (Euston Road is TLRN, so TfL is both highway and signal authority)."
 }
 ```
 
@@ -404,7 +414,7 @@ The rules let the model resolve a junction incident by walking a decision tree t
 
 ## Recommendations
 1. **Encode the MUST/should distinction as a fault-weight field.** Give MUST rules (backed by RTA 1988 s.36 + TSRGD) a high fault weight (offence + prima facie negligence); give "should" rules a lower evidential weight routed through RTA 1988 s.38(7). Threshold to change: if a rule's Highway Code text says "MUST/MUST NOT" AND cites a statute, flag it as hard-law.
-2. **Model the authority ("AI") as liable ONLY on the misfeasance branch.** Default authority fault to zero for correctly-functioning or merely-failed signals; enable a non-zero authority share only where the model generates a positively wrong/conflicting indication. Set TfL as the responsible authority entity for the Lambeth junction.
+2. **Model the authority ("AI") as liable ONLY on the misfeasance branch.** Default authority fault to zero for correctly-functioning or merely-failed signals; enable a non-zero authority share only where the model generates a positively wrong/conflicting indication. Set TfL as the responsible authority entity for the Euston Road (A501) junction (TLRN).
 3. **Implement the emergency-vehicle exemption as conditional, not absolute.** Represent red-as-give-way with an "endangerment" test drawn verbatim from para 5(5): if the emergency vehicle's entry was "likely to endanger any person or to cause the driver of another vehicle to change its speed or course in order to avoid an accident," assign it a fault share even though it was exempt.
 4. **Use Griffin's 60/40 as the calibration anchor** for green-driver-vs-red-emergency-vehicle collisions, and expose visibility/audibility parameters that shift the split (per Keyse's fact-specific approach and its 25% pedestrian contributory finding).
 5. **Benchmarks that should change the output:** signal-log evidence that indications were conflicting → shift share to TfL; dashcam/telemetry showing the green-light driver could have seen/heard the emergency vehicle → increase their contributory share; proof the "emergency" vehicle was not on a qualifying purpose → remove its exemption entirely.

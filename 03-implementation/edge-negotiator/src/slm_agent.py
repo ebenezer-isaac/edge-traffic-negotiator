@@ -20,20 +20,48 @@ SYSTEM = (
     'Reply with ONLY JSON {"phase": <index>} and nothing else.'
 )
 
-# Prompt for the ambiguous-case disambiguation job (Experiment 1). The model is
-# asked to judge a flagged event as real or fake/faulty from partial evidence,
-# the one decision a fixed per-junction rule cannot cleanly settle. No chain of
-# thought is requested (unfaithful; accountability is the audit log).
+# Prompt for the ambiguous-case disambiguation job (Experiment 1). The model
+# judges a flagged event as real or fake/faulty from partial evidence, the one
+# decision a fixed per-junction rule cannot cleanly settle. We give qualitative
+# judgment guidance (the DIRECTION each signal points) and a few worked examples
+# so the small model can calibrate, but NOT the reference rule's numeric
+# thresholds, that would collapse the SLM into the rule and void the comparison.
 SYSTEM_DISAMBIG = (
-    "You are a safety check at a road junction. A neighbouring junction has "
-    "reported an emergency or incident, but the evidence is incomplete. Using "
-    "only the evidence given, decide whether the event is REAL (should be acted "
-    "on) or FAKE or FAULTY (should be ignored). Weigh how many independent "
-    "junctions saw it, whether this junction saw it directly, how far the "
-    "reported vehicle counts depart from what is physically plausible, how long "
-    "the anomaly persisted, and whether neighbours agree. "
+    "You are the disambiguation check at a road junction. A neighbour has "
+    "reported an emergency or incident and you must decide if it is REAL (act on "
+    "it) or FAKE or FAULTY (ignore it). Weigh ALL the evidence together, do not "
+    "default to one answer.\n"
+    "More likely REAL: an independent junction also saw it, or this junction saw "
+    "it directly; the reported counts are physically plausible; the anomaly "
+    "persisted over several windows; neighbours agree.\n"
+    "More likely FAKE or FAULTY: no independent source saw it; the reported "
+    "counts are implausible (above the plausible limit of 1.0); it did not "
+    "persist; neighbours disagree.\n"
+    "A direct local sighting is strong evidence it is real. Zero independent "
+    "corroboration with implausible counts is strong evidence it is fake. On "
+    "mixed or conflicting evidence, judge on balance. "
     'Reply with ONLY JSON {"decision": "real"} or {"decision": "fake"}.'
 )
+
+# Worked examples (hand-crafted, NOT drawn from the evaluation dataset, so no
+# leakage). They teach the judgment pattern, not the rule's thresholds.
+_DISAMBIG_FEWSHOT = [
+    ("Event type: emergency_claim. Independent junctions that also saw it: 2. "
+     "This junction saw it directly: no. Reported counts vs plausible "
+     "(1.0 = the limit, above = implausible): 0.40. Windows the anomaly "
+     "persisted: 3. Fraction of neighbours whose reports agree: 0.90. "
+     "Reported severity: 0.80.", "real"),
+    ("Event type: emergency_claim. Independent junctions that also saw it: 0. "
+     "This junction saw it directly: no. Reported counts vs plausible "
+     "(1.0 = the limit, above = implausible): 1.80. Windows the anomaly "
+     "persisted: 1. Fraction of neighbours whose reports agree: 0.20. "
+     "Reported severity: 0.90.", "fake"),
+    ("Event type: incident_claim. Independent junctions that also saw it: 0. "
+     "This junction saw it directly: yes. Reported counts vs plausible "
+     "(1.0 = the limit, above = implausible): 0.60. Windows the anomaly "
+     "persisted: 4. Fraction of neighbours whose reports agree: 0.50. "
+     "Reported severity: 0.70.", "real"),
+]
 
 
 def _service_endpoint() -> str | None:
@@ -127,27 +155,37 @@ class SLMAgent:
         values), or None on any parse/connection failure so the caller can treat
         an unusable answer conservatively (reject = no preemption). Temperature 0.
         """
-        evidence = (
-            f"Event type: {case.event_type}. "
-            f"Independent junctions that also saw it: {case.corroboration_count}. "
-            f"This junction saw it directly: {'yes' if case.local_sensing else 'no'}. "
-            f"Reported vehicle counts vs physically plausible "
-            f"(1.0 = at the plausible limit, above 1.0 = implausible): {case.residual:.2f}. "
-            f"Windows the anomaly persisted: {case.persistence}. "
-            f"Fraction of neighbours whose reports agree: {case.neighbour_agreement:.2f}. "
-            f"Reported severity: {case.severity:.2f}."
-        )
-        user = (evidence + ' Is this event real? Reply ONLY '
+        user = (self._case_evidence(case) + ' Is this event real? Reply ONLY '
                 '{"decision": "real"} or {"decision": "fake"}.')
+        messages = [{"role": "system", "content": SYSTEM_DISAMBIG}]
+        for ex_user, ex_dec in _DISAMBIG_FEWSHOT:  # worked examples for calibration
+            messages.append({"role": "user", "content": ex_user
+                             + ' Reply ONLY {"decision": "real"} or {"decision": "fake"}.'})
+            messages.append({"role": "assistant", "content": '{"decision": "%s"}' % ex_dec})
+        messages.append({"role": "user", "content": user})
         try:
             resp = self.client.chat.completions.create(
                 model=self.model, temperature=0, max_tokens=self.max_tokens,
-                messages=[{"role": "system", "content": SYSTEM_DISAMBIG},
-                          {"role": "user", "content": user}],
+                messages=messages,
             )
             return self._parse_decision(resp.choices[0].message.content or "")
         except Exception:
             return None
+
+    @staticmethod
+    def _case_evidence(case) -> str:
+        """Format a FlaggedCase as neutral evidence text (shared by few-shot and
+        the live query so the framing is identical)."""
+        return (
+            f"Event type: {case.event_type}. "
+            f"Independent junctions that also saw it: {case.corroboration_count}. "
+            f"This junction saw it directly: {'yes' if case.local_sensing else 'no'}. "
+            f"Reported counts vs plausible "
+            f"(1.0 = the limit, above = implausible): {case.residual:.2f}. "
+            f"Windows the anomaly persisted: {case.persistence}. "
+            f"Fraction of neighbours whose reports agree: {case.neighbour_agreement:.2f}. "
+            f"Reported severity: {case.severity:.2f}."
+        )
 
     @staticmethod
     def _parse_decision(text: str) -> str | None:

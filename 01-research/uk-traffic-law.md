@@ -272,7 +272,7 @@
   source: "Highways Act 1980, s.41 (with s.58 defence); scope confined by Goodes v East Sussex CC [2000] 1 WLR 1356 (HL)",
   plain_language: "The highway authority has a duty to maintain the fabric of the highway; s.58 gives a defence where reasonable care was taken.",
   binds: "traffic-authority",
-  fault_if_violated: "Per Goodes v East Sussex CC [2000] 1 WLR 1356 (HL), the s.41 duty to 'maintain' is confined to keeping the fabric/surface of the highway in repair; it does NOT extend to traffic signs or signals. The related proposition that a highway authority owes no private-law duty to provide or erect signs/markings is Lord Hoffmann in Gorringe v Calderdale [2004] UKHL 15. (Earlier CA authority: Lavis v Kent CC (1992) 90 LGR 416.) So a signal fault is generally NOT actionable under s.41."
+  fault_if_violated: "Per Goodes v East Sussex CC [2000] 1 WLR 1356 (HL), the s.41 duty to 'maintain' is confined to keeping the physical fabric/surface of the highway in repair (Goodes concerned ice/snow on the carriageway; note its ice holding was legislatively reversed by the Railways and Transport Safety Act 2003 s.111, inserting Highways Act 1980 s.41(1A) — but the fabric/repair SCOPE principle it states survives and is what we rely on). The DISTINCT proposition that the s.41 duty does not extend to traffic signs/signals, and that a highway authority owes no private-law duty to provide or erect signs/markings, is Lord Hoffmann in Gorringe v Calderdale [2004] UKHL 15. (Earlier CA authority: Lavis v Kent CC (1992) 90 LGR 416.) So a signal fault is generally NOT actionable under s.41."
 }
 ```
 
@@ -340,7 +340,7 @@
 {
   id: "TfL-London-signals",
   source: "Greater London Authority Act 1999; Traffic Management Act 2004 (TfL as GLA functional body)",
-  plain_language: "Transport for London operates London's traffic-signal system — circa 6,400 traffic-signal junctions within the Greater London boundary, described by TfL as one of Europe's largest such networks. Euston Road (A501) is part of the Transport for London Road Network (TLRN, the 'red routes'), so TfL is BOTH the highway authority and the signal-operating authority for it — a stronger and less ambiguous controllership than a borough road, where signals are TfL but the carriageway is the borough's.",
+  plain_language: "Transport for London operates London's traffic-signal system — on the order of ~6,000 traffic-signal junctions within the Greater London boundary (TfL-published figure; attach a TfL source + as-at date before citing a precise number), one of Europe's largest such networks. Euston Road (A501) is part of the Transport for London Road Network (TLRN, the 'red routes'), so TfL is BOTH the highway authority and the signal-operating authority for it — a stronger and less ambiguous controllership than a borough road, where signals are TfL but the carriageway is the borough's.",
   binds: "traffic-authority",
   fault_if_violated: "Identifies the correct defendant for any signal-malfunction claim on the A501: Transport for London (Euston Road is TLRN, so TfL is both highway and signal authority)."
 }

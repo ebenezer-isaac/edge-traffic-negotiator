@@ -1,0 +1,42 @@
+{
+  "nonlinear_bayes_ceiling_accuracy": 0.94559,
+  "bayes_error": 0.05441,
+  "bayes_error_mc_half_width_95": 0.00099,
+  "axis_aligned_box_ceiling_accuracy": 0.84706,
+  "box_ceiling_thresholds": {
+    "corr_k": 0,
+    "residual_max": 1.0,
+    "persistence_p": 1,
+    "agreement_min": 0.5
+  },
+  "headroom_bayes_minus_box": 0.09853,
+  "density_floor": 0.0001,
+  "standardizer_mean": {
+    "corroboration_count": 1.42167,
+    "persistence": 1.96,
+    "residual": 0.86511,
+    "neighbour_agreement": 0.56927,
+    "severity": 0.53148
+  },
+  "standardizer_std": {
+    "corroboration_count": 1.40257,
+    "persistence": 1.6376,
+    "residual": 0.68768,
+    "neighbour_agreement": 0.22406,
+    "severity": 0.23554
+  },
+  "ood_distance_threshold": 2.81433,
+  "ood_percentile": 85,
+  "integration": "bounded-error Monte-Carlo over the balanced mixture; likelihood closed-form, error integral MC",
+  "provenance": {
+    "seed": 20260721,
+    "mc_n": 200000,
+    "n_per_class": 300,
+    "python": "3.13.0",
+    "note": "COMMITTED JSONs are authoritative; do not regenerate (\u00a710 hash pin)"
+  },
+  "adequacy": {
+    "status": "PENDING (real substrate not built) -> ceilings MODEL-RELATIVE",
+    "check": "compare the injector's per-feature class-conditional moments vs the real Euston SUMO-injection observed moments once euston.net.xml + a real run exist; until then the ceilings are labelled model-relative, not real-world optima."
+  }
+}

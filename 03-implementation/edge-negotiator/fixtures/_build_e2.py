@@ -1,0 +1,67 @@
+import json, os
+def sig(h): return (h * 128)[:128]  # 128 hex chars = 64-byte Ed25519 sig
+fx = {
+ "_doc": "E2 worked-example fixture - FROZEN, READ-ONLY. Pins the E2 tie-break expected origin for the assessment.py/fault_report rewrite (MASTER-SPEC v7 §3,§6.3,§11, build F3). Hand-authored BEFORE the build run; hash-pinned by the §10 gate. A build phase MUST NOT regenerate or edit it (a self-authored expected result is a tautology). Loader contract: IGNORE keys beginning with '_'; consume only registry/records/outcomes; hold `expected` OUT-OF-BAND (feed the impl only registry+records+outcomes, compare its output to `expected`).",
+ "_purpose": "TWO scored outcomes of the SAME type (false_preemption) with DISTINCT in-enum origins: o1 attacker-key (validly-SIGNED uncorroborated phantom, signing-key-count 1) and o2 sensor-fed-spoof (KEYLESS lone local sighting, signing-key-count 0). Plus a distractor decision. So ONLY an ev_id-matched causal selector + the §2/§3 TWO-FEATURE partition (signing-key-count AND recomputed-corroboration) satisfies both; every cheaper selector/attribution rule (incl. keying on outcome.type, or counting corroboration while ignoring key-count) fails at least one outcome. See _discrimination.",
+ "_consume": {
+   "causal_selector": "per outcome, select the causal decision by walking driving_input_seqs -> input record -> its ev_claim.ev_id / sighting.ev_id == outcome.ev_id (NOT by recency/junction/seq/input-count/timestamp).",
+   "attribution_rule": "over the causal decision's driving_input_seqs compute BOTH features: (a) signing-key-count = number of distinct non-null signing keys among the inputs; (b) independent-corroboration count = signed inputs whose key differs from the claimer's key. key-count==0 -> keyless-lone-sighting -> sensor-fed-spoof; key-count>=1 AND independent-corrob==0 -> uncorroborated-signed -> attacker-key (attributed to the claimer key); key-count>=1 AND independent-corrob>=1 (>=2 keys) -> corroborated -> legitimate. A rule that checks corroboration-count but IGNORES key-count wrongly returns attacker-key for the keyless case (o2) and fails.",
+   "keyless_input": "a KEYLESS local sensor reading is a kind:'sighting' with sighter_key=null and signature=null; it contributes 0 to signing-key-count. This is the §6.4 sensor-fed-spoof surface (a lone keyless reading forcing a transient preemption = an IN-SCOPE free-deviation class).",
+   "origin_is_class_independent": "origin is decided ONLY from verified provenance (key-count + recomputed corroboration + ev_id link); it does NOT read the runtime `classification` field, the `outcome.type`, nor the claimer's authorized entity-class.",
+   "clocks": "signed_payload.t / sighting.t = logical (100-104); decision.t = sim (150); outcome.t = harm-detection sim (160, AFTER all decisions) so a time-window/recency selector includes all decisions and picks the DISTRACTOR (wrong for both).",
+   "scored_origins": "the 3 provenance-decidable classes (§2/§3): keyless-lone-sighting->sensor-fed-spoof, uncorroborated-signed->attacker-key, corroborated->legitimate. This fixture asserts sensor-fed-spoof (o2) AND attacker-key (o1); both are false_preemption so outcome.type carries NO origin signal."
+ },
+ "registry": [
+  {"kind":"registry","seq":0,"entity_id":"J-ATT","key_fingerprint":"att-fpr","key_der":"DER-ATT","action":"enrol","external_root_sig":"PLACEHOLDER","self_sig":"PLACEHOLDER","admin_sig":"PLACEHOLDER"},
+  {"kind":"registry","seq":1,"entity_id":"J-HONEST-A","key_fingerprint":"hA-fpr","key_der":"DER-HA","action":"enrol","external_root_sig":"PLACEHOLDER","self_sig":"PLACEHOLDER","admin_sig":"PLACEHOLDER"}
+ ],
+ "records": [
+  {"kind":"message","seq":2,"sender":"J-ATT","sender_pubkey_fpr":"att-fpr","sender_pubkey_der":"DER-ATT",
+   "signed_payload":{"sender":"J-ATT","t":100,"payload":{"ev_claim":{"ev_id":"EV-PH","target":"J1","approach":"in_A"}}},
+   "sender_signature":sig("a"),"_note":"attacker phantom advance-claim #1 (EV-PH), signed key att-fpr"},
+  {"kind":"message","seq":3,"sender":"J-ATT","sender_pubkey_fpr":"att-fpr","sender_pubkey_der":"DER-ATT",
+   "signed_payload":{"sender":"J-ATT","t":101,"payload":{"ev_claim":{"ev_id":"EV-PH","target":"J1","approach":"in_A"}}},
+   "sender_signature":sig("b"),"_note":"attacker phantom advance-claim #2 (SAME key att-fpr, SAME ev_id/approach but a distinct logical t so it is a separate signed record; makes D_att a >1-input decision so length==1/fewest-inputs shortcuts diverge). independent-corrob stays 0 (both the claimer own key)."},
+  {"kind":"decision","seq":4,"driving_input_seqs":[[2,"att-fpr"],[3,"att-fpr"]],"junction":"J1","t":150,"executed":"preempt_in_A","classification":"LEGITIMATE","policies_applied":["corroboration"],
+   "_note":"D_ATT (causal for o1): signing-key-count 1 (att-fpr), independent-corrob 0 -> attacker-key. runtime classification LEGITIMATE is NOT read for origin."},
+  {"kind":"sighting","seq":5,"sighter_key":None,"ev_id":"EV-KL","approach":"in_B","t":102,"position":"local_in_B","signature":None,
+   "_note":"KEYLESS local sensor reading (sighter_key=null, signature=null) for EV-KL -> signing-key-count 0"},
+  {"kind":"decision","seq":6,"driving_input_seqs":[[5,None]],"junction":"J1","t":150,"executed":"preempt_in_B","classification":"LEGITIMATE","policies_applied":["corroboration"],
+   "_note":"D_KEYLESS (causal for o2): its sole driving input is a keyless local reading -> signing-key-count 0 -> keyless-lone-sighting -> sensor-fed-spoof. A rule that counts corroboration but ignores key-count wrongly calls this attacker-key (both have corrob 0) and FAILS here."},
+  {"kind":"message","seq":7,"sender":"J-HONEST-A","sender_pubkey_fpr":"hA-fpr","sender_pubkey_der":"DER-HA",
+   "signed_payload":{"sender":"J-HONEST-A","t":103,"payload":{"ev_claim":{"ev_id":"EV-OTHER","target":"J1","approach":"in_C"}}},
+   "sender_signature":sig("c"),"_note":"distractor claim (EV-OTHER)"},
+  {"kind":"decision","seq":8,"driving_input_seqs":[[7,"hA-fpr"]],"junction":"J1","t":150,"executed":"preempt_in_C","classification":"LEGITIMATE","policies_applied":["corroboration"],
+   "_note":"D_DISTRACTOR (no outcome references it): LATEST-seq decision at J1 + a fewest-inputs (1) decision -> latest/highest-seq/fewest-inputs selectors pick THIS (wrong for both outcomes). Forces the ev_id walk."}
+ ],
+ "outcomes": [
+  {"kind":"outcome","id":"o1","type":"false_preemption","junction":"J1","t":160,"ev_id":"EV-PH","metrics":{},"_note":"harm = the signed phantom preemption; detection t=160 after all decisions"},
+  {"kind":"outcome","id":"o2","type":"false_preemption","junction":"J1","t":160,"ev_id":"EV-KL","metrics":{},"_note":"harm = the KEYLESS sensor-spoof preemption; SAME type+junction+t as o1, DISTINCT ev_id -> only ev_id distinguishes them, and outcome.type carries NO origin signal"}
+ ],
+ "expected": [
+  {"outcome_id":"o1","causal_decision_seq":4,"origin":"attacker-key","culprit_key_fpr":"att-fpr",
+   "rationale":"o1.ev_id EV-PH matches the ev_claim in messages seq2 & seq3 driving decision seq4; seq4 driving_input_seqs=[[2,att-fpr],[3,att-fpr]] are validly SIGNED (signing-key-count 1, NOT keyless) and both the claimer own key (independent-corrob 0) -> uncorroborated-signed -> attacker-key, attributed to att-fpr. NOT sensor-fed-spoof (needs key-count 0). runtime LEGITIMATE ignored (§3)."},
+  {"outcome_id":"o2","causal_decision_seq":6,"origin":"sensor-fed-spoof","culprit_key_fpr":None,
+   "rationale":"o2.ev_id EV-KL matches the sighting seq5 driving decision seq6; seq5 is a KEYLESS local reading (sighter_key null) -> signing-key-count 0 -> keyless-lone-sighting -> sensor-fed-spoof (no key to attribute, culprit null). Same corroboration-count (0) as o1 but DIFFERENT key-count (0 vs 1): a rule that ignores key-count wrongly returns attacker-key here. §6.4: a keyless lone reading forcing a preemption is an in-scope free class, labelled sensor-fed-spoof post-hoc."}
+ ],
+ "_discrimination": {
+  "only_correct_impl_passes_both":"ev_id-matched causal selector + the §2/§3 two-feature (key-count AND corroboration) attribution",
+  "kills":[
+   "latest-at-junction/highest-seq -> seq8 distractor: wrong for o1 AND o2",
+   "earliest/lowest-seq -> seq4: right o1, WRONG o2",
+   "time-window recency (window ends outcome.t=160, includes all t=150) -> latest seq8: wrong for both",
+   "t-exact-match (outcome.t=160) -> no decision at t=160: picks nothing",
+   "fewest-driving-inputs -> ties at 1 (seq6,seq8), tiebreak lowest-seq seq6: right o2, WRONG o1",
+   "key on outcome.type -> both false_preemption: no origin signal, cannot distinguish o1 from o2",
+   "always-attacker-key -> WRONG o2 (sensor-fed-spoof)",
+   "corroboration-count-only, ignoring key-count -> attacker-key for BOTH (both corrob 0): WRONG o2",
+   "length==1 -> attacker-key -> seq4 has 2 inputs (non-attacker for o1) and seq6 has 1 (attacker for o2, wrong): WRONG on both",
+   "count the claimer own key as corroboration -> seq4 corrob 0->2: flips o1 off attacker-key: WRONG",
+   "read runtime classification for origin -> both causal decisions LEGITIMATE, origins differ: cannot produce both"
+  ]
+ }
+}
+p = "03-implementation/edge-negotiator/fixtures/e2_worked_example.json"
+json.dump(fx, open(p, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+print("written", p)
+print("message signature lengths:", sorted({len(r.get("sender_signature") or "") for r in fx["records"] if r["kind"]=="message"}))

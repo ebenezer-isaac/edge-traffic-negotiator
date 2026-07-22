@@ -1,0 +1,271 @@
+# ground_rules.yaml — machine-readable mirror of GROUND-RULES-POLICY.md + the UK-law fault KB.
+# CANONICAL policy base for the Edge Negotiator. Both the deterministic rule engine
+# (ambiguous_decision.RuleDisambiguator) and the SLM (slm_agent, via RAG retrieval) reason
+# against THIS file; a decision record cites `policy_id` verbatim, and the Job-A note cites
+# `law_rule.id` verbatim. Nothing is inferred at runtime: an unmatched case -> UNKNOWN.
+#
+# Provenance: policies mirror GROUND-RULES-POLICY.md (2026-07-16) section-for-section;
+# law_rules mirror 01-research/uk-traffic-law.md (statute_ref == that file's `id` field).
+# Substrate: Euston Road (A501), London (TLRN). NOT Lambeth.
+# Schema per MASTER-SPEC.md v7 §9. This artifact is hash-pinned by the §10 prerequisite gate.
+
+version: 1
+substrate: "Euston Road (A501), London — TLRN"
+classifications: [LEGITIMATE, SPOOFED_OR_FAULTY, UNKNOWN]
+
+# --- A. Authorized entities (GROUND-RULES §A) ------------------------------------------
+entities:
+  - class: ambulance
+    priority: 1
+    allowed: "request preemption along route; run active corridor"
+    signature: "vClass=emergency, registered EV key, plausible route + speed"
+  - class: fire
+    priority: 1
+    allowed: "request preemption; may request lane hold at scene"
+    signature: "vClass=emergency, registered EV key"
+  - class: police
+    priority: 2
+    allowed: "request preemption (pursuit) or escort hold"
+    signature: "vClass=emergency, registered EV key; escort may be multi-vehicle"
+  - class: maintenance
+    priority: 3
+    allowed: "request lane closure / incident reservation, NOT preemption"
+    signature: "registered works key; static or slow, scheduled window"
+    note: "a maintenance key asserting an ambulance preemption is signal_tampering (see attacks)"
+  - class: civilian
+    priority: null
+    allowed: "no priority; counted as normal traffic"
+    signature: "no EV key"
+
+# --- B. Legitimacy criteria (GROUND-RULES §B) — the 5 features rule + SLM both receive ---
+legitimacy_criteria:
+  - id: B1
+    name: identity
+    text: "signed by a currently-approved key authorized for the asserted class"
+  - id: B2
+    name: corroboration
+    text: "an independent junction (not the claimer) has physically sensed the same entity; recomputed from independently-signed sighting records, never a self-asserted scalar (MASTER-SPEC §6.6)"
+  - id: B3
+    name: local_sensing
+    text: "this junction physically senses the entity on its own approach — strong evidence, but SPOOFABLE (a lone keyless local reading cannot force sustained preemption, MASTER-SPEC §6.4)"
+  - id: B4
+    name: plausibility
+    text: "consistent with vehicle-conservation (counts inside the plausibility band) and a physically feasible route/speed"
+  - id: B5
+    name: temporal_consistency
+    text: "sighting timing consistent with route travel time (not stale, not impossibly early); per-claim nonce on (ev_id, approach, window, claimer)"
+
+# --- C. Attack taxonomy (GROUND-RULES §C) ----------------------------------------------
+attacks:
+  - id: invalid_id
+    exposes: "B1 fails"
+    def: "unsigned/unregistered/revoked/wrong-class key"
+  - id: signal_tampering
+    exposes: "B1 authorization fails"
+    def: "valid key asserts a class/action it is not authorized for"
+  - id: phantom_ev
+    exposes: "B2 + B3 both fail"
+    def: "signed claim for an entity that does not exist"
+  - id: count_inflation
+    exposes: "B4 fails"
+    def: "signed but physically implausible counts"
+  - id: missing_metadata
+    exposes: "schema check fails -> UNKNOWN"
+    def: "required fields absent/null"
+  - id: contradictory_signals
+    exposes: "B-signals conflict beyond tolerance"
+    def: "two approved reports about the same edge disagree"
+  - id: replay
+    exposes: "dedup on (recipient, sender, t)"
+    def: "a previously-valid message re-sent"
+  - id: withholding
+    exposes: "silent-neighbour expectation"
+    def: "an expected report is silently dropped"
+  - id: unknown_vehicle_type
+    exposes: "no matching policy -> UNKNOWN"
+    def: "entity/behaviour not in section A"
+  - id: collusion
+    scope: OUT_OF_SCOPE
+    def: ">=2 keys craft mutually-consistent lies; evades B-signals by construction; MEASURED as the boundary (MASTER-SPEC §8), contained by revoke + audit, not detection"
+  - id: key_compromise
+    scope: OUT_OF_SCOPE
+    def: "admin/root or external identity-root key stolen; single point of total failure, stated"
+
+# --- D. Decision policies (GROUND-RULES §D) — condition -> classification/action ---------
+policies:
+  - id: P1
+    name: local_sensing_wins
+    condition: "B3 holds (this junction senses the entity)"
+    classification: LEGITIMATE
+    action: preempt
+    note: "strong, but B3 is spoofable — a lone KEYLESS local reading may not force SUSTAINED preemption (MASTER-SPEC §6.4); keyless transients are charged to the junction-aggregate keyless budget"
+  - id: P2
+    name: auth_gate
+    condition: "B1 fails (bad/absent/revoked/unauthorized key)"
+    classification: SPOOFED_OR_FAULTY
+    action: reject_at_bus
+    attacks: [invalid_id, signal_tampering]
+  - id: P3
+    name: phantom_refusal
+    condition: "B1 holds but neither B2 nor B3 (zero independent corroboration, no local sighting)"
+    classification: SPOOFED_OR_FAULTY
+    action: withhold_preempt_stay_maxpressure
+    invariant: "anti-phantom: a single message can NEVER force a green"
+    attacks: [phantom_ev]
+  - id: P4
+    name: corroborated_real
+    condition: "B1 and B2 and B4 and B5 all hold (corroboration key-bound, >=2 keys)"
+    classification: LEGITIMATE
+    action: preempt_or_preclear
+    note: "preemption MAGNITUDE bound to a need functional over MEASURED inputs; bound is VOID where the measured source shares the keyless-spoof surface (keyless magnitude-inflation is an in-scope free class, MASTER-SPEC §6.6)"
+  - id: P5
+    name: implausible_counts
+    condition: "B4 fails (residual out of band, persistent)"
+    classification: SPOOFED_OR_FAULTY
+    action: discount_log_escalate
+    attacks: [count_inflation]
+  - id: P6
+    name: contradiction
+    condition: "two approved reports about the same edge disagree beyond tolerance"
+    classification: UNKNOWN
+    action: flag_discount_escalate_to_disambiguation
+    attacks: [contradictory_signals]
+  - id: P7
+    name: partial_evidence_ambiguous_middle
+    condition: "B1 holds, evidence partial (some but not decisive corroboration/plausibility/persistence)"
+    classification: escalate
+    action: disambiguate_rule_then_slm
+    note: "the SLM Job-B grey-zone job; withhold-only; returns classification + policies_applied"
+  - id: P8
+    name: unknown
+    condition: "no policy P1-P7 cleanly applies (unknown vehicle type, missing metadata)"
+    classification: UNKNOWN
+    action: conservative_reject_log_for_human_review
+    attacks: [missing_metadata, unknown_vehicle_type]
+
+# Safety invariants (independent of classification; FORMAL-SPECIFICATION §8)
+safety_invariants:
+  - id: S1
+    text: "min/max green"
+  - id: S2
+    text: "protected clearance"
+  - id: S3
+    text: "anti-starvation (MaxPressureController.step, per-approach skip counter, max_skip=3)"
+  - id: S4
+    text: "preemption only for a LEGITIMATE (corroborated or locally-sensed) entity; the shield substitutes the deterministic choice if a classification would violate S1-S4"
+
+# --- F. Policy-KPI exemption (MASTER-SPEC §5.7 amendment; TARGET-STATE until GROUND-RULES §F + TEST-AUDIT amended) ---
+policy_kpi_rule:
+  deterministic_records: "a deterministic decision record with empty policies_applied is a defect (the engine guessed)"
+  slm_job_a_note_exempt: true
+  slm_exempt_reason: "the SLM Job-A note is NON-EVIDENTIAL and carries law_rule citations (cited_rules), not P1-P8 policy ids; it is exempt from the empty-policies_applied defect gate"
+
+# --- Law rules (schema per MASTER-SPEC §9; statute_ref == 01-research/uk-traffic-law.md `id`) ---
+# binding: MUST (statute-backed offence + prima facie negligence, high weight)
+#          | should (Highway Code advisory, admissible via RTA 1988 s.38(7), lower weight)
+law_rules:
+  - id: LR-driver-red
+    source: primary
+    statute_ref: RTA1988-s36
+    binding: MUST
+    text: "A driver who fails to comply with a lawfully-placed prescribed traffic sign (incl. traffic light signals) commits a criminal offence."
+    applies_when: "a road user crosses the stop line against a red indication"
+    fault_weight: high
+    note: "read with TSRGD2016-Sch14-Pt1-para5(3); near-conclusive of driver fault; offence code TS10"
+  - id: LR-red-prohibition
+    source: primary
+    statute_ref: TSRGD2016-Sch14-Pt1-para5(3)
+    binding: MUST
+    text: "The red signal conveys the prohibition that vehicular traffic must not proceed beyond the stop line."
+    applies_when: "assessing a red-signal crossing"
+    fault_weight: high
+  - id: LR-amber
+    source: primary
+    statute_ref: TSRGD2016-Sch14-Pt1-para5(9)
+    binding: MUST
+    text: "A steady amber has the same effect as red, except a vehicle too close to stop safely may proceed."
+    applies_when: "a crossing occurs on amber"
+    fault_weight: medium
+  - id: LR-green-due-regard
+    source: primary
+    statute_ref: TSRGD2016-Sch14-Pt1-para5(14)
+    binding: MUST
+    text: "Traffic proceeding beyond a stop line on green must proceed with due regard to the safety of other road users."
+    applies_when: "a driver on green is involved in a conflict"
+    fault_weight: medium
+  - id: LR-ev-exemption
+    source: primary
+    statute_ref: TSRGD2016-Sch14-Pt1-para5(4)-(6)
+    binding: MUST
+    text: "An emergency vehicle may treat red as give-way, but the exemption is CONDITIONAL on not endangering others; it can still be at fault."
+    applies_when: "an authorized emergency vehicle (ambulance/fire/police) crosses on red"
+    fault_weight: high
+    note: "maintenance/works vehicles get NO exemption; calibration anchor Griffin v Mersey (60/40 against the non-emergency driver)"
+  - id: LR-highway-code-admissible
+    source: primary
+    statute_ref: RTA1988-s38(7)
+    binding: should
+    text: "A failure to observe a Highway Code 'should' provision is not itself an offence but is admissible to establish or negate liability."
+    applies_when: "weighting an advisory ('should') rule"
+    fault_weight: low
+  - id: LR-hc-r219
+    source: secondary
+    statute_ref: HC-Rule219
+    binding: should
+    text: "Drivers MUST NOT break the law (e.g. run a red) to give way to an emergency vehicle."
+    applies_when: "a driver commits an offence while yielding to an EV"
+    fault_weight: low
+    note: "reference only — verify against the current Highway Code before citing"
+  - id: LR-authority-maintain
+    source: primary
+    statute_ref: HighwaysAct1980-s41
+    binding: MUST
+    text: "The s.41 duty to 'maintain' is confined to the physical fabric/surface (Goodes v East Sussex CC [2000] 1 WLR 1356); it does NOT extend to traffic signs/signals."
+    applies_when: "a claim alleges the authority is liable for a signal fault under s.41"
+    fault_weight: low
+    note: "Goodes' ice holding reversed by RTSA 2003 s.111 (HA 1980 s.41(1A)); the fabric/scope PRINCIPLE survives. Signal fault generally NOT actionable under s.41."
+  - id: LR-authority-nonfeasance
+    source: primary
+    statute_ref: Gorringe-v-Calderdale
+    binding: MUST
+    text: "A highway authority owes no private-law duty to provide/erect signs or warn (nonfeasance); liability only for misfeasance (Stovin/Bird v Pearce)."
+    applies_when: "assessing signal-AUTHORITY fault"
+    fault_weight: low
+    note: "AUTHORITY (AI) fault defaults to ZERO; turns non-zero ONLY on the misfeasance/conflicting-green branch. Flag authority-fault outputs low-confidence."
+  - id: LR-authority-misfeasance
+    source: primary
+    statute_ref: Bird-v-Pearce
+    binding: MUST
+    text: "An authority CAN be liable where it positively creates a trap (e.g. conflicting green signals) — misfeasance, not omission."
+    applies_when: "the system generates a positively wrong/conflicting indication (conflicting-green detection)"
+    fault_weight: medium
+    note: "conflicting-green = a FACTUAL detection only; legal_causation NOT_ASSESSED (unsettled: Bird v Pearce vs Gorringe/Stovin/Poole-BC-v-GN)"
+  - id: LR-omissions-modern
+    source: primary
+    statute_ref: Poole-BC-v-GN
+    binding: MUST
+    text: "Modern UKSC restatement of the omissions principle: no duty to confer a benefit/protect from harm not created, absent assumption of responsibility."
+    applies_when: "assessing any authority-omission claim"
+    fault_weight: low
+    note: "reinforces the misfeasance-only branch; cite with Stovin v Wise + Gorringe"
+  - id: LR-controller-tfl
+    source: primary
+    statute_ref: TfL-London-signals
+    binding: MUST
+    text: "Euston Road (A501) is TLRN, so TfL is BOTH highway and signal authority — the correct defendant/controller for a signal-malfunction claim."
+    applies_when: "identifying the responsible authority entity"
+    fault_weight: low
+  - id: LR-contrib-negligence
+    source: primary
+    statute_ref: LawReform-ContribNeg-1945-s1
+    binding: MUST
+    text: "Damages are reduced for the claimant's contributory negligence."
+    applies_when: "apportioning between multiple at-fault parties"
+    fault_weight: medium
+  - id: LR-contribution-1978
+    source: primary
+    statute_ref: CivilLiability-Contribution-1978-s1
+    binding: MUST
+    text: "Liability is split between multiple wrongdoers."
+    applies_when: "more than one party is at fault"
+    fault_weight: medium

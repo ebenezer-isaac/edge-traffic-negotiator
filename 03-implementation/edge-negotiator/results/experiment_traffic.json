@@ -1,0 +1,149 @@
+{
+  "experiment": "H1_slm_vs_maxpressure_traffic",
+  "label": "PILOT / SMOKE",
+  "config": "myopic (per-junction queues; no coordination; no neighbour note)",
+  "corridor": "Euston Road A501 spine (euston_spine.net.xml, 4 TLS)",
+  "demand": "base.rou.xml (DfT-AADF-calibrated, daily resolution)",
+  "seed": 42,
+  "end": 300,
+  "gate": 2,
+  "decision_interval_s": 10,
+  "caveats": [
+    "PILOT: demand is DfT daily-AADF magnitude+mix; temporal profile assumed -> inferential claims GATED until time-resolved TfL counts land (\u00a78).",
+    "SMOKE: n=1, short horizon -> descriptive only, NO significance claim.",
+    "Audit layer LIVE on both arms (signed hash-chain + Merkle inclusion proof)."
+  ],
+  "baseline": {
+    "arm": "maxpressure",
+    "controller_model": "maxpressure(null-agent-shield)",
+    "controlled_tls": [
+      "GS_6985146843",
+      "GS_cluster_110097_110098",
+      "GS_cluster_13249075_6985146839_6985146845",
+      "cluster_2440680097_253308874_3837973624_427931760_#2more"
+    ],
+    "metrics": {
+      "loaded": 261,
+      "departed": 224,
+      "completed": 126,
+      "running_at_end": 98,
+      "undeparted": 37,
+      "mean_network_delay_s": 91.25446428571429,
+      "avg_travel_time_completed_s": 81.96825396825396,
+      "median_travel_time_completed_s": 75.0,
+      "teleports": 0,
+      "sim_steps": 300,
+      "write_unfinished_present": true,
+      "write_undeparted_present": true
+    },
+    "decision_stats": {
+      "decisions": 58,
+      "served_by": {
+        "slm": 0,
+        "shield": 41,
+        "anti_starvation": 17
+      },
+      "slm_valid_proposals": 0,
+      "slm_proposal_served": 0,
+      "slm_agreed_with_shield": 0,
+      "slm_diverged_and_served": 0,
+      "shield_fallbacks_none": 41,
+      "anti_starvation_overrides": 17
+    },
+    "audit": {
+      "enabled": true,
+      "entries": 58,
+      "decision_entries": 58,
+      "verify_chain": true,
+      "verify_signatures": true,
+      "merkle_root": "80a0caec0c80b67d06367681f22ffc4e58039508170341503d0df0ae184a0c49",
+      "inclusion_sample_index": 57,
+      "inclusion_branch_len": 6,
+      "inclusion_proof_valid": true
+    },
+    "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_maxpressure_s42.xml"
+  },
+  "slm": {
+    "arm": "slm_myopic",
+    "controller_model": "Phi-4-mini-instruct-generic-gpu:5",
+    "controlled_tls": [
+      "GS_6985146843",
+      "GS_cluster_110097_110098",
+      "GS_cluster_13249075_6985146839_6985146845",
+      "cluster_2440680097_253308874_3837973624_427931760_#2more"
+    ],
+    "metrics": {
+      "loaded": 261,
+      "departed": 224,
+      "completed": 126,
+      "running_at_end": 98,
+      "undeparted": 37,
+      "mean_network_delay_s": 91.25446428571429,
+      "avg_travel_time_completed_s": 81.96825396825396,
+      "median_travel_time_completed_s": 75.0,
+      "teleports": 0,
+      "sim_steps": 300,
+      "write_unfinished_present": true,
+      "write_undeparted_present": true
+    },
+    "decision_stats": {
+      "decisions": 58,
+      "served_by": {
+        "slm": 41,
+        "shield": 0,
+        "anti_starvation": 17
+      },
+      "slm_valid_proposals": 50,
+      "slm_proposal_served": 41,
+      "slm_agreed_with_shield": 41,
+      "slm_diverged_and_served": 0,
+      "shield_fallbacks_none": 0,
+      "anti_starvation_overrides": 17
+    },
+    "audit": {
+      "enabled": true,
+      "entries": 58,
+      "decision_entries": 58,
+      "verify_chain": true,
+      "verify_signatures": true,
+      "merkle_root": "40a426c58b26fa4fabdee20562cf0fd44a9da13689f8736ab10c1bc4b62b9a8b",
+      "inclusion_sample_index": 57,
+      "inclusion_branch_len": 6,
+      "inclusion_proof_valid": true
+    },
+    "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_slm_myopic_s42.xml",
+    "model": "Phi-4-mini-instruct-generic-gpu:5",
+    "slm_calls": 50,
+    "slm_none_returns": 0,
+    "latency": {
+      "n": 49,
+      "warmup_discarded": 1,
+      "min": 0.44844020000164164,
+      "p50": 0.4864251000035438,
+      "p95": 0.5263876999961212,
+      "p99": 0.6335879000034765,
+      "max": 0.6335879000034765,
+      "mean": 0.49223044898054485,
+      "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+    }
+  },
+  "verdict": {
+    "status": "match",
+    "metric": "mean_network_delay_s (lower is better)",
+    "baseline_delay_s": 91.25446428571429,
+    "slm_delay_s": 91.25446428571429,
+    "slm_minus_baseline_s": 0.0,
+    "slm_relative_delay": 0.0,
+    "baseline_completed": 126,
+    "slm_completed": 126,
+    "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+  },
+  "latency_viability": {
+    "decision_interval_s": 10,
+    "p50_s": 0.4864251000035438,
+    "p95_s": 0.5263876999961212,
+    "p99_s": 0.6335879000034765,
+    "p99_within_interval": true,
+    "p95_within_interval": true
+  }
+}

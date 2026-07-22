@@ -363,10 +363,21 @@ class EmergencyController(CoordinatedController):
         # decision applies policy `corroboration`; classification is the RUNTIME EV
         # label (LEGITIMATE iff admissible else SPOOFED_OR_FAULTY), DISTINCT from
         # ORIGIN (assessment.py MUST NOT read it for origin).
+        # The SERVED phase (post anti-starvation). The admissible-preempt lock is
+        # already set above, so _anti_starvation_choice returns `executed` when a
+        # preempt holds (the override is OUTRANKED, spec §6.8); absent a preempt it
+        # applies the fairness override just as step() will. The §11 record's
+        # executed must be the SERVED phase (MASTER-SPEC §4 H2).
+        served = self._anti_starvation_choice(tl, st, executed)
         log_decision(self.audit_log, self.identities, tl, ev_driving_pairs,
-                     self._sim_time(), executed,
+                     self._sim_time(), served,
                      "LEGITIMATE" if admissible else "SPOOFED_OR_FAULTY",
                      list(EV_POLICIES))
+        # This EV decision emitted a §11 record for the served phase this interval,
+        # so _on_served must NOT also emit a gate-skip decision (no double-record).
+        if isinstance(self._served_ctx, dict) and self._served_ctx.get("tl") == tl:
+            self._served_ctx = {**self._served_ctx, "emitted": True,
+                                "recorded": executed}
         return executed
 
     def _build_flagged_case(self, trig: dict, tl: str, local_ev):

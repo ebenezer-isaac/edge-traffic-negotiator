@@ -111,26 +111,25 @@ class MaxPressureController:
         preempt, which OUTRANKS the anti-starvation override (spec §6.8)."""
         return None
 
-    def _decide_with_anti_starvation(self, tl: str, st: dict) -> int:
-        """Wrap the phase CHOICE (not the pressure math) with the anti-starvation
-        override.
+    def _anti_starvation_choice(self, tl: str, st: dict, normal: int) -> int:
+        """Apply the anti-starvation precedence to an ALREADY-DECIDED ``normal``
+        choice and return the phase that will ACTUALLY be served. PURE: reads only
+        ``st`` (skip counters, pressure) + the preempt lock; NO side effects (the
+        skip counters update in ``_record_service``, called separately by step()).
 
-        ALWAYS calls decide() FIRST so every subclass side-effect fires and the §11
-        kind:"decision" audit record is emitted every interval (never skipped by an
-        override). Then applies precedence:
-          * disabled              -> return the normal choice (counters still update
-                                     in step() so negative_control sees violations);
-          * an admissible EV preempt is locked -> return the normal choice (emergency
+        Extracted so BOTH ``step()`` and the record PRODUCERS (decide() in the
+        Coordinated/Emergency subclasses) can compute the SERVED phase from a
+        pre-override choice WITHOUT re-running decide() -- the fix for the audit
+        recording the pre-override phase (MASTER-SPEC §4 H2 / §6.8). Precedence:
+          * disabled              -> the normal choice (counters still update in
+                                     step() so negative_control sees violations);
+          * an admissible EV preempt is locked -> the normal choice (emergency
                                      preemption OUTRANKS fairness; the shield never
                                      cuts an active preempt);
           * else if some phase has reached max_skip AND the normal choice is NOT
-            itself a starved phase -> force-serve the most-starved (highest skip;
-            tie-break highest _pressure, then lowest index);
-          * else -> the normal choice.
-        Behaviour-equivalent to the pre-refactor logic on the 2-phase fixture: at
-        most one phase is >= max_skip at a time, so `normal` is either that phase
-        (served -> no override) or the other (override to it)."""
-        normal = self.decide(tl, st)
+            itself a starved phase -> the most-starved (highest skip; tie-break
+            highest _pressure, then lowest index);
+          * else -> the normal choice."""
         if not self.anti_starvation_enabled:
             return normal
         if self._preempt_locked_phase(tl) is not None:
@@ -141,6 +140,27 @@ class MaxPressureController:
             return max(reached,
                        key=lambda p: (st["skip"][p], self._pressure(st, p), -p))
         return normal
+
+    def _decide_with_anti_starvation(self, tl: str, st: dict) -> int:
+        """Wrap the phase CHOICE (not the pressure math) with the anti-starvation
+        override.
+
+        ALWAYS calls decide() FIRST so every subclass side-effect fires and the §11
+        kind:"decision" audit record is emitted every interval (never skipped by an
+        override), THEN applies the precedence via ``_anti_starvation_choice``.
+        Behaviour-equivalent to the pre-refactor logic on the 2-phase fixture: at
+        most one phase is >= max_skip at a time, so `normal` is either that phase
+        (served -> no override) or the other (override to it)."""
+        return self._anti_starvation_choice(tl, st, self.decide(tl, st))
+
+    def _on_served(self, tl: str, st: dict, best: int) -> None:
+        """Notify that ``best`` is the phase ACTUALLY served this interval (after
+        the anti-starvation override), so a producer can record the SERVED phase
+        for accident reconstruction (MASTER-SPEC §4 H2). Called from step() once per
+        decision interval, AFTER the override and BEFORE ``_record_service``. Base
+        controller has no audit surface, so this is a no-op; HybridController (and
+        the coordination/emergency subclasses) override it."""
+        return
 
     def step(self) -> None:
         """Advance every controlled TLS by one simulated second."""
@@ -157,6 +177,10 @@ class MaxPressureController:
                     # while an admissible EV preempt holds the signal is legitimate
                     # (spec §6.8) -> its over-max_skip is not a violation.
                     best = self._decide_with_anti_starvation(tl, st)
+                    # Notify the producer of the SERVED phase (post-override) so the
+                    # audit records what was actually served, not the pre-override
+                    # proposal (MASTER-SPEC §4 H2). No traffic-control effect.
+                    self._on_served(tl, st, best)
                     preempt_locked = self._preempt_locked_phase(tl) is not None
                     self._record_service(st, best, preempt_locked=preempt_locked)
                     if best != st["cur"]:

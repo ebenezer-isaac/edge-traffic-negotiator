@@ -30,7 +30,7 @@ from audit_records import coordination_policies, log_decision, log_messages
 from conservation import ConservationChecker, Detection
 from flow_accounting import FlowWindow
 from flow_conservation import EdgeMeasurement, FlowConservationDetector
-from hybrid_controller import HybridController
+from hybrid_controller import HybridController, served_by
 from identity import JunctionIdentity
 from message_bus import MessageBus
 # Topology helpers live in net_topology (file-size limit). edge_map_from_net is
@@ -541,10 +541,19 @@ class CoordinatedController(HybridController):
         self._current_tl = tl
         mp_choice = super(HybridController, self).decide(tl, st)  # MaxPressure
         if tl not in self.slm:
+            self._served_ctx = {"tl": tl, "recorded": mp_choice, "event_index": None,
+                                "gate_skipped": False, "mp_choice": mp_choice,
+                                "slm_phase": None, "halting": None, "emitted": False}
             return mp_choice
 
         halting = [self.green_halting(st, gi) for gi in range(len(st["green"]))]
         if sum(halting) < self.gate:  # event-gate: quiet -> shield only
+            # Gate-skipped: no §11 decision emitted here. If step()'s anti-starvation
+            # override then changes the served phase, _on_served closes the hole.
+            self._served_ctx = {"tl": tl, "recorded": mp_choice, "event_index": None,
+                                "gate_skipped": True, "mp_choice": mp_choice,
+                                "slm_phase": None,
+                                "halting": [int(h) for h in halting], "emitted": False}
             return mp_choice
 
         # Only coordinate for junctions that have an identity to sign with.
@@ -745,9 +754,16 @@ class CoordinatedController(HybridController):
                     new_detections = []
                 self.detections = [*self.detections, *new_detections]
 
+        # The SERVED phase (post anti-starvation): step() will serve exactly this
+        # (best = _anti_starvation_choice(tl, st, decide()==used)), so the §11
+        # record's executed must be `served`, not the pre-override `used`
+        # (MASTER-SPEC §4 H2). Pure read; no traffic-control effect.
+        served = self._anti_starvation_choice(tl, st, used)
         self.events.append({
             "tls": tl, "halting": halting,
             "slm_phase": proposal, "shield_phase": mp_choice, "used": used,
+            "served": served,
+            "served_by": served_by(proposal, mp_choice, used, served),
             "overridden": proposal is None or proposal != mp_choice,
             "tick": tick,
             "published": published,
@@ -777,9 +793,36 @@ class CoordinatedController(HybridController):
                           if any(d.flagged for d in new_detections)
                           else "LEGITIMATE")
         log_decision(self.audit_log, self.identities, tl, driving_pairs,
-                     self._sim_time(), used, classification,
+                     self._sim_time(), served, classification,
                      coordination_policies(bool(new_detections)))
+        self._served_ctx = {"tl": tl, "recorded": used,
+                            "event_index": len(self.events) - 1,
+                            "gate_skipped": False, "mp_choice": mp_choice,
+                            "slm_phase": proposal,
+                            "halting": [int(h) for h in halting],
+                            "emitted": True}
         return used
+
+    def _on_served(self, tl: str, st: dict, best: int) -> None:
+        """Record the SERVED phase (post anti-starvation) for accountability.
+
+        First repairs the decision event's ``served`` (parent, HybridController).
+        Then closes the §11 gate-skip hole: when NO §11 decision record was emitted
+        this interval (gate-skipped / non-SLM path) AND the override changed the
+        served phase, emit a §11 kind:"decision" of the SERVED phase so the signed
+        chain never omits a served-phase change (MASTER-SPEC §4 H2 / §6.2). Its
+        driving_input_seqs is [] (no signed inputs were consumed on a gate-skip),
+        classification LEGITIMATE (no detection ran), policies the coordination
+        base (membership/replay). The full-path record already carries the served
+        phase (executed = served, set in decide()), so it needs no correction."""
+        ctx = self._served_ctx
+        super()._on_served(tl, st, best)
+        if (self.audit_log is not None and ctx and ctx.get("tl") == tl
+                and not ctx.get("emitted") and ctx.get("event_index") is None
+                and best != ctx.get("recorded")):
+            log_decision(self.audit_log, self.identities, tl, [],
+                         self._sim_time(), best, "LEGITIMATE",
+                         coordination_policies(False))
 
     def _sim_time(self) -> float:
         """Simulation-clock read for decision.t (§6.2). DISTINCT from the logical

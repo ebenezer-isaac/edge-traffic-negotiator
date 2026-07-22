@@ -1,33 +1,195 @@
 {
-  "_doc": "Forced-skip anti-starvation fixture - FROZEN, READ-ONLY. Committed BEFORE the build run; hash-pinned by the §10 gate. Pins a traffic scenario the anti-starvation mechanism (MASTER-SPEC v7 §6.8, §11 overnight-step 5) must be tested against. A build phase MUST NOT regenerate or edit it. Loader contract: ignore keys beginning with '_'.",
-  "_purpose": "A scenario where one green phase PROVABLY never wins the MaxPressureController._pressure argmax, so under plain MaxPressure it starves FOREVER. The ONLY route to serving it is the anti-starvation override (force-serve after max_skip skips). This makes the D7 test non-tautological: a controller with no override (or a broken counter) never serves the starved phase and FAILS assertion A; a controller that serves it too eagerly FAILS assertion D; anti_starvation_violations must EMERGE from the mechanism, never be set by the test.",
-  "_unit_note": "The scenario uses a strict 1:1 green-phase <-> approach mapping (phase 0 = approach A via in-lane LA; phase 1 = approach B via in-lane LB), so 'per-approach skip counter' and 'per-green-phase skip counter' coincide unambiguously (resolves the build per-approach-vs-phase-index question). The mechanism counts a SKIP for a green phase each decision interval it is eligible but not served.",
-  "tls": "J1",
-  "min_green": 10,
-  "yellow": 3,
-  "max_skip": 3,
-  "green_phases": [
-    {"idx": 0, "state": "Gr", "approach": "A", "in_lane": "LA", "out_lane": "LAo"},
-    {"idx": 1, "state": "rG", "approach": "B", "in_lane": "LB", "out_lane": "LBo"}
-  ],
-  "halting": {"LA": 1, "LB": 9, "LAo": 0, "LBo": 0},
-  "_halting_note": "CONSTANT per-lane halting counts (no time variation). _pressure(phase0) = halting(LA) - halting(LAo) = 1 - 0 = 1; _pressure(phase1) = halting(LB) - halting(LBo) = 9 - 0 = 9. So argmax over {0,1} is ALWAYS phase 1: phase 0 never wins, at every decision interval.",
-  "horizon_decision_intervals": 9,
-  "expected": {
-    "unconstrained_argmax_every_interval": 1,
-    "starved_phase_idx": 0,
-    "starved_approach": "A",
-    "phase0_first_served_at_or_before_interval": 3,
-    "phase0_service_cadence": "the override fires ONLY when phase 0's skip counter reaches max_skip (=3); i.e. phase 0 is served once per <=max_skip intervals, NOT every interval and NOT preemptively",
-    "phase1_dominant": "phase 1 (the genuine high-pressure phase) is served in the strict majority of intervals; the override is an exception, not a takeover",
-    "anti_starvation_violations": 0,
-    "min_green_yellow_respected": true
+  "_doc": "Forced-skip anti-starvation fixture - FROZEN, READ-ONLY. Committed BEFORE the build run; hash-pinned by §10. Pins traffic scenarios the anti-starvation mechanism (MASTER-SPEC v7 §6.8, §11 step 5) is tested against. A build phase MUST NOT regenerate/edit it. Loader ignores keys beginning with '_'.",
+  "_scope": "Declarative scenarios + pinned expected service schedules for a mechanism to be built in §11 step 5 and run against MaxPressureController (controllers.py). The ctor serves green[0]=phase0 at init (interval 0) BEFORE any decide(); therefore the STARVED phase is phase 1 (never served at init AND never wins _pressure argmax where LA>LB), so a no-override controller NEVER serves it -> assertion has teeth (fixes the ctor-init tautology).",
+  "_purpose": "THREE discriminating checks so only a CORRECT per-phase-skip-counter mechanism passes: S1 constant single-starve (phase1 forced at the max_skip cadence); S2 alternating/reset-on-win (pressure flips so the starving phase changes AND a phase wins on pressure before max_skip, resetting its counter -> a hardcoded timer / global counter produces a DIFFERENT schedule); negative_control (running the mechanism with the override DISABLED on S1 MUST yield anti_starvation_violations>0 -> proves the counter is a live signal, not 0-for-free). Verified out-of-tree: correct mechanism reproduces the pinned schedules; no_override / modulo_timer / always_starved / over-eager(max_skip=2) each DIVERGE on >=1 scenario.",
+  "decision_interval": "one decide() opportunity at a phase boundary; interval 0 = the ctor's initial green (phase0); intervals 1..N = successive decide() calls. Horizon = 10 intervals.",
+  "test_contract": {
+    "counter_not_timer": "the mechanism MUST derive force-service from a per-phase skip counter (incremented each interval a phase is eligible-but-unserved, RESET to 0 when the phase is served by EITHER argmax or override), NOT from a fixed interval timer. S2 distinguishes these.",
+    "violations_read_not_set": "the test READS controller.anti_starvation_violations; it MUST NOT assign it. The mechanism increments it when a phase's skip counter EXCEEDS max_skip (a starvation it failed to prevent).",
+    "per_phase": "skip counters are PER green phase (1:1 with approach here). A single global/modulo counter fails S2.",
+    "safe_transition": "force-service changes WHICH phase is served at a decision point; it MUST still honour min_green(10)+yellow(3) (S1/S2 invariants), never a mid-green interrupt."
   },
+  "common": {
+    "tls": "J1",
+    "min_green": 10,
+    "yellow": 3,
+    "max_skip": 3,
+    "ctor_initial_phase": 0,
+    "green_phases": [
+      {
+        "idx": 0,
+        "state": "Gr",
+        "approach": "A",
+        "in_lane": "LA",
+        "out_lane": "LAo"
+      },
+      {
+        "idx": 1,
+        "state": "rG",
+        "approach": "B",
+        "in_lane": "LB",
+        "out_lane": "LBo"
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "S1_single_starve",
+      "halting_constant": {
+        "LA": 9,
+        "LB": 1,
+        "LAo": 0,
+        "LBo": 0
+      },
+      "_note": "LA=9>LB=1 every interval -> phase0 wins argmax always; phase1 never wins and is not served at init -> starves; forced at the max_skip cadence.",
+      "expected": {
+        "starved_phase": 1,
+        "served_by_interval": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "phase1_service_intervals": [
+          3,
+          7
+        ],
+        "phase0_service_intervals": [
+          0,
+          1,
+          2,
+          4,
+          5,
+          6,
+          8,
+          9
+        ],
+        "phase1_first_service_interval": 3,
+        "anti_starvation_violations": 0
+      }
+    },
+    {
+      "id": "S2_alternating_reset",
+      "halting_schedule": [
+        {
+          "LA": 9,
+          "LB": 1,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 9,
+          "LB": 1,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 1,
+          "LB": 9,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 1,
+          "LB": 9,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 1,
+          "LB": 9,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 1,
+          "LB": 9,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 1,
+          "LB": 9,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 1,
+          "LB": 9,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 1,
+          "LB": 9,
+          "LAo": 0,
+          "LBo": 0
+        },
+        {
+          "LA": 1,
+          "LB": 9,
+          "LAo": 0,
+          "LBo": 0
+        }
+      ],
+      "_note": "LA=9/LB=1 for intervals 0-1 then FLIP to LA=1/LB=9: phase1 wins on PRESSURE at interval 2 (skip<max_skip, a reset-on-win, NOT an override), then phase0 starves and is FORCED later. A timer/global-counter yields a different schedule.",
+      "expected": {
+        "served_by_interval": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        "phase0_service_intervals": [
+          0,
+          1,
+          5,
+          9
+        ],
+        "phase1_service_intervals": [
+          2,
+          3,
+          4,
+          6,
+          7,
+          8
+        ],
+        "reset_on_win_interval": 2,
+        "anti_starvation_violations": 0
+      }
+    },
+    {
+      "id": "negative_control",
+      "base": "S1_single_starve",
+      "mutation": "override_disabled",
+      "_note": "MUTATION test: run the mechanism with the anti-starvation override DISABLED on S1. This is NOT the correct mechanism; it proves the violations counter CAN be nonzero.",
+      "expected_under_mutant": {
+        "phase1_ever_served": false,
+        "anti_starvation_violations_min": 1
+      },
+      "expected_under_correct_mechanism": {
+        "anti_starvation_violations": 0
+      }
+    }
+  ],
   "assertions": [
-    "A. under the anti-starvation controller, green phase 0 (approach A) IS served at or before decision interval max_skip=3 (a no-override / broken-counter controller never serves it -> FAILS here)",
-    "B. under plain MaxPressureController.decide (no override), phase 0 is NEVER selected across the horizon (pressure 1 vs 9 every interval) -- establishes the scenario is a genuine starvation, not an artefact",
-    "C. anti_starvation_violations == 0 EMERGES from the mechanism (the mechanism increments the per-phase skip counter and force-serves at max_skip; the counter of UN-prevented starvations stays 0). The test MUST NOT set this counter; it reads it.",
-    "D. phase 0 is served ONLY via the override at the skip threshold, not every interval (a controller that ignores pressure and serves phase 0 eagerly FAILS: phase 1 must dominate)",
-    "E. each forced service still respects min_green (>=10s green) + the yellow (3s) clearance before switching (S1/S2 invariants) -- the override changes WHICH phase, never the safe-transition timing"
+    "A. [S1] the anti-starvation controller serves phase1 (approach B) EXACTLY at [3, 7]; a no-override/timer-wrong controller diverges.",
+    "B. [S1] under plain MaxPressure.decide (no override) phase1 is NEVER served (pressure 1 vs 9) AND is not served at ctor-init (init serves phase0) -> establishes genuine starvation (has teeth).",
+    "C. [S2] the served schedule EXACTLY equals [0, 0, 1, 1, 1, 0, 1, 1, 1, 0]: phase1 served on pressure at interval 2 (reset-on-win, not override) and phase0 FORCED later; a hardcoded timer or single global counter produces a different schedule.",
+    "D. [negative_control] with the override disabled on S1, anti_starvation_violations >= 1 and phase1 is never served -> the counter is a live signal, not 0-for-free.",
+    "E. [all] anti_starvation_violations == 0 EMERGES from the correct mechanism (never set by the test); each forced service respects min_green+yellow (S1/S2 invariants).",
+    "F. [contract] the test READS the counter; the mechanism derives service from the per-phase skip counter (reset on any service), NOT a timer -- S2 is the discriminator."
   ]
 }

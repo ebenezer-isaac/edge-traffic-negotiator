@@ -45,8 +45,8 @@ from xml.sax.saxutils import quoteattr
 import sumolib  # type: ignore
 
 # Corridor bbox W,S,E,N — the geo-bounds of euston_spine.net.xml
-# (origBoundary="-0.148667,51.520533,-0.119252,51.535080"). Re-derived from the
-# real Euston Road (A501) spine net on 2026-07-22 (was the prior Lambeth bbox).
+# (origBoundary="-0.148667,51.520533,-0.119252,51.535080"). Derived from the
+# real Euston Road (A501) spine net.
 # Several DfT count points fall inside this bbox (e.g. cp 47245 AADF=55240,
 # cp 18454 AADF=46882, cp 17169 AADF=43425, cp 76054 AADF=37510; DfT year
 # 2025), but only THREE actually snap within SNAP_RADIUS_M=60 to a drivable

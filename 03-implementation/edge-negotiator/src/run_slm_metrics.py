@@ -2,7 +2,7 @@
 
 WHY THIS EXISTS
 ---------------
-The deterministic-StubAgent sweep (results/coord_throughput.md) proved that, under
+The deterministic-StubAgent sweep proved that, under
 throughput-controlled metrics, Channel-B (the deterministic coordination-adjusted
 reference choice) has NO measurable effect on the 2x2 grid: a valid SLM/Stub proposal
 always wins, so the adjusted-pressure term is inert on travel time. But that sweep is
@@ -444,7 +444,7 @@ def build_report(rows: list[dict]) -> str:
     p.append(
         "WHY THE REAL SLM IS REQUIRED: coordination enters chiefly via Channel A, the "
         "neighbour-note in the SLM prompt. The deterministic StubAgent ignores that "
-        "note (proven in `results/coord_throughput.md`), so the Channel-A effect can "
+        "note (proven by the deterministic-StubAgent sweep), so the Channel-A effect can "
         "ONLY be measured with the real model -- which is exactly this run.")
     p.append("")
     p.append("Every run is scored with the throughput-controlled metrics in "

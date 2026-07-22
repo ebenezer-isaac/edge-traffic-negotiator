@@ -3,7 +3,7 @@
 This is the centerpiece that ASSEMBLES every separately-tested part into one
 runnable pipeline. It does NOT re-implement any subsystem; it composes their
 PUBLIC APIs with explicit, swappable choices, and wires the audit log at the
-documented integration point (results/audit_log_design.md §7).
+documented integration point (MASTER-SPEC.md §6.2 — producer wiring).
 
 The parts it composes (all imported, none edited)
 -------------------------------------------------

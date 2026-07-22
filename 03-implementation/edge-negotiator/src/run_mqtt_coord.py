@@ -89,7 +89,7 @@ DEFAULT_PORT = int(os.environ.get("EDGE_MQTT_PORT", "1883"))
 #
 # With a 20 ms settle the MQTT run's decision-affecting counts (verified messages,
 # detections, flagged detections, coordination-adjusted decisions) are byte-for-
-# byte IDENTICAL to the in-process run (see results/mqtt_coord_design.md). Set 0
+# byte IDENTICAL to the in-process run (verified by tests/test_mqtt_coord.py). Set 0
 # to run with no barrier (slightly fewer same-tick deliveries; still safe — an
 # unsettled report is just drained on the next decision, never lost).
 STEP_SETTLE_S = 0.02

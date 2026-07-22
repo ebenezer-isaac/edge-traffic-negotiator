@@ -9,8 +9,8 @@ and an iterable `audit_log` — but answers them from an **in-memory cache** in
 microseconds, never from a synchronous `eth_call` and never blocking on
 consensus.
 
-Why this layer exists (BESU-SPIKE.md §6 / results/ledger_bench.md)
-------------------------------------------------------------------
+Why this layer exists (MASTER-SPEC.md §4.1 — async anchor, off the control loop)
+--------------------------------------------------------------------------------
 The single biggest integration risk is *coupling membership checks or audit
 writes to consensus latency*. Measured: a write commit is ~1.4-2.1 s median
 (p95 up to ~5 s); a read `eth_call` is ~30-50 ms; the in-memory equivalent is

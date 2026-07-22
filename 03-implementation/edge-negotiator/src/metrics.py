@@ -1,7 +1,7 @@
 """Throughput-controlled traffic metrics that resolve the survivorship-bias confound.
 
-Source of truth: results/milestone2_report.md ("Caveat") + MASTER-SPEC.md.
-The Milestone-2 sweep reported ``avg_travel_time_s`` averaged over *completed trips
+Source of truth: MASTER-SPEC.md (survivorship-bias caveat).
+A naive sweep reports ``avg_travel_time_s`` averaged over *completed trips
 only*. A controller that completes FEWER trips (e.g. it strands the slow, congested
 vehicles unfinished at the END horizon) silently drops those slow trips from the
 denominator, so its mean travel time can look *lower* purely because the slow trips

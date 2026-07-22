@@ -20,7 +20,7 @@ registry + audit log only and is NEVER in the real-time control loop**. Reads
 (`is_approved`, `public_key`) are local `eth_call`s against contract state and
 are cheap; writes (`register`, `revoke`) are transactions that must be mined and
 therefore carry block/finality latency — which is exactly why MASTER-SPEC.md keeps
-them off the fast path. See `src/bench_ledger.py` for the measured numbers.
+them off the fast path (MASTER-SPEC.md §4.1).
 
 The on-chain `AgentRegistered` / `AgentRevoked` events ARE the tamper-evident
 audit log; `audit_log` reconstructs the chronological event list from those logs

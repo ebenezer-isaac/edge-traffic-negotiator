@@ -44,9 +44,17 @@ class FakeLane:
     def __init__(self, halting: dict, vehicles: dict | None = None,
                  lengths: dict | None = None):
         self._halting = dict(halting)
-        # lane_id -> tuple of vehicle ids on that lane (order = SUMO order).
+        # lane_id -> tuple of vehicle ids on that lane (order as scripted; SUMO's
+        # downstream-to-upstream lane ordering is NOT modelled).
         self._vehicles = {k: tuple(v) for k, v in (vehicles or {}).items()}
         self._lengths = dict(lengths or {})
+
+    def _known(self, lane_id) -> bool:
+        """A lane the stub knows about (any of the three maps mentions it). Real
+        TraCI raises on a genuinely unknown lane for ALL lane calls; we mirror
+        that so a later lane-resolution bug cannot hide behind a silent default."""
+        return (lane_id in self._halting or lane_id in self._lengths
+                or lane_id in self._vehicles)
 
     def getLastStepHaltingNumber(self, lane_id):
         if lane_id not in self._halting:
@@ -54,12 +62,18 @@ class FakeLane:
         return self._halting[lane_id]
 
     def getLastStepVehicleIDs(self, lane_id):
-        """Vehicle ids on ``lane_id`` (empty tuple if none scripted). This is the
-        LANE call the EV detector uses -- NOT a vehicle-object call (build F4)."""
+        """Vehicle ids on ``lane_id`` (empty tuple if none scripted on a KNOWN
+        lane). This is the LANE call the EV detector uses -- NOT a vehicle-object
+        call (build F4). Unknown lane -> KeyError, as real TraCI raises."""
+        if not self._known(lane_id):
+            raise KeyError(lane_id)
         return tuple(self._vehicles.get(lane_id, ()))
 
     def getLength(self, lane_id):
-        """Lane length in metres (default _DEFAULT_LANE_LEN)."""
+        """Lane length in metres (default _DEFAULT_LANE_LEN on a KNOWN lane).
+        Unknown lane -> KeyError, as real TraCI raises."""
+        if not self._known(lane_id):
+            raise KeyError(lane_id)
         return float(self._lengths.get(lane_id, _DEFAULT_LANE_LEN))
 
     def set_observed(self, sender: str, value: int) -> None:

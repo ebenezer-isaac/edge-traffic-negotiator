@@ -97,8 +97,13 @@ def test_stub_exposes_corrected_vehicle_api():
 
 def test_stub_raises_on_unknown_ids_like_sumo():
     _ctrl, conn = _build_ev_controller(with_ev=True)
+    # All lane calls raise on a genuinely unknown lane (mirrors TraCIException).
     with pytest.raises(KeyError):
         conn.lane.getLastStepHaltingNumber("NOPE_0")
+    with pytest.raises(KeyError):
+        conn.lane.getLastStepVehicleIDs("NOPE_0")
+    with pytest.raises(KeyError):
+        conn.lane.getLength("NOPE_0")
     with pytest.raises(KeyError):
         conn.vehicle.getVehicleClass("ghost")
     with pytest.raises(KeyError):
@@ -165,10 +170,24 @@ def test_out_of_horizon_ev_is_not_preempted():
     NOT trigger preemption -- guards against a stub that detects any 'emergency'
     class regardless of position."""
     ctrl, conn = _build_ev_controller(with_ev=True)
-    # Move the ambulance to the lane entry (pos 5 on a 200 m lane -> 195 m to go,
-    # just OUTSIDE the <= would-detect boundary is 195; use 4 -> 196 m, clearly out).
+    # 200 m lane, ev_horizon 195, detect iff (len - pos) <= 195 i.e. pos >= 5.
+    # pos 4 -> gap 196 > 195 -> OUTSIDE, must not preempt.
     conn.vehicle._positions[_EV_ID] = 4.0
     st = ctrl.tls["A0"]
     executed = ctrl.decide("A0", st)
     assert executed == 1, "EV beyond ev_horizon must not preempt"
     assert [e for e in ctrl.ev_events if e["source"] == "local_sensing"] == []
+
+
+def test_horizon_inclusive_boundary_preempts():
+    """Pins the INCLUSIVE <= 195 boundary exactly: pos 5 on a 200 m lane -> gap
+    195 == ev_horizon -> must still detect + preempt. Together with the pos-4
+    out-case this brackets the boundary to a single metre, so a regression that
+    shrinks ev_horizon is caught (not just any horizon in a wide range)."""
+    ctrl, conn = _build_ev_controller(with_ev=True)
+    conn.vehicle._positions[_EV_ID] = 5.0   # gap = 200 - 5 = 195 == horizon
+    st = ctrl.tls["A0"]
+    executed = ctrl.decide("A0", st)
+    assert executed == 0, "EV exactly at ev_horizon (inclusive) must preempt"
+    ev_local = [e for e in ctrl.ev_events if e["source"] == "local_sensing"]
+    assert len(ev_local) == 1 and ev_local[0]["ev_id"] == _EV_ID

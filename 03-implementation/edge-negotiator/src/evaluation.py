@@ -1,4 +1,4 @@
-"""The Edge Negotiator full evaluation harness (Wk9-10 results generator).
+"""The Edge Negotiator full evaluation harness (results generator).
 
 This is the integration-ready "part" that produces the dissertation's *results
 matrix* end-to-end. It defines an experiment MATRIX and runs it to two tidy
@@ -33,8 +33,8 @@ blocks through their public APIs:
     (precision/recall/F1 + latency) against ground-truth-labelled injected
     messages, also Foundry-free and SUMO-free.
 
-LESSONS BAKED IN (from the Milestone-2 post-mortem)
----------------------------------------------------
+LESSONS BAKED IN
+----------------
   * HEADLINE metrics are throughput-controlled: ``mean_network_delay`` (lower is
     better), ``completion_rate`` and ``throughput`` (higher is better). The OLD
     completed-only ``avg_travel_time_completed`` is carried ONLY as a CONTRAST
@@ -589,7 +589,7 @@ def build_markdown(cfg: EvalConfig, rows: Sequence[Dict],
     if CONTRAST_METRIC in traffic_tables:
         a("### Contrast only — the OLD survivorship-biased metric")
         a("")
-        a("Shown to expose the Milestone-2 confound. If its sign/significance "
+        a("Shown to expose the confound. If its sign/significance "
           "disagrees with `mean_network_delay` above, the old number was driven "
           "by WHICH trips completed, not by genuinely faster travel. NOT the "
           "headline.")
@@ -659,7 +659,7 @@ def build_markdown(cfg: EvalConfig, rows: Sequence[Dict],
       "vehicles (stranded ones keep their accrued time), so a 'completes fewer "
       "but faster' controller earns no spurious win.")
     a("- `avg_travel_time_completed` is shown for contrast ONLY — it is the "
-      "survivorship-biased Milestone-2 metric and is never the headline.")
+      "survivorship-biased completed-only metric and is never the headline.")
     a("- Stats: BCa 95% CIs + paired permutation + Holm-Bonferroni, all paired "
       "on seed. Scale `--seeds` up (e.g. 30) for the dissertation-power run.")
     return "\n".join(p)

@@ -2,7 +2,7 @@
 
 Why this module
 ----------------
-`specs/001-edge-negotiator/experiment-1-slm-vs-rule.md` requires a decision an
+`MASTER-SPEC.md` §8 requires a decision an
 edge SLM can be characterized against: given a FLAGGED ambiguous case (an
 event a fixed per-junction rule cannot cleanly settle), classify it as
 **real** (escalate: preempt / reallocate) or **spoof-or-fault** (reject: stay
@@ -634,7 +634,7 @@ def evaluate(decider: _DeciderLike, cases: list) -> dict:
 
     Returns ``{"anticipated": {...}, "novel": {...}, "overall": {...}}``. The
     two splits are ALWAYS reported separately (per
-    `experiment-1-slm-vs-rule.md` §4: "never pooled into one accuracy
+    `MASTER-SPEC.md` §8: "never pooled into one accuracy
     number"); ``overall`` is provided in addition, never as a replacement.
     On an empty case list (or an empty split), every rate metric is 0.0
     rather than raising a ZeroDivisionError.

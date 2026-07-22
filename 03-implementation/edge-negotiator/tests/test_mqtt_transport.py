@@ -1,6 +1,6 @@
 """Round-trip + adversarial tests for src/mqtt_transport.py over a REAL broker.
 
-The MQTT transport is the de-risk spike for the brief's fast control path
+The MQTT transport is the spike for the brief's fast control path
 (signed messages over MQTT). The whole point of the spike is that the broker
 adds *transport only* and the trust guarantees stay byte-identical to the
 in-process ``MessageBus``. These tests assert exactly that against a live

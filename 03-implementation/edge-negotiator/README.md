@@ -34,12 +34,11 @@ Requires **SUMO 1.20+** with `SUMO_HOME` set, and **Microsoft Foundry Local** fo
 # H2 trust: Job-A SLM legal-reasoning eval (measured negative)
 .venv/Scripts/python src/experiment_jobA.py
 
-# H1 performance: SLM controller vs MaxPressure on Euston (audit live)
-.venv/Scripts/python src/experiment_traffic.py
-
 # emergency-preemption + audit demonstration
 .venv/Scripts/python src/measure_emergency.py
 .venv/Scripts/python src/run_attacks.py
 ```
+
+The **H1 headline experiment** — the SLM controller (`slm_agent.choose_phase`) against the MaxPressure baseline (`controllers.py`) on the real Euston stretch — is the pending next run: both components exist, but no runner for that head-to-head exists yet (MASTER-SPEC §3 marks it not-yet-run).
 
 Every claim is settled only when its MASTER-SPEC §12 acceptance gate passes over a real run; results are written under `results/`.

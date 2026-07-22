@@ -1,6 +1,6 @@
 """Coordinated controller: authenticated cross-junction coordination layer.
 
-Milestone-2 (brief Wk 3-4). Wraps the event-gated hybrid (SLM proposes /
+Wraps the event-gated hybrid (SLM proposes /
 MaxPressure shield disposes) with a *signed* neighbour-message exchange so
 adjacent junctions influence one another's phase choice and reconcile their
 claims against observation (conservation check). On each SLM-junction decision:

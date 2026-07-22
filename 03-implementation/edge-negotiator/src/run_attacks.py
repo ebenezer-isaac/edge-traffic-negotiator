@@ -1,6 +1,6 @@
 """Run the three attack scenarios through the detectors and measure performance.
 
-Wk7-8 DE-RISK: produce HARD detection data -- precision / recall / F1 / latency
+Produce HARD detection data -- precision / recall / F1 / latency
 per attack, plus a tolerance ROC-style sweep -- against KNOWN ground truth.
 
 Why a fake-conn harness (not the full SUMO run)?
@@ -490,10 +490,10 @@ def build_report(results: dict) -> str:
 
     lines: list[str] = []
     a = lines.append
-    a("# Attack & Detection Report — The Edge Negotiator (Wk7-8 DE-RISK)")
+    a("# Attack & Detection Report — The Edge Negotiator")
     a("")
     a("Hard detection data for the three threat-model scenarios "
-      "(`../THREAT-MODEL-ANALYSIS.md` §4), measured against KNOWN ground-truth "
+      "(`MASTER-SPEC.md` §6), measured against KNOWN ground-truth "
       "labels per injected message. All runs use the deterministic `StubAgent` "
       "and an in-memory TraCI stand-in — NO Foundry, NO SUMO — so every number "
       "below reproduces exactly via `python src/run_attacks.py`.")

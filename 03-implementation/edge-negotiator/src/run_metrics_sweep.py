@@ -1,15 +1,14 @@
-"""Honest throughput-controlled coordination sweep (the survivorship-bias-free redo).
+"""Throughput-controlled coordination metrics sweep.
 
 WHY THIS EXISTS
 ---------------
-The Milestone-2 sweep headlined ``avg_travel_time_s`` averaged over *completed trips
-only*. On the oversaturated 2x2 grid that statistic is survivorship-biased: a
-controller that strands the slow, congested vehicles unfinished at the horizon drops
-those slow trips from the denominator and can post a spuriously *lower* mean travel
-time -- the WRONG SIGN. (See src/metrics.py module docstring and the sibling agent's
-finding.)
+An ``avg_travel_time_s`` averaged over *completed trips only* is survivorship-biased on
+the oversaturated 2x2 grid: a controller that strands the slow, congested vehicles
+unfinished at the horizon drops those slow trips from the denominator and can post a
+spuriously *lower* mean travel time -- the WRONG SIGN. (See src/metrics.py module
+docstring.)
 
-This runner re-runs the four controller modes (and, for ``coordinated``, a
+This runner runs the four controller modes (and, for ``coordinated``, a
 coord_weight / lambda sweep) and scores every run with the *throughput-controlled*
 metrics in src/metrics.py:
 
@@ -444,7 +443,7 @@ def build_report(rows: list[dict]) -> str:
         "tripinfo emitted with `--tripinfo-output.write-unfinished "
         "--tripinfo-output.write-undeparted` so the whole vehicle population "
         "(completed + stranded-at-horizon + never-departed) is counted. This "
-        "resolves the Milestone-2 survivorship bias where avg-travel-time over "
+        "resolves the survivorship bias where avg-travel-time over "
         "*completed trips only* could flip sign.")
     parts.append("")
     parts.append(f"- Seeds: {n_seeds} ({sorted({r['seed'] for r in rows})})")

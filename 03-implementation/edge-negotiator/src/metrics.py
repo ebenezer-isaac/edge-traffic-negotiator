@@ -44,7 +44,7 @@ With all three, ONE file lets us recover:
     running  = departed but arrival < 0        (stranded at the horizon)
     undeparted = depart < 0                    (never got in)
 
-If a file was produced WITHOUT --write-unfinished (the legacy Milestone-2 files), it
+If a file was produced WITHOUT --write-unfinished (the legacy completed-only files), it
 contains ONLY completed trips; `parse_tripinfo` still works but `departed`/`running`
 will be undercounted. `parse_tripinfo` records whether unfinished/undeparted vehicles
 were present so callers can detect a legacy file and refuse to trust completion_rate.
@@ -278,7 +278,7 @@ def completion_rate(run: RunRecord) -> float:
 
 
 def avg_travel_time_completed(run: RunRecord) -> float:
-    """The OLD Milestone-2 metric: mean travel time over COMPLETED trips only.
+    """The OLD completed-only metric: mean travel time over COMPLETED trips only.
 
     Needs: default tripinfo. Kept deliberately so reports can show the biased number
     side-by-side with the robust ones. Returns NaN when nothing completed.

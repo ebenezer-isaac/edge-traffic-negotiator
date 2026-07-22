@@ -1,4 +1,4 @@
-"""De-risk runner for the REAL Euston Road (A501) spine corridor.
+"""Runner for the REAL Euston Road (A501) spine corridor.
 
 Targets ``euston_spine.net.xml`` (built + committed) with ``base.rou.xml``
 (DfT-AADF-calibrated demand, built by build_demand.py). Runs end-to-end.

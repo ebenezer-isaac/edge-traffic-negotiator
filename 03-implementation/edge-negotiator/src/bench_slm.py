@@ -1,4 +1,4 @@
-"""bench_slm.py — DE-RISK benchmark for the Edge Negotiator SLM-in-the-loop design.
+"""bench_slm.py — benchmark for the Edge Negotiator SLM-in-the-loop design.
 
 Measures two things with hard data, against whatever model Foundry Local currently
 serves (discovered via SLMAgent / the /v1/models endpoint):

@@ -1,5 +1,5 @@
 """Experiment 1: characterize the edge SLM against a reference rule on flagged
-ambiguous cases (see specs/001-edge-negotiator/experiment-1-slm-vs-rule.md).
+ambiguous cases (see MASTER-SPEC.md §8).
 
 This is a CHARACTERIZATION, not a competition. The well-tuned deterministic rule
 (``RuleDisambiguator``) is a yardstick; the SLM (Phi-4-mini via Foundry Local) is

@@ -1,6 +1,6 @@
 """Signed neighbour-message bus for The Edge Negotiator.
 
-Cross-junction coordination (brief Milestone-2, Wk 3-4): each signalised
+Cross-junction coordination: each signalised
 junction's SLM agent publishes a short predicted-state report; its *adjacent*
 junctions consume those reports to coordinate phases. The bus is the security
 boundary -- a junction must only ever act on a report that:

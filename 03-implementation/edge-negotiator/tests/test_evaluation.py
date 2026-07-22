@@ -130,7 +130,7 @@ def test_headline_metric_tables_present_with_stats_columns(report):
 def test_throughput_controlled_metric_is_the_headline_not_completed_only(report):
     """mean_network_delay is a headline metric; avg_travel_time_completed is NOT.
 
-    Guards the Milestone-2 lesson: the wrong-sign completed-only average must
+    Guards the lesson: the wrong-sign completed-only average must
     never be the sole headline. It may appear ONLY as a flagged contrast block.
     """
     assert "mean_network_delay" in HEADLINE_METRICS

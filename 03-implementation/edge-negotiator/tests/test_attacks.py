@@ -1,4 +1,4 @@
-"""Adversarial tests for the three Wk7-8 attack injectors + their detectors.
+"""Adversarial tests for the three attack injectors + their detectors.
 
 Asserts, against the AS-BUILT detectors driven through the genuine
 ``CoordinatedController.decide`` path (deterministic StubAgent + in-memory TraCI

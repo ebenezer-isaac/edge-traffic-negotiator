@@ -72,7 +72,7 @@ Units: s=seconds, m=metres, m/s, m/s², veh=vehicles, win=windows/decision-round
 ### 1.3 Triggers + corroboration
 | Symbol | Meaning | Units | Value | Status | Basis |
 |---|---|---|---|---|---|
-| `processing` | SLM round-trip budget | s | 1.0 | [K] | Foundry p95 (de-risk ~0.5 s; 1.0 conservative) |
+| `processing` | SLM round-trip budget | s | 1.0 | [K] | Foundry p95 (~0.5 s measured; 1.0 conservative) |
 | `ev_horizon` | EV trigger arming distance | m | v_free·(min_green+yellow+processing) | [D] | kinematic derivation (green pre-positioned before arrival); MUTCD 4D.27 preemption framework, NTCIP 1211 EVP messaging for context only |
 | `incident_occ` | incident occupancy threshold | frac | 0.70 | [C] | well past capacity occupancy (~0.11-0.25, incident-detection literature: California algorithm family, FHWA Traffic Detector Handbook) = standing jam |
 | `incident_speed_frac` | incident speed ceiling (×free) | – | 0.10 | [D] | ≤ walking pace = stopped, not slow queue |
@@ -95,7 +95,7 @@ Units: s=seconds, m=metres, m/s, m/s², veh=vehicles, win=windows/decision-round
 | `alpha` | significance level | – | 0.05 | [C] | standard |
 | `power` | target power 1−β | – | 0.80 | [C] | Cohen 1988 |
 | `MDE` | min detectable effect (paired) | metric units | (z_{1−α/2}+z_{1−β})·sd_diff/√n = 0.511·sd_diff (n=30) | [D] | paired-design power |
-| `seeds` | paired seeds | – | 30 | [C]/[D] | de-risk power finding |
+| `seeds` | paired seeds | – | 30 | [C]/[D] | power finding |
 | `J` | EV injections per seed | – | 6 | [D]/[U] | n_eff≥60 at ρ≈0.3 (re-derive after pilot) |
 | `tol_rec` | recovery tolerance | frac | 0.10 | [E] | queue within 10% of baseline |
 | `k_rec` | recovery persistence | cycles | 3 | [E] | sustained return |

@@ -28,8 +28,10 @@ python -m venv .venv
 - **Test suite:** `.venv/Scripts/python.exe -m pytest tests/`
 - **Fixture emergency demo (deterministic gate):** `.venv/Scripts/python.exe src/measure_emergency.py` (add `--multi --seeds=30` for the powered paired-seed run).
 - **Demand sweep:** `.venv/Scripts/python.exe src/experiment_demand_sweep.py`
-- **SLM controller metrics sweep (H1):** `.venv/Scripts/python.exe src/run_slm_metrics.py` — gated by the Foundry determinism probe; an unreachable or non-deterministic model records an honest SKIP rather than a degraded result.
+- **Real-SLM coordination-effect sweep:** `.venv/Scripts/python.exe src/run_slm_metrics.py` — runs the coordinated-vs-uncoordinated real-SLM arms on the grid fixture, gated by the Foundry determinism probe; an unreachable or non-deterministic model records an honest SKIP rather than a degraded result.
 - **SLM-vs-rule disambiguation (Job B):** `.venv/Scripts/python.exe src/experiment_slm_vs_rule.py`
 - **SLM legal-reasoning note (Job A):** `.venv/Scripts/python.exe src/experiment_jobA.py`
+
+The **H1 headline experiment** — the SLM controller (`slm_agent.choose_phase`) head-to-head against the MaxPressure baseline (`controllers.py`) on the real Euston stretch — is the pending next run. Both components exist, but no runner for that comparison exists yet (MASTER-SPEC §3 marks it not-yet-run), so no number for it may be quoted.
 
 Experiments that require the real Foundry Local model, the committed Euston net, the policy corpus, or a quorum anchor fail loud: they SKIP-with-a-record or ABORT rather than emit a silently-degraded green result. A recorded SKIP or a reported negative is an honest outcome.

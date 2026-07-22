@@ -452,7 +452,7 @@ def build_report(rows: list[dict]) -> str:
              "`--tripinfo-output.write-unfinished --tripinfo-output.write-undeparted` "
              "(unique path per run under `results/tripinfo_slm/`), so the whole "
              "vehicle population (completed + stranded-at-horizon + never-departed) "
-             "is counted and the Milestone-2 survivorship bias cannot recur.")
+             "is counted and the survivorship bias cannot recur.")
     p.append("")
     p.append(f"- Seeds: n={n_seeds} ({seeds})")
     p.append(f"- Horizon: end={end} steps (per run, capped)")

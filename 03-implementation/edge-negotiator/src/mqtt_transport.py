@@ -1,6 +1,6 @@
 """MQTT-backed transport for The Edge Negotiator's signed neighbour bus.
 
-DE-RISK SPIKE (MASTER-SPEC.md: the fast/real-time control path is
+SPIKE (MASTER-SPEC.md: the fast/real-time control path is
 *signed messages over MQTT*; the Besu ledger is the slow async trust path).
 ``src/message_bus.py`` ships an **in-process** ``MessageBus`` whose publish/inbox
 split was deliberately shaped like an MQTT adapter would wrap (see its module

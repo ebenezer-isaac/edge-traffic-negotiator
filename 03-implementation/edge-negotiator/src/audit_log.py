@@ -21,7 +21,7 @@ does not need:
      re-checks every signed entry against its issuer's DER public key, so a
      swapped or forged signature is caught independently of the hash chain.
 
-  2. **Merkle anchoring (the bridge to Besu).** The de-risk benchmark found a
+  2. **Merkle anchoring (the bridge to Besu).** The benchmark found a
      single Besu write costs ~2.1 s, so per-entry anchoring is infeasible. We
      instead fold a *batch* of entry hashes into one Merkle root
      (:meth:`merkle_root`); a single ~2.1 s write anchors the whole batch.
@@ -302,7 +302,7 @@ class AuditLog:
         """Merkle root over the entry hashes in ``[start, end)`` (end exclusive).
 
         Folds a *batch* of entry hashes into a single 64-hex root so one ~2.1 s
-        Besu write anchors the whole batch (per the de-risk ledger benchmark).
+        Besu write anchors the whole batch (per the ledger benchmark).
         Internal nodes use :func:`_hash_pair`; an odd level duplicates its last
         node (the standard Bitcoin-style promotion) so the tree is well defined
         for any batch size >= 1. Deterministic: the same range always yields the

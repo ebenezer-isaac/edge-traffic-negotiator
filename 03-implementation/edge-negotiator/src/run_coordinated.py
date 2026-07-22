@@ -1,7 +1,6 @@
 """Run + sweep harness for authenticated cross-junction coordination.
 
-Mirrors run_hybrid.py's structure, reusing CFG / HERE / parse_metrics from
-run_baseline. Four modes:
+Reuses CFG / HERE / parse_metrics from run_baseline. Four modes:
 
   * ``fixed``         -- SUMO default fixed-time program (no controller logic).
   * ``maxpressure``   -- classical MaxPressure baseline / shield.

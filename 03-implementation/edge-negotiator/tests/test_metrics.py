@@ -4,8 +4,8 @@ Run from the project root with the venv interpreter:
     .venv/Scripts/python -m pytest tests/test_metrics.py -v
 
 These tests exist to BREAK the metrics. The centrepiece (TestSurvivorshipBias)
-constructs the exact failure mode from results/milestone2_report.md: a controller
-that completes FEWER but FASTER trips. The OLD completed-only average is fooled by it;
+constructs the exact survivorship-bias failure mode (see the src/metrics.py module
+docstring): a controller that completes FEWER but FASTER trips. The OLD completed-only average is fooled by it;
 the assertions verify the NEW throughput-controlled metrics (total/mean network delay
 and the matched-set diff) are NOT fooled. The rest covers completion-rate arithmetic,
 parsing/boundary validation, immutability, and adversarial malformed input.
@@ -259,7 +259,7 @@ class TestParsing:
         assert {t.veh_id for t in run.departed_trips} == {"c", "r"}
 
     def test_legacy_file_has_no_unfinished_flag(self):
-        # Milestone-2 style: completed-only. Flag must be False so callers
+        # Legacy style: completed-only. Flag must be False so callers
         # know completion_rate is untrustworthy (collapses to 1.0).
         run = _parse(completed("0", 0, 10), completed("1", 1, 20))
         assert run.has_unfinished is False

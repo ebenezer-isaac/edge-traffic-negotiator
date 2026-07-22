@@ -1,6 +1,6 @@
 """Run a deterministic baseline controller over the 2x2 grid and report metrics.
 
-Wk 1-2 pipeline milestone: proves SUMO + TraCI + a controller loop end-to-end.
+A SUMO + TraCI baseline runner: drives a controller loop end-to-end over the grid fixture.
 
     python src/run_baseline.py --controller maxpressure
     python src/run_baseline.py --controller fixed --gui

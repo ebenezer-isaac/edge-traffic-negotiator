@@ -1,4 +1,4 @@
-"""CLI for the full Edge Negotiator evaluation matrix (Wk9-10 results generator).
+"""CLI for the full Edge Negotiator evaluation matrix (evaluation-matrix generator).
 
 Runs the controllers x seeds matrix end-to-end with the deterministic StubAgent
 (NO Foundry Local) + the required full-population tripinfo flags, scores every

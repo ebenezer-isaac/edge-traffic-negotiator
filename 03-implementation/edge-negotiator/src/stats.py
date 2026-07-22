@@ -1,7 +1,7 @@
 """Statistical inference harness for the Edge Negotiator experimental sweep.
 
 Source of truth: MASTER-SPEC.md section 7 ("Stats: BCa bootstrap,
-Holm-Bonferroni"). The Wk9-10 sweep is 30 seeds x 4 scenarios comparing four
+Holm-Bonferroni"). The powered sweep is 30 seeds x 4 scenarios comparing four
 controllers (fixed-time, MaxPressure, uncoordinated-SLM, coordinated-SLM) on
 traffic metrics (average travel time, average queue, throughput).
 

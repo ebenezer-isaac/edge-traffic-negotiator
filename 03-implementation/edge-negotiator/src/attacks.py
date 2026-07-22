@@ -1,7 +1,6 @@
 """Injectable attack transforms over the authenticated coordination layer.
 
-Wk7-8 DE-RISK: turn the three threat-model scenarios
-(`../THREAT-MODEL-ANALYSIS.md` §4) into *composable* injectors that sit on top
+Turn the three threat-model scenarios into *composable* injectors that sit on top
 of the **public** API (``MessageBus.publish`` / ``CoordinatedController``) and
 never edit ``message_bus.py``, ``conservation.py``, ``registry.py``, or
 ``identity.py``. Each injector emits messages carrying a known **ground-truth

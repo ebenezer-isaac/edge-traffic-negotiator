@@ -66,19 +66,17 @@ def _determinism(agent, cases, reps: int) -> dict:
 
 
 def _probe_foundry():
-    """Return an SLMAgent if Foundry Local is reachable, else None (with reason)."""
+    """Return an SLMAgent if the real-model precondition holds, else (None, reason).
+
+    Reuses the SHARED ``slm_agent.probe_foundry_determinism`` so this path's SKIP
+    now covers BOTH reachability AND temp-0 determinism (it previously only
+    checked reachability). SKIP-not-abort: never raises. The import failure is
+    still caught locally so an absent ``slm_agent`` degrades to a skip too."""
     try:
-        from slm_agent import SLMAgent
+        from slm_agent import probe_foundry_determinism
     except Exception as exc:
         return None, f"import failed: {type(exc).__name__}: {exc}"
-    try:
-        agent = SLMAgent()
-        # a cheap real call so a dead service fails here, not mid-run
-        agent.client.models.list()
-        return agent, None
-    except Exception as exc:
-        return None, (f"Foundry Local not reachable ({type(exc).__name__}). "
-                      "Start it: `foundry service start` and load phi-4-mini.")
+    return probe_foundry_determinism()
 
 
 def run(with_slm: bool = False, seed: int = 0, determinism_reps: int = 5) -> dict:

@@ -67,6 +67,7 @@ from coordinated_controller import CoordinatedController
 from hybrid_controller import HybridController
 from run_baseline import CFG, HERE
 from run_coordinated import ADJACENCY, _build_coordination
+from slm_agent import probe_foundry_determinism
 
 # The two REAL-SLM arms we compare. coordinated uses coord_weight=1.0 so BOTH
 # Channel A (the prompt note) and Channel B (the adjusted reference) are live.
@@ -81,6 +82,11 @@ TRIPINFO_DIR = os.path.join(HERE, "..", "results", "tripinfo_slm")
 RESULTS_MD = os.path.join(HERE, "..", "results", "coord_slm_honest.md")
 RESULTS_JSON = os.path.join(HERE, "..", "results", "coord_slm_honest_raw.json")
 PROGRESS = os.path.join(HERE, "..", "results", "coord_slm_progress.txt")
+# Skip-with-record sinks (§10 golden rule / D3): written INSTEAD of a report when
+# the Foundry-determinism probe cannot prove the real-model precondition. They are
+# a recorded skip, NOT a fabricated green result.
+SKIP_MD = os.path.join(HERE, "..", "results", "coord_slm_honest.SKIPPED.md")
+SKIP_JSON = os.path.join(HERE, "..", "results", "coord_slm_honest.SKIPPED.json")
 
 
 def _log(msg: str) -> None:
@@ -93,12 +99,6 @@ def _log(msg: str) -> None:
             f.write(line + "\n")
     except Exception:
         pass
-
-
-def _real_agent():
-    """Construct the real SLMAgent (deferred import: needs Foundry Local)."""
-    from slm_agent import SLMAgent
-    return SLMAgent()
 
 
 def _tripinfo_path(mode: str, seed: int) -> str:
@@ -204,9 +204,24 @@ def run_one(mode: str, seed: int, agent, end: int = DEFAULT_END) -> dict:
 # Sweep orchestration.
 # --------------------------------------------------------------------------- #
 def run_sweep(seeds, end: int = DEFAULT_END) -> list[dict]:
-    """Run every (mode, seed) cell with ONE shared real SLMAgent; return run rows."""
-    agent = _real_agent()
-    _log(f"SLMAgent constructed: model={getattr(agent, 'model', '?')}")
+    """Run every (mode, seed) cell with ONE shared real SLMAgent; return run rows.
+
+    FAIL-LOUD GATE (§10 golden rule / D3 / §11 step 6): the Foundry-determinism
+    probe runs FIRST -- BEFORE any ``traci.start`` / SUMO work -- so a failure
+    skips cleanly with no SUMO present. If the real-model precondition
+    (reachable + answers a well-formed decision + deterministic at temp 0) is
+    NOT proven, we return a SINGLE skip-marker row and do NOT run the sweep.
+    Without this gate a down/non-deterministic Foundry would make
+    ``choose_phase`` return None every call, the controller would silently fall
+    back to the deterministic shield, and the run would complete as a DEGRADED
+    all-shield result masquerading as a real-SLM measurement -- exactly the
+    silent-null the golden rule forbids.
+    """
+    agent, reason = probe_foundry_determinism()
+    if agent is None:
+        _log(f"[SKIP] foundry_determinism probe failed: {reason}")
+        return [{"skipped": True, "reason": reason, "probe": "foundry_determinism"}]
+    _log(f"SLMAgent constructed + probed OK: model={getattr(agent, 'model', '?')}")
     rows: list[dict] = []
     total = len(MODES) * len(seeds)
     done = 0
@@ -544,7 +559,56 @@ def build_report(rows: list[dict]) -> str:
     return "\n".join(p)
 
 
+def _is_skip(rows: list[dict]) -> bool:
+    """True when ``run_sweep`` returned a probe skip-marker rather than run rows."""
+    return bool(rows) and isinstance(rows[0], dict) and rows[0].get("skipped") is True
+
+
+def write_skip_record(marker: dict) -> None:
+    """Record a SKIP (never a fabricated report). Writes a minimal JSON + MD note
+    to results stating the run was skipped-with-reason, so the fail-loud gate
+    leaves an auditable trail without implying a real run happened."""
+    os.makedirs(os.path.dirname(SKIP_JSON), exist_ok=True)
+    record = {
+        "status": "SKIPPED",
+        "run": "run_slm_metrics (real-SLM honest coordination sweep)",
+        "probe": marker.get("probe", "foundry_determinism"),
+        "reason": marker.get("reason", "unknown"),
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "note": ("real-model precondition NOT proven; no sweep ran. This is a "
+                 "recorded skip per MASTER-SPEC §10 golden rule / D3, NOT a "
+                 "degraded all-shield result and NOT a report."),
+    }
+    with open(SKIP_JSON, "w", encoding="utf-8") as f:
+        json.dump(record, f, indent=2)
+    _log(f"[wrote SKIP] {SKIP_JSON}")
+    md = (
+        "# Real-SLM honest coordination sweep -- SKIPPED (not run)\n\n"
+        f"**Status:** SKIPPED  \n"
+        f"**Probe:** {record['probe']}  \n"
+        f"**Reason:** {record['reason']}  \n"
+        f"**When:** {record['timestamp']}\n\n"
+        "The Foundry-determinism probe could not prove the real-model "
+        "precondition (reachable + answers a well-formed decision + "
+        "deterministic at temp 0), so **no sweep ran**. Per MASTER-SPEC §10 "
+        "golden rule (\"fail loud, never degrade silently\") and D3 "
+        "(`real_model=true` guard SKIPS-with-record, never a null), this is a "
+        "recorded skip. It is NOT a real-SLM measurement and NOT a degraded "
+        "all-shield result masquerading as one. Re-run with Foundry Local up "
+        "(`foundry service start` and load phi-4-mini).\n"
+    )
+    with open(SKIP_MD, "w", encoding="utf-8") as f:
+        f.write(md)
+    _log(f"[wrote SKIP] {SKIP_MD}")
+
+
 def write_report(rows: list[dict]) -> None:
+    # Defensive guard: build_report/write_report must NEVER run on skip-marker
+    # rows (they would fabricate a green/empty report implying a real run). Route
+    # to the skip record instead, per the §10 golden rule.
+    if _is_skip(rows):
+        write_skip_record(rows[0])
+        return
     os.makedirs(os.path.dirname(RESULTS_JSON), exist_ok=True)
     with open(RESULTS_JSON, "w", encoding="utf-8") as f:
         json.dump(rows, f, indent=2)
@@ -582,6 +646,13 @@ def main() -> None:
          f"modes={MODES} coord_weight={COORD_WEIGHT} ===")
     t0 = time.time()
     rows = run_sweep(seeds, end=end)
+    if _is_skip(rows):
+        # Fail-loud gate tripped: record the skip, no report, clean exit (never a
+        # traceback, never a green/empty report implying a real run happened).
+        write_skip_record(rows[0])
+        _log(f"=== SWEEP SKIPPED (probe={rows[0].get('probe')}): "
+             f"{rows[0].get('reason')} -> {os.path.basename(SKIP_MD)} ===")
+        return
     write_report(rows)
     _log(f"=== SWEEP COMPLETE in {time.time() - t0:.0f}s "
          f"({len(rows)} runs, {len(seeds)} seeds) -> {os.path.basename(RESULTS_MD)} ===")

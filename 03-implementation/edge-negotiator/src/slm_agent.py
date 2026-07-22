@@ -233,3 +233,59 @@ class SLMAgent:
         if tok in ("fake", "faulty", "reject", "false"):
             return "reject"
         return None
+
+
+# --------------------------------------------------------------------------- #
+# Shared fail-loud probe (MASTER-SPEC §10 golden rule + D3 + §11 step 6).
+# --------------------------------------------------------------------------- #
+def probe_foundry_determinism(reps: int = 3):
+    """Prove the REAL SLM's precondition BEFORE any real-model gate runs.
+
+    Two-dimension precondition, per the §10 golden rule ("a gate that cannot
+    prove its precondition [real model answered] must SKIP-with-a-recorded-skip
+    or ABORT, never emit a green result") and D3 ("`real_model=true` guard
+    ABORTS/SKIPS-with-record, never a null"):
+
+      1. REACHABILITY -- construct an ``SLMAgent`` and make a cheap live call
+         (``client.models.list()``); a dead/absent Foundry Local fails here.
+      2. TEMP-0 DETERMINISM -- call a canned decision (phase 0 has all the
+         waiting vehicles, phase 1 has none) ``reps`` times. If any call returns
+         None the model did not answer a well-formed decision; if the answers
+         are not all identical the model is non-deterministic at temp 0. Either
+         way the real-model precondition is UNPROVEN.
+
+    SKIP-not-ABORT: this NEVER raises. On any failure it returns
+    ``(None, reason)`` so the caller records the skip and returns cleanly,
+    instead of letting ``choose_phase`` silently return None every call and the
+    sweep complete as a DEGRADED all-shield result masquerading as a real-model
+    measurement. On success it returns ``(agent, None)`` -- the SAME constructed
+    agent, so the caller reuses it (no double-construct, no second endpoint
+    discovery).
+    """
+    # reps < 2 cannot detect non-determinism (len(set) is trivially 1), which
+    # would SILENTLY vacate dimension 2 -> refuse it rather than degrade to a
+    # reachability-only probe a future caller might not notice.
+    if reps < 2:
+        return None, "determinism probe needs reps >= 2 (reps<2 cannot detect non-determinism)"
+    # --- dimension 1: construct + reachability ----------------------------- #
+    try:
+        agent = SLMAgent()
+        agent.client.models.list()  # cheap real call: dead service fails HERE
+    except Exception as exc:  # noqa: BLE001 -- SKIP-not-abort: never raise
+        return None, (f"Foundry Local not reachable ({type(exc).__name__}). "
+                      "Start it: `foundry service start` and load phi-4-mini.")
+
+    # --- dimension 2: temp-0 determinism on a canned decision -------------- #
+    seen: list[int] = []
+    for _ in range(reps):
+        try:
+            phase = agent.choose_phase("PROBE", 2, [8, 0])
+        except Exception as exc:  # noqa: BLE001 -- SKIP-not-abort: never raise
+            return None, (f"probe decision raised {type(exc).__name__}: {exc}")
+        if phase is None:
+            return None, "model did not answer a well-formed decision"
+        seen.append(phase)
+    if len(set(seen)) != 1:
+        return None, (f"non-deterministic at temp 0 over {reps} reps: "
+                      f"{sorted(set(seen))}")
+    return agent, None

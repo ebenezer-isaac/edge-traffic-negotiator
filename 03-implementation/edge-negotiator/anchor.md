@@ -39,9 +39,9 @@ anchor_submit(commit, salt, signer_counts) -> { w1_receipt:{uuid,sth,inclusion_p
     - FAIL-LOUD: if EITHER witness is unreachable/rejects -> status="NOT_EXTERNALLY_ANCHORED";
       the §10 anchor gate marks the run "not externally anchored" and REFUSES any non-equivocation
       / conditional-coupling claim (never green). A mock/in-memory anchor returns this status.
-    - EMPTY-WINDOW: a batch with no new entries emits NO commit (AuditLog.merkle_root raises on an
-      empty range); xaudit treats a legitimately-empty window as skip-with-record (seq_high carries
-      unchanged), NOT a one-sided-absence anomaly.
+    - EMPTY-WINDOW: a batch with no new entries emits NO commit (the salted-leaf commitment raises
+      on an empty range, as the scaffolding AuditLog.merkle_root does); xaudit treats a legitimately-
+      empty window as skip-with-record (seq_high carries unchanged), NOT a one-sided-absence anomaly.
 
 anchor_verify(batch_id) -> { w1_ok, w2_ok, agree, commit }
     - w1_ok = Rekor inclusion proof + STH verify; w2_ok = W2 receipt sig + block-membership verify.
@@ -71,7 +71,7 @@ anchor_verify(batch_id) -> { w1_ok, w2_ok, agree, commit }
 
 ## 5. Honest bounds (the MEASURED boundary, stated inline; not defended)
 
-- Merkle root proves PRESENCE, never ABSENCE, so **operator CREATION-TIME OMISSION** (a signer never emits its own incriminating record; it never enters the batch, the seq range stays contiguous, no signer-signed count over-claims it) is OUT OF REACH — §8 free-deviation boundary, measured not defended.
+- Merkle root proves PRESENCE, never ABSENCE (and presence is provable only by a salt-holder; crypto-erasing the salt ends presence-provability for that batch — the Art 17 forensic-availability tradeoff, §1), so **operator CREATION-TIME OMISSION** (a signer never emits its own incriminating record; it never enters the batch, the seq range stays contiguous, no signer-signed count over-claims it) is OUT OF REACH — §8 free-deviation boundary, measured not defended.
 - **Per-signer disclosure mismatch is INCONCLUSIVE** (operator-drop vs signer-lie, both directions) — surfaced for human inquiry, never attributed, never gate-blocking.
 - **Colluding keys** (k-of-n) produce mutually-consistent records that pass every check — out of scope (§8 boundary).
 - **Single-node W2 + single xaudit** are weaker than a Byzantine quorum + multi-auditor gossip — demo limitation, honestly labelled.

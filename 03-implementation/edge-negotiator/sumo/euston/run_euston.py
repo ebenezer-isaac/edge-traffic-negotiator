@@ -1,12 +1,9 @@
 """De-risk runner for the REAL Euston Road (A501) spine corridor.
 
-PENDING ARTIFACT: this runner targets ``euston_spine.net.xml``, which does NOT
-exist yet -- it must be built with SUMO ``netconvert`` from an OSM extract of
-the Euston Road corridor (out of scope for this change; requires SUMO on the
-target machine). Until that net is built, this runner is PENDING and cannot
-execute end-to-end. The legacy ``lambeth_*.net.xml`` files left in this
-directory are the PRIOR corridor's build artifacts, kept for reference only;
-they are NOT the Euston substrate and must not be pointed at by ``NET`` below.
+Targets ``euston_spine.net.xml`` (built + committed) with ``base.rou.xml``
+(DfT-AADF-calibrated demand, built by build_demand.py). Runs end-to-end.
+NOTE (§8): the demand is DfT-magnitude-calibrated at DAILY (AADF) resolution,
+NOT hourly -> inferential claims from these runs are GATED (pilot only).
 
 Drives the UNMODIFIED src/ controller stack (FixedTimeController,
 MaxPressureController) over euston_spine.net.xml end-to-end via TraCI, and runs
@@ -37,9 +34,6 @@ sys.path.insert(0, SRC)
 
 from controllers import MaxPressureController, FixedTimeController  # noqa: E402
 
-# PENDING: euston_spine.net.xml does not exist yet (needs netconvert on the
-# target machine, out of scope here). This runner cannot execute until it is
-# built.
 NET = os.path.join(HERE, "euston_spine.net.xml")
 ROUTES = os.path.join(HERE, "base.rou.xml")
 

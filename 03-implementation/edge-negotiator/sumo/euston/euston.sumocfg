@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Euston Road (A501) spine SUMO config.
+     net    : euston_spine.net.xml (4-TLS eastern A501 stretch, UTM-projected).
+     routes : base.rou.xml (DfT-AADF-calibrated demand; see build_demand.py).
+     Demand is DAILY-resolution DfT-calibrated -> inferential claims GATED,
+     PILOT ONLY (MASTER-SPEC §8). Tripinfo flags match metrics.py needs. -->
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+    <input>
+        <net-file value="euston_spine.net.xml"/>
+        <route-files value="base.rou.xml"/>
+    </input>
+    <time>
+        <begin value="0"/>
+        <end value="3600"/>
+    </time>
+    <processing>
+        <time-to-teleport value="300"/>
+    </processing>
+    <output>
+        <tripinfo-output value="tripinfo_euston.xml"/>
+        <tripinfo-output.write-unfinished value="true"/>
+        <tripinfo-output.write-undeparted value="true"/>
+    </output>
+    <report>
+        <no-step-log value="true"/>
+        <no-warnings value="true"/>
+    </report>
+</configuration>

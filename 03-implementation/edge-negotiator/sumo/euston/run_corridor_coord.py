@@ -1,14 +1,11 @@
 """Run the authenticated coordination layer on the REAL Euston Road (A501)
 spine corridor.
 
-PENDING ARTIFACT: this runner targets ``euston_spine.net.xml``, which does NOT
-exist yet -- it must be built with SUMO ``netconvert`` from an OSM extract of
-the Euston Road corridor (out of scope for this change; requires SUMO on the
-target machine). Until that net is built, this runner is PENDING and cannot
-execute end-to-end. The legacy ``lambeth_*.net.xml`` files left in this
-directory, and the ``SLM_JUNCTIONS`` OSM cluster ids below, are the PRIOR
-corridor's build artifacts -- kept for reference only, NOT the Euston
-substrate; ``SLM_JUNCTIONS`` must be re-derived once the Euston net is built.
+``euston_spine.net.xml`` exists (4 TLS, built with SUMO ``netconvert`` from an
+OSM extract of the Euston Road corridor); this runner targets it and executes
+end-to-end. The ``SLM_JUNCTIONS`` ids below are re-derived from this net (not
+the legacy ``lambeth_*.net.xml`` files also left in this directory, which are
+the PRIOR corridor's build artifacts kept for reference only).
 
 Dissertation goal ("The Edge Negotiator"): prove the authenticated-coordination
 integrity layer GENERALISES from the 2x2 toy grid to the real Euston Road
@@ -93,26 +90,22 @@ from identity import JunctionIdentity  # noqa: E402
 from message_bus import MessageBus  # noqa: E402
 from registry import Registry  # noqa: E402
 
-# PENDING: euston_spine.net.xml does not exist yet (needs netconvert on the
-# target machine, out of scope here). This runner cannot execute until it is
-# built.
+# euston_spine.net.xml exists (built with netconvert; 4 TLS, see build history).
 NET = os.path.join(HERE, "euston_spine.net.xml")
 ROUTES = os.path.join(HERE, "base.rou.xml")
 # Unique tripinfo dir to avoid collision with other running sims (per brief).
 TRIPINFO_DIR = os.path.normpath(os.path.join(HERE, "..", "..", "results", "tripinfo_corridor"))
 
-# STALE (prior Lambeth-net build): these are the multi-green ("SLM-controllable")
-# TLS ids derived from the PRIOR corridor net; they are OSM cluster ids specific
-# to that net and will NOT match euston_spine.net.xml. PENDING re-derivation
-# once the Euston net is built (retained here only so the wiring below is
-# runnable/readable pending that rebuild).
+# The 4 traffic-light junctions of euston_spine.net.xml (the "SLM-controllable"
+# multi-green TLS), re-derived from the real net on 2026-07-22 (were the prior
+# Lambeth OSM cluster ids). Verified against net.getTrafficLights(); run() also
+# intersects this with traci.trafficlight.getIDList() so an id drift SKIPs
+# rather than crashes.
 SLM_JUNCTIONS = [
-    "cluster_1032792732_1032792753_1032792770_1032792773_#11more",
-    "cluster_102714594_2513316336_2513319064_2513319066_#7more",
-    "cluster_2592978101_2592978108_2592978110_6955969347_#2more",
-    "cluster_10273328593_2152588369_267833619_32978305_#4more",
-    "GS_227716",
-    "GS_8413292286",
+    "GS_cluster_110097_110098",
+    "GS_6985146843",
+    "GS_cluster_13249075_6985146839_6985146845",
+    "cluster_2440680097_253308874_3837973624_427931760_#2more",
 ]
 
 

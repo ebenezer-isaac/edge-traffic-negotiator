@@ -543,9 +543,9 @@ class IntegratedSystem:
             return sumocfg, ["-c", sumocfg], adjacency, None
 
         # euston — derive adjacency + edge_map from the real net (brief).
-        # PENDING: euston_spine.net.xml does not exist yet (needs netconvert on
-        # the target machine, out of scope here); this path is unreachable in
-        # CI (live-gated via ``requires_sumo``) until that net is built.
+        # euston_spine.net.xml exists (4 TLS, built with netconvert); junction
+        # ids are re-derived from it via edge_map_from_net below. This path is
+        # live-gated via ``requires_sumo`` (needs SUMO/sumolib installed).
         import sumolib
         net = os.path.join(_SRC, "..", "sumo", "euston", "euston_spine.net.xml")
         routes = os.path.join(_SRC, "..", "sumo", "euston", "base.rou.xml")

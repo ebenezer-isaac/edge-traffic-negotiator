@@ -20,6 +20,19 @@ Steps performed here:
   5. Write a SUMO edgeData file (<meandata>) with `entered` counts per edge,
      consumable by routeSampler.py -d.
 
+DEMAND SOURCE + RESOLUTION (methods/honesty-critical, MASTER-SPEC §8):
+  Source  = DfT Road Traffic Statistics, AADF count-point data
+            (dft_traffic_counts_aadf.csv), A501 count points, year 2025. REAL,
+            NAMED, public. Vehicle MIX (cars_and_taxis / buses_and_coaches /
+            LGVs / all_HGVs / two_wheeled) is ALSO real from the same rows.
+  Resolution = DAILY (Annual Average Daily Flow), NOT hourly. The AM/PM
+            hourly profile (PEAK_FRACTION), the directional split, and the
+            junction turning proportions are ASSUMED, not measured.
+  => Because the temporal profile is NOT a real time-resolved (hourly) source,
+     §8's hard startup gate applies: INFERENTIAL claims from Euston runs are
+     GATED (PILOT ONLY). The edge counts anchor a realistic magnitude; they do
+     not license a "measured demand" inferential claim.
+
 NOTE: convertLonLat2XY needs pyproj. If pyproj is absent, install it into the
 venv (pip install pyproj) OR snap using easting/northing columns from the AADF
 CSV against the net's UTM offset. This script tries pyproj first and prints a
@@ -31,12 +44,17 @@ from xml.sax.saxutils import quoteattr
 
 import sumolib  # type: ignore
 
-# Corridor bbox W,S,E,N (must match extract_corridor.ps1).
-# PENDING: this bbox is the PRIOR (Lambeth) corridor's bounds, kept only so the
-# script remains runnable pending the Euston Road (A501) net build; it must be
-# re-derived to the real Euston Road corridor bbox before this pipeline is run
-# against euston_spine.net.xml.
-BBOX = (-0.1190, 51.4600, -0.0930, 51.4980)
+# Corridor bbox W,S,E,N — the geo-bounds of euston_spine.net.xml
+# (origBoundary="-0.148667,51.520533,-0.119252,51.535080"). Re-derived from the
+# real Euston Road (A501) spine net on 2026-07-22 (was the prior Lambeth bbox).
+# Several DfT count points fall inside this bbox (e.g. cp 47245 AADF=55240,
+# cp 18454 AADF=46882, cp 17169 AADF=43425, cp 76054 AADF=37510; DfT year
+# 2025), but only THREE actually snap within SNAP_RADIUS_M=60 to a drivable
+# edge and reach aadf_counts.edgedata.xml, and those three are the ACTUAL
+# corridor demand anchors: cp 37293 (A5202, AADF=16414), cp 18077 and
+# cp 56815 (A501, AADF=38863 each). The other in-bbox points above are
+# off-net (no drivable edge within SNAP_RADIUS_M) and are NOT anchors.
+BBOX = (-0.148667, 51.520533, -0.119252, 51.535080)
 PEAK_FRACTION_DEFAULT = 0.085  # assumed peak-hour share of AADF (tune per scenario)
 SNAP_RADIUS_M = 60.0           # max distance count-point -> edge to accept a match
 

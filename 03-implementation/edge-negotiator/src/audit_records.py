@@ -3,9 +3,8 @@
 Split out of the controllers (which are at the file-size ceiling) so the record
 SHAPES live in one place and both producers -- ``CoordinatedController`` and
 ``EmergencyController`` -- emit byte-identical schemas. These are the records the
-forensic reader (``fault_attribution`` today, ``assessment`` after the later
-phase) consumes; every key here matches MASTER-SPEC §11 exactly, with two forced
-renames noted below.
+forensic reader (``assessment``, the §6.3 origin classifier) consumes; every key
+here matches MASTER-SPEC §11 exactly, with two forced renames noted below.
 
 Schemas (MASTER-SPEC §11)
 -------------------------

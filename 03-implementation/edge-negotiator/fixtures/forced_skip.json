@@ -1,0 +1,33 @@
+{
+  "_doc": "Forced-skip anti-starvation fixture - FROZEN, READ-ONLY. Committed BEFORE the build run; hash-pinned by the §10 gate. Pins a traffic scenario the anti-starvation mechanism (MASTER-SPEC v7 §6.8, §11 overnight-step 5) must be tested against. A build phase MUST NOT regenerate or edit it. Loader contract: ignore keys beginning with '_'.",
+  "_purpose": "A scenario where one green phase PROVABLY never wins the MaxPressureController._pressure argmax, so under plain MaxPressure it starves FOREVER. The ONLY route to serving it is the anti-starvation override (force-serve after max_skip skips). This makes the D7 test non-tautological: a controller with no override (or a broken counter) never serves the starved phase and FAILS assertion A; a controller that serves it too eagerly FAILS assertion D; anti_starvation_violations must EMERGE from the mechanism, never be set by the test.",
+  "_unit_note": "The scenario uses a strict 1:1 green-phase <-> approach mapping (phase 0 = approach A via in-lane LA; phase 1 = approach B via in-lane LB), so 'per-approach skip counter' and 'per-green-phase skip counter' coincide unambiguously (resolves the build per-approach-vs-phase-index question). The mechanism counts a SKIP for a green phase each decision interval it is eligible but not served.",
+  "tls": "J1",
+  "min_green": 10,
+  "yellow": 3,
+  "max_skip": 3,
+  "green_phases": [
+    {"idx": 0, "state": "Gr", "approach": "A", "in_lane": "LA", "out_lane": "LAo"},
+    {"idx": 1, "state": "rG", "approach": "B", "in_lane": "LB", "out_lane": "LBo"}
+  ],
+  "halting": {"LA": 1, "LB": 9, "LAo": 0, "LBo": 0},
+  "_halting_note": "CONSTANT per-lane halting counts (no time variation). _pressure(phase0) = halting(LA) - halting(LAo) = 1 - 0 = 1; _pressure(phase1) = halting(LB) - halting(LBo) = 9 - 0 = 9. So argmax over {0,1} is ALWAYS phase 1: phase 0 never wins, at every decision interval.",
+  "horizon_decision_intervals": 9,
+  "expected": {
+    "unconstrained_argmax_every_interval": 1,
+    "starved_phase_idx": 0,
+    "starved_approach": "A",
+    "phase0_first_served_at_or_before_interval": 3,
+    "phase0_service_cadence": "the override fires ONLY when phase 0's skip counter reaches max_skip (=3); i.e. phase 0 is served once per <=max_skip intervals, NOT every interval and NOT preemptively",
+    "phase1_dominant": "phase 1 (the genuine high-pressure phase) is served in the strict majority of intervals; the override is an exception, not a takeover",
+    "anti_starvation_violations": 0,
+    "min_green_yellow_respected": true
+  },
+  "assertions": [
+    "A. under the anti-starvation controller, green phase 0 (approach A) IS served at or before decision interval max_skip=3 (a no-override / broken-counter controller never serves it -> FAILS here)",
+    "B. under plain MaxPressureController.decide (no override), phase 0 is NEVER selected across the horizon (pressure 1 vs 9 every interval) -- establishes the scenario is a genuine starvation, not an artefact",
+    "C. anti_starvation_violations == 0 EMERGES from the mechanism (the mechanism increments the per-phase skip counter and force-serves at max_skip; the counter of UN-prevented starvations stays 0). The test MUST NOT set this counter; it reads it.",
+    "D. phase 0 is served ONLY via the override at the skip threshold, not every interval (a controller that ignores pressure and serves phase 0 eagerly FAILS: phase 1 must dominate)",
+    "E. each forced service still respects min_green (>=10s green) + the yellow (3s) clearance before switching (S1/S2 invariants) -- the override changes WHICH phase, never the safe-transition timing"
+  ]
+}

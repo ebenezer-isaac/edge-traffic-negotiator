@@ -1,24 +1,28 @@
 # ground_rules.yaml — machine-readable mirror of GROUND-RULES-POLICY.md + the UK-law fault KB.
 # CANONICAL policy base for the Edge Negotiator. This file is the source of truth for the
-# YET-TO-BE-BUILT RAG/retrieval + producer layer and the citation oracle; a decision record
-# will cite `policy_id` (P1-P8) and `policies_applied` (the check-stage vocab), and the SLM
-# Job-A note will cite `cited_rules` by `statute_ref`. NOTE (real state): the current
+# YET-TO-BE-BUILT RAG/retrieval + producer layer and the citation oracle; a decision's reasoning
+# trace will NAME the P1-P8 policy ids that fired (auditability), the decision record will carry
+# the §6.2 check-stage vocab in its `policies_applied` field (there is no separate `policy_id`
+# field in the pinned decision schema), and the SLM Job-A note will cite `cited_rules` by
+# `statute_ref`. NOTE (real state): the current
 # ambiguous_decision.RuleDisambiguator is a DECOUPLED, pure-stdlib Exp-1 yardstick and does
 # NOT load this file; slm_agent does no RAG yet. Wiring both to this base is a later build
 # phase (MASTER-SPEC §11 step 2-4). Nothing is inferred at runtime: an unmatched case -> UNKNOWN.
 #
-# Provenance: policies mirror GROUND-RULES-POLICY.md (2026-07-16) §A-§F (B3/P1 spoofable note
-# and the §F SLM exemption TRACK MASTER-SPEC v7 §5.6/§5.7 and run ahead of the still-unamended
-# master — those master amendments are a doc-remediation build phase);
+# Provenance: policies mirror GROUND-RULES-POLICY.md (2026-07-16) §A-§F. Points that TRACK
+# MASTER-SPEC v7 AHEAD of the still-unamended master (reconciled by a doc-remediation build
+# phase): B3/P1 spoofable (§5.6/§6.4); the §F SLM exemption (§5.7); B2 key-bound-recompute +
+# B5 per-claim nonce + P4 >=2-key condition & magnitude-bound (§6.6). None contradicts the
+# master; all are spec-forward refinements;
 # law_rules mirror 01-research/uk-traffic-law.md (statute_ref == that file's `id` field).
 # Substrate: Euston Road (A501), London (TLRN) — NOT the prior synthetic corridor.
 # Schema per MASTER-SPEC.md v7 §9. To be hash-pinned in the spec (§10 gate) before the Job-A phase.
 
 version: 1
 substrate: "Euston Road (A501), London — TLRN"
-# Terminal verdicts a decision resolves to:
+# Terminal classifications a decision resolves to:
 classifications: [LEGITIMATE, SPOOFED_OR_FAULTY, UNKNOWN]
-# Non-terminal routing dispositions (NOT terminal verdicts; the master leaves P3/P6/P7 unclassified):
+# Non-terminal routing dispositions (NOT terminal classifications; the master leaves P3/P6/P7 unclassified):
 dispositions: [WITHHOLD, ESCALATE]
 
 # policies_applied vocab (MASTER-SPEC §6.2) — the CHECK-STAGES a decision record cites, DISTINCT
@@ -117,7 +121,7 @@ attacks:
 # --- D. Decision policies (GROUND-RULES §D) — condition -> classification|disposition/action ---
 # Terminal policies carry `classification`; the two escalate policies (P6,P7) and the withhold
 # policy (P3) carry a non-terminal `disposition` — the master leaves these three unclassified,
-# so the disambiguator/human RETURNS the terminal verdict (faithful mirror of §D).
+# so the disambiguator/human RETURNS the terminal classification (faithful mirror of §D).
 policies:
   - id: P1
     name: local_sensing_wins
@@ -137,7 +141,7 @@ policies:
     disposition: WITHHOLD
     action: withhold_preempt_stay_maxpressure
     invariant: "anti-phantom: a single message can NEVER force a green"
-    note: "NOT-YET-ACTIONABLE, not declared false (master §D). A real EV not yet corroborated is withheld, not accused; a SPOOFED_OR_FAULTY verdict is a POST-HOC fault-engine call, never the real-time gate."
+    note: "NOT-YET-ACTIONABLE, not declared false (master §D). A real EV not yet corroborated is withheld, not accused; a SPOOFED_OR_FAULTY classification is a POST-HOC fault-engine call, never the real-time gate. (Master §E's worked-example maps a phantom P3 case to SPOOFED_OR_FAULTY — that is the post-hoc reconciliation being made explicit here, not the real-time gate's disposition.)"
     attacks: [phantom_ev]
   - id: P4
     name: corroborated_real
@@ -156,7 +160,7 @@ policies:
     condition: "two approved reports about the same edge disagree beyond tolerance"
     disposition: ESCALATE
     action: flag_discount_escalate_to_disambiguation
-    note: "master §D gives P6 no terminal classification — flag/discount both + escalate to the disambiguator, which RETURNS the verdict"
+    note: "master §D gives P6 no terminal classification — flag/discount both + escalate to the disambiguator, which RETURNS the classification"
     attacks: [contradictory_signals]
   - id: P7
     name: partial_evidence_ambiguous_middle
@@ -279,7 +283,7 @@ law_rules:
     text: "When traffic lights are not working (dark), the MUST duty to obey the signal falls away and each driver reverts to ordinary care as at an unmarked junction."
     applies_when: "the signal was dark/inoperative at the time of the incident"
     fault_weight: low
-    note: "important for a signal-MALFUNCTION system: do NOT charge a red-running offence when the signal was dark"
+    note: "reference only (secondary source) — excluded from evidence-pack emission per MASTER-SPEC §7.3; important for a signal-MALFUNCTION system so the engine does NOT charge a red-running offence when the signal was dark"
   - id: LR-authority-maintain
     source: primary
     statute_ref: HighwaysAct1980-s41

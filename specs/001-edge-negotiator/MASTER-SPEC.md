@@ -216,7 +216,7 @@ default -> MaxPressure (+ coordination term, INERT structural zero; not an exper
 
 ## 12. Acceptance tests (all binary; all required for distinction)
 
-- D1: full §5 manifest clean (incl "Lambeth"); excluded set ⊆ a VERBATIM allowlist AND every non-excluded live doc greps clean; one thesis sentence + one substrate (Euston) across live docs. Grep runs last.
+- D1: full §5 manifest clean (incl "Lambeth"); excluded set ⊆ a VERBATIM allowlist AND every non-excluded live doc greps clean; one thesis sentence + one substrate (Euston) across live docs. Grep runs last. **D1 verbatim allowlist (per-file, per-term, with reason):** `03-implementation/edge-negotiator/ground_rules.yaml` — term "liability": permitted, appears ONLY in `law_rule.text` that summarises the cited UK-law KB (quotation of prior work, §5.1-permitted) + the statute proper name `CivilLiability-Contribution-1978-s1`; the file greps clean for every OTHER manifest term (verified: 0 "verdict"/"blockchain"/"Lambeth"/"detectability envelope").
 - D2: fault language = split; the pack has no verdict/confidence/accusation/"lie"/"attacker"; citation selection origin-INDEPENDENT (proven); the note non-evidential + firewalled + counsel-gated.
 - D3: `real_model=true` guard ABORTS/SKIPS-with-record, never a null.
 - D4: Experiment 1 — CIs + numeric MDE (external-harm) + TOST; sealed bundle + eval-counter=1; classifier-independent OOD metric + continuous curve; axis-aligned-conjunction ceiling AND analytic nonlinear Bayes ceiling (in-distribution only; dropped if unwriteable) with tail-no-ceiling stated; no threshold-defining constant across the whole prompt + behavioral leak test; parse-failures as failures.

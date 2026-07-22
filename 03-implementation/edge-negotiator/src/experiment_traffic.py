@@ -104,23 +104,36 @@ class NullAgent:
 class TimingAgent:
     """Wrap a real agent, timing every ``choose_phase`` call (per-decision latency).
 
-    Calls the inner agent MYOPICALLY (no neighbour note is forwarded), matching the
-    H1 myopic config. Records per-call wall-clock so ``slm_latency.summarize_latency``
-    can profile choose_phase against the decision interval.
+    ``forward_note`` controls the config arm (MASTER-SPEC §3 {myopic, +coordination,
+    +prediction}):
+      * ``False`` (DEFAULT, MYOPIC) -- the neighbour note is DROPPED, so the SLM
+        sees only its own per-junction queues (the H1 myopic config).
+      * ``True`` (+coordination / +prediction) -- the note IS forwarded, so the SLM
+        sees the coordination/prediction context the CoordinatedController assembled.
+    Records per-call wall-clock so ``slm_latency.summarize_latency`` can profile
+    choose_phase against the decision interval, identically across all arms.
     """
 
-    def __init__(self, inner):
+    def __init__(self, inner, *, forward_note: bool = False):
         self.inner = inner
         self.model = getattr(inner, "model", "unknown")
+        self.forward_note = bool(forward_note)
         self.latencies_s: list[float] = []
         self.calls = 0
         self.none_returns = 0
+        self.notes_forwarded = 0
 
     def choose_phase(self, junction_id, num_phases, halting_per_phase,
-                     neighbor_note: str = ""):  # noqa: ARG002 - myopic: note dropped
+                     neighbor_note: str = ""):
         self.calls += 1
         t0 = perf_counter()
-        out = self.inner.choose_phase(junction_id, num_phases, halting_per_phase)
+        if self.forward_note:
+            if neighbor_note:
+                self.notes_forwarded += 1
+            out = self.inner.choose_phase(junction_id, num_phases, halting_per_phase,
+                                          neighbor_note=neighbor_note)
+        else:  # myopic: the note is NOT forwarded to the inner agent
+            out = self.inner.choose_phase(junction_id, num_phases, halting_per_phase)
         self.latencies_s.append(perf_counter() - t0)
         if out is None:
             self.none_returns += 1
@@ -130,17 +143,86 @@ class TimingAgent:
 # --------------------------------------------------------------------------- #
 # Harness building blocks (pure / testable without SUMO or Foundry).
 # --------------------------------------------------------------------------- #
-def build_controller(conn, tls_ids, agent, *, gate: int = 2,
-                     min_green: int = DECISION_INTERVAL_S, yellow: int = 3):
-    """Build the SHARED shield-gated wiring for one arm.
+# The config arms (MASTER-SPEC §3 {myopic, +coordination, +prediction}). The
+# baseline (myopic MaxPressure) is ALWAYS the myopic reference; the arm names below
+# vary only what the SLM controller may use ON TOP of the same MaxPressure shield.
+CONFIGS = ("myopic", "coordination", "prediction")
+# Coordination reference weight (Channel B) and the actual-flow window (s). 1.0
+# means the incoming-release term counts at parity with local halting; the window
+# is the sliding actual-flow reconciliation horizon used by run_coordinated too.
+COORD_WEIGHT = 1.0
+FLOW_WINDOW_S = 30.0
+# +prediction weight: approaching (in-motion) vehicles count at parity with queued
+# ones in the deterministic reference. 0.0 for myopic/coordination arms.
+PREDICT_WEIGHT = 1.0
 
-    Both arms use HybridController (SLM proposes, MaxPressure shield disposes,
-    event-gated). The baseline passes a NullAgent; the SLM arm passes a TimingAgent
-    wrapping the live SLMAgent. Reusing one controller class keeps the arms
-    apples-to-apples: only the proposal source changes.
+
+def build_coordination(tls_ids, net_path: str = NET):
+    """Build the coordination scaffolding for a real net (identities + registry +
+    signed bus + checker + derived adjacency/edge_map).
+
+    Adjacency and the explicit ``(src,dst)->edge_id`` map are DERIVED from the real
+    net via ``edge_map_from_net`` (chain mode: two TLS are neighbours iff a path of
+    non-signalised interior nodes joins them). This is what makes coordination work
+    on the OSM Euston net whose edge ids are not junction-id concatenations. Returns
+    a dict consumed by ``build_controller``. Reads the net via sumolib (no traci).
     """
-    return HybridController(conn, tls_ids, agent, gate=gate,
-                            min_green=min_green, yellow=yellow)
+    import sumolib
+    from coordinated_controller import edge_map_from_net
+    from message_bus import MessageBus
+    from registry import Registry
+
+    net = sumolib.net.readNet(net_path)
+    adjacency, edge_map = edge_map_from_net(net, mode="chain")
+    identities = {jid: JunctionIdentity(jid) for jid in tls_ids}
+    registry = Registry()
+    for jid, ident in identities.items():
+        registry.register(jid, ident.public_key)
+    # The bus needs an adjacency for EVERY signalised junction (default empty).
+    bus_adjacency = {jid: list(adjacency.get(jid, ())) for jid in tls_ids}
+    bus = MessageBus(registry, bus_adjacency)
+    return {
+        "identities": identities,
+        "registry": registry,
+        "bus": bus,
+        "adjacency": bus_adjacency,
+        "edge_map": edge_map,
+    }
+
+
+def build_controller(conn, tls_ids, agent, *, config: str = "myopic", gate: int = 2,
+                     min_green: int = DECISION_INTERVAL_S, yellow: int = 3,
+                     coordination: dict | None = None):
+    """Build the shield-gated controller for one arm at a given config.
+
+    ALL arms share the MaxPressure shield (SLM proposes, shield disposes,
+    event-gated); the config only widens what the SLM may use on top:
+      * ``myopic``       -- HybridController: per-junction queues only.
+      * ``coordination`` -- CoordinatedController with a live signed neighbour
+        exchange (coord_weight>0) feeding a neighbour note + a coordination-adjusted
+        deterministic reference. Requires ``coordination`` (from build_coordination).
+      * ``prediction``   -- coordination PLUS the +prediction lever (predict_weight>0):
+        approaching in-motion vehicles are anticipated in the reference + the note.
+    Reusing one shield keeps the arms apples-to-apples: only the SLM's information
+    (and the deterministic fallback reference) changes, never the safety floor.
+    """
+    if config not in CONFIGS:
+        raise ValueError(f"config must be one of {CONFIGS}, got {config!r}")
+    if config == "myopic":
+        return HybridController(conn, tls_ids, agent, gate=gate,
+                                min_green=min_green, yellow=yellow)
+    if coordination is None:
+        raise ValueError(f"config {config!r} requires coordination scaffolding "
+                         "(call build_coordination first)")
+    from coordinated_controller import CoordinatedController
+    predict_weight = PREDICT_WEIGHT if config == "prediction" else 0.0
+    return CoordinatedController(
+        conn, tls_ids, agent,
+        identities=coordination["identities"], registry=coordination["registry"],
+        bus=coordination["bus"], adjacency=coordination["adjacency"],
+        edge_map=coordination["edge_map"], gate=gate, min_green=min_green,
+        yellow=yellow, coord_weight=COORD_WEIGHT, flow_window=FLOW_WINDOW_S,
+        predict_weight=predict_weight)
 
 
 def mirror_new_events(audit: AuditLog, identities: dict, events, already: int) -> int:
@@ -298,11 +380,49 @@ def metrics_from_tripinfo(tripinfo_path: str, teleports: int, sim_steps: int) ->
 # --------------------------------------------------------------------------- #
 # The live SUMO run of one arm.
 # --------------------------------------------------------------------------- #
-def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2) -> dict:
+def coordination_stats(ctrl) -> dict | None:
+    """Coordination/prediction liveness + causality for a coordinated arm.
+
+    Separates WIRING-LIVE (signed messages actually published + verified over the
+    real derived adjacency) from CAUSAL EFFECT (decisions the adjusted reference /
+    the prediction term actually moved). A structural zero on this substrate is a
+    HONEST finding (§3), reported as such -- distinct from an inert/unwired term.
+    Returns None for the myopic arm (no coordination layer).
+    """
+    if not hasattr(ctrl, "coord_adjusted_decisions"):
+        return None
+    ev = ctrl.events
+    published = sum(1 for e in ev if isinstance(e.get("published"), dict)
+                    and "error" not in e.get("published", {}))
+    verified = sum(len(e.get("received", [])) for e in ev
+                   if isinstance(e.get("received"), list)
+                   and not any("error" in r for r in e.get("received", [])
+                               if isinstance(r, dict)))
+    return {
+        "coord_weight": ctrl.coord_weight,
+        "predict_weight": getattr(ctrl, "predict_weight", 0.0),
+        "flow_window_s": ctrl.flow_window_s,
+        "messages_published": published,
+        "verified_messages_received": verified,
+        "rejected_messages": len(ctrl.bus.rejected),
+        "coord_adjusted_decisions": ctrl.coord_adjusted_decisions,
+        "pred_adjusted_decisions": getattr(ctrl, "pred_adjusted_decisions", 0),
+        "coord_changed_events": sum(1 for e in ev if e.get("coord_changed")),
+        "pred_changed_events": sum(1 for e in ev if e.get("pred_changed")),
+        "detections": len(ctrl.detections),
+        "flagged_detections": sum(1 for d in ctrl.detections if d.flagged),
+    }
+
+
+def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
+            config: str = "myopic") -> dict:
     """Run ONE controller arm end-to-end on the Euston net; return its result dict.
 
-    Live-gated on SUMO (imports traci/sumolib inside). Injects a fresh AuditLog and
-    mirrors every controller decision into it, then asserts audit integrity.
+    Live-gated on SUMO (imports traci/sumolib inside). Builds the config-appropriate
+    controller (myopic HybridController, or a CoordinatedController for the
+    +coordination / +prediction arms), injects a fresh AuditLog and mirrors every
+    controller decision into it, then asserts audit integrity. For coordinated arms
+    the audit is signed by the SAME per-junction identities the controller uses.
     """
     import traci
     from sumolib import checkBinary
@@ -328,10 +448,17 @@ def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2) -> dict:
     logged = 0
     tls: list[str] = []
     ctrl = None
+    coordination = None
     try:
         tls = list(traci.trafficlight.getIDList())
-        identities = {tl: JunctionIdentity(tl) for tl in tls}
-        ctrl = build_controller(traci, tls, agent, gate=gate)
+        if config == "myopic":
+            identities = {tl: JunctionIdentity(tl) for tl in tls}
+        else:
+            # Coordinated arms sign the audit with the controller's OWN identities.
+            coordination = build_coordination(tls)
+            identities = coordination["identities"]
+        ctrl = build_controller(traci, tls, agent, config=config, gate=gate,
+                                coordination=coordination)
         while traci.simulation.getMinExpectedNumber() > 0 and step < end:
             traci.simulationStep()
             ctrl.step()
@@ -348,10 +475,12 @@ def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2) -> dict:
     events = ctrl.events if ctrl is not None else []
     return {
         "arm": arm,
+        "config": config,
         "controller_model": getattr(agent, "model", "unknown"),
         "controlled_tls": tls,
         "metrics": metrics_from_tripinfo(tripinfo, teleports, step),
         "decision_stats": decision_stats(events),
+        "coordination": coordination_stats(ctrl),
         "audit": audit_bundle(audit, public_keys),
         "tripinfo": tripinfo,
     }
@@ -475,6 +604,148 @@ def run(seed: int = 42, end: int = 300, gate: int = 2) -> dict:
         fh.write(render_md(result))
     _print_summary(result, json_path, md_path)
     return result
+
+
+_CONFIG_DESC = {
+    "myopic": "per-junction queues only; no coordination; no neighbour note",
+    "coordination": "signed neighbour exchange feeds a coordination note + a "
+                    "coordination-adjusted deterministic reference (coord_weight>0)",
+    "prediction": "coordination PLUS the +prediction lever: approaching in-motion "
+                  "vehicles anticipated in the reference + the note (predict_weight>0)",
+}
+
+
+def _stub_agent():
+    """Deterministic argmax-over-queue stand-in (no Foundry). Used ONLY by the
+    wiring-validation path so the config-arm machinery can be proven live on the
+    real net when Foundry is unavailable -- NEVER a stand-in for the SLM in a
+    feasibility claim."""
+    from coordinated_controller import StubAgent
+    return StubAgent()
+
+
+def run_configs(seed: int = 42, end: int = 300, gate: int = 2,
+                configs=CONFIGS, *, stub: bool = False) -> dict:
+    """Run the myopic MaxPressure baseline ONCE, then a controller across the config
+    arms {myopic, +coordination, +prediction}, on the real Euston corridor.
+
+    ``stub=False`` (DEFAULT): the SLM controller (phi-4-mini via Foundry Local),
+    gated on the Foundry determinism probe -- the H1 feasibility measurement. Arms
+    SKIP-with-record if the probe fails (never a fabricated green).
+
+    ``stub=True``: the deterministic StubAgent (argmax-over-queue, no Foundry) --
+    a WIRING / CAUSALITY validation of the config-arm machinery on the real net
+    (signed neighbour exchange live, coordination/prediction terms causal, served-
+    phase audit correct). This is NOT an SLM feasibility result and is written to a
+    DISTINCT file so it can never be mistaken for one.
+
+    One shared baseline (myopic MaxPressure, Varaiya -- the fixed reference every
+    config is asked to match-or-beat), the config arms, one verdict + coordination
+    liveness per arm. PILOT/SMOKE, n=1: descriptive only.
+    """
+    mode = "STUB_WIRING_VALIDATION" if stub else "SLM_FEASIBILITY"
+    result: dict = {
+        "experiment": ("H1_config_arms_WIRING_VALIDATION" if stub
+                       else "H1_config_arms_slm_vs_maxpressure"),
+        "mode": mode,
+        "label": "PILOT / SMOKE",
+        "controller_under_test": (
+            "StubAgent (deterministic argmax-over-queue; NOT the SLM) -- config-arm "
+            "WIRING/CAUSALITY validation only" if stub
+            else "on-device SLM (phi-4-mini via Foundry Local)"),
+        "corridor": "Euston Road A501 spine (euston_spine.net.xml, 4 TLS)",
+        "demand": "base.rou.xml (DfT-AADF-calibrated, daily resolution)",
+        "baseline_controller": "myopic MaxPressure (Varaiya) -- fixed reference",
+        "seed": seed,
+        "end": end,
+        "gate": gate,
+        "decision_interval_s": DECISION_INTERVAL_S,
+        "configs": list(configs),
+        "config_descriptions": {c: _CONFIG_DESC[c] for c in configs},
+        "caveats": [
+            "PILOT: demand is DfT daily-AADF magnitude+mix; temporal profile assumed "
+            "-> inferential claims GATED until time-resolved TfL counts land (§8).",
+            "SMOKE: n=1, short horizon -> descriptive only, NO significance claim.",
+            "Audit layer LIVE on every arm (signed hash-chain + Merkle inclusion proof).",
+            "Baseline is myopic MaxPressure; the config arms vary only the controller's "
+            "information, never the MaxPressure safety floor.",
+        ],
+    }
+    if stub:
+        result["caveats"].insert(0,
+            "WIRING VALIDATION ONLY: the controller is the deterministic StubAgent, "
+            "NOT the SLM. This run proves the config-arm machinery is live + causal "
+            "on the real net; it is NOT an SLM feasibility result (D-H1-perf).")
+
+    # ONE baseline: myopic MaxPressure. Every config arm compares against it.
+    result["baseline"] = run_arm("maxpressure", NullAgent(), seed=seed, end=end,
+                                 gate=gate, config="myopic")
+
+    if stub:
+        agent, reason = _stub_agent(), None
+    else:
+        agent, reason = probe_foundry()
+    arms: dict = {}
+    if agent is None:
+        for config in configs:
+            arms[config] = {"skipped": True, "reason": reason}
+    else:
+        for config in configs:
+            # Fresh TimingAgent per arm (accumulates its own latency samples). The
+            # note is forwarded for coordination/prediction, dropped for myopic.
+            timing = TimingAgent(agent, forward_note=(config != "myopic"))
+            slm = run_arm(f"{'stub' if stub else 'slm'}_{config}", timing,
+                          seed=seed, end=end, gate=gate, config=config)
+            slm["model"] = agent.model
+            slm["slm_calls"] = timing.calls
+            slm["slm_none_returns"] = timing.none_returns
+            slm["notes_forwarded"] = timing.notes_forwarded
+            slm["latency"] = summarize_latency(timing.latencies_s, warmup=1)
+            slm["verdict"] = verdict(result["baseline"], slm)
+            slm["latency_viability"] = latency_viability(slm["latency"])
+            arms[config] = slm
+    result["arms"] = arms
+    result["scale_summary"] = _scale_summary(result["baseline"], arms, configs)
+
+    os.makedirs(RESULTS, exist_ok=True)
+    stem = "experiment_traffic_arms_stub" if stub else "experiment_traffic_arms"
+    json_path = os.path.join(RESULTS, f"{stem}.json")
+    with open(json_path, "w", encoding="utf-8") as fh:
+        json.dump(result, fh, indent=2)
+    md_path = os.path.join(RESULTS, f"{stem}.md")
+    with open(md_path, "w", encoding="utf-8") as fh:
+        fh.write(render_configs_md(result))
+    _print_configs_summary(result, json_path, md_path)
+    return result
+
+
+def _scale_summary(baseline: dict, arms: dict, configs) -> dict:
+    """The simplest config reaching parity-or-better (proto scale-threshold, §3).
+
+    Ordered myopic -> coordination -> prediction (simplest first). Reports the
+    FIRST config that matches-or-beats the baseline on delay, or an honest negative.
+    n=1 SMOKE, so this is descriptive framing for the eventual feasibility map, NOT
+    an inferential threshold claim.
+    """
+    order = [c for c in ("myopic", "coordination", "prediction") if c in configs]
+    ran = {c: arms[c] for c in order
+           if isinstance(arms.get(c), dict) and not arms[c].get("skipped")}
+    if not ran:
+        return {"status": "no_arm_ran",
+                "reason": "SLM arms skipped (Foundry precondition unmet)"}
+    parity_or_better = [
+        c for c in order
+        if c in ran and ran[c]["verdict"].get("status") in ("match", "slm_beats")
+    ]
+    simplest = parity_or_better[0] if parity_or_better else None
+    return {
+        "simplest_parity_or_better_config": simplest,
+        "per_config_status": {c: ran[c]["verdict"].get("status") for c in order
+                              if c in ran},
+        "note": ("SMOKE n=1: descriptive only. The powered feasibility MAP over "
+                 "{model} x {config} + a real scale threshold is phase 2, gated on "
+                 "time-resolved demand (§8)."),
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -617,6 +888,169 @@ def _print_summary(r: dict, json_path: str, md_path: str) -> None:
     print(f"  wrote: {md_path}")
 
 
+def render_configs_md(r: dict) -> str:
+    """Feasibility-style report: baseline + one column per SLM config arm."""
+    b = r["baseline"]["metrics"]
+    ba = r["baseline"]["audit"]
+    configs = r["configs"]
+    arms = r["arms"]
+    ran = {c: arms[c] for c in configs
+           if isinstance(arms.get(c), dict) and not arms[c].get("skipped")}
+    stub = r.get("mode") == "STUB_WIRING_VALIDATION"
+    col = "Stub" if stub else "SLM"
+    title = ("H1 config arms: WIRING VALIDATION (StubAgent, NOT the SLM) vs myopic "
+             "MaxPressure (Euston A501)" if stub else
+             "H1 config arms: SLM controller vs myopic MaxPressure (Euston A501)")
+    lines = [f"# {title}", ""]
+    lines.append(f"- Controller under test: {r['controller_under_test']}")
+    lines.append("")
+    lines.append("**PILOT / SMOKE** -- n=1 per arm. Config-arm validation (each arm "
+                 "runs live + is genuinely wired/causal), NOT the powered sweep.")
+    if stub:
+        lines.append("")
+        lines.append("> WIRING VALIDATION ONLY -- the controller is the deterministic "
+                     "StubAgent, NOT the SLM. Proves the config-arm machinery is live "
+                     "and causal on the real net; NOT an SLM feasibility result.")
+    lines.append("")
+    lines.append(f"- Corridor: {r['corridor']}")
+    lines.append(f"- Demand: {r['demand']}")
+    lines.append(f"- Baseline: {r['baseline_controller']}")
+    lines.append(f"- Seed: {r['seed']}  |  horizon: {r['end']} s  |  event-gate: "
+                 f"{r['gate']}  |  decision interval: {r['decision_interval_s']} s")
+    lines.append("")
+    for c in configs:
+        lines.append(f"- **{c}**: {r['config_descriptions'][c]}")
+    lines.append("")
+
+    # Head-to-head table: baseline column + one column per config that ran.
+    ran_cfgs = [c for c in configs if c in ran]
+    header = "| Metric | MaxPressure |" + "".join(f" {col} {c} |" for c in ran_cfgs)
+    sep = "|---|---|" + "---|" * len(ran_cfgs)
+    lines.append("## Head-to-head")
+    lines.append("")
+    if not ran_cfgs:
+        skip = next((arms[c] for c in configs
+                     if isinstance(arms.get(c), dict) and arms[c].get("skipped")), {})
+        lines.append(f"All SLM arms SKIPPED: {skip.get('reason')}")
+        lines.append(f"Baseline recorded: completed={_fmt(b.get('completed'), 0)}, "
+                     f"mean delay={_fmt(b.get('mean_network_delay_s'))} s, "
+                     f"teleports={_fmt(b.get('teleports'), 0)}, "
+                     f"audit verify_chain={_fmt(ba.get('verify_chain'))}.")
+        lines.append("")
+    else:
+        lines.append(header)
+        lines.append(sep)
+
+        def mrow(label, key, nd=2):
+            cells = "".join(f" {_fmt(ran[c]['metrics'].get(key), nd)} |" for c in ran_cfgs)
+            return f"| {label} | {_fmt(b.get(key), nd)} |" + cells
+        lines.append(mrow("completed (arrival>=0)", "completed", 0))
+        lines.append(mrow("departed", "departed", 0))
+        lines.append(mrow("running at end", "running_at_end", 0))
+        lines.append(mrow("mean network delay (s)", "mean_network_delay_s"))
+        lines.append(mrow("median completed travel (s)", "median_travel_time_completed_s"))
+        lines.append(mrow("teleports", "teleports", 0))
+        p99row = "".join(
+            f" {_fmt(ran[c].get('latency', {}).get('p99'), 3)} |" for c in ran_cfgs)
+        lines.append("| SLM choose_phase P99 (s) | -- |" + p99row)
+        vchain = "".join(f" {_fmt(ran[c]['audit'].get('verify_chain'))} |" for c in ran_cfgs)
+        lines.append(f"| audit verify_chain | {_fmt(ba.get('verify_chain'))} |" + vchain)
+        lines.append("")
+
+        # Verdict + wiring/causality per config.
+        lines.append("## Per-config verdict + coordination liveness")
+        lines.append("")
+        for c in ran_cfgs:
+            arm = ran[c]
+            v = arm["verdict"]
+            lines.append(f"### {c}")
+            lines.append(f"- **{v.get('status')}** on delay: baseline "
+                         f"{_fmt(v.get('baseline_delay_s'))} s vs SLM "
+                         f"{_fmt(v.get('slm_delay_s'))} s "
+                         f"(delta {_fmt(v.get('slm_minus_baseline_s'))} s, "
+                         f"{_fmt((v.get('slm_relative_delay') or 0) * 100, 1)}%)")
+            lat = arm.get("latency", {})
+            lines.append(f"- choose_phase latency P50/P95/P99 = "
+                         f"{_fmt(lat.get('p50'), 3)}/{_fmt(lat.get('p95'), 3)}/"
+                         f"{_fmt(lat.get('p99'), 3)} s (n={lat.get('n')})")
+            ds = arm.get("decision_stats", {})
+            sb = ds.get("served_by", {})
+            lines.append(f"- served-by: slm={sb.get('slm', 0)}, shield={sb.get('shield', 0)}, "
+                         f"anti_starvation={sb.get('anti_starvation', 0)}; "
+                         f"SLM valid proposals={ds.get('slm_valid_proposals')}, "
+                         f"notes forwarded={arm.get('notes_forwarded', 0)}")
+            co = arm.get("coordination")
+            if co is None:
+                lines.append("- coordination: n/a (myopic arm, no coordination layer)")
+            else:
+                lines.append(
+                    f"- coordination WIRING: {co['messages_published']} signed messages "
+                    f"published, {co['verified_messages_received']} verified received, "
+                    f"{co['rejected_messages']} rejected (window {_fmt(co['flow_window_s'], 0)} s)")
+                lines.append(
+                    f"- coordination CAUSAL: coord_weight={_fmt(co['coord_weight'], 1)}, "
+                    f"adjusted-reference changed {co['coord_adjusted_decisions']} decisions; "
+                    f"prediction (predict_weight={_fmt(co['predict_weight'], 1)}) changed "
+                    f"{co['pred_adjusted_decisions']} decisions"
+                    + (" -- STRUCTURAL ZERO on this substrate (honest §3 finding)"
+                       if co['coord_adjusted_decisions'] == 0 and co['pred_adjusted_decisions'] == 0
+                       else ""))
+            lines.append("")
+
+    # Proto scale-threshold framing.
+    ss = r["scale_summary"]
+    lines.append("## Simplest config reaching parity-or-better (proto scale-threshold)")
+    lines.append("")
+    if ss.get("status") == "no_arm_ran":
+        lines.append(f"- No SLM arm ran: {ss.get('reason')}")
+    else:
+        simplest = ss.get("simplest_parity_or_better_config")
+        lines.append(f"- Simplest config at parity-or-better: "
+                     f"**{simplest if simplest else 'NONE in this smoke'}**")
+        lines.append(f"- Per-config status: {ss.get('per_config_status')}")
+    lines.append(f"- {ss.get('note', '')}")
+    lines.append("")
+    lines.append("## Caveats")
+    lines.append("")
+    for c in r["caveats"]:
+        lines.append(f"- {c}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _print_configs_summary(r: dict, json_path: str, md_path: str) -> None:
+    print("=" * 72)
+    print("H1 CONFIG ARMS (PILOT/SMOKE): SLM vs myopic MaxPressure on Euston A501")
+    b = r["baseline"]["metrics"]
+    print(f"  baseline (myopic MaxPressure): completed={b['completed']} "
+          f"mean_delay={_fmt(b['mean_network_delay_s'])}s teleports={b['teleports']}")
+    for c in r["configs"]:
+        arm = r["arms"].get(c, {})
+        if arm.get("skipped"):
+            print(f"  [{c}] SKIPPED -- {arm.get('reason')}")
+            continue
+        s = arm["metrics"]
+        v = arm["verdict"]
+        lat = arm.get("latency", {})
+        co = arm.get("coordination")
+        line = (f"  [{c}] completed={s['completed']} "
+                f"mean_delay={_fmt(s['mean_network_delay_s'])}s "
+                f"teleports={s['teleports']} verdict={v.get('status')} "
+                f"P99={_fmt(lat.get('p99'), 3)}s")
+        if co is not None:
+            line += (f" | coord_changed={co['coord_adjusted_decisions']} "
+                     f"pred_changed={co['pred_adjusted_decisions']} "
+                     f"msgs={co['messages_published']}/{co['verified_messages_received']}")
+        print(line)
+        print(f"       audit verify_chain={arm['audit']['verify_chain']} "
+              f"decision_records={arm['audit'].get('decision_entries')}")
+    ss = r["scale_summary"]
+    print(f"  simplest parity-or-better: {ss.get('simplest_parity_or_better_config')}")
+    print("=" * 72)
+    print(f"  wrote: {json_path}")
+    print(f"  wrote: {md_path}")
+
+
 def _build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         description="H1 headline: on-device SLM controller vs MaxPressure on Euston A501 "
@@ -626,9 +1060,20 @@ def _build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--seed", type=int, default=42, help="SUMO seed (default 42)")
     ap.add_argument("--gate", type=int, default=2,
                     help="event-gate: skip the SLM when total halting < gate (default 2)")
+    ap.add_argument("--configs", action="store_true",
+                    help="run the {myopic,+coordination,+prediction} config arms "
+                         "(one shared baseline + 3 SLM arms) instead of the single "
+                         "myopic smoke")
+    ap.add_argument("--stub", action="store_true",
+                    help="config arms with the deterministic StubAgent (no Foundry): "
+                         "a WIRING/CAUSALITY validation of the arm machinery on the "
+                         "real net, NOT an SLM feasibility result. Implies --configs.")
     return ap
 
 
 if __name__ == "__main__":
     args = _build_parser().parse_args()
-    run(seed=args.seed, end=args.end, gate=args.gate)
+    if args.configs or args.stub:
+        run_configs(seed=args.seed, end=args.end, gate=args.gate, stub=args.stub)
+    else:
+        run(seed=args.seed, end=args.end, gate=args.gate)

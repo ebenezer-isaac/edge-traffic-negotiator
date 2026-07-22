@@ -74,7 +74,8 @@ class CoordinatedController(HybridController):
                  coord_override: bool = False,
                  coord_override_threshold: float = 0.0,
                  reconcile_silent_neighbours: bool = False,
-                 flow_window: float = 0.0, *, audit_log=None):
+                 flow_window: float = 0.0,
+                 predict_weight: float = 0.0, *, audit_log=None):
         super().__init__(conn, tls_ids, agent, slm_junctions=slm_junctions,
                          gate=gate, min_green=min_green, yellow=yellow)
         # §6.2 producer wiring: keyword-only AuditLog injection. None (default) =
@@ -105,6 +106,26 @@ class CoordinatedController(HybridController):
         # differed from the plain MaxPressure choice -- the proof the pathway is
         # CAUSAL even when travel-time is unchanged (see run_coordinated metrics).
         self.coord_adjusted_decisions = 0
+        # +prediction lever (MASTER-SPEC §3: "anticipating arrivals from upstream
+        # detectors, a lever MaxPressure lacks"). MaxPressure scores a phase on
+        # HALTING (already-queued) vehicles only; prediction adds the vehicles
+        # currently APPROACHING on the served in-lanes (moving = last-step vehicle
+        # count minus halting), so a phase whose queue is short but whose platoon
+        # is about to arrive can win. predict_weight == 0.0 (DEFAULT) makes the
+        # term a structural zero -> today's behaviour byte-for-byte. Validated at
+        # the boundary exactly like coord_weight.
+        if isinstance(predict_weight, bool) or not isinstance(predict_weight, (int, float)):
+            raise TypeError(
+                f"predict_weight must be a number, got {type(predict_weight).__name__}")
+        if predict_weight != predict_weight or predict_weight in (float("inf"), float("-inf")):
+            raise ValueError("predict_weight must be finite")
+        if predict_weight < 0:
+            raise ValueError(f"predict_weight must be >= 0, got {predict_weight}")
+        self.predict_weight = float(predict_weight)
+        # Count of decisions where the prediction term specifically changed the
+        # deterministic reference choice (isolated from coordination) -- proof the
+        # prediction lever is CAUSAL, not inert (D-H1-perf battery).
+        self.pred_adjusted_decisions = 0
         # Known signalised junctions, for parsing edge ids into (src, dst).
         self._junctions = frozenset(self.identities.keys())
         # Edge id -> set of lane ids, built ONCE from the lanes TraCI already
@@ -350,6 +371,47 @@ class CoordinatedController(HybridController):
                         p + amount if g == gi else p
                         for g, p in enumerate(per_phase)
                     ]
+        return per_phase
+
+    def _predicted_per_phase(self, st: dict) -> list[int]:
+        """Approaching (moving, not-yet-queued) vehicles per green phase (+prediction).
+
+        For each green phase ``gi`` sum, over its served in-lanes, the vehicles
+        currently on the in-lane that are NOT halting -- ``getLastStepVehicleNumber
+        - getLastStepHaltingNumber`` -- i.e. the platoon in motion toward the
+        stop-line that MaxPressure's halting-only pressure cannot see yet. This is
+        the "anticipating arrivals from upstream detectors" lever (§3): the in-lane
+        IS the upstream detector. Each in-lane is counted ONCE per phase (a movement
+        served by the phase), matching ``green_halting``'s served-in-lane accounting.
+
+        Transport-safe: a failed/absent read contributes 0 (the sim never dies on a
+        presentation read). Returns a fresh list, one entry per green phase; when
+        prediction is disabled the caller never invokes this.
+        """
+        vehnum = getattr(self.c.lane, "getLastStepVehicleNumber", None)
+        halting = self.c.lane.getLastStepHaltingNumber
+        ngreen = len(st["green"])
+        per_phase = [0] * ngreen
+        if vehnum is None:
+            return per_phase
+        for gi in range(ngreen):
+            state = st["green"][gi]
+            counted: set[str] = set()
+            total = 0
+            for i, ch in enumerate(state):
+                if ch not in "Gg":
+                    continue
+                in_lane = st["in_lanes"][i]
+                if not in_lane or in_lane in counted:
+                    continue
+                counted.add(in_lane)
+                try:
+                    moving = int(vehnum(in_lane)) - int(halting(in_lane))
+                except Exception:
+                    moving = 0
+                if moving > 0:  # negative is impossible; clamp defensively
+                    total += moving
+            per_phase[gi] = total
         return per_phase
 
     def _toward_counts(self, st: dict, gi: int) -> dict[str, int]:
@@ -665,22 +727,45 @@ class CoordinatedController(HybridController):
 
         # (c) Channel B: deterministic coordination-adjusted reference choice.
         #     adj_halting[gi] = green_halting[gi] + coord_weight * incoming_per_phase[gi]
+        #                       + predict_weight * pred_per_phase[gi]
         incoming_per_phase = self._incoming_per_phase(st, incoming_by_neighbour, tl)
-        adj_halting = [
+        # +prediction term: approaching (in-motion) vehicles per phase. A structural
+        # zero when the lever is off (predict_weight == 0.0), so ablation is exact.
+        pred_per_phase = (self._predicted_per_phase(st)
+                          if self.predict_weight > 0.0 else [0] * len(halting))
+        # Coordination-only reference (halting + coord * incoming) -- kept separate
+        # so the prediction term's MARGINAL causal effect can be isolated below.
+        coord_only_adj = [
             halting[gi] + self.coord_weight * incoming_per_phase[gi]
             for gi in range(len(halting))
         ]
+        adj_halting = [
+            coord_only_adj[gi] + self.predict_weight * pred_per_phase[gi]
+            for gi in range(len(halting))
+        ]
         # The coordinated deterministic choice (the shield's coordinated reference).
-        # With coord_weight == 0.0 this is argmax over plain halting; to reproduce
-        # the plain MaxPressure choice EXACTLY (same tie-breaking), short-circuit.
-        if self.coord_weight == 0.0:
+        # With BOTH terms zero this is the plain MaxPressure choice EXACTLY (same
+        # tie-breaking); short-circuit so the pure ablation stays byte-for-byte.
+        if self.coord_weight == 0.0 and self.predict_weight == 0.0:
             coord_choice = mp_choice
         else:
             coord_choice = max(range(len(adj_halting)), key=lambda gi: adj_halting[gi])
-        # CRUCIAL METRIC: did coordination change the deterministic choice?
+        # CRUCIAL METRIC: did the adjusted reference change the deterministic choice?
         coord_changed = coord_choice != mp_choice
         if coord_changed:
             self.coord_adjusted_decisions += 1
+        # Isolate the +prediction lever: argmax(coord-only) vs argmax(coord+pred).
+        # When they differ, prediction SPECIFICALLY moved the choice -> proof the
+        # lever is causal, not inert. coord-only argmax reproduces the plain
+        # MaxPressure choice when coord_weight == 0.0 (same short-circuit).
+        pred_changed = False
+        if self.predict_weight > 0.0:
+            coord_only_choice = (
+                mp_choice if self.coord_weight == 0.0
+                else max(range(len(coord_only_adj)), key=lambda gi: coord_only_adj[gi]))
+            if coord_choice != coord_only_choice:
+                pred_changed = True
+                self.pred_adjusted_decisions += 1
 
         # (c') Channel A: build a per-phase neighbour note and consult the agent.
         if expected_incoming > 0:
@@ -693,6 +778,16 @@ class CoordinatedController(HybridController):
                     f"Serve the phase facing the worst combined pressure.")
         else:
             note = ""
+        # +prediction: append the approaching-platoon note when the lever is on.
+        # This block is SKIPPED when predict_weight == 0.0, so the coordination /
+        # myopic note is byte-for-byte unchanged.
+        if self.predict_weight > 0.0 and any(p > 0 for p in pred_per_phase):
+            pred_bits = ", ".join(
+                f"phase {gi} +{pred_per_phase[gi]}"
+                for gi in range(len(pred_per_phase)) if pred_per_phase[gi] > 0)
+            approaching = (f"Approaching (in motion, not yet queued): {pred_bits}. "
+                           f"Weight imminent arrivals, not just current queues.")
+            note = f"{note} {approaching}" if note else approaching
         proposal = self.agent.choose_phase(tl, len(st["green"]), halting, neighbor_note=note)
         # Shield disposes: SLM proposal if valid else the coordination-adjusted choice.
         used = proposal if proposal is not None else coord_choice
@@ -772,6 +867,8 @@ class CoordinatedController(HybridController):
             "mp_choice": mp_choice,
             "coord_choice": coord_choice,
             "coord_changed": coord_changed,
+            "pred_per_phase": pred_per_phase,
+            "pred_changed": pred_changed,
             "coord_overrode": coord_overrode,
             "received": received,
             "neighbor_note": note,
@@ -786,7 +883,8 @@ class CoordinatedController(HybridController):
         # §6.2: emit the §11 kind:"decision" record inline. driving_input_seqs =
         # the FULL set of consumed signed inputs (no materiality filter); junction
         # = the deciding tl; t = SIM time (distinct clock from the signed logical
-        # message.t); executed = the used phase; classification is a RUNTIME label
+        # message.t); executed = the SERVED phase (post anti-starvation, = `served`,
+        # NOT the pre-override `used`); classification is a RUNTIME label
         # from detections[].flagged (DISTINCT from ORIGIN -- assessment.py MUST NOT
         # read it for origin); policies per §6.2 (detection "ran" iff >=1 Detection).
         classification = ("SPOOFED_OR_FAULTY"

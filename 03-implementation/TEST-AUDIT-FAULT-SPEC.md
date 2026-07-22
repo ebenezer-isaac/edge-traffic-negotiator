@@ -1,6 +1,6 @@
 # The Edge Negotiator: Test, Audit, and Fault-Attribution Specification
 
-**Status**: CANONICAL, frozen test + accountability contract. Created 2026-07-16.
+**Status**: CANONICAL test contract — **Part 2 (fault attribution) is SUPERSEDED pending the §5 D1 doc-remediation gate.** As-built, the forensic reader is `src/assessment.py` (the §6.3 mechanical ORIGIN classifier + evidence-pack/internal-note SPLIT), NOT a verdict machine: Part 2's `verdict` enum (ATTACKER/SYSTEM_CLASSIFIER/OUT_OF_SCOPE_COLLUSION/…) is FORBIDDEN by MASTER-SPEC §3 + §5/D2 and must be conformed to the §2 ORIGIN enum; the Part 1 record is now the §11 schema (`driving_input_seqs` SET, no `sig_valid`). Do NOT build a verdict-emitting reader from Part 2 as written. Created 2026-07-16.
 **Purpose**: lock down, unambiguously, (1) every adversarial and functional test case and its expected outcome, (2) how we systematically try to break the system, (3) how the system attributes fault for any adverse outcome to a specific responsible party, and (4) the audit record that makes every decision reconstructable. This is the document the tests are written from; a behaviour not covered here is a gap to close, not a judgement call at build time.
 
 Grounded in: `GROUND-RULES-POLICY.md` (policies P1-P8, criteria B1-B5, attack taxonomy), `FORMAL-SPECIFICATION.md` §8 (invariants R/A/S), `src/audit_log.py` (the tamper-evident chain), `src/ambiguous_decision.py` (classification contract).
@@ -132,7 +132,7 @@ Per attack category and overall: **precision, recall, false-positive rate, false
 ## Part 6. Build order for this spec
 
 1. Extend `AuditLog` event producers so decisions carry `policies_applied` + `driving_input_seq` + `classification` (Part 1).
-2. `src/fault_attribution.py`: the Part 2 procedure over an `AuditLog`; unit-tested on synthetic logs.
+2. `src/assessment.py` (SUPERSEDES the former `src/fault_attribution.py`, now deleted): the §6.3 mechanical ORIGIN classifier over an `AuditLog` — gated (`verify_chain` + per-SENDER `identity.verify` + in-window completeness) with the evidence-pack/internal-note SPLIT; unit-tested on synthetic logs + the pinned E2 fixture. The Part-2 text below is pending D1 conformance.
 3. `src/adversarial_suite.py` + `tests/`: the Part 3 matrix as generators (unit + integration), organized by category.
 4. Metrics extension for P/R/FPR/FNR per category (Part 4), reuse `emergency_metrics` + `stats`.
 5. `tests/TRACEABILITY.md`: the FR/SC/policy/attack → test map (Part 5).

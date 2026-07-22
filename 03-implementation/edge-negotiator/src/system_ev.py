@@ -32,7 +32,30 @@ def flatten_entries(audit) -> tuple[dict, ...]:
 
 
 def run_ev_incident(system):
-    """Stage a NAIVE-victim phantom-claim + real-EV incident (§6.2).
+    """Stage the incident and assemble a ``SystemResult`` (§6.2).
+
+    Thin wrapper over :func:`stage_ev_incident` (which holds the staging + the
+    references the accident-reconstruction demo needs); this reassembles the
+    serialisable ``SystemResult`` exactly as before. Behaviour is unchanged.
+    """
+    from system import SystemResult
+    s = stage_ev_incident(system)
+    return SystemResult(
+        config=config_dict(s["cfg"]),
+        traffic=fake_traffic_summary(2, len(s["ctrl"].events)),
+        coordination=coordination_counts(s["ctrl"], s["bus"]),
+        audit=system._audit_bundle(s["audit"], s["registry_appended"]),
+        backends=system._backends(live=False),
+        audit_entries=flatten_entries(s["audit"]),
+        ev_incident=s["ev_incident"],
+    )
+
+
+def stage_ev_incident(system) -> dict:
+    """Stage a NAIVE-victim phantom-claim + real-EV incident (§6.2) and RETURN the
+    live references (audit, identities, registry, controller, bus, ev_incident) so
+    the accident-reconstruction demo (D-accident, §4.4) can run ``fault_report``
+    over the SAME signed AuditLog this produced -- no duplicated staging.
 
     HONEST exploit-then-defend (the servable phantom DOES commandeer the naive
     victim; the defended gate refuses it). The AUDITED incident is the NAIVE leg
@@ -50,7 +73,7 @@ def run_ev_incident(system):
     DEFENDED leg (contrast, unaudited): the SAME servable phantom "A1A0" with NO
     corroborating sighting is REFUSED (executed == baseline, no preempt).
     """
-    from system import SystemResult, _GRID_ADJACENCY, _GRID_TLS
+    from system import _GRID_ADJACENCY, _GRID_TLS
 
     cfg = system.config
     adjacency = {k: list(v) for k, v in _GRID_ADJACENCY.items()}
@@ -141,12 +164,13 @@ def run_ev_incident(system):
         "real_executed": real_executed, "baseline": baseline,
         "real_tick_t": real_t,
     }
-    return SystemResult(
-        config=config_dict(cfg),
-        traffic=fake_traffic_summary(2, len(ctrl.events)),
-        coordination=coordination_counts(ctrl, bus),
-        audit=system._audit_bundle(audit, registry_appended),
-        backends=system._backends(live=False),
-        audit_entries=flatten_entries(audit),
-        ev_incident=ev_incident,
-    )
+    return {
+        "cfg": cfg,
+        "audit": audit,
+        "identities": identities,
+        "registry": registry,
+        "registry_appended": registry_appended,
+        "ctrl": ctrl,
+        "bus": bus,
+        "ev_incident": ev_incident,
+    }

@@ -1,0 +1,193 @@
+{
+  "experiment": "H2_accident_reconstruction_demo",
+  "gate": "D-accident (\u00a712) / \u00a74.4",
+  "corridor": "2x2 grid fixture (the \u00a76.2 EV-incident staging; the audit primitive is corridor-agnostic)",
+  "scenario": "NAIVE victim (corroboration_required=False): a compromised neighbour A1 signs a phantom EV advance-claim for a servable approach; the naive victim admits it and COMMANDEERS the signal off the MaxPressure baseline; a real EV is then sensed locally and legitimately preempts.",
+  "verification_layer": {
+    "entries": 12,
+    "verify_chain": true,
+    "verify_signatures": true,
+    "merkle_root": "b966f2dbe7f73511d477a03c9a74da6a4b0c6e4ef6bfc02892faf822237ac310",
+    "completeness_commitment": "merkle_root + sample inclusion proof",
+    "sample_inclusion_index": 11,
+    "inclusion_proof_valid": true,
+    "external_quorum_anchor": "DEFERRED to D-anchor (>=2 witnesses: Rekor + ledger RPC) -- live step, not this demo",
+    "named_cross_auditor": "DEFERRED to D-anchor (split-view detection)"
+  },
+  "what_happened": {
+    "baseline_phase": 1,
+    "phantom_executed_phase": 0,
+    "phantom_commandeered": true,
+    "real_executed_phase": 0,
+    "real_preempted": true,
+    "decision_record_count": 4,
+    "executed_sequence": [
+      {
+        "seq": 5,
+        "junction": "A0",
+        "executed": 1,
+        "classification": "LEGITIMATE"
+      },
+      {
+        "seq": 7,
+        "junction": "A0",
+        "executed": 0,
+        "classification": "LEGITIMATE"
+      },
+      {
+        "seq": 9,
+        "junction": "A0",
+        "executed": 1,
+        "classification": "LEGITIMATE"
+      },
+      {
+        "seq": 11,
+        "junction": "A0",
+        "executed": 0,
+        "classification": "LEGITIMATE"
+      }
+    ]
+  },
+  "how_it_happened": {
+    "phantom": {
+      "causal_decision_seq": 7,
+      "executed_phase": 0,
+      "driving_input_seqs": [
+        [
+          6,
+          "A1"
+        ]
+      ],
+      "policies_applied": [
+        "corroboration"
+      ]
+    },
+    "real": {
+      "causal_decision_seq": 11,
+      "executed_phase": 0,
+      "driving_input_seqs": [
+        [
+          10,
+          null
+        ]
+      ],
+      "policies_applied": [
+        "corroboration"
+      ]
+    }
+  },
+  "which_key": {
+    "phantom": {
+      "origin": "attacker-key",
+      "culprit_key": "A1",
+      "scored_class": "uncorroborated-signed",
+      "signing_key_count": 1,
+      "independent_corroboration_count": 0,
+      "rationale": "validly-signed but recomputed independent-corroboration is 0 over driving_input_seqs (\u00a73 E2 rule); attributed to the signing key, never a person"
+    },
+    "real": {
+      "origin": "sensor-fed-spoof",
+      "culprit_key": null,
+      "scored_class": "keyless-lone-sighting",
+      "signing_key_count": 0,
+      "independent_corroboration_count": 0,
+      "rationale": "driving input is a keyless sighting (signing-key-count 0); \u00a76.4 sensor-fed-spoof, no key to attribute"
+    }
+  },
+  "reconstruction_phantom": {
+    "outcome": {
+      "type": "false_preemption",
+      "junction": "A0",
+      "t": 2.0,
+      "ev_id": "PHANTOM-AMB"
+    },
+    "status": "OK",
+    "which_key": {
+      "origin": "attacker-key",
+      "culprit_key": "A1",
+      "scored_class": "uncorroborated-signed",
+      "signing_key_count": 1,
+      "independent_corroboration_count": 0,
+      "rationale": "validly-signed but recomputed independent-corroboration is 0 over driving_input_seqs (\u00a73 E2 rule); attributed to the signing key, never a person"
+    },
+    "how": {
+      "causal_decision_seq": 7,
+      "executed_phase": 0,
+      "driving_input_seqs": [
+        [
+          6,
+          "A1"
+        ]
+      ],
+      "policies_applied": [
+        "corroboration"
+      ]
+    },
+    "evidence_pack_is_fact_only": true,
+    "sender_signature_checks": [
+      {
+        "seq": 6,
+        "sender": "A1",
+        "sender_signature_verified": true
+      }
+    ]
+  },
+  "reconstruction_real": {
+    "outcome": {
+      "type": "ev_preemption",
+      "junction": "A0",
+      "t": 2.0,
+      "ev_id": "AMB-REAL"
+    },
+    "status": "OK",
+    "which_key": {
+      "origin": "sensor-fed-spoof",
+      "culprit_key": null,
+      "scored_class": "keyless-lone-sighting",
+      "signing_key_count": 0,
+      "independent_corroboration_count": 0,
+      "rationale": "driving input is a keyless sighting (signing-key-count 0); \u00a76.4 sensor-fed-spoof, no key to attribute"
+    },
+    "how": {
+      "causal_decision_seq": 11,
+      "executed_phase": 0,
+      "driving_input_seqs": [
+        [
+          10,
+          null
+        ]
+      ],
+      "policies_applied": [
+        "corroboration"
+      ]
+    },
+    "evidence_pack_is_fact_only": true,
+    "sender_signature_checks": []
+  },
+  "tamper_test": {
+    "applicable": true,
+    "tampered_message_seq": 6,
+    "verify_chain_after_tamper": true,
+    "verify_signatures_after_tamper": true,
+    "fault_report_status": "REFUSED",
+    "refusal": "unknown",
+    "caught_by_identity_verify": true,
+    "note": "a substituted sender_signature that KEEPS verify_chain()==True is still caught by the per-sender identity.verify -> REFUSED, no green attribution"
+  },
+  "checks": {
+    "verify_chain": true,
+    "verify_signatures": true,
+    "merkle_inclusion_proof": true,
+    "phantom_commandeered_recorded": true,
+    "which_key_attributed_to_signing_key": true,
+    "reconstruction_derived_from_verified_records": true,
+    "evidence_pack_is_fact_only": true,
+    "tamper_caught_by_identity_verify": true
+  },
+  "passed": true,
+  "caveats": [
+    "The external QUORUM anchor (>=2 witnesses: Rekor + ledger RPC) + the NAMED cross-auditor are the LIVE step gated by D-anchor (a separate phase); this demo proves reconstruction over the locally-verifiable completeness commitment (Merkle root + inclusion proof).",
+    "The cross-auditor's honesty/independence is an UNVERIFIED assumption (on par with the identity root), stated not hidden (\u00a74.2).",
+    "Origin names a KEY, never a person; the evidence pack states only mechanically-true facts and does NOT adjudicate legal fault (\u00a77.1)."
+  ]
+}

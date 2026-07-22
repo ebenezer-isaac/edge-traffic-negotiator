@@ -7,7 +7,9 @@
     "counter_not_timer": "the mechanism MUST derive force-service from a per-phase skip counter (incremented each interval a phase is eligible-but-unserved, RESET to 0 when the phase is served by EITHER argmax or override), NOT from a fixed interval timer. S2 distinguishes these.",
     "violations_read_not_set": "the test READS controller.anti_starvation_violations; it MUST NOT assign it. The mechanism increments it when a phase's skip counter EXCEEDS max_skip (a starvation it failed to prevent).",
     "per_phase": "skip counters are PER green phase (1:1 with approach here). A single global/modulo counter fails S2.",
-    "safe_transition": "force-service changes WHICH phase is served at a decision point; it MUST still honour min_green(10)+yellow(3) (S1/S2 invariants), never a mid-green interrupt."
+    "safe_transition": "force-service changes WHICH phase is served at a decision point; it MUST still honour min_green(10)+yellow(3) (S1/S2 invariants), never a mid-green interrupt.",
+    "override_disable_hook": "the negative_control mutation disables the override via a single named flag (e.g. controller.anti_starvation_enabled=False); the test toggles ONLY that flag and runs the otherwise-identical code path, so violations>0 under the mutant vs ==0 under the correct mechanism isolates the override.",
+    "position_index_mapping": "the harness/FakeConn MUST map controlled-link position i to the phase whose green cell ('G') is at position i, so _pressure reads the intended in/out lane. Here the 2-phase diagonal ('Gr'/'rG') makes position==phase; a >2-phase net must preserve this alignment."
   },
   "common": {
     "tls": "J1",

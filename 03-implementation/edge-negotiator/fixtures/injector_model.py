@@ -92,7 +92,15 @@ def sample_x(rnd, y):
         "local_sensing": False,
     }
 
-# ---- classifier-independent OOD split (distance from dev support) ------------
+# ---- distance-from-dev-support statistic (§8; NOT called OOD - see honesty note) ----
+# §8: "define the split by a classifier-independent distance-from-dev-support criterion ...
+# report accuracy as a CONTINUOUS curve vs distance so no threshold DOF exists; do NOT call
+# low-density-in-distribution OOD." So: the standardizer is fit on a SEPARATE DEV sample
+# (dev-frozen, m-1), distance is standardized-Euclidean from that support, and the primary
+# characterisation is the accuracy-vs-distance CURVE. The binary split field (anticipated/novel,
+# required by FlaggedCase's enum) is the below/above-85th-pct tail; we do NOT claim the tail is
+# "harder" - in this synthetic Naive-Bayes model the far tail is actually EASIER (classes most
+# separated there), so a genuinely-harder generalisation regime needs REAL substrate (deferred).
 _CONT = ("corroboration_count", "persistence", "residual", "neighbour_agreement", "severity")
 def _fit_standardizer(dev):
     n = len(dev); mean = {f: sum(d[f] for d in dev)/n for f in _CONT}
@@ -103,83 +111,131 @@ def _percentile(vals, q):
     s = sorted(vals); k = (len(s)-1)*q/100.0; lo = int(math.floor(k)); hi = int(math.ceil(k))
     return s[lo] if lo == hi else s[lo] + (s[hi]-s[lo])*(k-lo)
 
-# ---- build the frozen dataset + ceilings -------------------------------------
+def _dev_standardizer():
+    """DEV-frozen standardizer: fit on a SEPARATE dev sample (distinct seed), never on the
+    eval pool (m-1: no leakage of the eval/tail points into their own normalisation)."""
+    rnd = random.Random(SEED + 7); dev = []
+    for y in ("real", "spoof_or_fault"):
+        for _ in range(N_PER_CLASS):
+            dev.append(sample_x(rnd, y))
+    mean, std = _fit_standardizer(dev)
+    dists = sorted(_distance(d, mean, std) for d in dev)
+    thr = _percentile(dists, OOD_PERCENTILE)
+    return mean, std, thr
+
 def build_dataset():
-    rnd = random.Random(SEED)
-    raw = []
+    mean, std, thr = _dev_standardizer()
+    rnd = random.Random(SEED); out = []
     for y in ("real", "spoof_or_fault"):
         for i in range(N_PER_CLASS):
-            raw.append({**sample_x(rnd, y), "label": y, "_y": y, "idx": i})
-    # dev support = the sampled distribution; standardize + threshold at the pinned percentile
-    mean, std = _fit_standardizer(raw)
-    dists = [_distance(r, mean, std) for r in raw]
-    thr = _percentile(dists, OOD_PERCENTILE)
-    out = []
-    for r, d in zip(raw, dists):
-        split = "novel" if d > thr else "anticipated"
-        out.append({
-            "case_id": f"INJ-{r['_y'][:3]}-{r['idx']:04d}",
-            "event_type": r["event_type"], "corroboration_count": r["corroboration_count"],
-            "residual": r["residual"], "persistence": r["persistence"],
-            "neighbour_agreement": r["neighbour_agreement"], "local_sensing": r["local_sensing"],
-            "severity": r["severity"], "split": split, "label": r["label"],
-        })
-    return out, {"standardizer_mean": {f: round(mean[f], 5) for f in _CONT},
-                 "standardizer_std": {f: round(std[f], 5) for f in _CONT},
-                 "ood_distance_threshold": round(thr, 5), "ood_percentile": OOD_PERCENTILE}
+            x = sample_x(rnd, y); d = _distance(x, mean, std)
+            out.append({
+                "case_id": f"INJ-{y[:3]}-{i:04d}",
+                "event_type": x["event_type"], "corroboration_count": x["corroboration_count"],
+                "residual": x["residual"], "persistence": x["persistence"],
+                "neighbour_agreement": x["neighbour_agreement"], "local_sensing": x["local_sensing"],
+                "severity": x["severity"],
+                "split": "novel" if d > thr else "anticipated",   # FlaggedCase enum; = far-support tail, NOT a harder/shifted regime
+                "label": y,
+            })
+    ood = {"criterion": "standardized-Euclidean distance from a DEV-frozen support (separate seed); "
+                        "split = above the frozen 85th-pct threshold. NOT claimed harder/OOD; the "
+                        "primary characterisation is the accuracy-vs-distance curve.",
+           "standardizer_mean": {f: round(mean[f], 5) for f in _CONT},
+           "standardizer_std": {f: round(std[f], 5) for f in _CONT},
+           "distance_threshold_p85": round(thr, 5)}
+    return out, ood
 
-def bayes_error_mc():
-    rnd = random.Random(SEED + 1); wrong = 0
-    for _ in range(CEIL_MC_N):
-        y = "real" if rnd.random() < PRIOR["real"] else "spoof_or_fault"
-        x = sample_x(rnd, y)
-        if bayes_decide(x) != y: wrong += 1
-    err = wrong/CEIL_MC_N
-    return err, 1.96*math.sqrt(max(err*(1-err), 1e-12)/CEIL_MC_N)
+def _balanced_acc(pred_fn, cases):
+    tp = fn = fp = tn = 0
+    for x in cases:
+        pr = pred_fn(x) == "real"; ar = x["label"] == "real"
+        tp += pr and ar; fn += (not pr) and ar; fp += pr and (not ar); tn += (not pr) and (not ar)
+    rec = tp/(tp+fn) if (tp+fn) else 0.0; spec = tn/(tn+fp) if (tn+fp) else 0.0
+    return (rec+spec)/2.0
 
-def box_ceiling(dataset):
-    """Best accuracy of RuleDisambiguator's exact function class (its real grid),
-    over the anticipated (dev) split; local_sensing=False so the OR-local branch is inert."""
-    dev = [d for d in dataset if d["split"] == "anticipated"]
-    best, thr = 0.0, None
+def _in_support(dataset, mean, std, floor_logdens):
+    """Split the frozen dataset into the density>floor region (where a ceiling is claimed) and
+    the low-density tail (NO ceiling claimed, §8). floor is on mixture_logdensity."""
+    keep, tail = [], []
+    for x in dataset:
+        (keep if mixture_logdensity(x) > floor_logdens else tail).append(x)
+    return keep, tail
+
+def bayes_and_box_ceilings(dataset):
+    """Both ceilings on the SAME population (m/MAJOR-2), restricted to the density>floor region
+    (MAJOR-3); the low-density tail is reported separately with NO ceiling. Bayes = the model's
+    posterior classifier (balanced acc); box = RuleDisambiguator's exact grid (balanced acc, m-3)."""
+    floor_logdens = math.log(DENSITY_FLOOR)
+    keep, tail = _in_support(dataset, None, None, floor_logdens)
+    def box_pred_factory(a, b, c, dmin):
+        return lambda x: ("real" if (x["corroboration_count"] >= a and x["residual"] <= b
+                          and x["persistence"] >= c and x["neighbour_agreement"] >= dmin) else "spoof_or_fault")
+    best_box, box_thr = 0.0, None
     for a in _CORR_K_GRID:
         for b in _RESIDUAL_MAX_GRID:
             for c in _PERSISTENCE_P_GRID:
                 for dmin in _AGREEMENT_MIN_GRID:
-                    ok = 0
-                    for x in dev:
-                        pred = ("real" if (x["corroboration_count"] >= a and x["residual"] <= b
-                                and x["persistence"] >= c and x["neighbour_agreement"] >= dmin)
-                                else "spoof_or_fault")
-                        if pred == x["label"]: ok += 1
-                    acc = ok/len(dev)
-                    if acc > best: best, thr = acc, {"corr_k": a, "residual_max": b, "persistence_p": c, "agreement_min": dmin}
-    return best, thr
+                    acc = _balanced_acc(box_pred_factory(a, b, c, dmin), keep)
+                    if acc > best_box: best_box, box_thr = acc, {"corr_k": a, "residual_max": b, "persistence_p": c, "agreement_min": dmin}
+    bayes = _balanced_acc(bayes_decide, keep)
+    return {"population": "density>floor in-support region", "n_in_support": len(keep), "n_low_density_tail": len(tail),
+            "nonlinear_bayes_ceiling_balacc": round(bayes, 5),
+            "axis_aligned_box_ceiling_balacc": round(best_box, 5), "box_ceiling_thresholds": box_thr,
+            "headroom_bayes_minus_box": round(bayes - best_box, 5),
+            "low_density_tail_no_ceiling": "the %d density<floor cases carry NO ceiling claim (§8)" % len(tail)}
 
-ADEQUACY = {"status": "PENDING (real substrate not built) -> ceilings MODEL-RELATIVE",
-            "check": "compare the injector's per-feature class-conditional moments vs the real "
-                     "Euston SUMO-injection observed moments once euston.net.xml + a real run exist; "
-                     "until then the ceilings are labelled model-relative, not real-world optima."}
+def accuracy_vs_distance(dataset, mean, std, n_bins=6):
+    """§8 primary characterisation: balanced accuracy of the Bayes classifier and the best box,
+    as a CONTINUOUS curve over distance-from-dev-support bins (no threshold DOF)."""
+    ds = [(x, _distance(x, mean, std)) for x in dataset]
+    dmax = max(d for _, d in ds); edges = [dmax*i/n_bins for i in range(n_bins+1)]
+    # one frozen box (the dev-tuned best on the in-support region) for a like-for-like curve
+    curve = []
+    for i in range(n_bins):
+        lo, hi = edges[i], edges[i+1]
+        binx = [x for x, d in ds if (lo <= d < hi or (i == n_bins-1 and d == hi))]
+        if not binx: curve.append({"dist_lo": round(lo, 3), "dist_hi": round(hi, 3), "n": 0}); continue
+        curve.append({"dist_lo": round(lo, 3), "dist_hi": round(hi, 3), "n": len(binx),
+                      "bayes_balacc": round(_balanced_acc(bayes_decide, binx), 4)})
+    return curve
+
+ADEQUACY = {"status": "PENDING (real substrate not built) -> ALL ceilings are MODEL-RELATIVE, "
+                      "NOT a headline result: the class-conditional overlap is hand-chosen, so the "
+                      "Bayes ceiling + the box<Bayes headroom are properties of THIS model until the "
+                      "adequacy check runs. Every downstream §8/§12-D4/D5 ceiling claim MUST carry the "
+                      "'model-relative pending adequacy' label.",
+            "check": "compare the injector's per-feature class-conditional moments (mean/var of "
+                     "corroboration_count, residual, persistence, neighbour_agreement) vs the real "
+                     "Euston SUMO-injection observed moments once euston.net.xml + a real run exist."}
 
 if __name__ == "__main__":
     ds, ood = build_dataset()
-    be, hw = bayes_error_mc()
-    box_acc, box_thr = box_ceiling(ds)
+    mean, std, _ = _dev_standardizer()
+    ceil = bayes_and_box_ceilings(ds)          # same population (density>floor), balanced acc
+    curve = accuracy_vs_distance(ds, mean, std)
     ceilings = {
-        "nonlinear_bayes_ceiling_accuracy": round(1-be, 5),
-        "bayes_error": round(be, 5), "bayes_error_mc_half_width_95": round(hw, 5),
-        "axis_aligned_box_ceiling_accuracy": round(box_acc, 5), "box_ceiling_thresholds": box_thr,
-        "headroom_bayes_minus_box": round((1-be)-box_acc, 5),
-        "density_floor": DENSITY_FLOOR, **ood,
-        "integration": "bounded-error Monte-Carlo over the balanced mixture; likelihood closed-form, error integral MC",
-        "provenance": {"seed": SEED, "mc_n": CEIL_MC_N, "n_per_class": N_PER_CLASS,
-                       "python": platform.python_version(), "note": "COMMITTED JSONs are authoritative; do not regenerate (§10 hash pin)"},
+        "MODEL_RELATIVE_CAVEAT": "all ceilings below are MODEL-RELATIVE (adequacy PENDING, see adequacy); "
+                                 "NOT a headline result until validated vs real Euston moments.",
+        **ceil,
+        "accuracy_vs_distance_curve": curve,   # §8 primary characterisation (no threshold DOF)
+        "density_floor": DENSITY_FLOOR,
+        "distance_split_note": ood["criterion"],
+        "standardizer_mean": ood["standardizer_mean"], "standardizer_std": ood["standardizer_std"],
+        "distance_threshold_p85": ood["distance_threshold_p85"],
+        "integration": "bounded-error Monte-Carlo / exact over the frozen population; per-feature "
+                       "likelihood closed-form, the multivariate Bayes-error integral has no closed form",
+        "provenance": {"seed": SEED, "n_per_class": N_PER_CLASS, "python": platform.python_version(),
+                       "note": "COMMITTED JSONs are authoritative; do not regenerate (§10 hash pin)"},
         "adequacy": ADEQUACY,
     }
     base = "03-implementation/edge-negotiator/fixtures/"
     json.dump(ds, open(base+"exp1_dataset.json", "w", encoding="utf-8"), indent=2)
     json.dump(ceilings, open(base+"exp1_ceilings.json", "w", encoding="utf-8"), indent=2)
-    n_ant = sum(1 for d in ds if d["split"] == "anticipated"); n_nov = len(ds)-n_ant
-    print(f"dataset n={len(ds)} anticipated={n_ant} novel={n_nov}")
-    print(f"Bayes ceiling {1-be:.4f} (err {be:.4f}+/-{hw:.4f}) | box ceiling {box_acc:.4f} | headroom {(1-be)-box_acc:.4f}")
-    print(f"box < Bayes: {box_acc < (1-be)-hw} | overlap(>0): {be>0} | wrote exp1_dataset.json + exp1_ceilings.json")
+    n_ant = sum(1 for d in ds if d["split"] == "anticipated")
+    print(f"dataset n={len(ds)} anticipated(in-support)={n_ant} far-tail={len(ds)-n_ant}")
+    print(f"[same pop, density>floor, n={ceil['n_in_support']}, tail={ceil['n_low_density_tail']}] "
+          f"Bayes(balacc) {ceil['nonlinear_bayes_ceiling_balacc']} | box(balacc) {ceil['axis_aligned_box_ceiling_balacc']} "
+          f"| headroom {ceil['headroom_bayes_minus_box']}")
+    print(f"box < Bayes: {ceil['axis_aligned_box_ceiling_balacc'] < ceil['nonlinear_bayes_ceiling_balacc']} "
+          f"| wrote exp1_dataset.json + exp1_ceilings.json")

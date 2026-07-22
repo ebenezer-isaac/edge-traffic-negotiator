@@ -1,42 +1,82 @@
 {
-  "nonlinear_bayes_ceiling_accuracy": 0.94559,
-  "bayes_error": 0.05441,
-  "bayes_error_mc_half_width_95": 0.00099,
-  "axis_aligned_box_ceiling_accuracy": 0.84706,
+  "MODEL_RELATIVE_CAVEAT": "all ceilings below are MODEL-RELATIVE (adequacy PENDING, see adequacy); NOT a headline result until validated vs real Euston moments.",
+  "population": "density>floor in-support region",
+  "n_in_support": 595,
+  "n_low_density_tail": 5,
+  "nonlinear_bayes_ceiling_balacc": 0.93277,
+  "axis_aligned_box_ceiling_balacc": 0.85876,
   "box_ceiling_thresholds": {
     "corr_k": 0,
     "residual_max": 1.0,
     "persistence_p": 1,
     "agreement_min": 0.5
   },
-  "headroom_bayes_minus_box": 0.09853,
+  "headroom_bayes_minus_box": 0.07402,
+  "low_density_tail_no_ceiling": "the 5 density<floor cases carry NO ceiling claim (\u00a78)",
+  "accuracy_vs_distance_curve": [
+    {
+      "dist_lo": 0.0,
+      "dist_hi": 0.83,
+      "n": 8,
+      "bayes_balacc": 0.875
+    },
+    {
+      "dist_lo": 0.83,
+      "dist_hi": 1.66,
+      "n": 150,
+      "bayes_balacc": 0.8531
+    },
+    {
+      "dist_lo": 1.66,
+      "dist_hi": 2.49,
+      "n": 308,
+      "bayes_balacc": 0.9448
+    },
+    {
+      "dist_lo": 2.49,
+      "dist_hi": 3.32,
+      "n": 100,
+      "bayes_balacc": 1.0
+    },
+    {
+      "dist_lo": 3.32,
+      "dist_hi": 4.15,
+      "n": 24,
+      "bayes_balacc": 1.0
+    },
+    {
+      "dist_lo": 4.15,
+      "dist_hi": 4.979,
+      "n": 10,
+      "bayes_balacc": 1.0
+    }
+  ],
   "density_floor": 0.0001,
+  "distance_split_note": "standardized-Euclidean distance from a DEV-frozen support (separate seed); split = above the frozen 85th-pct threshold. NOT claimed harder/OOD; the primary characterisation is the accuracy-vs-distance curve.",
   "standardizer_mean": {
-    "corroboration_count": 1.42167,
-    "persistence": 1.96,
-    "residual": 0.86511,
-    "neighbour_agreement": 0.56927,
-    "severity": 0.53148
+    "corroboration_count": 1.51333,
+    "persistence": 1.92833,
+    "residual": 0.87374,
+    "neighbour_agreement": 0.55187,
+    "severity": 0.54239
   },
   "standardizer_std": {
-    "corroboration_count": 1.40257,
-    "persistence": 1.6376,
-    "residual": 0.68768,
-    "neighbour_agreement": 0.22406,
-    "severity": 0.23554
+    "corroboration_count": 1.42472,
+    "persistence": 1.64414,
+    "residual": 0.7525,
+    "neighbour_agreement": 0.23002,
+    "severity": 0.22851
   },
-  "ood_distance_threshold": 2.81433,
-  "ood_percentile": 85,
-  "integration": "bounded-error Monte-Carlo over the balanced mixture; likelihood closed-form, error integral MC",
+  "distance_threshold_p85": 2.69904,
+  "integration": "bounded-error Monte-Carlo / exact over the frozen population; per-feature likelihood closed-form, the multivariate Bayes-error integral has no closed form",
   "provenance": {
     "seed": 20260721,
-    "mc_n": 200000,
     "n_per_class": 300,
     "python": "3.13.0",
     "note": "COMMITTED JSONs are authoritative; do not regenerate (\u00a710 hash pin)"
   },
   "adequacy": {
-    "status": "PENDING (real substrate not built) -> ceilings MODEL-RELATIVE",
-    "check": "compare the injector's per-feature class-conditional moments vs the real Euston SUMO-injection observed moments once euston.net.xml + a real run exist; until then the ceilings are labelled model-relative, not real-world optima."
+    "status": "PENDING (real substrate not built) -> ALL ceilings are MODEL-RELATIVE, NOT a headline result: the class-conditional overlap is hand-chosen, so the Bayes ceiling + the box<Bayes headroom are properties of THIS model until the adequacy check runs. Every downstream \u00a78/\u00a712-D4/D5 ceiling claim MUST carry the 'model-relative pending adequacy' label.",
+    "check": "compare the injector's per-feature class-conditional moments (mean/var of corroboration_count, residual, persistence, neighbour_agreement) vs the real Euston SUMO-injection observed moments once euston.net.xml + a real run exist."
   }
 }

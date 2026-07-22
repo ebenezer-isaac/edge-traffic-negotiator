@@ -1,26 +1,29 @@
 # The Edge Negotiator — Architecture Synthesis
 
-**Status:** Architecture locked for the reframed project (2026-05-31), supervisor-approved (Lee greenlit by text; Akin assumed). Mirrors `03-implementation/PROJECT-DECISION-BRIEF.md`, the single source of truth.
+**Status:** Conformed to the current thesis (2026-07-21 re-pivot). Mirrors `specs/001-edge-negotiator/MASTER-SPEC.md` §0–§3, the single source of truth.
 
-> **This document supersedes the prior "Edge Negotiator — Locked Architecture Synthesis" (the equity-audit / Gini / CoT-faithfulness-probe / Besu-vs-Tessera framing).** That earlier synthesis is **stale and must not be acted on**. The pre-pivot state is recoverable at git commit `bcd06cb`. The dissertation pivoted on 2026-05-31; everything below reflects the new project.
+> **This document supersedes all prior framings** — the equity-audit / Gini / CoT-faithfulness-probe / Besu-vs-Tessera coordination-trust synthesis, and the intermediate Lambeth cross-junction-coordination synthesis. Both earlier states are stale and must not be acted on; recoverable in git history if needed. Everything below reflects the current, frozen project.
 
-**Working title (retained, reframed):** *The Edge Negotiator: Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control.*
+**Working title (reframed):** *The Edge Negotiator: an on-device, trust-preserving coordination layer for signalised junctions, with a measured characterisation of the stealthy insider deviations it can and cannot hold accountable.*
 
-**Programme context:** UCL MSc SEIOT. Supervisors: Akin Delibasi (SUMO / MaxPressure / statistics) and Lee Stott (Foundry Local / Phi / identity). Hardware: RTX 4050 8GB laptop. Constraint: 90-day build, SUMO-on-laptop, executed from India.
+**Programme context:** UCL MSc SEIOT. Supervisors: Akin Delibasi (SUMO / MaxPressure / statistics) and Lee Stott (Foundry Local / Phi / identity). Hardware: RTX 4050 8GB laptop. Constraint: build through August 2026, SUMO-on-laptop, executed from India.
 
 ---
 
 ## The Pitch
 
-A corridor of **small-language-model agents — Phi-4-mini (3.8B) via Microsoft Foundry Local, one per signalised junction** — that **coordinate signal timing by sharing predicted traffic state** with their neighbours, evaluated in **Eclipse SUMO on a real Lambeth corridor** (Brixton → Elephant & Castle). Every agent holds a **cryptographic identity**; inter-junction messages are **signed and verified against a permissioned-ledger registry of approved agents**; and a **vehicle-conservation plausibility check** flags neighbour reports physically inconsistent with observed flow (spoofed or faulty). A tamper-evident ledger records every decision and every identity/registry change. A deterministic **MaxPressure shield** validates or overrides every SLM decision and runs alone at quiet junctions.
+An on-device, trust-preserving coordination layer for signalised junctions, evaluated on a real corridor — **Euston Road (A501), a 3–4 signal stretch, central London** (the synthetic 2×2 grid is a unit-test fixture only, never the evaluation substrate). One frozen small-language-model agent — **Phi-4-mini (3.8B) via Microsoft Foundry Local** — sits per junction. A deterministic **MaxPressure shield** (Varaiya 2013) validates or overrides every SLM decision and runs alone at quiet junctions, with anti-starvation (`max_skip=3`); an admissible emergency preemption outranks the anti-starvation shield.
 
-The architecture has two paths:
+The project answers one question: *in a compromised-insider emergency, what can be held accountable mechanically, and what remains a human/counsel judgment that even an on-device reasoner cannot faithfully automate?* Three contributions:
 
-- **Fast path (real-time):** Agent A signs `state + forecast` and sends it to neighbour B over MQTT; Phi-4-mini proposes a phase; the MaxPressure shield acts. Signatures are verified against the registry.
-- **Trust path (async, off the control loop):** Hyperledger Besu permissioned ledger holds the on-chain registry of approved identities with `revoke()`, runs the conservation reconciliation, and stores the tamper-evident audit log (provenance, non-repudiation).
+- **(a) A deterministic real-time gate** that refuses signed-but-uncorroborated emergency preemption from a compromised insider, and clears physically corroborated real emergencies.
+- **(b) A Certificate-Transparency-style, quorum-anchored, cross-audited, signature-verified accountability log.** The mechanism is credited to prior art — RFC 6962, CONIKS (Melara 2015), A2M (Chun 2007), TrInc (Levin 2009), PeerReview (Haeberlen 2007), Küsters CCS 2010 — cited, **not claimed novel**.
+- **(c) The novel object: a self-referential coupling.** The preemption attack controls the signal phase, which is *also* the variable that gates honest-witness coverage — so executing the attack opens the very coverage desert that conceals it. Stated as a **conditional lemma** under explicit hypotheses (§8 of the spec), with one severe, pre-registered measurement of its boundary on the real Euston corridor. The honest boundary — not an unconditional guarantee — is the finding.
 
 **The one defensible claim (the thesis is staked on this):**
-> *Authenticated, plausibility-checked cross-junction coordination for SLM-driven traffic control — verifiable agent identity (signatures + on-chain registry) plus a vehicle-conservation consistency check yield spoofing/fault detection and a non-repudiable audit trail, with no claim of game-theoretic incentive-compatibility.*
+> *A deterministic gate holds a compromised-insider emergency-preemption attack accountable exactly up to a measured, honestly-conceded boundary — because the attack lever (signal phase) is the same variable that gates the honest-witness coverage needed to catch it — and no further.*
+
+Coordination between junctions is retained as an engineering property of the platform (MaxPressure + coordination term) but is reported as a **structural zero** — an inert term, not a headline benefit, and not an experiment. This project does not claim to optimise traffic.
 
 ---
 
@@ -28,97 +31,101 @@ The architecture has two paths:
 
 | Component | Decision | Basis |
 |---|---|---|
-| Primary SLM | **Phi-4-mini 3.8B only**, via Foundry Local (INT4, inference-only) | Qwen edge irrelevant for the terse phase task; 8GB VRAM, no training |
-| Optional SLM ablation | **Qwen3-4B** — late "model-agnostic" ablation *only* if a clean 1-2 wk buffer exists | Not co-primary; conversion is fiddly, edge unclear |
-| SLM output | **Terse action only (`{"phase": N}`), no chain-of-thought** | CoT-faithfulness literature (design justification, §"Why terse") + latency budget |
-| SLM role in loop | **Hybrid: SLM proposes, MaxPressure shield disposes; event-gated (skip quiet junctions)** | SafeLight SUMO precedent; event-trigger precedent (Amanullah/Keijzer) |
-| MaxPressure shield | Deterministic (Varaiya 2013) — validates/overrides every SLM decision; runs alone at quiet junctions | Provides a safe, always-available fallback |
-| Agent identity | **Ed25519/ECDSA signatures + small on-chain allowlist + `revoke()`.** DID/VC is future work | DID/VC is 3-5× the work and brittle for a single domain |
-| Blockchain role | **Hyperledger Besu (QBFT) — async only: registry + audit log + conservation-check contract.** Never in the control loop (~1-2s finality) | Besu agent: async only; fast path is signed MQTT messages |
-| Integrity comparison | **Besu permissioned ledger vs plain signed append-only log** | Quantifies what the chain buys over plain signing |
-| Conservation check | Vehicle-conservation reconciliation: did A's claimed outflow match B's observed inflow within the travel-time window? | Catches insider FDI (spoofed reports) + faulty sensors |
-| Communication | Signed neighbour-message bus over **MQTT** | Fast path transport |
-| Registry governance | **Single city-authority admin key** (multisig = optional hardening) | Defensible for a one-operator pilot |
-| Corridor scale | **~6 SLM-controlled junctions** (headroom to 8-10) within a **~10-13-junction real Lambeth corridor**; remaining junctions on MaxPressure | ~3 wk sweep at N=6 including re-run tax |
-| Simulation base | **sumo-rl** (MIT, arbitrary nets) — reimplement the neighbour-message algorithm | NOT CoLLMLight/CityFlow (welded to CityFlow, not SUMO) |
-| Network | Real Lambeth corridor (Brixton → Elephant & Castle), OSM-derived in netedit; demand from DfT AADF + assumed peak profile + SUMO `routeSampler`/calibrators | Real-corridor anchor with cited demand-synthesis method |
-| Threats demonstrated | **(1) spoofed traffic-state report [primary], (2) faulty sensor [secondary], (3) optional Sybil count-inflation** | Conservation check catches insider FDI + faults; auth catches impersonation/replay |
+| Primary SLM | **Phi-4-mini (3.8B), frozen, via Foundry Local (INT4, inference-only)** — the only model | 8GB VRAM budget; no training; terse latency budget |
+| SLM role | **Self-contained co-equal contribution**, not the instrument of the boundary map. Job A = citation-faithful legal-reasoning note (primary metric); Job B = disambiguation classifier (characterised); Job C = frozen-vs-hardened robustness/adaptivity tradeoff | §3 of the spec |
+| Fault-output channel | **SPLIT, never merged.** (1) A mechanically-verifiable provenance evidence pack — reproducible facts only, no machine verdict/confidence/accusation, header "Provenance record; not a determination of legal fault." (2) A firewalled, non-evidential, counsel-gated internal AI triage note | §0/§5 of the spec |
+| MaxPressure shield | Deterministic (Varaiya 2013) — validates/overrides every SLM decision; runs alone at quiet junctions; anti-starvation `max_skip=3`; an admissible emergency preemption outranks the anti-starvation shield | Safety floor |
+| Real-time defence | Deterministic Ed25519 auth + conservation/CUSUM + a corroboration gate (≥2 keys); keyless sustained preemption hard-refused + a junction-aggregate cumulative keyless-transient budget | §6 of the spec |
+| Accountability mechanism | **Certificate-Transparency-style, quorum-anchored, cross-audited accountability log** — a signed hash-chained AuditLog + a quorum external anchor (≥2 witnesses, e.g. a Rekor transparency log + a named single-node ledger RPC) + a named cross-auditor. Not a blockchain; not foregrounded as a contribution — credited to prior art | Mechanism conceded; the coupling + measurement is the contribution |
+| Registry | **Permissioned key registry** (not a decentralised ledger) with an external identity root + counter-signed rotation | §6.5 of the spec |
+| Fault ontology (internal note only) | `attacker-key / system-classifier / system-detector / sensor-fed-spoof / colluding-keys / legitimate / unknown`. Where the origin is a signing party it names a **key, never a person** | §2 of the spec |
+| Origin classification | A deterministic, mechanical partition over two features (signing-key count, recomputed corroboration), deciding three classes: `keyless-lone-sighting`→sensor-fed-spoof, `uncorroborated-signed`→attacker-key, `corroborated`→legitimate. The veracity/collusion distinction is honestly `→unknown`. A verification check, not the primary metric | §3 of the spec |
+| Substrate | **Real Euston Road (A501), a 3–4 signal stretch, central London**, pre-built and committed. Synthetic 2×2 grid = unit-test fixture only | §0/§9 of the spec |
+| Legal grounding | UK law only — RTA 1988 s.36/s.38, GDPR/DPA 2018, *Goodes*, *Gorringe*, *Stovin*, *Poole BC v GN* et al (`01-research/uk-traffic-law.md`) | §7 of the spec |
+| Coordination effect | **A structural zero** — reported as such, not an experiment, not a headline benefit | §2/§8 of the spec |
 
 ---
 
 ## Contributions
 
-1. **Authenticated, plausibility-checked cross-junction coordination for SLM-driven signal control** — the integrative novelty: verifiable agent identity (Ed25519/ECDSA + on-chain registry with revocation) fused with a vehicle-conservation consistency check, atop an SLM coordination platform.
-2. **Spoofing/fault detection from the conservation check** — demonstrated against a spoofed neighbour report (primary), a faulty sensor (secondary), and optionally Sybil count-inflation.
-3. **A non-repudiable, tamper-evident audit trail** for every decision and identity/registry change, with a head-to-head **Besu-vs-plain-signed-log** cost/benefit characterisation.
-4. **Evidence that small off-the-shelf SLMs can coordinate a corridor** versus classical and uncoordinated baselines.
+1. **(a) A deterministic real-time gate** refusing signed-but-uncorroborated emergency preemption from a compromised insider, clearing physically corroborated real emergencies — Ed25519 auth + registry + conservation/CUSUM + corroboration (≥2 keys); keyless sustained preemption hard-refused with a junction-aggregate keyless-transient budget.
+2. **(b) A Certificate-Transparency-style, quorum-anchored, cross-audited accountability log** — mechanism credited to prior art (RFC 6962, CONIKS, A2M, TrInc, PeerReview, Küsters), cited, not claimed novel. Reports a signed-log-vs-plain-log cost/benefit characterisation.
+3. **(c) The self-referential coupling (the novel object)** — the preemption attack controls the signal phase, which also gates honest-witness coverage, so executing the attack opens the coverage desert that conceals it. Stated as a conditional lemma with one severe, pre-registered measurement of the boundary on the real Euston corridor: how the real signal-phase-coupled sighting-coverage geometry shifts the deviation-escape surface away from the well-mixed prediction, and which deviation classes escape in scope.
+4. **A self-contained SLM contribution** — Phi-4-mini's citation-faithful legal-reasoning note (Job A, primary metric: citation-correctness + false-citation-rate on novel fact-combinations vs an un-rigged rule-to-text template baseline), a disambiguation classifier (Job B, characterised), and a frozen-vs-hardened robustness/adaptivity tradeoff (Job C, reported).
 
-*Note:* the CoT-faithfulness literature is now **design justification only** (it motivates terse output), not a contribution. Equity audit (Gini/Rawlsian/counterfactual demographic re-run) is **dropped**. Incentive-compatibility is **not** claimed (`Tian2025` is motivation only).
-
----
-
-## Build Plan (~3 months)
-
-1. **Wk 1-2 — Pipeline on a 2×2 synthetic grid (sumo-rl).** TraCI loop, MaxPressure baseline, a single SLM agent via Foundry Local returning a terse phase decision, pause-sim inference timing. *In parallel:* begin extracting and cleaning the real Lambeth network in netedit (long-pole, no code dependency).
-2. **Wk 3-4 — Cross-junction coordination.** Signed neighbour-message bus (MQTT); event-gated SLM coordination across the grid; MaxPressure shield/override. **Milestone: the "it coordinates" demo.**
-3. **Wk 5-6 — Identity + ledger.** Besu QBFT in Docker; Ed25519 signing; on-chain allowlist + `revoke()`; web3.py glue; async audit log of every decision.
-4. **Wk 7-8 — Conservation-check contract + attacks.** Vehicle-conservation reconciliation; inject (1) spoofed report, (2) faulty sensor, (3) optional Sybil; measure detection.
-5. **Wk 9-10 — Swap in Lambeth network + full sweep.** ~6 SLM junctions, 30 seeds × 4 scenarios; BCa bootstrap, Holm-Bonferroni.
-6. **Wk 11-12 — Write-up + viva prep.** Optional Qwen3-4B model-agnostic ablation *only* if buffered.
-
-Everything after Milestone 2 (end Wk 4) is the integrity contribution and its evaluation.
+*Note:* coordination between junctions is retained as a platform property but is a **structural zero**, not a contribution. The **equity-audit framing** (Gini/Rawlsian/Disparate Impact/ATRS-as-an-equity-metric/CoT-faithfulness-as-contribution) is **dropped** — it is not a current contribution. What is **retained (reframed)** is the UK legal-accountability treatment and the India comparative-accountability lens (see lit-review §2.8.2/§2.8.3): ATRS survives only as a transparency-and-logging standard, and India only as a comparative accountability lens — not as equity metrics. Incentive-compatibility is not claimed.
 
 ---
 
-## Why Terse Output (Design Justification, Not a Contribution)
+## Position vs Prior Art
 
-The SLM emits a single terse phase decision with **no chain-of-thought**, by design. The faithfulness literature (Lit-Review §2.6) shows explicit CoT traces are **post-hoc rationalisations, not faithful causal records** (Turpin et al. 2023, biasing-features methodology; Lanham et al. 2023, causal-intervention battery; consistent across the sub-7B corpus). Emitting reasoning would add latency and token cost while providing **no trustworthy interpretability benefit**. Accountability is instead provided structurally — by the signed, tamper-evident audit log — not by the model's self-narration. This repurposes an already-written lit-review chapter as architectural justification, not a separate experiment.
+The accountability layer **is** Certificate Transparency / accountability infrastructure (RFC 6962, CONIKS, A2M, TrInc, PeerReview, Haber-Stornetta 1991, Küsters CCS 2010) — the mechanism is conceded, not claimed novel. The stealthy attack class is False Data Injection (Liu-Ning-Reiter 2011, Teixeira-Sandberg 2015, Mo-Sinopoli 2010); unobservability's topology-dependence is owned by Kosut et al (IEEE TSG 2011) and Hendrickx et al (IEEE TAC 2014). The domain-closest signal-attack work (Chen et al I-SIG NDSS 2018; Ghena et al WOOT 2014) does **not** couple the attack lever to the observability gate. The increment — not claimed as "first" — is the **self-referential coupling** (attack lever = coverage gate) instantiated and measured on a real signalised corridor. This confronts Traffic-R1 on the accountability role and the measured coupling, not on "the SLM beats a rule" or "coordination optimises traffic."
+
+---
+
+## Build Plan
+
+Phased per `specs/001-edge-negotiator/MASTER-SPEC.md` §11 (build order) and §9 (Euston substrate + prerequisite artifacts, pre-built and committed rather than authored overnight). At a high level:
+
+1. Doc/framing remediation across the corpus (this document included) to the current thesis, gated by a forbidden-term sweep (§5 of the spec).
+2. Wire the real accountability-log producer: message/sighting/decision records, signature capture at both inbox seams, the EV-vs-coordination causal-attribution rule.
+3. Rewrite origin classification (assessment) to the 3-class scored subset over mechanical predicates; verify chain + signature + quorum-completeness + cross-audit before any attribution.
+4. Land the deterministic real-time gate: Ed25519 auth, conservation/CUSUM, corroboration (≥2 keys), the keyless-transient budget.
+5. Stand up the quorum anchor (≥2 witnesses) + named cross-auditor; the Euston substrate (pre-built `euston.net.xml`); the Job-A SLM note.
+6. Run Experiment D (the coupling measurement, the headline) and Experiment 1 (Job B classifier) and Job C (frozen-vs-hardened tradeoff), all pre-registered under a single hash seal.
+7. Write-up.
 
 ---
 
 ## Baselines & Metrics
 
 **Baselines:**
-- **Fixed-time** (Webster)
-- **MaxPressure** (also the shield)
-- **Uncoordinated-SLM vs coordinated-SLM**
-- **Optional CoLight** (canonical MARL baseline)
-
-Classical baselines are reimplemented (~30 lines each, MIT-clean) rather than vendoring GPL RESCO.
+- **Fixed-time** (Webster) and **MaxPressure** (also the shield).
+- **Gate on vs off** for the real-time defence contribution.
+- **An un-rigged rule-to-text template** for the SLM Job A comparison.
 
 **Metrics:**
-- **Traffic:** average travel time (ATT), average queue, throughput.
-- **Detection:** precision / recall / F1 at a **fixed false-alarm rate**; detection latency in control cycles.
-- **Integrity overhead:** signing latency, ledger commit latency, and the **Besu-vs-plain-signed-log** comparison.
+- **Gate:** admissibility of corroborated real emergencies vs refusal of uncorroborated signed preemption; the measured keyless-transient budget cost.
+- **Coupling (Experiment D):** the coverage-vs-escape surface as a statistical object — a pre-registered contrast estimator over named cells, a closed-form well-mixed comparator, a directional prediction with a magnitude pinned to an external operational-harm threshold, a named CI method, N fixed under the seal.
+- **SLM (Job A):** citation-correctness + false-citation-rate on novel legal fact-combinations, vs the un-rigged template baseline.
+- **Coordination:** reported as a structural zero — not scored as a metric of merit.
 
 ---
 
 ## What We Can / Cannot Claim
 
 **Can claim:**
-- Message authenticity — the report came from a currently-approved, registered member.
-- Tamper-evident on-chain registration/revocation and a non-repudiable audit trail.
-- Detection of *inconsistent* (uncoordinated-spoof or faulty) neighbour reports.
-- That small off-the-shelf SLMs can coordinate a corridor versus the baselines.
+- The gate refuses a signed-but-uncorroborated compromised-insider preemption and clears a physically corroborated real emergency.
+- A signed, quorum-anchored, cross-audited accountability log — provenance and non-repudiation for every decision and identity/registry change.
+- The self-referential coupling, as a conditional lemma under explicit stated hypotheses, with one measured, pre-registered boundary on the real Euston corridor.
+- That a frozen on-device SLM can produce a citation-faithful legal-reasoning note, measured honestly against an un-rigged baseline (or that it cannot, if the pre-registered kill-criterion fires — the claim may be demoted, the SLM's presence never is).
 
 **Cannot claim:**
-- That the blockchain "creates trust" or "prevents lying" — it provides **provenance and identity, not truth** (it faithfully records garbage-in).
-- **Incentive-compatibility** — type-incoherent for frozen LLMs; `Tian2025` is motivation only.
-- Which of two disagreeing junctions is the wrong one.
-- Defence against a *coordinated, conservation-respecting* attacker — the **`Xiao2026` evasion limit**, acknowledged by us, which is precisely what the auth layer complements.
-
-We also retain the **Traffic-R1 cited-claim hedge**: Traffic-R1 is cited as a benchmark anchor, not deployed.
+- That the accountability log "creates trust" or "prevents lying" — it provides provenance and identity, not truth; it faithfully records garbage-in.
+- Any determination of legal fault — the evidence pack carries no verdict, confidence, or accusation; that is a human/counsel judgment.
+- Defence against colluding keys (≥2), operator creation-time omission, identity-root/quorum/cross-auditor compromise, or coverage below the phase-coupled threshold — these are out-of-scope, hypothesis-failure axes, stated honestly, not defended.
+- Traffic optimisation — coordination is a structural zero, not a headline result.
+- That the coupling is an unconditional guarantee — it holds only under its stated hypotheses (honest keys, cross-audited non-equivocating quorum, adequate coverage, no operator omission).
 
 ---
 
-## Key Engineering Constraints (from the code audit)
+## Canonical Free-Deviation Boundary (state once, cross-reference elsewhere)
+
+**In-scope, free classes** (the gate does not stop these, stated honestly): sub-margin piggyback-inflation on a corroborated event; keyless-transient sensor-spoof; compounded keyless transients; keyless magnitude-inflation of a genuine corroborated event.
+
+**Out-of-scope / hypothesis-failure axes:** colluding keys (≥2); operator creation-time omission; identity-root/quorum/cross-auditor compromise; coverage below the phase-coupled threshold.
+
+All of the above are measured and stated as the boundary of the finding, not defended as a guarantee.
+
+---
+
+## Key Engineering Constraints
 
 | Constraint | Mitigation |
 |---|---|
-| Foundry Local serialises inference (~2-8s/call, no batching) | Terse output (~2s); pause SUMO during inference; event-gate; ≤6-8 SLM junctions; state caching |
-| sumo-rl, not CoLLMLight/CityFlow | Reimplement the neighbour-message algorithm on sumo-rl; do not port CityFlow code |
-| Blockchain too slow for control (1-2s finality) | Ledger is async registry + audit only; fast path = signed MQTT; batch commits |
-| Consistency ≠ truth | Scope the threat model to uncoordinated spoofs + faults; cite `Xiao2026` ourselves; auth layer is the complement |
-| No structured-output enforcement in Foundry Local | Prompt-and-parse + JSON validation/retry; MaxPressure fallback on parse failure |
-| Coarse real Lambeth demand data | DfT AADF as link anchors + assumed peak profile + SUMO `routeSampler`/calibrators (method cited) |
+| Foundry Local serialises inference (no batching) | Terse Job-A/Job-B outputs; event-gate; state caching |
+| Accountability log too slow for the control loop | Log is async — signing + append + batch anchor; fast path is the deterministic gate, not the log |
+| Keyless local sensing is spoofable | Corroboration requires ≥2 independently-signed keys; keyless sustained preemption hard-refused with a cumulative budget |
+| Provenance ≠ veracity | The veracity/collusion distinction is honestly conceded `→unknown`; not adjudicated by the system |
+| Coarse real Euston demand data | Demand calibrated to a named, time-resolved source (TfL/DfT hourly + turning counts + mix); a hard startup gate for any inferential claim |
 | 8GB VRAM | Phi-4-mini INT4, inference-only, no training |

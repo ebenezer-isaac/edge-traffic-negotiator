@@ -1,15 +1,23 @@
-"""De-risk runner for the REAL Lambeth spine corridor (9 TLS, A23/A3).
+"""De-risk runner for the REAL Euston Road (A501) spine corridor.
+
+PENDING ARTIFACT: this runner targets ``euston_spine.net.xml``, which does NOT
+exist yet -- it must be built with SUMO ``netconvert`` from an OSM extract of
+the Euston Road corridor (out of scope for this change; requires SUMO on the
+target machine). Until that net is built, this runner is PENDING and cannot
+execute end-to-end. The legacy ``lambeth_*.net.xml`` files left in this
+directory are the PRIOR corridor's build artifacts, kept for reference only;
+they are NOT the Euston substrate and must not be pointed at by ``NET`` below.
 
 Drives the UNMODIFIED src/ controller stack (FixedTimeController,
-MaxPressureController) over lambeth_spine.net.xml end-to-end via TraCI, and runs
+MaxPressureController) over euston_spine.net.xml end-to-end via TraCI, and runs
 a demand sweep (via SUMO's --scale knob over base.rou.xml) to locate the clean
 operating band and the gridlock tipping point.
 
 Does NOT edit src/. It imports the controllers as-is to prove (or break) their
 compatibility with real irregular junction topology. teleports == gridlock signal.
 
-    .venv/Scripts/python sumo/lambeth/run_lambeth.py --controller maxpressure --scale 1.0
-    .venv/Scripts/python sumo/lambeth/run_lambeth.py --sweep
+    .venv/Scripts/python sumo/euston/run_euston.py --controller maxpressure --scale 1.0
+    .venv/Scripts/python sumo/euston/run_euston.py --sweep
 """
 from __future__ import annotations
 
@@ -29,7 +37,10 @@ sys.path.insert(0, SRC)
 
 from controllers import MaxPressureController, FixedTimeController  # noqa: E402
 
-NET = os.path.join(HERE, "lambeth_spine.net.xml")
+# PENDING: euston_spine.net.xml does not exist yet (needs netconvert on the
+# target machine, out of scope here). This runner cannot execute until it is
+# built.
+NET = os.path.join(HERE, "euston_spine.net.xml")
 ROUTES = os.path.join(HERE, "base.rou.xml")
 
 
@@ -58,7 +69,7 @@ def run(controller: str, scale: float = 1.0, seed: int = 42, end: int = 3600,
     """
     binary = checkBinary("sumo-gui" if gui else "sumo")
     tag = f"{controller}_s{scale:g}"
-    tripinfo = os.path.join(HERE, f"tripinfo_lambeth_{tag}.xml")
+    tripinfo = os.path.join(HERE, f"tripinfo_euston_{tag}.xml")
     # time-to-teleport 300: gridlock surfaces honestly as teleports.
     traci.start([binary, "-n", NET, "-r", ROUTES,
                  "--tripinfo-output", tripinfo,

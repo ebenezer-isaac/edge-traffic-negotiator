@@ -1,3 +1,5 @@
+> **SUPERSEDED HISTORICAL DE-RISK RECORD (pre-2026-05-31 pivot).** Dated lab-notebook measurements kept for the audit trail; the substrate here (Lambeth A23/A3) was DROPPED and the ledger/Besu framing DEMOTED. Current thesis: specs/001-edge-negotiator/MASTER-SPEC.md (Euston A501; self-referential coupling; CT-style accountability credited to prior art; Phi-4-mini). Numbers/terms below are historical, not current claims.
+
 # Authenticated Coordination on the REAL Lambeth Corridor — Generalisation Evidence
 
 **Goal (dissertation, "The Edge Negotiator"):** prove the authenticated

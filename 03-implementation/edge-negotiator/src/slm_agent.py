@@ -20,7 +20,8 @@ from openai import OpenAI
 
 SYSTEM = (
     "You control one traffic-signal junction. "
-    "Pick the green phase with the MOST waiting vehicles, to clear the longest queue. "
+    "You will be given the number of waiting vehicles for each green phase. "
+    "Decide which phase to serve next. "
     'Reply with ONLY JSON {"phase": <index>} and nothing else.'
 )
 

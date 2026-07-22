@@ -1,7 +1,7 @@
 """Deterministic signal controllers for the Edge Negotiator.
 
 `MaxPressureController` is both the classical baseline and the always-on safety
-*shield* the SLM agent's proposals are checked against (see PROJECT-DECISION-BRIEF.md).
+*shield* the SLM agent's proposals are checked against (see MASTER-SPEC.md).
 
 MaxPressure (Varaiya): at each decision interval serve the phase with the greatest
 pressure = sum over the movements that phase gives green to of

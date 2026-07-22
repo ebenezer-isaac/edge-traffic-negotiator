@@ -238,8 +238,8 @@ def test_mqtt_transport_implies_sumo_path():
     assert cfg.is_default is False
 
 
-def test_lambeth_implies_sumo_path():
-    cfg = SystemConfig(network="lambeth", use_sumo=False)
+def test_euston_implies_sumo_path():
+    cfg = SystemConfig(network="euston", use_sumo=False)
     assert cfg.requires_sumo is True
     assert cfg.is_default is False
 

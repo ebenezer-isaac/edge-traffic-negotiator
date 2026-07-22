@@ -15,11 +15,11 @@ plus an `audit_log` property and a `verify_chain()`. Because `MessageBus`
 `action` / `junction_id` fields, a `BesuRegistry` can be handed to
 `MessageBus(registry, adjacency)` unchanged.
 
-Architecture (PROJECT-DECISION-BRIEF.md §2/§3): the ledger is an **async
+Architecture (MASTER-SPEC.md §2/§3): the ledger is an **async
 registry + audit log only and is NEVER in the real-time control loop**. Reads
 (`is_approved`, `public_key`) are local `eth_call`s against contract state and
 are cheap; writes (`register`, `revoke`) are transactions that must be mined and
-therefore carry block/finality latency — which is exactly why the brief keeps
+therefore carry block/finality latency — which is exactly why MASTER-SPEC.md keeps
 them off the fast path. See `src/bench_ledger.py` for the measured numbers.
 
 The on-chain `AgentRegistered` / `AgentRevoked` events ARE the tamper-evident

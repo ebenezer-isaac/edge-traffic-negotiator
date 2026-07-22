@@ -4,8 +4,8 @@ Measures the latency of every registry operation against BOTH backends and
 emits hard numbers (median + p95 over >=N trials) plus a measured block/finality
 time, then writes a Markdown report (default `results/ledger_bench.md`).
 
-Why this exists (PROJECT-DECISION-BRIEF.md §7 deliverable "Besu vs plain
-signed log" comparison): the brief assumes the ledger is **async, off the
+Why this exists (MASTER-SPEC.md §7 deliverable "Besu vs plain
+signed log" comparison): MASTER-SPEC.md assumes the ledger is **async, off the
 control loop, ~1-2 s finality**. This script tests that assumption with real
 measurements so the dissertation can cite numbers, not guesses.
 
@@ -293,9 +293,9 @@ def write_report(
         "registry is consulted on change, so read cost is not a control-loop risk.",
         "- **Writes carry finality latency.** `register` / `revoke` median commit "
         f"latency is bounded by the block period (**{bt}**). On the in-memory "
-        "baseline the same op is sub-microsecond. This is the whole reason the "
-        "brief keeps the ledger **off the control loop**.",
-        "- **Does the brief's '1-2 s finality, async-only' assumption hold?** "
+        "baseline the same op is sub-microsecond. This is the whole reason "
+        "MASTER-SPEC.md keeps the ledger **off the control loop**.",
+        "- **Does MASTER-SPEC.md's '1-2 s finality, async-only' assumption hold?** "
         "See `besu register` median above: on a single-node dev chain it sits at "
         "or below the ~1 s block period, consistent with the 1-2 s assumption. A "
         "production QBFT network (2 s default block period, multi-validator "
@@ -309,7 +309,7 @@ def write_report(
         "- Because each on-chain write costs ~1 block, writing one transaction per "
         "control decision (sub-second cadence across 6 junctions) would saturate "
         "the commit path and couple control latency to consensus latency. "
-        "**Mitigation (already in the brief §3): batch commits.** Buffer audit "
+        "**Mitigation (already in MASTER-SPEC.md §3): batch commits.** Buffer audit "
         "events in memory on the fast path and flush them asynchronously — either "
         "as periodic batched transactions or by anchoring a Merkle root of a batch "
         "on-chain. The `batch_register_N` row shows sequential per-tx cost scales "

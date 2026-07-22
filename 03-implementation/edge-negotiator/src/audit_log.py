@@ -1,8 +1,11 @@
 """Append-only, tamper-evident DECISION + EVENT audit log for The Edge Negotiator.
 
-This is the subsystem the brief (PROJECT-DECISION-BRIEF.md s.6) calls for: a
+This is the subsystem MASTER-SPEC.md (s.6) calls for: a
 "tamper-evident audit log recording every decision and identity/registry
-change", with the blockchain (Hyperledger Besu) as an **async anchor only**.
+change", with an external ledger (Hyperledger Besu — ONE optional anchor
+witness of the >=2-witness Certificate-Transparency-style quorum, §6.7) as an
+**async anchor only**; the accountability mechanism is credited to CT prior art,
+not claimed novel, and Besu is a demoted anchor OPTION, not the contribution.
 
 It deliberately mirrors the hash-chain already used by ``src/registry.py``
 (same canonical-JSON + sha256(prev_hash || canonical(event)) construction, same

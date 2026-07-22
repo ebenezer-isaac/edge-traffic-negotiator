@@ -1,6 +1,6 @@
 # The Edge Negotiator: Formal Specification (parameters, algorithms, metrics, data flow)
 
-**Status:** CANONICAL spec authority. Companion to `PROJECT-PROPOSAL.md` (direction/scope) and `METHODOLOGY-AND-IMPLEMENTATION-DESIGN.md` (build plan). This document is the single source for: every parameter (value + justification + status), every equation, every metric formula, the statistical method, and how the modules interlock at runtime. Produced 2026-06-20 from a five-specialist research pass; every external claim is cited and was web-verified unless marked otherwise.
+**Status:** Parameter/algorithm spec. The single source of truth for direction, scope, and framing is `MASTER-SPEC.md`; this document is the detailed reference for every parameter (value + justification + status), every equation, every metric formula, the statistical method, and how the modules interlock at runtime. Companion to `PROJECT-PROPOSAL.md` (the earlier proposal) and `METHODOLOGY-AND-IMPLEMENTATION-DESIGN.md` (build plan). Produced 2026-06-20 from a five-specialist research pass; every external claim is cited and was web-verified unless marked otherwise. Where any framing here conflicts with `MASTER-SPEC.md`, the latter governs.
 
 **Value status legend:** `[D]` derived from first principles/other parameters · `[C]` literature-cited standard · `[K]` must be calibrated (procedure given) · `[E]` engineering threshold, no external standard.
 
@@ -52,8 +52,8 @@ Units: s=seconds, m=metres, m/s, m/s², veh=vehicles, win=windows/decision-round
 | `H` | coordination look-ahead horizon | s | = C_opt (≈60) | [D] | one cycle |
 | **Shield** | | | | | |
 | `shield_margin` | pressure-floor veto tolerance | veh | calibrate; report 0 baseline | [K] | sweep {0,2,4,8,16}; largest passing benign never-regress |
-| `max_skip` | anti-starvation skip bound | decisions | 8 | [D] | ⌈C_opt/Δ⌉=⌈78/10⌉, capped by pedestrian max-wait policy |
-| `T_starve` | worst-case wait bound | s | ≤93 | [D] | max_skip·Δ + (min_green+yellow) = 8·10+13 |
+| `max_skip` | anti-starvation skip bound | decisions | 3 | [D]/PINNED | PINNED anti-starvation shield value (MASTER-SPEC §0 / §6.8); the ⌈C_opt/Δ⌉=⌈78/10⌉=8 cycle figure is a looser upper bound now superseded by the tighter pinned 3 |
+| `T_starve` | worst-case wait bound | s | ≤43 | [D] | max_skip·Δ + (min_green+yellow) = 3·10+13 |
 
 ### 1.2 Detection (conservation + CUSUM)
 | Symbol | Code | Meaning | Units | Value | Status | Basis |
@@ -100,7 +100,7 @@ Units: s=seconds, m=metres, m/s, m/s², veh=vehicles, win=windows/decision-round
 | `tol_rec` | recovery tolerance | frac | 0.10 | [E] | queue within 10% of baseline |
 | `k_rec` | recovery persistence | cycles | 3 | [E] | sustained return |
 | `W_base` | pre-incident baseline window | cycles | 10 | [E] | stable baseline |
-| `λ` (sweep) | lie magnitude / band | – | {0.25,0.5,0.75,1,1.25,1.5,2,2.5,3} | [D] | detectability-envelope x-axis |
+| `λ` (sweep) | lie magnitude / band | – | {0.25,0.5,0.75,1,1.25,1.5,2,2.5,3} | [D] | free-deviation-boundary / deviation-magnitude x-axis |
 | `ρ_knee` | recall-collapse recovery threshold | – | 0.5 | [E] | half-maximum knee |
 | GEH<5 | demand-calibration acceptance | – | ≥85% of links | [C] | DfT TAG M3.1 |
 
@@ -117,9 +117,9 @@ Units: s=seconds, m=metres, m/s, m/s², veh=vehicles, win=windows/decision-round
 
 **(7) Platoon arrival:** `t_arrive = t_release + ℓ_e/v_free`. **(8) Offset:** `offset_AB = (ℓ_e/v_free) mod C_opt` (Morgan & Little 1964). **(9) Horizon:** `H = C_opt`.
 
-**(10) Channel-B coordinated score:** `adj_halting_i = green_halting_i + λ·incoming_per_phase_i`; `coord_choice = (mp_choice if λ=0 else argmax_i adj_halting_i)`. λ=0 short-circuits to a byte-exact MaxPressure ablation (FR-8).
+**(10) Channel-B coordinated score:** `adj_halting_i = green_halting_i + λ·incoming_per_phase_i`; `coord_choice = (mp_choice if λ=0 else argmax_i adj_halting_i)`. λ=0 short-circuits to a byte-exact MaxPressure ablation (FR-8). Per MASTER-SPEC §8 the coordination term is an **inert structural zero**, reported as such and NOT an experimental benefit; any delay effect is not a headline claim (no traffic-performance benefit is claimed).
 
-**Anti-starvation:** `max_skip = ⌈C_opt/Δ⌉ = ⌈78/10⌉ = 8`; worst-case wait `T_starve ≤ max_skip·Δ + (min_green+yellow) = 8·10+13 = 93 s`.
+**Anti-starvation:** `max_skip = 3` (PINNED anti-starvation shield value, MASTER-SPEC §0 / §6.8; the ⌈C_opt/Δ⌉=⌈78/10⌉=8 cycle figure is a looser upper bound now superseded by the tighter pinned 3); worst-case wait `T_starve ≤ max_skip·Δ + (min_green+yellow) = 3·10+13 = 43 s`.
 
 ---
 
@@ -162,7 +162,7 @@ Two regimes per tick: NORMAL (no trigger → MaxPressure decides, coordination a
 **Attacker tiers:** (T1) outsider no-key → auth `unknown_sender`/`bad_signature`, IN scope; (T2) Dolev-Yao network adversary → replay-dedup + crypto, IN scope, residual = cross-restart replay (build item: persisted per-sender high-water-mark); (T3) single compromised insider (one key) → conservation residual, IN scope for supra-tolerance + phantom-emergency, sub-tolerance evades (stated); (T4) ≥2-key conservation-respecting collusion → by construction the colluders keep the mass-balance residual inside the band (one inflates a claim, the other supplies a matching fake observation), so the residual is statistically indistinguishable from benign traffic and recall→0; OUT of scope, contained by key revocation + audit, not detection; (T5) compromised admin key → OUT of scope, single point of total failure.
 
 **Attack injection (compose over `MaliciousPublisher`, never edit the bus):**
-| Attack | Parameters | Ground-truth window | Expected verdict |
+| Attack | Parameters | Ground-truth window | Expected outcome |
 |---|---|---|---|
 | phantom-preemption | uncorroborated `ev_claim{approach,eta}` | tick t0, malicious | auth admits; corroboration withholds preemption |
 | phantom-incident | `incident_edge`, no matching obs | tick t0 | conservation `missing_observation` (FN possible if no reconciled edge; report) |
@@ -181,7 +181,7 @@ Two regimes per tick: NORMAL (no trigger → MaxPressure decides, coordination a
 
 **Detection (window-labelled, positive = injected attack active on edge that window):** precision `TP/(TP+FP)`, recall `TP/(TP+FN)`, F1 `2PR/(P+R)`, latency = first-detect − first-malicious cycle, false_alarm_rate `FP/(FP+TN)`. **Safety:** false_preemption_rate, shield_veto_rate, anti_starvation_violations (target 0), safe_but_suboptimal_rate. **Overhead:** sign/verify/commit latency (median + p95, right-skewed).
 
-**Detectability envelope:** `recall(λ)`, `latency(λ)`, λ = lie/band; knee `λ* = sup{λ: recall(λ)<0.5}` with BCa CI (or logistic half-max fit).
+**Free-deviation boundary (measured characterisation):** `recall(λ)`, `latency(λ)`, λ = deviation/band; the recall-collapse point `λ* = sup{λ: recall(λ)<0.5}` with BCa CI (or logistic half-max fit). This is the deviation-magnitude axis; the headline object is the phase-coupled coverage threshold on the real corridor (§8, MASTER-SPEC). Not a detection ROC.
 
 **Statistics:** primary family {mean_network_delay, completion_rate, throughput} Holm-corrected together (confirmatory); others exploratory with CIs. BCa bootstrap (method: Efron 1987 / DiCiccio-Efron 1996; n_boot=10000), paired Monte-Carlo permutation with the (B+1)/(m+1) correction for sampled permutations (Phipson-Smyth 2010; n_perm=10000), Holm-Bonferroni (1979), effect size = Cliff's delta (Cliff 1993) reported with a BCa CI, EV analysis = seed-random-intercept mixed model (within-seed EV correlation). All paired on seed.
 
@@ -236,8 +236,8 @@ At λ=0, no trigger, no SLM override: reduces exactly to `mp_choice`.
 | `stats` | per-seed paired metrics | BCa CI + perm p + Holm + Cliff's δ | paired on seed; primary family FWER-controlled |
 
 ### 7.4 Build status (code map)
-- **Built + tested:** MaxPressure, MessageBus (auth+replay), FlowWindow, FlowConservationDetector (CUSUM), conservation (stateless offline), metrics (traffic), stats, evaluation harness, identity/registry, Besu/QBFT/MQTT spikes.
-- **To build (MUST):** `EmergencyController` + `_shield_validate` (V_starve anti-starvation, V3 corroboration gate, V5 pressure floor with calibrated `shield_margin`), `_admissible_ev` + signed sighting log, the 5 trigger evaluators, `emergency_metrics`, `cooperative_naive` victim, `attacks_live` (ev_claim/incident_claim/λ-sweep injectors), the λ-reparameterised detectability envelope + knee estimator, Cliff's delta + mixed-effects, MDE reporter, max_green enforcement, cross-restart replay high-water-mark, spillback-cap, payload size/depth bound.
+- **Built + tested:** MaxPressure, MessageBus (auth+replay), FlowWindow, FlowConservationDetector (CUSUM), conservation (stateless offline), metrics (traffic), stats, evaluation harness, identity/registry, permissioned-ledger/messaging anchor spikes (demoted to the cited-prior-art anchor option).
+- **To build (MUST):** `EmergencyController` + `_shield_validate` (V_starve anti-starvation, V3 corroboration gate, V5 pressure floor with calibrated `shield_margin`), `_admissible_ev` + signed sighting log, the 5 trigger evaluators, `emergency_metrics`, `cooperative_naive` victim, `attacks_live` (ev_claim/incident_claim/λ-sweep injectors), the λ-reparameterised free-deviation-boundary sweep + recall-collapse estimator, Cliff's delta + mixed-effects, MDE reporter, max_green enforcement, cross-restart replay high-water-mark, spillback-cap, payload size/depth bound.
 
 ---
 
@@ -262,7 +262,7 @@ Fully corroborated and zero-evidence claims never escalate; they resolve determi
 **Safety floor (invariant set, SLM-independent).** The executed action always satisfies:
 - S1 min/max green bounds (`min_green=10`, `max_green=64`, §1.1/§2).
 - S2 protected yellow + all-red clearance on every transition (`yellow=3`, `r_ac=2`, §1.1/§2).
-- S3 anti-starvation: no approach skipped more than `max_skip=8` consecutive decisions (§1.1/§2; worst-case wait `T_starve≤93 s`, §1.1/§2); a corroborated emergency may defer it by at most one min_green+yellow.
+- S3 anti-starvation: no approach skipped more than `max_skip=3` consecutive decisions (PINNED per MASTER-SPEC §0 / §6.8; §1.1/§2; worst-case wait `T_starve≤43 s`, §1.1/§2); a corroborated emergency may defer it by at most one min_green+yellow.
 - S4 preemption only for corroborated emergencies (`admissible_ev`, §4).
 
 A violating SLM proposal is replaced by the deterministic choice (`_shield_validate`, §7.2-7.3).
@@ -270,7 +270,7 @@ A violating SLM proposal is replaced by the deterministic choice (`_shield_valid
 ---
 
 ## 9. Relationships (the couplings)
-`yellow,r_ac → L_lost → C_opt → {max_green, max_skip → T_starve}`; `min_green = Δ`; `yellow+r_ac ≤ min_green`; `k = δ/2`, detection latency ≈ 6-7 win (`⌈h/(δ−k)⌉=6` zero-noise bound, Siegmund expected ≈6.4), ARL₀ via Siegmund; `band ≈ 1σ benign residual` so z is standardised and CUSUM tables apply; `λ` couples coordination to local queue (0 = decoupled); `shield_margin` bounds SLM↔MaxPressure divergence (orthogonal to λ); `ev_horizon = v_free·(min_green+yellow+processing)`; `tol = clock_skew_bound + sensing_latency`; the same signed `release` feeds both conservation and coordination (unification 1); the conservation flag is the SLM escalation trigger (unification 2, formalised as predicate A1 in §8).
+`yellow,r_ac → L_lost → C_opt → {max_green}; max_skip PINNED=3 (MASTER-SPEC §0/§6.8; not purely C_opt-derived) → T_starve`; `min_green = Δ`; `yellow+r_ac ≤ min_green`; `k = δ/2`, detection latency ≈ 6-7 win (`⌈h/(δ−k)⌉=6` zero-noise bound, Siegmund expected ≈6.4), ARL₀ via Siegmund; `band ≈ 1σ benign residual` so z is standardised and CUSUM tables apply; `λ` couples coordination to local queue (0 = decoupled); `shield_margin` bounds SLM↔MaxPressure divergence (orthogonal to λ); `ev_horizon = v_free·(min_green+yellow+processing)`; `tol = clock_skew_bound + sensing_latency`; the same signed `release` feeds both conservation and coordination (unification 1); the conservation flag is the SLM escalation trigger (unification 2, formalised as predicate A1 in §8).
 
 ---
 

@@ -1,3 +1,5 @@
+> **SUPERSEDED HISTORICAL RECORD (pre-2026-05-31-pivot).** Dated measurement log / transcript kept for the audit trail; the current thesis is in specs/001-edge-negotiator/MASTER-SPEC.md (Euston A501; self-referential coupling; CT-style accountability; Phi-4-mini). Forbidden-term hits below are historical, not current claims.
+
 # Professional codes and real-world attacks: an IoT infrastructure ethics analysis
 
 Autonomous IoT traffic systems — where each intersection runs its own SLM agent in a decentralised mesh — expose fundamental gaps in every major professional code of conduct. **None of the three codes analysed below were designed for systems where no single developer, operator, or organisation controls behaviour**, yet all three contain principles that apply with unexpected force to exactly this scenario. Part A maps the precise clauses; Part B grounds the analysis in verified, citable incidents where traffic and transport AI was attacked, fooled, or caused unintended harm.

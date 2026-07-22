@@ -1,8 +1,8 @@
 """Benchmark: MQTT fast-path transport vs the in-process bus baseline.
 
-DE-RISK SPIKE measurement (PROJECT-DECISION-BRIEF: the real-time control path is
-*signed messages over MQTT*). This script puts hard numbers on the question the
-brief leaves open: **is a real broker fast enough for the per-decision control
+DE-RISK SPIKE measurement (MASTER-SPEC.md: the real-time control path is
+*signed messages over MQTT*). This script puts hard numbers on the question
+MASTER-SPEC.md leaves open: **is a real broker fast enough for the per-decision control
 loop?** It measures end-to-end **publish -> verified-deliver** latency for a
 signed neighbour message over a live ``eclipse-mosquitto`` broker, and compares
 it against the in-process ``MessageBus`` doing the *same verification work* with
@@ -55,7 +55,7 @@ from mqtt_transport import (  # noqa: E402
     verify_received,
 )
 
-# 2x2 grid topology from the brief.
+# 2x2 grid topology from MASTER-SPEC.md.
 ADJACENCY = {
     "A0": ["A1", "B0"],
     "A1": ["A0", "B1"],

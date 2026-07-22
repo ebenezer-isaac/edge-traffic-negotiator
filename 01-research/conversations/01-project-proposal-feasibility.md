@@ -1,3 +1,5 @@
+> **SUPERSEDED HISTORICAL RECORD (pre-2026-05-31-pivot).** Dated measurement log / transcript kept for the audit trail; the current thesis is in specs/001-edge-negotiator/MASTER-SPEC.md (Euston A501; self-referential coupling; CT-style accountability; Phi-4-mini). Forbidden-term hits below are historical, not current claims.
+
 Decentralized Autonomous Traffic Optimization using Blockchain-Anchored Edge AI: A Feasibility Study and Research Roadmap
 Executive Summary
 The convergence of Edge AI, Small Language Models (SLMs), and Distributed Ledger Technology (DLT) is reshaping the architecture of industrial IoT systems. This report provides an exhaustive technical analysis of two proposed MSc dissertation projects, with a primary focus on "The Edge Negotiator," a system designed to facilitate decentralized traffic optimization via blockchain-anchored agentic negotiation. This study evaluates the feasibility, industry alignment, and academic merit of deploying Microsoft Foundry Local, Phi-3/4 Mini models, and Nethereum on resource-constrained hardware to solve complex coordination problems in air-gapped environments.

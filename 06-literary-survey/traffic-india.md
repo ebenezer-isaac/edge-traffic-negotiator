@@ -1,6 +1,17 @@
 # india-context.md
 
-India-context anchors for an LLM-driven traffic signal equity audit (UCL MSc Systems Engineering for IoT, Quarterly Equity Audit Protocol, SUMO/Lambeth–Southwark substrate, optional Bengaluru ORR–Marathahalli secondary chapter). Compiled 26 April 2026.
+> **Archived / superseded (2026-07-21).** This file is the output of `PROMPT8.md` under a since-dropped dissertation
+> framing (a Quarterly Equity Audit Protocol on a Lambeth/Southwark SUMO corridor, with an optional Bengaluru
+> secondary chapter). The current single source of truth is
+> [`../specs/001-edge-negotiator/MASTER-SPEC.md`](../specs/001-edge-negotiator/MASTER-SPEC.md): the substrate is the
+> real **Euston Road (A501)**, the only model is **Phi-4-mini**, and **equity/fairness auditing and the
+> Indian-regulatory-comparison chapter are not part of the current thesis** — there is no Bengaluru secondary
+> chapter and no live use for the Section B UK/India equity-metric adaptation matrix below. The underlying Indian
+> statutory, judicial, dataset and deployment-verification citations in Section A are retained as genuine
+> prior-art/reference material; Sections B and C describe the OLD equity-audit framing and must not be read as a
+> live specification.
+
+India-context anchors for an LLM-driven traffic signal equity audit (UCL MSc Systems Engineering for IoT, Quarterly Equity Audit Protocol, SUMO/Lambeth–Southwark substrate, optional Bengaluru ORR–Marathahalli secondary chapter). Compiled 26 April 2026. **[Superseded — see banner above.]**
 
 ---
 
@@ -125,7 +136,7 @@ India-context anchors for an LLM-driven traffic signal equity audit (UCL MSc Sys
 
 ---
 
-## Section B — Adaptation matrix (UK/EU → India)
+## Section B — Adaptation matrix (UK/EU → India) [archived — built for the dropped equity-audit protocol; no current use]
 
 | UK / EU ingredient | Indian equivalent (with `[short-tag]`) |
 |---|---|
@@ -142,7 +153,7 @@ India-context anchors for an LLM-driven traffic signal equity audit (UCL MSc Sys
 
 ---
 
-## Section C — Gap analysis and dissertation framing claim (≤600 words)
+## Section C — Gap analysis and dissertation framing claim (≤600 words) [archived — written for the dropped equity-audit protocol; the "Stott pillars," the CoT-faithfulness probe, and the blockchain framing below are all superseded by `MASTER-SPEC.md`]
 
 **(1) Stott-pillar coverage.** Indian-context sources strengthen all four Stott critique pillars, but unevenly. **S2 (equity operationalisation) is most strengthened**: Sambasivan et al. [`sambasivan-facct-2021`] reframe protected attributes as caste, religion, gender and Hijra/Adivasi sub-groups (not Western race); Ghosh [`ghosh-blr-equity-2022`] and Gangopadhyay [`gangopadhyay-mumbai-gini-2021`] supply ward-level Gini/PTAI methodology; Verma [`verma-mumbai-rawls-2026`] supplies an India Rawlsian Difference Principle benchmark. **S3 (evidential basis) is moderately strengthened but also exposed**: Theme 5 verification surfaced systematic vendor mis-attribution (BATCS is C-DAC + Arcadis IBI, not Siemens; Hyderabad HTRIMS is BEL, not TCS/NEC; Ahmedabad is NEC, not Honeywell), and confirmed that no peer-reviewed independent evaluation exists for any flagship Indian municipal AI traffic deployment — the absence itself is an equity-relevant finding. **S1 (CoT risk) is unchanged**: no India-specific CoT-faithfulness literature was located; the dissertation's bounded-CoT analysis remains UK/EU-anchored. **S4 (blockchain trade-offs) is unchanged**: no Indian peer-reviewed literature on Hyperledger Besu QBFT for municipal audit logging was surfaced; the IUDX architecture [`iudx-whitepaper`] uses a different consent-server pattern.
 
@@ -152,7 +163,7 @@ India-context anchors for an LLM-driven traffic signal equity audit (UCL MSc Sys
 
 **(4) India-specific data-protection constraint.** Yes — three points need express acknowledgement beyond UK GDPR: (i) **DPDPA Section 2(t) "personal data"** [`dpdpa-2023`] applies to any Bengaluru CCTV/ANPR-derived feature even though Section 16 cross-border transfer rules do not become enforceable until **13 May 2027** [`dpdp-rules-gsr843-2025`, `barandbench-dpdp-rules-2025`] — the dissertation's UCL Study-Away processing falls before this date but should be DPDPA-compliant by design; (ii) **no UK adequacy decision exists in either direction** as of April 2026 (ICO India guidance lists no regulation); (iii) **DPDPA contains no GDPR Art. 22 analogue** (no general right against solely-automated decision-making) [`prs-dpdp-bill-2023`] — relevant because the LLM controller's automated phase decisions cannot be challenged through Indian statutory ADM rights and instead must be argued via Puttaswamy proportionality [`puttaswamy-2017`, `puttaswamy-aadhaar-2018`].
 
-**(5) Verbatim India-context framing claim.** *"This dissertation's Quarterly Equity Audit Protocol is constitutionally anchored in Articles 14, 15, 16 and 21 of the Constitution of India [`constitution-india`] as elaborated by Puttaswamy (2017) [`puttaswamy-2017`] and Puttaswamy-Aadhaar (2018) [`puttaswamy-aadhaar-2018`]; data-protection compliance is governed by DPDPA 2023 [`dpdpa-2023`] and DPDP Rules 2025 [`dpdp-rules-gsr843-2025`], whose Section 16 cross-border-transfer regime is not enforceable until 13 May 2027 [`barandbench-dpdp-rules-2025`]; Indian fairness is operationalised through caste, religion, gender and Hijra/Adivasi sub-groups [`sambasivan-facct-2021`] using ward-level Gini/PTAI [`ghosh-blr-equity-2022`, `gangopadhyay-mumbai-gini-2021`] and Rawlsian Difference Principle [`verma-mumbai-rawls-2026`] benchmarks, with NITI MPI 2023 [`niti-mpi-2023`] as the IMD analogue; the strongest Indian municipal-AI traffic anchor is the Kerala Safe Kerala system upheld in V D Satheesan v State of Kerala [`keralacam-livelaw-2025`], while Bengaluru BATCS attribution is corrected to C-DAC CoSiCoSt + Arcadis IBI Group [`batcs-deccanherald-singh`, `batcs-spotgenie-2025`]."*
+**(5) Verbatim India-context framing claim [DO NOT paste into the current thesis — this is the OLD, dropped equity-audit claim, retained only as an archival record].** *"This dissertation's Quarterly Equity Audit Protocol is constitutionally anchored in Articles 14, 15, 16 and 21 of the Constitution of India [`constitution-india`] as elaborated by Puttaswamy (2017) [`puttaswamy-2017`] and Puttaswamy-Aadhaar (2018) [`puttaswamy-aadhaar-2018`]; data-protection compliance is governed by DPDPA 2023 [`dpdpa-2023`] and DPDP Rules 2025 [`dpdp-rules-gsr843-2025`], whose Section 16 cross-border-transfer regime is not enforceable until 13 May 2027 [`barandbench-dpdp-rules-2025`]; Indian fairness is operationalised through caste, religion, gender and Hijra/Adivasi sub-groups [`sambasivan-facct-2021`] using ward-level Gini/PTAI [`ghosh-blr-equity-2022`, `gangopadhyay-mumbai-gini-2021`] and Rawlsian Difference Principle [`verma-mumbai-rawls-2026`] benchmarks, with NITI MPI 2023 [`niti-mpi-2023`] as the IMD analogue; the strongest Indian municipal-AI traffic anchor is the Kerala Safe Kerala system upheld in V D Satheesan v State of Kerala [`keralacam-livelaw-2025`], while Bengaluru BATCS attribution is corrected to C-DAC CoSiCoSt + Arcadis IBI Group [`batcs-deccanherald-singh`, `batcs-spotgenie-2025`]."*
 
 ---
 

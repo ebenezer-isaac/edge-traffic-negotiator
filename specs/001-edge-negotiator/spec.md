@@ -7,17 +7,17 @@
 **Supervisors**: Dr A. Delibasi (UCL), L. Stott (Microsoft)
 **Input**: On-device SLMs at neighbouring traffic junctions coordinate to clear emergencies and handle incidents, and stay safe when a junction's coordination messages are compromised.
 
-> Authored in the GitHub Spec Kit format (Spec-Driven Development). This is the `spec.md` (the WHAT and WHY for stakeholders). Technology and build sequencing live in `plan.md` and `tasks.md`. Project facts are drawn from the canonical `03-implementation/PROJECT-PROPOSAL.md` and the measured results in `03-implementation/DEMO-REPORT.md`.
+> Authored in the GitHub Spec Kit format (Spec-Driven Development). This is the `spec.md` (the WHAT and WHY for stakeholders). Technology and build sequencing live in `plan.md` and `tasks.md`. The single source of truth for direction, scope, and framing is `MASTER-SPEC.md`; `03-implementation/PROJECT-PROPOSAL.md` is the earlier proposal and `03-implementation/DEMO-REPORT.md` records the measured fixture demo.
 
 ---
 
 ## 1. Overview (for business stakeholders)
 
-Neighbouring traffic signals increasingly coordinate (green waves, ambulance preemption). The moment they act on each other's messages, a faulty or hijacked junction can lie, and a naive coordinator acts on the lie: wasted green, starved side streets, or a road cleared for an ambulance that does not exist.
+Neighbouring traffic signals increasingly coordinate (green waves, ambulance preemption). The moment they act on each other's messages, a hijacked junction that still holds a valid key can lie, and a naive coordinator acts on the lie: wasted green, starved side streets, or a road cleared for an ambulance that does not exist.
 
-The Edge Negotiator is a corridor of traffic junctions that **coordinate to handle emergencies and incidents together**, each running a small AI model on the junction itself. A classical controller (MaxPressure) stays in charge by default and is the safety net; the AI is consulted only on the hard, ambiguous cases. Because junctions act on neighbours' reports, the system is built to **detect a compromised neighbour and degrade safely** rather than believe the lie.
+The Edge Negotiator is an on-device, **trust-preserving coordination layer** for a stretch of signalised junctions, each running a small AI model on the junction itself. A classical controller (MaxPressure) stays in charge by default and is the safety net; the AI is consulted only on the hard, ambiguous cases. A deterministic gate refuses a signed-but-uncorroborated emergency preemption from a compromised insider and clears physically-corroborated real emergencies; a signed, hash-chained accountability log (a Certificate-Transparency-style, quorum-anchored, cross-audited design credited to prior art, not claimed novel) makes every decision reconstructable.
 
-The headline value is coordinated emergency response. Robustness to a compromised junction is the property that makes that coordination safe to deploy.
+The genuinely new result is not a security mechanism and not a traffic-performance claim. It is a **measured characterisation** of exactly which stealthy insider deviations this layer can and cannot hold accountable, and one specific structural finding: the preemption attack controls the signal phase, which is *also* the variable that gates honest-witness coverage, so executing the attack opens the very coverage gap that would conceal it (the **self-referential coupling**). The honest boundary of what is accountable, not an unconditional guarantee, is the finding.
 
 ---
 
@@ -29,7 +29,7 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 ### Acceptance scenarios
 
 1. **Real ambulance, single junction**
-   **Given** an approved corridor with the system running, **when** an emergency vehicle is physically detected on a junction's own approach, **then** that junction preempts to clear it (local sensing is trusted and cannot be spoofed).
+   **Given** an approved corridor with the system running, **when** an emergency vehicle is physically detected on a junction's own approach, **then** that junction preempts to clear it as a bounded, transient response (local sensing is strong evidence but is itself spoofable: a lone keyless local reading cannot force *sustained* preemption, and repeated keyless-driven preemptions are charged against a per-junction budget).
 
 2. **Real ambulance, cross-junction coordination**
    **Given** an emergency vehicle that an upstream junction has already, independently sensed, **when** a downstream junction receives a signed advance claim for that vehicle, **then** the downstream junction pre-clears for it before arrival (the claim is corroborated by an independent sighting).
@@ -58,8 +58,8 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 
 - **FR-001** Junctions MUST exchange coordination messages over a channel that authenticates the sender against an approved-member registry and rejects unsigned, forged, replayed, or revoked messages.
 - **FR-002** Junctions MUST share what they physically sense (vehicle sightings, emergency vehicles) with adjacent junctions so the corridor can act together.
-- **FR-003** A junction MUST grant emergency preemption for a vehicle it physically detects on its own approach.
-- **FR-004** A junction MUST grant emergency preemption on a neighbour's advance claim only when an independent source corroborates it (a sighting from a junction other than the claimer, or its own local sensing).
+- **FR-003** A junction MUST grant a bounded, transient emergency preemption for a vehicle it physically detects on its own approach, but MUST NOT let a lone keyless local reading force sustained preemption, and MUST charge repeated keyless-driven preemptions against a per-junction budget (local sensing is spoofable).
+- **FR-004** A junction MUST grant sustained emergency preemption on a neighbour's advance claim only when independently-signed corroboration from at least two keys supports it (a signed sighting from a junction other than the claimer), recomputed from signed sighting records rather than a self-asserted count.
 - **FR-005** A junction MUST refuse preemption for an emergency claim that is authenticated but uncorroborated (the spoofed-emergency case), and remain on the classical controller.
 - **FR-006** The classical controller MUST be the default and the safety floor: every clear-cut safety decision is deterministic and never depends on the AI.
 - **FR-007** The AI MUST be invoked only on flagged, ambiguous cases (a detector-flagged anomaly the classical rule cannot settle), and its proposal MUST be validated by the deterministic safety net before execution.
@@ -78,11 +78,11 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 
 ## 4. Success criteria (business KPIs) *(measurable)*
 
-- **SC-001 Emergency-vehicle delay**: coordinated preemption reduces emergency-vehicle corridor time versus no preemption. *Measured baseline: 31 s faster over 30 paired runs.*
-- **SC-002 Spoof resistance**: every uncorroborated emergency claim is refused; zero false preemptions under a single compromised insider. *Measured: worst affected side-street wait held 16 s below a trust-everything controller.*
-- **SC-003 Cost of trust**: the evidence requirement adds a bounded, reported cost to genuine preemption. *Measured: 8 s of ambulance time versus blindly trusting, accepted.*
+- **SC-001 Emergency-vehicle delay**: enabling preemption reduces emergency-vehicle corridor time versus no preemption. *Measured on the fixture demo (StubAgent, deterministic gate): 31 s faster over 30 paired runs. This reflects preemption-on vs preemption-off, not coordination and not the SLM.*
+- **SC-002 Spoof resistance**: every signed-but-uncorroborated sustained-preemption claim is refused; zero false sustained preemptions under a single compromised insider (one corridor key). *Measured on the fixture demo: worst affected side-street wait held 16 s below a trust-everything controller.*
+- **SC-003 Cost of trust**: the evidence requirement adds a bounded, reported cost to genuine preemption. *Measured on the fixture demo: 8 s of ambulance time versus blindly trusting, accepted.*
 - **SC-004 No-harm guarantee**: the trust layer does not slow normal traffic beyond a pre-registered margin.
-- **SC-005 Detection quality**: precision, recall, and detection latency are reported across a sweep of lie sizes (the detectability envelope).
+- **SC-005 Characterisation quality**: precision, recall, and detection latency are reported across the deviation-magnitude axis to map the free-deviation boundary (which stealthy conservation-consistent deviations escape); the headline object is the phase-coupled coverage threshold measured on the real corridor, not a detection ROC.
 - **SC-006 Edge feasibility**: an on-device AI decision completes within the per-decision budget on Microsoft Foundry Local, with no cloud call. *Target budget: [NEEDS CLARIFICATION: agreed per-decision latency ceiling for production].*
 - **SC-007 Auditability**: every signed message and decision is recoverable from a tamper-evident log.
 
@@ -91,7 +91,7 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 ## 5. Constraints and non-functional requirements (technical)
 
 - **C-001 On the edge, no cloud, no retraining**: the deployed model is a frozen small model running locally (Microsoft Foundry Local). Training is permitted only for comparison baselines, never for the deployed model.
-- **C-002 Single trust domain**: one city authority, one administrative key; a permissioned key registry rather than a decentralised ledger.
+- **C-002 Single trust domain**: one city authority, one administrative key; a permissioned key registry. The accountability log is anchored to an external quorum of independent witnesses with a named cross-auditor (a Certificate-Transparency-style design credited to prior art); it is a permissioned, quorum-anchored append-only log, not an open consensus ledger, and it is not the contribution.
 - **C-003 Safety is deterministic**: hard minimum and maximum green, mandatory clearance intervals, and an anti-starvation override are owned by the controller and cannot be violated by the AI.
 - **C-004 Simulation substrate**: evaluation is in SUMO microsimulation (emergency-vehicle dynamics and lane blockage); results are relative-in-simulator, not absolute field numbers.
 - **C-005 Verifiable agent identity**: each junction has a cryptographic identity, the same agent-trust problem as Microsoft Entra Agent ID, made physical and measurable.
@@ -100,26 +100,30 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 
 ## 6. MVP scope
 
+**Substrate.** The evaluation substrate is the real **Euston Road (A501)**, a 3-4 signal stretch in central London (pre-built, committed). The synthetic four-junction arterial corridor is a **unit-test fixture only**, used for the deterministic fixture demo below.
+
 **In scope (MVP):**
-- The four-junction arterial corridor with the classical controller, signed coordination, registry, and plausibility check.
-- Coordinated emergency handling: local-sensing preemption plus corroborated downstream pre-clearing.
-- The live exploit-then-defend demonstration (real ambulance cleared; signed-but-spoofed emergency refused) with three modes (defended, trust-everything victim, no-preemption baseline).
-- Measured results over 30 paired runs with confidence ranges.
+- The signed coordination layer, registry, and plausibility check, exercised on the synthetic four-junction fixture with the classical controller and safety net.
+- Emergency handling: bounded keyless local-sensing preemption plus ≥2-key-corroborated downstream pre-clearing.
+- The live demonstration (real ambulance cleared; signed-but-spoofed sustained preemption refused) with three modes (defended, trust-everything victim, no-preemption baseline).
+- Measured results over 30 paired runs with confidence ranges (fixture demo, StubAgent + deterministic gate).
 
 **Out of scope (this MVP; tracked as next steps):**
-- Making normal-traffic green-wave coordination steer decisions, not only verify them (currently verified end to end, not yet causal).
+- The headline measurement of the self-referential coupling on Euston A501 (the phase-coupled coverage threshold and the free-deviation boundary).
+- Making the coordination term steer decisions: it is an inert structural zero, reported as such, not a traffic-performance experiment.
 - Coordinated incident reallocation around a blockage.
-- The real on-device model evaluation on Foundry Local (the demo uses a deterministic stand-in; the corroboration gate is deterministic, so the safety result is unchanged). When run, this is a characterization of the SLM against a well-tuned reference rule on ambiguous cases (Experiment 1), not a competition; a clean null, where the rule suffices, is a valid and reportable outcome.
-- A real-city arterial and a full demand sweep.
-- Defence against colluding insiders or a stolen administrative key.
+- The real on-device model evaluation on Foundry Local (the demo uses a deterministic stand-in; the corroboration gate is deterministic, so the safety result is unchanged). When run, the SLM is a self-contained co-equal contribution: a citation-faithful legal-reasoning note scored on citation-correctness and false-citation-rate against an un-rigged rule-to-text template, plus a characterised disambiguation classifier; a clean null (a demoted claim) leaves the SLM's presence intact.
+- The full Euston demand sweep calibrated to a named time-resolved source.
+- Defence against colluding insiders (≥2 keys), operator creation-time omission, or a stolen administrative key.
 
 ---
 
 ## 7. Current status (built vs next)
 
-- **Built and measured**: signed coordination, registry, plausibility check, classical controller and safety net, the corroboration gate, the four-junction corridor, the exploit-then-defend demo, and the 30-run metrics. In one defended run: 6 local-sensing preemptions, 7 corroborated downstream preemptions, 6 phantom claims withheld.
-- **Verified but not yet causal**: normal-traffic green-wave coordination (next build step).
-- **Designed, not yet run**: real on-device model on Foundry Local, characterized against a well-tuned reference rule on flagged ambiguous cases, reported either way including a null (see `experiment-1-slm-vs-rule.md`); incident reallocation; real-city net and demand sweep.
+- **Built and measured (synthetic fixture)**: signed coordination, registry, plausibility check, classical controller and safety net, the corroboration gate, the four-junction fixture, the live demo, and the 30-run metrics. In one defended run: 6 local-sensing preemptions, 7 corroborated downstream preemptions, 6 phantom claims withheld.
+- **Committed, not yet the measured headline**: the real Euston Road (A501) net and its edge map.
+- **Structural, not an experiment**: the normal-traffic coordination term (inert structural zero).
+- **Designed, not yet run**: the headline coupling measurement on Euston A501; the real on-device model on Foundry Local (SLM as a self-contained co-equal contribution: citation-faithful legal reasoning + disambiguation, reported either way including a claim-demoting null, see `experiment-1-slm-vs-rule.md`); incident reallocation; the full Euston demand sweep.
 
 ---
 

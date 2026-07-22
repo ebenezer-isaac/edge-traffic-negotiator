@@ -106,7 +106,7 @@ def main(argv=None) -> int:
     ap.add_argument("--transport", choices=["inprocess", "mqtt"], default="inprocess")
     ap.add_argument("--registry", choices=["memory", "besu"], default="memory")
     ap.add_argument("--agent", choices=["stub", "slm"], default="stub")
-    ap.add_argument("--network", choices=["grid2x2", "lambeth"], default="grid2x2")
+    ap.add_argument("--network", choices=["grid2x2", "euston"], default="grid2x2")
     ap.add_argument("--no-audit", action="store_true",
                     help="disable the signed audit log (default: on)")
     ap.add_argument("--sumo", action="store_true",

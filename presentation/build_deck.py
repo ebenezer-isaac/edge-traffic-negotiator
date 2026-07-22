@@ -38,7 +38,7 @@ st.left, st.top, st.width, st.height = Inches(0.8), Inches(2.1), Inches(11.7), I
 subph = s.placeholders[1]
 subph.left, subph.top, subph.width, subph.height = Inches(0.8), Inches(3.5), Inches(11.7), Inches(3.4)
 sub = subph.text_frame
-sub.text = "Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control"
+sub.text = "A Trust-Preserving Coordination Layer for Signalised Junctions: Characterising a Self-Referential Coupling in Compromised-Insider Emergencies"
 for line in [
     "UCL MSc Systems Engineering for IoT. Project pitch.",
     "Student 25153651, Ebenezer Veeraraju. Supervisors: Dr Akin Delibasi (UCL) and Lee Stott (Microsoft).",
@@ -50,46 +50,46 @@ for line in [
 
 # Slide 2 - Problem (Rubric I)
 bullets("The problem", [
-    "Traffic signals act blind to their neighbours, leaving coordination gains unused.",
-    "When junctions share data to coordinate, nothing confirms that data is genuine or correct.",
-    "Signals are safety-critical infrastructure: AI control is deployable only if inputs are trusted and auditable.",
-    "Originality: securing language-model coordination with verifiable identity and a physics-based check has no published precedent.",
+    "Emergency-vehicle preemption lets one signed message seize a junction's green phase, a lever a compromised insider key can pull without ever touching the road.",
+    "The question: in a compromised-insider emergency, what can be held accountable mechanically, and what remains a human or counsel judgment that an on-device reasoner cannot faithfully automate?",
+    "Signals are safety-critical infrastructure: preemption control is deployable only if a refused, uncorroborated claim is provably distinct from a cleared, physically corroborated one.",
+    "Originality: no published account measures where the attack lever and the witness coverage that would catch it are the SAME variable.",
 ])
 
 # Slide 3 - Literature (Rubric II, 35 pts)
 bullets("Background and the gap", [
-    "Mature but separate strands: language-model traffic control, MaxPressure control, cooperative-ITS spoof and fault detection, decentralized identity and blockchain PKI, and chain-of-thought faithfulness.",
-    "175 sources reviewed across the field, with 28 added for agent identity and spoof or fault detection.",
-    "The gap: nobody places authenticated identity and a vehicle-conservation check beneath language-model cross-junction coordination.",
-    "Research question: can authenticated, plausibility-checked agents coordinate a corridor while detecting spoofed or faulty inputs?",
-    "Honest limit: a consistency-respecting attacker can evade conservation checks (Xiao, 2026), so identity is a separate layer.",
+    "The accountability mechanism is not new: Certificate-Transparency-style, quorum-anchored, cross-audited logs (RFC 6962, CONIKS, A2M, TrInc, PeerReview, Kusters) are credited, not claimed novel.",
+    "The stealthy attack class is False Data Injection (Liu, Ning and Reiter, 2011; Teixeira and Sandberg); unobservability's topology-dependence is owned by Kosut (2011) and Hendrickx (2014).",
+    "The gap: nobody states or measures the coupling where the preemption attack's lever, the signal phase, is also the variable that gates honest-witness coverage.",
+    "The nearest competitor is Traffic-R1; the differentiator is the accountability role plus the measured coupling, not a claim that the SLM beats a rule or that coordination optimises traffic.",
+    "Honest limit: the coupling is a conditional lemma under explicit hypotheses (honest keys, quorum anchor), not an unconditional guarantee.",
 ])
 
 # Slide 4 - Methodology (Rubric III, method)
 bullets("Methodology", [
-    "Per-junction Phi-4-mini agents (Microsoft Foundry Local) coordinate signals in SUMO on a real Lambeth corridor.",
-    "A MaxPressure shield validates or overrides every decision: the model proposes, the shield disposes.",
-    "Signed messages plus a permissioned Hyperledger Besu registry verify the sender and revoke compromised junctions.",
-    "A vehicle-conservation check flags physically impossible reports; every decision is logged tamper-evidently.",
-    "The model outputs only a phase number, not reasoning, because chain-of-thought is an unfaithful explanation.",
+    "A deterministic real-time gate refuses signed-but-uncorroborated emergency preemption and clears physically corroborated real emergencies, on the real Euston Road (A501) corridor.",
+    "One frozen Phi-4-mini SLM per junction (Microsoft Foundry Local) proposes a phase from the raw waiting-vehicle counts; a deterministic MaxPressure shield validates or overrides every decision.",
+    "Fault output is split into two firewalled channels: a mechanically-verifiable provenance evidence pack with no verdict or accusation, and a counsel-gated internal triage note that names a key, never a person.",
+    "The self-referential coupling is stated and measured directly: executing the preemption attack changes the phase, which changes the coverage that would corroborate or refute it.",
+    "One severe, pre-registered measurement locates the honest boundary of that coupling on the real corridor, not an unconditional guarantee.",
 ])
 
 # Slide 5 - Evaluation + progress (Rubric III, evaluation)
 bullets("Evaluation and progress so far", [
-    "Baselines: fixed-time, MaxPressure, and uncoordinated versus coordinated agents.",
-    "Metrics: travel time, queue and throughput; detection precision, recall and latency; trust-layer overhead.",
-    "Rigour: pre-registered seeds, bootstrap confidence intervals, multiple-comparison correction.",
-    "Already working: MaxPressure beats fixed-time, and a live language-model junction ran 90 decisions with zero failures.",
+    "Measured characterisation: the free-deviation classes the gate does not stop (sub-margin piggyback inflation, keyless transient spoofing) versus the out-of-scope axes (colluding keys, quorum compromise, coverage below threshold).",
+    "SLM evaluation: citation-faithful legal-reasoning correctness against an un-rigged rule-to-text baseline, plus a characterised disambiguation classifier and a frozen-versus-hardened robustness tradeoff.",
+    "Rigour: pre-registered seeds, bootstrap confidence intervals, multiple-comparison correction; the coordination effect itself is reported as a structural zero, not a headline benefit.",
+    "Already working: the deterministic gate clears and refuses correctly on the fixture corridor, and a live SLM junction runs decisions end to end with zero failures.",
     "All code, scenario and documentation sit in a reproducible public repository.",
 ])
 
 # Slide 6 - Roadmap, confidence, risks
 bullets("Roadmap, confidence, and risks", [
-    "Next: cross-junction coordination, then identity and audit, then adversarial evaluation on the real corridor.",
-    "Confident: pipeline runs end to end; Phi-4-mini runs on a laptop; the shield is provably stable; identity is literature-backed.",
-    "Latency risk: terse output, pause while thinking, skip quiet junctions, cap model-controlled junctions.",
-    "Trust risk: scope claims to clumsy or faulty data; the identity layer covers deliberate attacks.",
-    "Data risk: calibrate demand from Department for Transport counts using SUMO routeSampler.",
+    "Next: the Euston Road (A501) net build via netconvert, the pre-registered severe measurement of the coupling's boundary, and the SLM Job A/B/C characterisation.",
+    "Confident: the deterministic gate and audit log are built and tested; the coupling claim is stated as a conditional lemma so it cannot overreach the evidence.",
+    "Coupling risk: the measured boundary may be narrower than hoped; the honest boundary itself, not a guarantee, is the reported finding either way.",
+    "SLM risk: a pre-committed kill criterion can demote the SLM's claim without removing the SLM's presence in the architecture.",
+    "Data risk: calibrate demand from Department for Transport counts using SUMO routeSampler once the real net exists.",
 ])
 
 out = __file__.rsplit("\\", 1)[0].rsplit("/", 1)[0] + "/25153651_EbenezerVeeraraju_ADelibasi_COMP0234_SysIoT_Pitch_2324.pptx"

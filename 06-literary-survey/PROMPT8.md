@@ -1,8 +1,20 @@
 # Prompt 8 — India compliance, equity precedent, and Bengaluru-corridor anchors for the Edge Negotiator dissertation
 
+> **Archived / superseded (2026-07-21).** This prompt was written under a since-dropped dissertation framing (a
+> Quarterly Equity Audit Protocol on a Lambeth/Southwark SUMO corridor, evaluating Qwen3-4B + Phi-4-mini anchored to
+> Hyperledger Besu QBFT). That framing is superseded by
+> [`../specs/001-edge-negotiator/MASTER-SPEC.md`](../specs/001-edge-negotiator/MASTER-SPEC.md): the substrate is now
+> the real **Euston Road (A501)**, the only model is **Phi-4-mini**, the accountability mechanism is a
+> Certificate-Transparency-style quorum-anchored + cross-audited log (conceded to prior art, not a blockchain
+> contribution), and **equity/fairness auditing and the Indian-regulatory-comparison chapter are not part of the
+> current thesis** — there is no Bengaluru secondary chapter. This file is retained only as an archived record of
+> the original research scope and its underlying Indian statutory/case-law/dataset citations (genuine prior-art
+> references are not deleted); its framing paragraphs below describe the OLD, no-longer-current brief and must not
+> be read as a live specification.
+
 ## Context (do not skip — this constrains the answer)
 
-This is the eighth prompt in a UCL MSc Systems Engineering for IoT dissertation literature survey. The previous seven prompts produced 147 papers across CoT faithfulness, deterministic SLM + classical fallback, Microsoft commercial intelligence, multi-agent robotics, traffic-LLM control, and edge blockchain — all global / UK / China / EU-anchored. The dissertation primary contribution is **locked**: a Quarterly Equity Audit Protocol, executed in SUMO on the Elephant & Castle–Brixton corridor (Lambeth/Southwark, London), evaluating an LLM-driven traffic signal controller (Qwen3-4B + Phi-4-mini, MaxPressure shield, structured-JSON+bounded-CoT logging anchored to Hyperledger Besu QBFT). The protocol joins SUMO output to LSOA boundaries, IMD 2019 deciles, and ONS 2021 Census ethnicity, computes Gini / Rawlsian / DIR / pedestrian-parity, and reports under the UK ATRS template.
+This is the eighth prompt in a UCL MSc Systems Engineering for IoT dissertation literature survey. The previous seven prompts produced 147 papers across CoT faithfulness, deterministic SLM + classical fallback, Microsoft commercial intelligence, multi-agent robotics, traffic-LLM control, and edge blockchain — all global / UK / China / EU-anchored. **[Original, now-superseded framing:]** the dissertation primary contribution was at the time understood to be **locked**: a Quarterly Equity Audit Protocol, executed in SUMO on the Elephant & Castle–Brixton corridor (Lambeth/Southwark, London), evaluating an LLM-driven traffic signal controller (Qwen3-4B + Phi-4-mini, MaxPressure shield, structured-JSON+bounded-CoT logging anchored to Hyperledger Besu QBFT). The protocol joined SUMO output to LSOA boundaries, IMD 2019 deciles, and ONS 2021 Census ethnicity, computed Gini / Rawlsian / DIR / pedestrian-parity, and reported under the UK ATRS template. None of this is current — see the banner above.
 
 Two reasons this prompt exists:
 1. The student will spend up to 90 days of dissertation work remotely from India under UCL Study Away (Academic Manual §3.5.2). The methodology chapter must situate the audit alongside the Indian regulatory regime, not only the EU AI Act / UK ATRS / US NIST AI RMF triad.
@@ -145,7 +157,7 @@ Flat list of every URL from Section A, in the order they appear, suitable for a 
 - **Citation freshness.** Prefer 2024–2026 sources; older sources only when statutory (Constitution, Census 2011) or precedential (Puttaswamy 2017/2018).
 - **No paywalled-only sources** unless absolutely no open alternative exists. Where a source is paywalled, name an open mirror or institutional repository.
 - **Verify dataset licences.** Every dataset cited (UVH-26, IDD, DATS_2022, IUDX catalogues, Smart Cities portal data) must have an explicitly named licence in the relevance sentence.
-- **Do not propose new methodology, models, hardware, or architecture.** This prompt's job is purely to surface jurisdictional, evidential, and corridor-anchor sources. The technical substrate (Qwen3-4B + Phi-4-mini + MaxPressure shield + Besu QBFT + Tessera + SUMO Lambeth) is locked from the previous seven prompts.
+- **Do not propose new methodology, models, hardware, or architecture.** This prompt's job is purely to surface jurisdictional, evidential, and corridor-anchor sources. **[Superseded — see the archival banner at the top of this file.]** At the time this prompt was written the technical substrate was understood to be Qwen3-4B + Phi-4-mini + MaxPressure shield + Besu QBFT + Tessera + SUMO Lambeth; the current substrate per `MASTER-SPEC.md` is Phi-4-mini only, on the real Euston Road (A501), with a Certificate-Transparency-style quorum-anchored + cross-audited accountability log (Besu/Tessera demoted to a cited prior-art anchor option, not the core mechanism).
 
 ## Stop conditions
 

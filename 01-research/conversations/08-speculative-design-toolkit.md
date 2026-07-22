@@ -1,3 +1,5 @@
+> **SUPERSEDED HISTORICAL RECORD (pre-2026-05-31-pivot).** Dated measurement log / transcript kept for the audit trail; the current thesis is in specs/001-edge-negotiator/MASTER-SPEC.md (Euston A501; self-referential coupling; CT-style accountability; Phi-4-mini). Forbidden-term hits below are historical, not current claims.
+
 # Speculative design toolkit for The Edge Negotiator
 
 **Decentralized autonomous traffic systems sit at the intersection of systems thinking, edge AI, and speculative design — and Dunne & Raby's Future Cones framework offers the ideal scaffold for imagining how a Code of Conduct for such a system might function across probable, plausible, possible, and preferable futures.** This report synthesizes the theoretical frameworks, technical realities, narrative techniques, and academic writing strategies needed to produce 5–6 vivid speculative scenarios for UCL COMP0184 coursework. It draws together Meadows' leverage points, Sterling's diegetic prototypes, real-world edge AI deployments, and the rhetorical craft of design fiction into a single actionable resource.

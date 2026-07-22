@@ -1,12 +1,12 @@
 """Permissioned agent registry with a tamper-evident (hash-chained) audit log.
 
 Local stand-in for the future on-chain Hyperledger Besu registry described in
-PROJECT-DECISION-BRIEF.md (Wk 5-6). The interface is deliberately
+MASTER-SPEC.md (Wk 5-6). The interface is deliberately
 **ledger-agnostic**: callers see register / revoke / is_approved / public_key and
 an append-only `audit_log`; whether that log lives in memory (here) or on Besu
 later is an implementation detail behind this class.
 
-Trust model (brief §6): this records *who is currently approved* and gives a
+Trust model (MASTER-SPEC.md §6): this records *who is currently approved* and gives a
 non-repudiable, tamper-evident history of every registration/revocation. It does
 NOT vouch for the honesty of an approved agent — only its membership.
 

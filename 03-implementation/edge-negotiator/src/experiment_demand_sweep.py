@@ -68,7 +68,7 @@ def parse_run(path: str) -> dict:
 
     groups = {j: v for j, v in per_junction.items() if v}
     fair = em.fairness_report(groups) if groups else {
-        "jain": None, "gini": None, "rawlsian_worst_group": None,
+        "jain": None, "gini": None, "worst_case_group": None,
         "utilitarian_mean_group": None, "n_groups": 0}
     wc = em.worst_case_report(network) if network else {"max": None, "p95": None, "n": 0}
     # Attack harm is TARGETED at J2's cross street, so the worst case there is the
@@ -80,7 +80,7 @@ def parse_run(path: str) -> dict:
         "net_mean_timeloss": round(em.utilitarian_mean(network), 3) if network else None,
         "amb_duration": amb_dur,
         "jain": fair["jain"], "gini": fair["gini"],
-        "rawlsian_worst_junction": fair["rawlsian_worst_group"],
+        "worst_case_junction": fair["worst_case_group"],
         "worst_max": wc["max"], "worst_p95": wc["p95"],
         "worst_max_j2": round(max(j2), 3) if j2 else None,
     }
@@ -131,7 +131,7 @@ def run(seeds=30, scales=SCALES, modes=MODES, steps=STEPS) -> dict:
     # Per (scale, mode) means of each metric.
     means = {}
     metric_keys = ("throughput", "net_mean_timeloss", "amb_duration", "jain",
-                   "gini", "rawlsian_worst_junction", "worst_max", "worst_p95",
+                   "gini", "worst_case_junction", "worst_max", "worst_p95",
                    "worst_max_j2")
     for scale in scales:
         for mode in modes:

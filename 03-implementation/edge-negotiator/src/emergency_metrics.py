@@ -12,8 +12,9 @@ Four fairness ideologies (traffic-signal-control fairness literature)
                    to being equal, scaled so 1.0 = perfectly equal.
   Gini coefficient egalitarian ideology: standard inequality measure from
                    welfare economics; 0.0 = perfect equality.
-  Rawlsian worst   maximin ideology (Rawls' difference principle): judge the
-                   system by its WORST-OFF member, not its average.
+  Worst-case max   maximin ideology: worst-case (maximin) delay across
+                   groups/junctions -- judge the system by its WORST-OFF
+                   member, not its average.
   Utilitarian mean classic aggregate-welfare ideology: judge the system by
                    its mean outcome (what a plain average already reports,
                    included here so all four ideologies are reported side by
@@ -53,7 +54,7 @@ The two ABSOLUTE (unit-bearing) metrics have no defined value over zero
 observations, so they follow this repo's existing NaN-for-undefined
 convention (see metrics.completion_rate) rather than silently returning 0.0,
 which would be indistinguishable from a genuine zero-delay observation:
-  rawlsian_worst([]) is NaN
+  worst_case_max([]) is NaN
   utilitarian_mean([]) is NaN
   p95([]) is NaN
 """
@@ -66,7 +67,7 @@ __all__ = [
     "EmergencyMetricsError",
     "jains_index",
     "gini",
-    "rawlsian_worst",
+    "worst_case_max",
     "utilitarian_mean",
     "p95",
     "fairness_report",
@@ -172,10 +173,9 @@ def gini(values: List[float]) -> float:
     return weighted / (n * total)
 
 
-def rawlsian_worst(values: List[float]) -> float:
-    """Rawlsian (maximin) worst-case metric: John Rawls' difference
-    principle -- judge a distribution by its WORST-OFF member, not its
-    average.
+def worst_case_max(values: List[float]) -> float:
+    """Worst-case (maximin) delay metric: judge a distribution by its
+    WORST-OFF member, not its average.
 
     Formula: max(x)
 
@@ -185,7 +185,7 @@ def rawlsian_worst(values: List[float]) -> float:
     """
     if not values:
         return math.nan
-    _validate_values(values, "rawlsian_worst")
+    _validate_values(values, "worst_case_max")
     return float(max(values))
 
 
@@ -262,7 +262,7 @@ def fairness_report(group_delays: Dict[str, List[float]]) -> Dict[str, float]:
         {
           "jain": Jain's index over the per-group means,
           "gini": Gini coefficient over the per-group means,
-          "rawlsian_worst_group": max per-group mean (the worst-off group),
+          "worst_case_group": max per-group mean (the worst-off group),
           "utilitarian_mean_group": mean of the per-group means,
           "n_groups": number of groups,
         }
@@ -282,7 +282,7 @@ def fairness_report(group_delays: Dict[str, List[float]]) -> Dict[str, float]:
     return {
         "jain": jains_index(group_means),
         "gini": gini(group_means),
-        "rawlsian_worst_group": rawlsian_worst(group_means),
+        "worst_case_group": worst_case_max(group_means),
         "utilitarian_mean_group": utilitarian_mean(group_means),
         "n_groups": len(group_means),
     }
@@ -301,7 +301,7 @@ def worst_case_report(per_vehicle_delays: List[float]) -> Dict[str, float]:
     Empty input: max/p95 are NaN (undefined), n is 0.
     """
     return {
-        "max": rawlsian_worst(per_vehicle_delays),
+        "max": worst_case_max(per_vehicle_delays),
         "p95": p95(per_vehicle_delays),
         "n": len(per_vehicle_delays),
     }

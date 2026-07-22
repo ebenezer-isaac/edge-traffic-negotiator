@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Anchor SUMO demand to DfT AADF link counts.
+"""Anchor SUMO demand to DfT AADF link counts, for the Euston Road (A501)
+corridor.
 
-Pipeline role (see LAMBETH-EXTRACTION.md section 2):
+Pipeline role (corridor demand-calibration extraction):
   AADF (vehicles/day, all directions) -> hourly peak flow (veh/h on a SUMO edge)
   -> SUMO edgeData <interval> file -> routeSampler count calibrator.
 
@@ -30,7 +31,11 @@ from xml.sax.saxutils import quoteattr
 
 import sumolib  # type: ignore
 
-# Corridor bbox W,S,E,N (must match extract_corridor.ps1)
+# Corridor bbox W,S,E,N (must match extract_corridor.ps1).
+# PENDING: this bbox is the PRIOR (Lambeth) corridor's bounds, kept only so the
+# script remains runnable pending the Euston Road (A501) net build; it must be
+# re-derived to the real Euston Road corridor bbox before this pipeline is run
+# against euston_spine.net.xml.
 BBOX = (-0.1190, 51.4600, -0.0930, 51.4980)
 PEAK_FRACTION_DEFAULT = 0.085  # assumed peak-hour share of AADF (tune per scenario)
 SNAP_RADIUS_M = 60.0           # max distance count-point -> edge to accept a match

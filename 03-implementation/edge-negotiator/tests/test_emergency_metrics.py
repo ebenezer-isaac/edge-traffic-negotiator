@@ -6,7 +6,7 @@ Run from the project root with the venv interpreter:
 Context: the supervisors asked for system-level trade-offs -- "fairness across
 junctions" and "worst-case guarantees" -- reported alongside throughput. This
 module implements all four fairness ideologies from the traffic-signal-control
-literature (Jain, Gini, Rawlsian, utilitarian) plus a worst-case (tail) report,
+literature (Jain, Gini, worst-case/maximin, utilitarian) plus a worst-case (tail) report,
 as pure functions of plain delay lists (no SUMO, no TraCI).
 
 These tests exist to BREAK the metrics, per repo testing philosophy: known-value
@@ -35,9 +35,9 @@ from emergency_metrics import (  # noqa: E402
     gini,
     jains_index,
     p95,
-    rawlsian_worst,
     summarize,
     utilitarian_mean,
+    worst_case_max,
     worst_case_report,
 )
 
@@ -184,29 +184,29 @@ class TestGini:
 
 
 # =========================================================================== #
-# rawlsian_worst                                                               #
+# worst_case_max                                                               #
 # =========================================================================== #
-class TestRawlsianWorst:
+class TestWorstCaseMax:
     def test_matches_max(self):
         values = [3.0, 7.0, 2.0, 19.5]
-        assert rawlsian_worst(values) == pytest.approx(max(values))
+        assert worst_case_max(values) == pytest.approx(max(values))
 
     def test_single_element(self):
-        assert rawlsian_worst([42.0]) == pytest.approx(42.0)
+        assert worst_case_max([42.0]) == pytest.approx(42.0)
 
     def test_empty_is_nan(self):
-        assert math.isnan(rawlsian_worst([]))
+        assert math.isnan(worst_case_max([]))
 
     def test_negative_value_rejected(self):
         with pytest.raises(EmergencyMetricsError, match="negative"):
-            rawlsian_worst([1.0, -5.0])
+            worst_case_max([1.0, -5.0])
 
     def test_random_vectors_match_builtin_max(self):
         rng = random.Random(55)
         for _ in range(100):
             n = rng.randint(1, 50)
             values = [rng.uniform(0.0, 500.0) for _ in range(n)]
-            assert rawlsian_worst(values) == pytest.approx(max(values))
+            assert worst_case_max(values) == pytest.approx(max(values))
 
 
 # =========================================================================== #
@@ -291,7 +291,7 @@ class TestFairnessReport:
         # Means: A=10.0, B=10.0, C=45.0
         report = fairness_report(group_delays)
         assert report["n_groups"] == 3
-        assert report["rawlsian_worst_group"] == pytest.approx(45.0)
+        assert report["worst_case_group"] == pytest.approx(45.0)
         assert report["utilitarian_mean_group"] == pytest.approx((10.0 + 10.0 + 45.0) / 3)
         assert report["jain"] == pytest.approx(jains_index([10.0, 10.0, 45.0]))
         assert report["gini"] == pytest.approx(gini([10.0, 10.0, 45.0]))
@@ -310,7 +310,7 @@ class TestFairnessReport:
         assert report["n_groups"] == 0
         assert report["jain"] == pytest.approx(1.0)
         assert report["gini"] == pytest.approx(0.0)
-        assert math.isnan(report["rawlsian_worst_group"])
+        assert math.isnan(report["worst_case_group"])
         assert math.isnan(report["utilitarian_mean_group"])
 
     def test_group_with_empty_delay_list_rejected(self):

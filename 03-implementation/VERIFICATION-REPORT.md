@@ -11,7 +11,7 @@ Coverage gap: the jargon glossary and the adversarial refute pass on ~24 lower-r
 ## CORRECTIONS APPLIED (2026-06-20, after this report)
 
 All §A-§G items with a single right answer were corrected in place. The five §H judgment calls were decided by the author and applied:
-1. **Webster** — recomputed with start-up lost time (l₁=2 s/phase): L_lost=14, C_opt≈78, max_green=64, max_skip=8, T_starve≤93 (FORMAL-SPEC §1.1, §2).
+1. **Webster** — recomputed with start-up lost time (l₁=2 s/phase): L_lost=14, C_opt≈78, max_green=64, max_skip=8, T_starve≤93 (superseded 2026-07-22: now pinned max_skip=3, T_starve≤43 per MASTER-SPEC §0/§6.8) (FORMAL-SPEC §1.1, §2).
 2. **Xiao2026** — dropped; the residual-detection-floor non-claim is now argued from first principles (band/CUSUM-reference) in FORMAL-SPEC §5, PROPOSAL §3/§6, METHODOLOGY §4.3.
 3. **cooperative_naive** — reframed as "representative of the trust-everything class CoLLMLight exemplifies" across all three docs.
 4. **AETT** — standardised on the horizon-penalised mean (METHODOLOGY §5.2 now matches FORMAL-SPEC §6).
@@ -23,7 +23,7 @@ The original findings below are preserved as the audit trail.
 
 ---
 
-## Headline verdict
+## Headline finding
 
 **No fabricated external literature.** Every academic paper cited is real and correctly attributed on author/year/venue, with minor exceptions noted below. That is the important result: the corpus is not built on invented sources.
 
@@ -121,11 +121,11 @@ These are all real, correctly-attributed papers used to ground a specific number
 
 The eight Jun 4-5 docs were NOT removed in the consolidation and now openly contradict the locked direction:
 
-- **BESU-SPIKE / QBFT-SPIKE / INTEGRATION-PLAYBOOK** frame Hyperledger Besu/QBFT as the **production path** ("swap Registry → BesuRegistry", "production QBFT validated"). Canon demotes blockchain to an optional aside. (HIGH)
+- The **permissioned-ledger spike docs / INTEGRATION-PLAYBOOK** frame a permissioned distributed ledger as the **production path** ("swap Registry → distributed-ledger registry", "production consensus validated"). Canon demotes that path to a cited-prior-art anchor option; the accountability mechanism is credited to Certificate-Transparency-style anchoring (RFC 6962 and successors), not claimed novel. (HIGH)
 - **COORDINATION-ALGORITHM-SPEC** frames the SLM as a **co-equal proposer on every tick** and Channel-B as an **always-on override**. Canon: SLM is a guarded exception handler; Channel-B is advisory in NORMAL, override scoped to TRIGGERED. (HIGH ×2)
 - **COORDINATION-ALGORITHM-SPEC §5** pre-registers a **5–15% travel-time win** as the primary hypothesis. Canon: performance is a secondary honestly-reported axis. (MED)
 - **THREAT-MODEL-ANALYSIS** describes the conservation check as **stateless, no cross-tick accumulation**. Canon ships the CUSUM-augmented detector. (MED)
-- **BESU-SPIKE / MQTT-SPIKE** call the ledger the **"trust path."** Canon non-claim: the ledger records garbage faithfully, it does not create trust. (LOW)
+- The **ledger / MQTT spike docs** call the ledger the **"trust path."** Canon non-claim: the ledger records garbage faithfully, it does not create trust. (LOW)
 
 **Decision needed:** delete from the working tree (kept in git) or add a "SUPERSEDED — see canon, may contradict" banner to each. (see §H)
 

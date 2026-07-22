@@ -1,34 +1,49 @@
 # Literary survey — index
 
-> **Direction note (2026-05-31).** The dissertation has **pivoted**. The single source of truth is now
-> [`../03-implementation/PROJECT-DECISION-BRIEF.md`](../03-implementation/PROJECT-DECISION-BRIEF.md), which supersedes the
-> equity-audit framing in `00-SCOPE-LOCKIN.md` (supervisor-approved 2026-05-31). The new spine —
-> *The Edge Negotiator: Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control* —
-> pairs **authenticated agent identity** (Ed25519/ECDSA signatures + an on-chain permissioned registry with
-> `revoke()`) and a **vehicle-conservation plausibility check** for spoof/fault detection with **SLM (Phi-4-mini)
-> cross-junction coordination**, all evaluated in SUMO on a real Lambeth corridor. The **equity-audit protocol and
-> the CoT-faithfulness probe are dropped as contributions**; the CoT-faithfulness survey is repurposed as the
-> *design justification* for terse SLM output.
+> **Direction note (2026-07-21, supersedes the 2026-05-31 note below).** The dissertation has **pivoted again**.
+> The single source of truth is now
+> [`../specs/001-edge-negotiator/MASTER-SPEC.md`](../specs/001-edge-negotiator/MASTER-SPEC.md) (the
+> `PROJECT-DECISION-BRIEF.md` this note used to point to has been deleted; do not cite it). The frozen thesis —
+> *an on-device, trust-preserving coordination layer for signalised junctions, plus a measured characterisation of
+> exactly which stealthy insider deviations it can and cannot hold accountable* — has three contributions: **(a)** a
+> deterministic real-time gate that refuses signed-but-uncorroborated emergency preemption from a compromised
+> insider and clears physically-corroborated real emergencies; **(b)** a **Certificate-Transparency-style,
+> quorum-anchored, cross-audited, signature-verified accountability log** (mechanism credited to prior art —
+> RFC 6962, CONIKS, A2M, TrInc, PeerReview, Küsters — cited, NOT claimed novel); and **(c)** the novel object, a
+> **self-referential coupling** — the preemption attack controls the signal phase, which is also the variable that
+> gates honest-witness coverage, so executing the attack opens the very coverage desert that conceals it, stated as
+> a conditional lemma and measured on the real **Euston Road (A501)** corridor (the synthetic 2×2 grid is a
+> unit-test fixture only; Lambeth/Southwark/Brixton/Elephant & Castle/A23/A3 are dropped). A frozen on-device
+> **Phi-4-mini** SLM (the only model; Qwen3-4B is dropped) is the mandatory, self-contained co-equal contribution
+> (citation-faithful legal-reasoning note + disambiguation + frozen-vs-hardened tradeoff) — it is NOT the instrument
+> of the boundary map. The **equity-audit framing** (Gini/Rawlsian/Disparate Impact/ATRS-as-an-equity-metric)
+> **and the CoT-faithfulness probe are dropped as contributions** (equity/fairness auditing is not part of the
+> current thesis). What is **retained, reframed** is the UK legal-accountability treatment and the India
+> **comparative-accountability lens** (lit-review §2.8.2/§2.8.3): ATRS survives only as a transparency-and-logging
+> standard, and India only as a comparative accountability lens — not as equity metrics. The CoT-faithfulness
+> literature is retained only as background for why the SLM's internal reasoning note is validated against cited
+> statute and never trusted, not as a standalone experiment.
 
 **175 papers** total: 147 across seven completed deep-research prompts, plus **28 added by Prompt 9** (2026-05-31), of
-which **1 (`ssiframe25`) was dropped as redundant**. Prompt 8 (India context) remains in flight. The seven original
-prompts **remain valid background** — the traffic-LLM, RL-baseline, blockchain, CoT-faithfulness, and edge-hardware
-surveys all still ground the pivoted direction. The Prompt-9 additions are **staged, not yet merged** into the locked
-`registry.json` (see "How to cite"). Do not add, remove, or re-tag papers in `registry.json` without a supervisor
-instruction.
+which **1 (`ssiframe25`) was dropped as redundant**. Prompt 8 (India context) is superseded — see its file for the
+current status. The seven original prompts **remain valid background** for the parts that do not conflict with the
+current thesis — the traffic-LLM, RL-baseline, cited-DLT-benchmark, CoT-faithfulness, and edge-hardware surveys still
+ground the pivoted direction; the equity-audit and India-regulatory-comparison content within them does not. The
+Prompt-9 additions are **staged, not yet merged** into the locked `registry.json` (see "How to cite"). Do not add,
+remove, or re-tag papers in `registry.json` without a supervisor instruction.
 
 ## File map
 
 | File | Theme | Papers | Role under the pivoted direction |
 |---|---|---|---|
-| `priliminary-research.md` | Prompt 1 — CoT faithfulness in sub-7B SLMs and safety-critical control | 25 | **Repurposed as the justification for terse SLM output** (no chain-of-thought): explicit CoT traces are post-hoc rationalisations, not faithful causal records, so emitting reasoning adds latency with no trustworthy interpretability benefit. No longer a separate experiment/probe. |
-| `deterministic-slm.md` | Prompt 2 — Deterministic SLM + classical fallback + tamper-evident ledger across 7 domains | 44 | Background: grounds the MaxPressure-shield "SLM proposes, deterministic disposes" pattern and the tamper-evident audit log. |
-| `microsoft-foundry.md` | Prompt 3 — Microsoft commercial intelligence | 5 MSR papers + case-study coverage | Background: Foundry Local / Phi deployment context for the SLM agents. |
-| `robotics.md` | Prompt 4 — LLM/SLM orchestration over deterministic low-level control in multi-agent CPS | 18 | Background: multi-agent CPS orchestration precedent for cross-junction coordination. |
-| `traffic-llms.md` | Prompt 6 — Traffic signal control with LLMs/SLMs | 52 | Core traffic-domain background and baseline anchor (Traffic-R1, LLMLight, CoLLMLight, CoLight, MaxPressure, etc.). |
-| `edge-blockchain.md` | Prompt 7 — Permissioned blockchain & PQC for AI audit | 20 | Background: grounds the Besu permissioned-ledger registry + audit log (async trust path, never in the control loop). |
-| `PROMPT8.md` | Prompt 8 — India compliance, equity precedent, Bengaluru-corridor anchors | (in flight) | Background only; equity precedent de-emphasised after the pivot. |
-| `PROMPT9.md` | **Prompt 9 (2026-05-31) — Identity/registry + physical-consistency/spoofing detection** | **28 added (1 dropped)** | **Directly grounds the new integrity layer.** Catalogues the 28 new papers in two pillars (see below). |
+| `priliminary-research.md` | Prompt 1 — CoT faithfulness in sub-7B SLMs and safety-critical control | 25 | Background: motivates why the SLM's internal, non-evidential, counsel-gated reasoning note is validated against cited statute and never trusted as a machine verdict — not a standalone CoT-faithfulness experiment/probe. |
+| `deterministic-slm.md` | Prompt 2 — Deterministic SLM + classical fallback + tamper-evident ledger across 7 domains | 44 | Background: grounds the "SLM proposes, deterministic MaxPressure shield disposes" pattern and the tamper-evident audit log. |
+| `microsoft-foundry.md` | Prompt 3 — Microsoft commercial intelligence | 5 MSR papers + case-study coverage | Background: Foundry Local / Phi-4-mini deployment context for the frozen on-device SLM. |
+| `robotics.md` | Prompt 4 — LLM/SLM orchestration over deterministic low-level control in multi-agent CPS | 18 | Background: multi-agent CPS orchestration precedent for the deterministic-shield-validates-every-SLM-decision pattern. |
+| `traffic-llms.md` | Prompt 6 — Traffic signal control with LLMs/SLMs | 52 | Core traffic-domain background and baseline anchor (Traffic-R1, LLMLight, CoLLMLight, CoLight, MaxPressure, etc.); confront Traffic-R1 on the accountability role + measured coupling, not on coordination performance. |
+| `edge-blockchain.md` | Prompt 7 — Permissioned blockchain & PQC for AI audit | 20 | Background only: the cited Besu/QBFT/Tessera/GoQuorum benchmarks are prior-art anchor OPTIONS for the CT-style quorum witness set, not the core mechanism — the accountability layer's mechanism is conceded to Certificate-Transparency-style prior art (RFC 6962 et al), never foregrounded as a blockchain contribution. |
+| `PROMPT8.md` | Prompt 8 — India compliance, equity precedent, Bengaluru-corridor anchors | (superseded) | **Archived.** Written for the dropped Quarterly Equity Audit Protocol; equity/fairness auditing and the Indian-regulatory-comparison chapter are not part of the current thesis. Retained for its underlying Indian-law citations only. |
+| `PROMPT9.md` | **Prompt 9 (2026-05-31) — Identity/registry + physical-consistency/spoofing detection** | **28 added (1 dropped)** | **Directly grounds the identity root / registry + corroboration layer.** Catalogues the 28 new papers in two pillars (see below). |
 | `registry.json` | Master inventory — short-tag, title, year, URL, source-prompt, category, relevance | 147 (locked); Prompt-9 tags staged, not yet merged | — |
 
 The seven completed prompts also exist as PDFs in `01-research/prompt-outputs/` (Prompts 1–7 in their original form). The
@@ -40,17 +55,25 @@ Prompt 9 added **28 papers** (23 auto-downloaded + 5 fetched via UCL; **1, `ssif
 `papers/` and staged in the URL lists `prompt9-identity-urls.txt` and `prompt9-detection-urls.txt`. `PROMPT9.md` is the
 authoritative catalogue of these papers, their short-tags, and their relevance. The two pillars:
 
-1. **Identity / registry** (`prompt9-identity-urls.txt`) — DID/VC, blockchain-PKI, on-chain key registry & revocation.
-   Grounds the authenticated-identity layer; note `proofmember23` motivates *stripping* full DID/VC down to a
+1. **Identity / registry** (`prompt9-identity-urls.txt`) — DID/VC, blockchain-PKI, permissioned key registry & revocation.
+   Grounds the external identity root + registry layer; note `proofmember23` motivates *stripping* full DID/VC down to a
    signatures-plus-allowlist scheme for the single-domain pilot (DID/VC positioned as future work).
 2. **Physical-consistency / spoofing detection** (`prompt9-detection-urls.txt`) — vehicle-conservation checking,
-   false-data-injection, and Sybil detection. Grounds the conservation plausibility check.
-   **Honest caveat to carry through:** `Xiao2026` shows that a *coordinated, conservation-respecting* attacker can evade
-   the consistency check — so the check proves consistency, not truth, and the authentication layer is its complement.
+   false-data-injection, and Sybil detection. Grounds the conservation/CUSUM + corroboration gate.
+   **Honest caveat to carry through:** `Xiao2026Residual` shows that a *coordinated, conservation-respecting* (≥2-key
+   colluding) attacker can evade the consistency check — this is exactly the §0 hypothesis-failure axis (colluding
+   keys are out of scope); the check proves consistency, not truth, and the authentication/corroboration layer is its
+   complement, never a defeat of the boundary claim.
 
-**Integrative novelty (replaces the old equity tuple).** The contribution is the *conjunction*: authenticated identity +
-vehicle-conservation plausibility checking + SLM cross-junction coordination. Each piece is individually well-trodden; the
-pairing is what is open. There is **no claim of game-theoretic incentive-compatibility** (type-incoherent for frozen LLMs).
+**The novel object (replaces both the old equity tuple and the earlier "integrative novelty" framing above).** The
+headline is the **self-referential coupling**: the preemption attack controls the signal phase, which is also the
+variable that gates honest-witness coverage, so executing the attack opens the very coverage desert that conceals it —
+stated as a conditional lemma under explicit hypotheses (honest keys only, cross-audited non-equivocating quorum, no
+operator omission, adequate phase-coupled coverage) and measured once, severely, on Euston A501. Identity/registry +
+corroboration + the CT-style log are each individually well-trodden (conceded to prior art); the coupling + its
+measured boundary is what is open. There is **no claim of game-theoretic incentive-compatibility** (type-incoherent for
+frozen LLMs), and **no claim that coordination is optimised** (the coordination term is a structural zero, reported not
+experimented on).
 
 ## How to cite
 

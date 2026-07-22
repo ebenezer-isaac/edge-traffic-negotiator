@@ -1,3 +1,5 @@
+> **SUPERSEDED HISTORICAL RECORD (pre-2026-05-31-pivot).** Dated measurement log / transcript kept for the audit trail; the current thesis is in specs/001-edge-negotiator/MASTER-SPEC.md (Euston A501; self-referential coupling; CT-style accountability; Phi-4-mini). Forbidden-term hits below are historical, not current claims.
+
 # RouteLens (modelrouter-routelens) — Relevance Analysis for Edge Negotiator
 
 **Repo:** `e:\desktop\assignments\dissertation\02-experiments\modelrouter-routelens`

@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-"""Resolve <!-- TODO: registry tag --> markers in sec-2-8.md sequentially."""
+"""Resolve <!-- TODO: registry tag --> markers in sec-2-8.md sequentially.
+
+NOTE (post thesis-cutover): sec-2-8.md was rewritten from the equity-audit framing
+to the legal-accountability framing and now carries inline [tag] citations with no
+TODO markers, so this script is inert (it will report 0 markers). The equity/
+pedestrian-harm tags (nchrp-969-2021, dangerous-by-design-2024, tfl-ksi-2023) were
+dropped with the equity axis and are no longer part of the sequence below.
+"""
 from pathlib import Path
 
 SECTION = Path(__file__).parent / "sec-2-8.md"
 
-# Sequence of tag replacements in textual order:
+# Sequence of tag replacements in textual order (accountability framing):
 TAGS = [
     "ofqual-2020",
     "syri-court-hague-2020",
@@ -16,9 +23,6 @@ TAGS = [
     "uk-atrs",
     "bridges-v-swp-2020",
     "schufa-cjeu-2023",
-    "nchrp-969-2021",
-    "dangerous-by-design-2024",
-    "tfl-ksi-2023",
 ]
 
 MARKER = ".<!-- TODO: registry tag -->"

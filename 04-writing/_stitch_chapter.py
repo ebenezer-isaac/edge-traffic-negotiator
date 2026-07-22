@@ -95,16 +95,16 @@ def build_references_block(order: list[str], registry_index: dict[str, dict]) ->
 
 HEADER = """# Chapter 2 — Literature Review
 
-**The Edge Negotiator: An Audit-Anchored Architecture for Decentralised Traffic Signal Control**
+**The Edge Negotiator: An Accountability-Anchored On-Device Coordination Layer for Signalised Junctions**
 
 **Author:** 25153651
 **Institution:** University College London, United Kingdom
 
 ## Abstract
 
-This chapter establishes that no published work integrates a sub-7B small-language-model traffic signal controller, a deterministic Max-Pressure shield, a permissioned blockchain audit ledger, and an executable equity-audit protocol on a real London signalised corridor under combined UK and Indian regulatory comparative framing. The chapter traces, section by section, how each architectural decision is compelled by the literature rather than stipulated, surveying the classical adaptive baseline (Max-Pressure, SCOOT, SCATS), reinforcement-learning controllers and their adversarial brittleness, the LLM/SLM-for-TSC frontier, edge-hardware constraints on sub-7B inference, the chain-of-thought-faithfulness literature governing reasoning logs, the permissioned-blockchain audit-ledger literature, and the algorithmic-fairness audit literature spanning UK, EU, and Indian regulatory frameworks. The chapter closes on a seven-axis novelty tuple. Each axis is occupied by adjacent prior work; their conjunction is not.
+This chapter establishes that no published work instantiates and measures a self-referential coupling — in which a stealthy insider preemption attack controls the same signal phase that gates honest-witness coverage — on a real signalised corridor, backed by an on-device small-language-model reasoner and a Certificate-Transparency-style, quorum-anchored, cross-audited accountability log. The chapter traces, section by section, how each architectural decision is compelled by the literature rather than stipulated, surveying the classical adaptive baseline (Max-Pressure, SCOOT, SCATS), reinforcement-learning controllers and their adversarial brittleness, the LLM/SLM-for-TSC frontier, edge-hardware constraints on sub-7B inference, the chain-of-thought-faithfulness literature that governs why the reasoning channel is firewalled rather than trusted, the accountability-log literature whose transparency-log mechanism the design credits to prior art, and the legal-accountability literature governing automated public-sector decisions. The chapter closes on the novel object: a conditional coupling lemma and a single pre-registered measurement of its boundary on the real Euston Road (A501) corridor. The accountability mechanism is credited to prior art; the measured coupling is the increment.
 
-**Keywords:** decentralized traffic optimisation, edge AI, blockchain auditability, small language models, algorithmic fairness audit, chain-of-thought faithfulness, permissioned consensus, equity in transport
+**Keywords:** on-device coordination, edge AI, accountability log, transparency log, provenance evidence pack, small language models, self-referential coupling, compromised-insider emergency preemption
 
 ---
 

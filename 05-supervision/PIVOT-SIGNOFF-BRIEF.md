@@ -18,7 +18,7 @@ I am pivoting from the **Quarterly Equity Audit Protocol** to **authenticated, p
 
 ## The new project (one paragraph)
 
-A corridor of small-language-model agents (**Phi-4-mini via Microsoft Foundry Local**, one per junction) coordinate signal timing in **Eclipse SUMO** on a real **Lambeth corridor** (Brixton→Elephant & Castle; ~6 SLM-controlled junctions within a ~10–13-junction corridor, the rest on Max-Pressure). Each agent holds a **cryptographic identity** (Ed25519 signatures + an on-chain **Hyperledger Besu** allowlist with revocation); inter-junction messages are signed and verified against that registry; and a **vehicle-conservation plausibility check** flags reports physically inconsistent with neighbours (spoofed or faulty). A deterministic **Max-Pressure shield** validates/overrides every SLM decision and runs alone at quiet junctions. A tamper-evident ledger records all decisions.
+A corridor of small-language-model agents (**Phi-4-mini via Microsoft Foundry Local**, one per junction) coordinate signal timing in **Eclipse SUMO** on a real **Euston Road (A501) corridor** (a 3–4 signal stretch, central London; the rest of any wider corridor on Max-Pressure). Each agent holds a **cryptographic identity** (Ed25519 signatures + a permissioned key registry with revocation); inter-junction messages are signed and verified against that registry; and a **vehicle-conservation plausibility check** flags reports physically inconsistent with neighbours (spoofed or faulty). A deterministic **Max-Pressure shield** validates/overrides every SLM decision and runs alone at quiet junctions. A tamper-evident, quorum-anchored accountability ledger records all decisions (a Certificate-Transparency-style mechanism, credited to prior art — Hyperledger Besu was an earlier, since-demoted candidate for that anchor, not the core).
 
 **Defensible claim (no over-reach):** *verifiable agent identity + a vehicle-conservation consistency check give spoofing/fault detection and a non-repudiable audit trail for SLM-driven traffic control — with no claim of game-theoretic incentive-compatibility.*
 
@@ -40,7 +40,7 @@ A corridor of small-language-model agents (**Phi-4-mini via Microsoft Foundry Lo
 
 - **sumo-rl** confirmed as the build base (MIT, arbitrary networks, per-junction state exposed); CoLLMLight is CityFlow-welded and used as an algorithm reference only.
 - **Foundry Local** is GA and serves Phi-4-mini INT4 on 8GB; latency is managed by pausing the sim during inference, event-gating, and terse output.
-- **Besu** is async audit/registry only (never in the control loop). The identity design follows the single-administrative-domain literature (Pino et al. 2023, which deliberately omits heavy DID/VC for exactly this case).
+- A permissioned key registry is async audit/registry only (never in the control loop); a blockchain anchor (e.g. Hyperledger Besu) is a cited prior-art option, not the core. The identity design follows the single-administrative-domain literature (Pino et al. 2023, which deliberately omits heavy DID/VC for exactly this case).
 - 28 supporting papers gathered for the two new pillars (identity/registry; consistency/spoof detection).
 
 ## For Dr Delibasi (UCL) — review asks
@@ -59,4 +59,4 @@ The systems/experimental core is yours to pressure-test:
 
 Lit review submits ~2026-06-03 unchanged. Build is ~3 months (grid-pipeline → real corridor → identity+ledger → attacks+evaluation → write-up). **I'd appreciate written sign-off (or concerns) on the reframing** — in particular Lee's view on dropping the equity (S2) focus, and Akin's on the detection methodology — before I commit the build.
 
-*Full detail: `03-implementation/PROJECT-DECISION-BRIEF.md` (repo). Honest limits and non-claims are documented there.*
+*Full detail: `specs/001-edge-negotiator/MASTER-SPEC.md` (repo; supersedes the now-deleted `PROJECT-DECISION-BRIEF.md`). Honest limits and non-claims are documented there.*

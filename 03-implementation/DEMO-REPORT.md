@@ -1,22 +1,22 @@
-# Coordinated Edge-SLM Emergency Handling: Measured Results & Analysis
+# Trust-Preserving Coordination: Measured Fixture-Demo Results & Analysis
 
-**Date:** 2026-06-21 · **System:** The Edge Negotiator · **Substrate:** 4-junction SUMO arterial corridor (J0-J1-J2-J3)
+**Date:** 2026-06-21 · **System:** The Edge Negotiator · **Substrate:** synthetic 4-junction SUMO corridor (J0-J1-J2-J3), a **unit-test fixture only** (the evaluation substrate is the real Euston Road (A501); the headline coupling measurement on Euston is not run here).
 **Reproduce:** `./.venv/Scripts/python.exe src/measure_emergency.py` (raw output: `results/emergency_metrics.json`)
 
-> Scope note: these are **single-seed point estimates** from one deterministic run per condition, intended to characterise the demo and the mechanism. They are *not* the powered, multi-seed result with confidence intervals (that is evaluation milestone M4). Read §5 before quoting any number.
+> Scope note: these are **fixture-demo** figures with a deterministic StubAgent and the deterministic gate. The measured emergency-vehicle effect is **preemption on vs off** — it is NOT a coordination result and NOT an SLM result (the SLM is the deterministic stub here). The single-seed numbers are point estimates; the powered n=30 figures are the defensible ones. Read §5 before quoting any number.
 
 ---
 
 ## Abstract
 
-This report measures the two core claims of the Edge Negotiator: that coordinated multi-junction emergency preemption clears ambulances faster than isolated control, and that the coordination remains effective when a junction is compromised. The primary result is the coordination-emergency win: across 30 paired seeds, the system clears a real ambulance **31 s faster** (95% CI [25.4, 36.5]) than MaxPressure with no emergency layer. The robustness result (the property that makes the coordination deployable in adversarial settings) is measured separately: a corroboration gate blocks a signed-but-spoofed phantom emergency, reducing cross-street delay at the attacked junction by 45% vs a trust-everything victim (mean time-loss 8.95 s vs 16.12 s) with a worst-case 3.5x smaller (20.1 s vs 69.5 s). The gate costs ~11 s of ambulance time relative to blind trust, because it waits for physical corroboration before preempting. Network-aggregate delay is insensitive (~26 s in all three conditions), an important methodological caution: a targeted attack is invisible in the network average and must be measured on the targeted subset.
+This report measures, on the synthetic fixture, the deterministic gate at the centre of the trust-preserving coordination layer: that enabling emergency preemption clears a real ambulance faster than no preemption layer, and that the corroboration gate keeps the layer safe when a junction is compromised. The preemption effect: across 30 paired seeds, enabling preemption clears a real ambulance **31 s faster** (95% CI [25.4, 36.5]) than MaxPressure with no emergency layer. This is preemption on vs off, **not** a coordination effect and **not** an SLM effect. The gate result: a corroboration gate blocks a signed-but-spoofed phantom emergency, reducing cross-street delay at the attacked junction by 45% vs a trust-everything victim (mean time-loss 8.95 s vs 16.12 s) with a worst-case 3.5x smaller (20.1 s vs 69.5 s). The gate costs ~11 s of ambulance time relative to blind trust, because it waits for physical corroboration before preempting. Network-aggregate delay is insensitive (~26 s in all three conditions), an important methodological caution: a targeted attack is invisible in the network average and must be measured on the targeted subset.
 
 ---
 
 ## 1. Objective
 
 Answer four questions with measured numbers:
-1. Does coordinated emergency preemption clear a real ambulance faster than isolated MaxPressure?
+1. Does enabling emergency preemption clear a real ambulance faster than MaxPressure with no emergency layer? (a preemption-on-vs-off question, not a coordination or SLM question)
 2. Does a spoofed emergency from an authenticated insider succeed if the coordination channel is compromised, and what damage does it do if believed?
 3. Does the corroboration gate prevent that damage, keeping coordination robust to the compromise?
 4. What does the gate cost?
@@ -79,8 +79,8 @@ Note the EV benefit is **much larger across seeds (31 s) than in the single seed
 - `naive` clears it faster still (122 s) *because* it preempts on the advance claim without waiting for corroboration. **This is the central tradeoff:** the same trust that lets the spoof through also shaves latency off a genuine claim. The gate trades ~11 s of ambulance time for immunity to the spoof.
 
 ### What went right
-- Coordinated preemption **clears the ambulance** (−5.7% corridor time, −11 s waiting vs no preemption; −31 s in the powered run).
-- The robustness property holds: the spoof is **blocked**, and protection is quantified, not asserted (cross-J2 mean delay 45% lower than the victim, worst case 3.5x smaller).
+- Enabling preemption **clears the ambulance** (−5.7% corridor time, −11 s waiting vs no preemption; −31 s in the powered run). This is a preemption effect, not a coordination or SLM effect.
+- The gate property holds: the spoof is **refused**, and protection is quantified, not asserted (cross-J2 mean delay 45% lower than the victim, worst case 3.5x smaller).
 - The defence is **automatic** and needs no knowledge of intent: it withholds on any uncorroborated claim, phantom or merely unconfirmed.
 
 ### What went wrong / was weaker than hoped
@@ -104,7 +104,7 @@ The gate's behaviour follows directly from `_admissible_ev`: local sensing is tr
 | Improvement | How | Why |
 |---|---|---|
 | Statistical power | Run n = 30 paired seeds; report BCa confidence intervals + paired permutation p-values (the existing stats stack) | Turn point estimates into defensible claims; a 7 s mean delta needs a CI to mean anything |
-| Detectability envelope | Sweep the lie magnitude (claim size as multiples of the tolerance band) and plot recall/latency vs magnitude | Locate the recall-collapse knee (the actual scientific object, not a single attack) |
+| Free-deviation boundary | Sweep the deviation magnitude (claim size as multiples of the tolerance band) and plot recall/latency vs magnitude; on Euston, measure the phase-coupled coverage threshold | Map which stealthy conservation-consistent deviations escape (the measured characterisation, not a single attack, and not a detection ROC) |
 | Stronger regime | Repeat under a saturated demand sweep (scale 0.3→3.0) | Where the EV benefit and attack harm are large and network-visible |
 | Isolate the tradeoff | Add a 4th condition: corroboration-gated but advance-claim-preempting | Separate the gate's EV-latency cost from the advance-claim policy |
 | Real SLM | Re-run with Phi-4-mini on Foundry Local; measure temp-0 agreement | Validate determinism on the longer emergency prompts |
@@ -112,6 +112,6 @@ The gate's behaviour follows directly from `_admissible_ev`: local sensing is tr
 
 ## 7. Conclusion
 
-The primary result is that coordinated multi-junction emergency preemption clears a real ambulance faster than isolated MaxPressure: 31 s mean benefit across 30 seeds (95% CI [25.4, 36.5]). Prior art (CoLLMLight) shows coordination alone is feasible; prior art (EMVLight, VLMLight) shows emergency handling alone is feasible; the contribution here is fusing both on a frozen on-device SLM (Phi-4-mini, never retrained) under a potentially compromised coordination channel.
+On the fixture, enabling emergency preemption clears a real ambulance faster than MaxPressure with no emergency layer: 31 s mean benefit across 30 seeds (95% CI [25.4, 36.5]). This is a preemption-on-vs-off effect only; it is not attributable to coordination (the coordination term is an inert structural zero) and not to the SLM (the deterministic stub decides admissibility here, so the result is identical with Phi-4-mini).
 
-The robustness result is the property that makes this coordination deployable: the corroboration gate blocks a signed-but-spoofed emergency that would otherwise nearly double the attacked cross street's delay (69 s worst-case vs 20 s when defended), while genuine preemption still works. The gate costs ~11 s of ambulance time relative to blind trust, a real and measured tradeoff. Both effects are localised and invisible in the network aggregate; quantifying them properly is the job of the powered, multi-seed evaluation in milestone M4.
+The gate result is the point of the demo: the corroboration gate refuses a signed-but-spoofed sustained preemption that would otherwise nearly double the attacked cross street's delay (69 s worst-case vs 20 s when defended), while a genuine corroborated preemption still clears. The gate costs ~11 s of ambulance time relative to blind trust, a real and measured tradeoff. Both effects are localised and invisible in the network aggregate. This fixture demo exercises the mechanism; it is not the dissertation's headline. The headline is the measured characterisation of the free-deviation boundary and the self-referential coupling on the real Euston Road (A501) corridor, and the SLM's self-contained citation-faithful contribution, neither of which is run here.

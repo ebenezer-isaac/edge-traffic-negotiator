@@ -1,3 +1,5 @@
+> **SUPERSEDED HISTORICAL RECORD (pre-2026-05-31-pivot).** Dated measurement log / transcript kept for the audit trail; the current thesis is in specs/001-edge-negotiator/MASTER-SPEC.md (Euston A501; self-referential coupling; CT-style accountability; Phi-4-mini). Forbidden-term hits below are historical, not current claims.
+
 # Verified sources: AI traffic systems and equity provisions
 
 **AI-optimised traffic signals systematically disadvantage pedestrians, low-income communities, and minority groups** — a pattern documented across adaptive systems from SCOOT to reinforcement learning. This report compiles verified, citable evidence across three domains: algorithmic inequity in traffic signals, London-specific smart traffic data, and the "black box recorder" analogy for autonomous infrastructure. Every claim below includes author, title, publication, year, and URL or DOI.

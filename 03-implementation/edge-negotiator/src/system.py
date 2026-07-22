@@ -22,7 +22,7 @@ Swappable backends (SystemConfig)
   transport : "inprocess" (MessageBus)        | "mqtt"   (MqttBusAdapter, live broker)
   registry  : "memory"    (Registry)          | "besu"   (RegistryService, live node)
   agent     : "stub"      (StubAgent)         | "slm"    (SLMAgent, live Foundry)
-  network   : "grid2x2"   (string-convention) | "lambeth"(edge_map_from_net)
+  network   : "grid2x2"   (string-convention) | "euston" (edge_map_from_net)
   audit     : on/off       — every decision appended+signed, registry events mirrored
   attacks   : optional injectors run during the sim
 
@@ -73,7 +73,7 @@ from system_fakeconn import (  # noqa: E402
 _TRANSPORTS = ("inprocess", "mqtt")
 _REGISTRIES = ("memory", "besu")
 _AGENTS = ("stub", "slm")
-_NETWORKS = ("grid2x2", "lambeth")
+_NETWORKS = ("grid2x2", "euston")
 
 # Grid 2x2 adjacency (same as run_coordinated.ADJACENCY) — kept local so the CI
 # default path has NO import-time SUMO dependency.
@@ -198,7 +198,7 @@ class SystemConfig:
             raise ValueError("coord_weight must be finite")
         if self.coord_weight < 0:
             raise ValueError("coord_weight must be >= 0")
-        # The MQTT transport and the lambeth network only run under the SUMO
+        # The MQTT transport and the euston network only run under the SUMO
         # microsimulation; selecting either IMPLIES the SUMO path (see
         # ``requires_sumo``), so no explicit ``use_sumo`` flag is needed and these
         # configs are valid as-is — they just route through ``_run_sumo``.
@@ -206,7 +206,7 @@ class SystemConfig:
     @property
     def requires_sumo(self) -> bool:
         """True iff this config drives the real SUMO microsimulation."""
-        return self.use_sumo or self.transport == "mqtt" or self.network == "lambeth"
+        return self.use_sumo or self.transport == "mqtt" or self.network == "euston"
 
     @property
     def is_default(self) -> bool:
@@ -542,10 +542,13 @@ class IntegratedSystem:
             adjacency = {k: list(v) for k, v in _GRID_ADJACENCY.items()}
             return sumocfg, ["-c", sumocfg], adjacency, None
 
-        # lambeth — derive adjacency + edge_map from the real net (brief).
+        # euston — derive adjacency + edge_map from the real net (brief).
+        # PENDING: euston_spine.net.xml does not exist yet (needs netconvert on
+        # the target machine, out of scope here); this path is unreachable in
+        # CI (live-gated via ``requires_sumo``) until that net is built.
         import sumolib
-        net = os.path.join(_SRC, "..", "sumo", "lambeth", "lambeth_spine.net.xml")
-        routes = os.path.join(_SRC, "..", "sumo", "lambeth", "base.rou.xml")
+        net = os.path.join(_SRC, "..", "sumo", "euston", "euston_spine.net.xml")
+        routes = os.path.join(_SRC, "..", "sumo", "euston", "base.rou.xml")
         adjacency, edge_map = edge_map_from_net(sumolib.net.readNet(net), mode="chain")
         adjacency = {k: list(v) for k, v in adjacency.items()}
         return net, ["-n", net, "-r", routes, "--time-to-teleport", "300"], adjacency, edge_map
@@ -692,7 +695,7 @@ class IntegratedSystem:
     # ===================================================================== #
 
     def _score_attacks(self, specs, ctrl, bus, injected_records) -> list[dict]:
-        """Score each injected attack against the live detectors' verdicts.
+        """Score each injected attack against the live detectors' detection results.
 
         For conservation attacks (spoof / under_report): a flagged ``Detection``
         on the edge counts as detected. For auth attacks (not_neighbour / revoked
@@ -715,7 +718,7 @@ class IntegratedSystem:
                 # Match the rejection for THIS attack's (recipient, sender, tick)
                 # specifically — the honest baseline's benign self-rescan also
                 # logs replays on other ticks for the same sender, which are not
-                # this attack's verdict.
+                # this attack's detection result.
                 hits = [r for r in rejected
                         if r.get("recipient") == spec.recipient
                         and r.get("sender") == spec.sender

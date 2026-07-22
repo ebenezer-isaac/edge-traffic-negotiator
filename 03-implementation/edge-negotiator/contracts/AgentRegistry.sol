@@ -9,7 +9,7 @@ pragma solidity 0.8.24;
 ///         non-repudiable on-chain audit log (provenance + history); the
 ///         contract state is just the current membership view.
 ///
-/// @dev Trust model (PROJECT-DECISION-BRIEF.md §6): this vouches for *membership*,
+/// @dev Trust model (MASTER-SPEC.md §6): this vouches for *membership*,
 ///      not for the honesty of an approved agent. A single city-authority admin
 ///      key governs the allowlist (`onlyOwner`); multisig is documented as an
 ///      optional production hardening, not implemented here.

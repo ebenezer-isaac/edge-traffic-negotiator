@@ -2,9 +2,9 @@
 
 ## Context (do not skip — this constrains the answer)
 
-This is the ninth prompt in the dissertation literature survey. The project has **pivoted** to *Verified-Source Cross-Junction Coordination for SLM-Driven Traffic Signal Control* (see [../03-implementation/PROJECT-DECISION-BRIEF.md](../03-implementation/PROJECT-DECISION-BRIEF.md)). Prompt 9 was run on **2026-05-31** to fill the two literature gaps the pivot opened:
+This is the ninth prompt in the dissertation literature survey. **Note (2026-07-21): the project has since re-pivoted again; the current single source of truth is [`../specs/001-edge-negotiator/MASTER-SPEC.md`](../specs/001-edge-negotiator/MASTER-SPEC.md) (the `PROJECT-DECISION-BRIEF.md` this prompt originally cited has been deleted).** Prompt 9 was run on **2026-05-31**, under the then-current "Verified-Source Cross-Junction Coordination" framing, to fill the two literature gaps that pivot opened; both pillars below remain directly useful background under the current thesis (external identity root + registry, and the conservation/CUSUM + corroboration gate):
 
-- **Pillar A — Identity / registry / revocation.** Anchors for a single-administrative-domain agent-identity registry (Besu-style membership: register, validate, revoke verified sources) without committing to the full DID/VC cross-domain machinery. The selected analogues deliberately bracket the design space — from a minimal membership-proof registry to full ledger-anchored DID/VC mutual authentication — and several supply explicit *evidence against* over-engineering for a 3-month build.
+- **Pillar A — Identity / registry / revocation.** Anchors for a single-administrative-domain agent-identity registry (a permissioned membership registry: register, validate, revoke verified sources) without committing to the full DID/VC cross-domain machinery. The selected analogues deliberately bracket the design space — from a minimal membership-proof registry to full ledger-anchored DID/VC mutual authentication — and several supply explicit *evidence against* over-engineering for a 3-month build.
 - **Pillar B — Physical-consistency / spoofing-&-fault detection.** Anchors for a conservation/plausibility invariant that cross-checks neighbour reports, plus the key adversarial bound (physically-consistent FDI evades residual checks) that motivates pairing the invariant with the Pillar-A authentication layer.
 
 Twenty-eight papers were gathered: **15 in Pillar A** (14 cached, 1 dropped) and **14 in Pillar B** (all cached). A file `papers/<key>.pdf` existing in the survey folder counts as **CACHED**; this was confirmed by directory listing against `prompt9-identity-urls.txt` and `prompt9-detection-urls.txt`.
@@ -17,7 +17,7 @@ Twenty-eight papers were gathered: **15 in Pillar A** (14 cached, 1 dropped) and
 
 | key | title | authors | year | venue | status | relevance |
 |---|---|---|---|---|---|---|
-| proofmember23 | Combining Decentralized IDentifiers with Proof of Membership to Enable Trust in IoT Networks | A. Pino, D. Margaria, A. Vesco | 2023 | IEEE ITNAC 2023 | CACHED | Closest analogue to a single-domain Besu membership registry; mutual auth via DID key-ownership + proof a DID belongs to an evolving trusted set; deliberately drops VCs for the same-administrative-domain case. |
+| proofmember23 | Combining Decentralized IDentifiers with Proof of Membership to Enable Trust in IoT Networks | A. Pino, D. Margaria, A. Vesco | 2023 | IEEE ITNAC 2023 | CACHED | Closest analogue to a single-domain permissioned membership registry; mutual auth via DID key-ownership + proof a DID belongs to an evolving trusted set; deliberately drops VCs for the same-administrative-domain case. |
 | pkchain25 | PKChain: Compromise-Tolerant and Verifiable Public Key Management System | J. Y. Mosakheil, K. Yang | 2025 | IEEE Internet of Things Journal 12(3) | CACHED (IEEE version of record; eprint mirror also cached) | On-chain public-key register/update/query/validate/revoke via threshold validation; on-chain status removes need for CRL/OCSP. |
 | dcsm24 | Decentralized Credential Status Management: A Paradigm Shift in Digital Trust | P. Herbke et al. | 2024 | arXiv:2406.11511 (also IEEE) | CACHED | Frames centralized-PKI → DPKI transition (DigiNotar/Symantec), blockchain credential-status/revocation; argues a root authority is still needed. |
 | didlink24 | DID Link: Authentication in TLS with Decentralized Identifiers and Verifiable Credentials | S. Rodriguez Garzon, D. Natusch, A. Philipp, A. Küpper, H. J. Einsiedler, D. Schneider | 2024 | arXiv:2405.07533 (also IEEE) | CACHED | Mutual auth in the TLS handshake using DID-bound self-signed X.509 + verifiable presentations; reports DID resolution 3–42× slower than CA X.509 (overhead caveat). |
@@ -68,7 +68,7 @@ The JSON array below uses the same shape as entries in `registry.json` (`tag`/sh
     "year": 2023,
     "url": "https://arxiv.org/pdf/2310.08163",
     "category": "A-identity",
-    "relevance": "Closest analogue to a single-domain Besu membership registry; mutual auth via DID key-ownership + proof a DID belongs to an evolving trusted set; deliberately drops VCs for the same-administrative-domain case."
+    "relevance": "Closest analogue to a single-domain permissioned membership registry; mutual auth via DID key-ownership + proof a DID belongs to an evolving trusted set; deliberately drops VCs for the same-administrative-domain case."
   },
   {
     "tag": "pkchain25",

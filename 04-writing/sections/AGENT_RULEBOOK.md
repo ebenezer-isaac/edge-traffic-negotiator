@@ -4,7 +4,7 @@ This document is read by every drafting agent before producing a section. Read i
 
 ## What you are doing
 
-You are drafting one section of Chapter 2 (Literature Review) of a UCL MSc dissertation. The chapter target is 10,000–13,000 words across nine sections (§2.1–§2.9). You are writing one of those sections. The chapter argues that no published work integrates a sub-7B small-language-model traffic signal controller with a deterministic Max-Pressure shield, a permissioned blockchain audit ledger, and an executable equity-audit protocol on a real London corridor.
+You are drafting one section of Chapter 2 (Literature Review) of a UCL MSc dissertation. The chapter target is 10,000–13,000 words across nine sections (§2.1–§2.9). You are writing one of those sections. The chapter argues that no published work instantiates and measures a self-referential coupling — in which a stealthy insider preemption attack controls the same signal phase that gates honest-witness coverage — on a real signalised corridor, backed by an on-device frozen Phi-4-mini reasoner, a deterministic Max-Pressure shield, and a Certificate-Transparency-style, quorum-anchored, cross-audited accountability log (mechanism credited to prior art). The substrate is the real Euston Road (A501) corridor. There is no equity-audit axis, no Qwen backbone, and no blockchain foregrounded as the contribution.
 
 ## Output contract
 
@@ -41,7 +41,7 @@ You are drafting one section of Chapter 2 (Literature Review) of a UCL MSc disse
 The seven claims below have been independently verified and require hedged framing whenever cited:
 
 1. **Traffic-R1 [Traffic-R1]** — Production-deployment claims are UNVERIFIED. Frame as "an emerging line of LLM-driven traffic-signal-control research" (e.g., Zou et al.'s Traffic-R1) rather than as evidence of large-scale operational deployment. Note the PCITECH (SSE: 600728) vendor-academic affiliation explicitly in the first paragraph that cites Traffic-R1. Do not cite the "55,000 daily drivers" figure as established fact; if mentioned, prefix with "the authors report a partial production trial covering, by their account, around 55,000 daily drivers, a figure that has not been independently verified".
-2. **Hyperledger Iroha 2** — DISPUTED. Do not cite Iroha 2 as a deployment substrate or quote its "~1 s finality". The chapter's permissioned-ledger position is Hyperledger Besu QBFT; do not write Iroha 2 into any forward-looking claim.
+2. **Hyperledger Iroha 2** — DISPUTED. Do not cite Iroha 2 as a deployment substrate or quote its "~1 s finality". The chapter's accountability-log position is a Certificate-Transparency-style, quorum-anchored, cross-audited log whose mechanism is credited to prior art; a permissioned Besu QBFT ledger is only a demoted, optional anchoring witness. Do not foreground any blockchain as the contribution, and do not write Iroha 2 into any claim.
 3. **Southampton/Minima drone "first blockchain black box"** — VENDOR-ONLY. Drop entirely. Do not cite under any framing.
 4. **Google Project Green Light** — PARTIALLY VERIFIED. Cite as "Google's Project Green Light, a vendor-reported deployment with operator-supplied delay-reduction figures and limited independent reproduction". Do not quote specific percentages as established results.
 5. **Alibaba City Brain** — PARTIALLY VERIFIED. Cite as "Alibaba's City Brain platform, with vendor-published throughput claims that independent academic reproductions have only partially confirmed".

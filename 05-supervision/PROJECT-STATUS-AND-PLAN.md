@@ -26,7 +26,7 @@
 | Foundry Local SLM wiring | Built (phase-prompt only) | `slm_agent.py`; benched 100% argmax, 0.48s median |
 | Coordination-causal fix (normal regime) | Built, tested | `coordinated_controller.py:709-711`; `coord_adjusted_decisions` |
 | Statistics stack (BCa + permutation + Holm) | Built, tested | `stats.py`; self-calibration tests |
-| Real Lambeth corridor port | Built (as robustness check) | `corridor_coord.md` (9 TLS) |
+| Real 9-TLS corridor port (Lambeth A23/A3 de-risk substrate, now dropped) | Built as a de-risk check: the pipeline runs end-to-end on a real 9-TLS corridor. The Euston Road (A501) port is NOT built (net PENDING; see §5 M5 "Not started") | `corridor_coord.md` (9 TLS, Lambeth) |
 
 **Measured results that exist:**
 - Emergency n=30 (paired seeds): ambulance 31s faster with preemption vs off [CI 25.4, 36.5]; spoof worst-case side-street wait held 16s below trust-everything; 8s gate cost. Source: `results/emergency_metrics_n30.json`.
@@ -35,7 +35,7 @@
 - Coordination lambda-sweep n=15: coordinated == uncoordinated exactly (dead pathway vs that baseline). Source: `coord_throughput.md`.
 - Real SLM coordinated vs uncoordinated n=4: non-significant, flagged underpowered. Source: `coord_slm_honest.md`.
 - SLM latency/quality bench (5 models): Phi-4-mini 0.48s, 100% argmax agreement. Source: `slm_bench.md`.
-- Lambeth demand behaviour: clean to scale 1.0, tipping ~1.3-1.5, gridlock >=2.0. Source: `lambeth_controllability.md`.
+- Lambeth A23/A3 de-risk demand behaviour (historical, now-dropped substrate): clean to scale 1.0, tipping ~1.3-1.5, gridlock >=2.0 — a de-risk measurement that proved the pipeline runs end-to-end on a real 9-TLS corridor. Source: `results/lambeth_controllability.md`. These numbers are NOT Euston. The Euston Road (A501) headline substrate and its demand behaviour are PENDING: no Euston net exists yet (`run_euston.py` marks `euston_spine.net.xml` PENDING), consistent with §5 M5 "Not started".
 
 ---
 
@@ -72,7 +72,7 @@ Implication for the headline: unless the SLM (Experiment 1) or coordination (Exp
 6. Trigger types beyond `emergency_vehicle`: at least **`incident`** and **`conservation_anomaly`** (the report lists incident reallocation as "to build"). `sensor_outage`/`abnormal_demand` are lower priority.
 
 ### 4C. Evaluation-harness gaps
-1. **Demand sweep integrated into the main harness** across all modes (currently only a separate Lambeth script, fixed vs maxpressure, no statistics).
+1. **Demand sweep integrated into the main harness** across all modes (currently only a separate Euston-corridor script, fixed vs maxpressure, no statistics).
 2. **Fairness-across-junctions metric** (e.g. Jain index or per-junction delay variance) and **worst-case metric** (max / p95 per-vehicle or per-junction delay). Neither exists.
 3. **Real-SLM as a first-class `--agent` option** in `evaluation.py` (today it is a bespoke n=4 side-script; `EvalConfig.agent` is dead code on the default path).
 4. **Labelled flagged-state dataset** for Experiment 1 (curated micro-benchmark + harvested-from-sweep).
@@ -91,7 +91,7 @@ Dissertation chapters (methodology, results, discussion, limitations), a reprodu
 | M2 Detection | conservation + CUSUM detector | Done |
 | M3 Emergency + corroboration | emergency controller + gate + exploit-then-defend | Done |
 | M4 Evaluation | demand sweep + real corridor, benign + attacked, n=30, stats | In progress (gaps in 4C) |
-| M5 Detectability envelope | recall/latency vs lie-magnitude figure | Not started |
+| M5 Coupling boundary | the self-referential coupling's measured free-deviation boundary (coverage-vs-escape) | Not started |
 | M6 Write-up | dissertation + reproducibility package | Not started |
 
 ---
@@ -105,7 +105,7 @@ Dissertation chapters (methodology, results, discussion, limitations), a reprodu
 | **P0. Rigour writing** | S2 formalise concepts, S3 threat model, S4 gap derivation, S6 limitations + assurance case, document eval method (part of S5) | ~1 week | Now (no dependencies) |
 | **P1. Make the SLM real** | 4B-1 causal triggered-regime path + shield validation, 4B-4 metric + test, 4B-5 disambiguation prompt, 4B-3 anti-starvation, 4B-2 baselines | ~2 to 3 weeks | Now (parallel with P0) |
 | **P2. Evaluation build** | 4C-1 integrated demand sweep, 4C-2 fairness + worst-case metrics, 4C-3 real-SLM first-class, 4C-5 unify CI, 4C-4 dataset | ~1 to 2 weeks | After P1 baselines land |
-| **P3. The experiments** | S1 SLM-vs-rule n=30 on Foundry (determinism check first), S5 demand sweep with throughput/fairness/worst-case + no-harm, M5 lie-magnitude detectability envelope, real Lambeth robustness run | ~2 to 3 weeks | After P1 + P2 (Foundry-bound) |
+| **P3. The experiments** | S1 SLM Job A citation-correctness/FCR on Foundry (determinism check first), S5 demand sweep with throughput/fairness/worst-case + no-harm, the pre-registered self-referential-coupling coverage-vs-escape measurement, real Euston Road (A501) robustness run | ~2 to 3 weeks | After P1 + P2 (Foundry-bound) |
 | **P4. Write-up (M6)** | dissertation chapters, fold in P0 formalisations, reproducibility package | ~3 to 4 weeks, overlapping | Draft alongside P3 |
 
 **Critical path:** P1 (SLM causal) → P3 (SLM evaluation) → headline decision → write-up. This is the long pole and is Foundry-serialised, so start P1 immediately and begin the Foundry determinism check as soon as the disambiguation prompt exists.

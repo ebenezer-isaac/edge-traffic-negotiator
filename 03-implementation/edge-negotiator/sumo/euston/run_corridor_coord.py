@@ -1,8 +1,18 @@
-"""Run the authenticated coordination layer on the REAL Lambeth spine corridor.
+"""Run the authenticated coordination layer on the REAL Euston Road (A501)
+spine corridor.
+
+PENDING ARTIFACT: this runner targets ``euston_spine.net.xml``, which does NOT
+exist yet -- it must be built with SUMO ``netconvert`` from an OSM extract of
+the Euston Road corridor (out of scope for this change; requires SUMO on the
+target machine). Until that net is built, this runner is PENDING and cannot
+execute end-to-end. The legacy ``lambeth_*.net.xml`` files left in this
+directory, and the ``SLM_JUNCTIONS`` OSM cluster ids below, are the PRIOR
+corridor's build artifacts -- kept for reference only, NOT the Euston
+substrate; ``SLM_JUNCTIONS`` must be re-derived once the Euston net is built.
 
 Dissertation goal ("The Edge Negotiator"): prove the authenticated-coordination
-integrity layer GENERALISES from the 2x2 toy grid to the real Lambeth A23/A3
-corridor (9 TLS, ``lambeth_spine.net.xml``). This runner stands up the FULL
+integrity layer GENERALISES from the 2x2 toy grid to the real Euston Road
+(A501) corridor (``euston_spine.net.xml``). This runner stands up the FULL
 integrity stack on the real net at the clean operating point (``--scale 1.0``):
 
   * one Ed25519 :class:`JunctionIdentity` per multi-green ("SLM-controllable") TLS,
@@ -37,7 +47,7 @@ On the real net this convention is FALSE. TLS ids are OSM cluster strings
     silently no-op while still "running".
 
 The brief authorises supplying the adjacency/edge map EXPLICITLY rather than
-relying on name parsing. We derive both from ``lambeth_spine.net.xml`` with
+relying on name parsing. We derive both from ``euston_spine.net.xml`` with
 sumolib and inject them by overriding exactly the three name-parsing methods.
 Everything else (signing, registry, bus trust checks, conservation, the
 Channel-A/B coordination maths, the event log) is the unmodified grid code.
@@ -55,8 +65,8 @@ comparison. For every directed neighbour pair we record the edge that ENTERS the
 downstream TLS -- that edge is the explicit in-edge / out-edge map the controller
 needs.
 
-    .venv/Scripts/python sumo/lambeth/run_corridor_coord.py
-    .venv/Scripts/python sumo/lambeth/run_corridor_coord.py --adjacency single
+    .venv/Scripts/python sumo/euston/run_corridor_coord.py
+    .venv/Scripts/python sumo/euston/run_corridor_coord.py --adjacency single
 """
 from __future__ import annotations
 
@@ -83,13 +93,19 @@ from identity import JunctionIdentity  # noqa: E402
 from message_bus import MessageBus  # noqa: E402
 from registry import Registry  # noqa: E402
 
-NET = os.path.join(HERE, "lambeth_spine.net.xml")
+# PENDING: euston_spine.net.xml does not exist yet (needs netconvert on the
+# target machine, out of scope here). This runner cannot execute until it is
+# built.
+NET = os.path.join(HERE, "euston_spine.net.xml")
 ROUTES = os.path.join(HERE, "base.rou.xml")
 # Unique tripinfo dir to avoid collision with other running sims (per brief).
 TRIPINFO_DIR = os.path.normpath(os.path.join(HERE, "..", "..", "results", "tripinfo_corridor"))
 
-# The 6 multi-green ("SLM-controllable") TLS per results/lambeth_controllability.md.
-# Exactly the TLS with >=2 green phases; the other 3 are single-green no-ops.
+# STALE (prior Lambeth-net build): these are the multi-green ("SLM-controllable")
+# TLS ids derived from the PRIOR corridor net; they are OSM cluster ids specific
+# to that net and will NOT match euston_spine.net.xml. PENDING re-derivation
+# once the Euston net is built (retained here only so the wiring below is
+# runnable/readable pending that rebuild).
 SLM_JUNCTIONS = [
     "cluster_1032792732_1032792753_1032792770_1032792773_#11more",
     "cluster_102714594_2513316336_2513319064_2513319066_#7more",

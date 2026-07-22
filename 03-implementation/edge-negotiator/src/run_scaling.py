@@ -2,7 +2,7 @@
 
 De-risks SCALING for *The Edge Negotiator*. The full stack (Ed25519 identities,
 permissioned Registry, signed MessageBus, ConservationChecker, CoordinatedController)
-was validated on a 2x2 grid (4 TLS) and the real Lambeth corridor (9 TLS). This
+was validated on a 2x2 grid (4 TLS) and the real Euston Road (A501) substrate. This
 harness characterises how that stack scales on synthetic grids of INCREASING size
 -- 2x2 (4 TLS), 3x3 (9 TLS), 4x4 (16 TLS) -- using the DETERMINISTIC StubAgent so
 there is NO Foundry Local dependency: every run is fast and bit-reproducible.
@@ -22,7 +22,7 @@ What it measures, per (grid, seed):
 KEY QUESTION (P2): MessageBus.inbox() was recently indexed (per-recipient scan
 cursor) to remove an O(n^2) full-buffer rescan. Does coordination wall-clock now
 grow ~LINEARLY in TLS count (4 -> 9 -> 16)? This harness reports the growth so the
-verdict is data-backed.
+answer is data-backed.
 
 Usage:
     .venv/Scripts/python src/run_scaling.py                 # default seeds

@@ -18,7 +18,7 @@ parties' reports are mutually consistent. It CANNOT identify which of two
 disagreeing parties is wrong, and -- critically -- it is evadable by a
 **coordinated, conservation-respecting attacker** who inflates A's claim and
 B's observation in lockstep so the books still balance (the ``Xiao2026``
-limit; see PROJECT-DECISION-BRIEF.md s.6). That residual threat is what the
+limit; see MASTER-SPEC.md s.6). That residual threat is what the
 authentication / registry layer complements; this primitive catches
 uncoordinated spoofs and faults only.
 

@@ -1,3 +1,5 @@
+> **SUPERSEDED HISTORICAL RECORD (pre-2026-05-31-pivot).** Dated measurement log / transcript kept for the audit trail; the current thesis is in specs/001-edge-negotiator/MASTER-SPEC.md (Euston A501; self-referential coupling; CT-style accountability; Phi-4-mini). Forbidden-term hits below are historical, not current claims.
+
 Architectural Implications of NVIDIA Jetson Orin Nano for Decentralized Traffic Optimization: Converging Edge AI, Trusted Execution Environments, and Local Distributed Ledgers
 
 1. The Crisis of Centralization in Intelligent Transportation Systems

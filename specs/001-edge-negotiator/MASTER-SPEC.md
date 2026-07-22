@@ -185,7 +185,9 @@ default -> MaxPressure (+ coordination term, INERT structural zero; not an exper
 
 - Real-model / Corpus / Net gates (SKIP-and-mark).
 - **Quorum-anchor gate:** any non-equivocation claim requires a real write to ≥2 witnesses + a reconciled per-signer count + a PASSING cross-audit; a single-node/un-cross-audited/mock anchor is labelled "not externally anchored" and CANNOT back the claim.
-- **Prerequisite-artifact gate (non-self-satisfiable, build F2):** each artifact's SHA-256 is PINNED IN THIS SPEC (committed in a separate human commit); the gate asserts `git hash-object <file> == <pinned hash>` AND that the containing commit is an ANCESTOR of the run's base ref. Absent a matching pinned hash, the dependent item SKIPs. An unattended run that authors + commits an artifact as its first step does NOT satisfy the gate (no pinned hash / not an ancestor).
+- **Prerequisite-artifact gate (non-self-satisfiable, build F2):** each artifact's hash is PINNED IN THIS SPEC (committed in a SEPARATE commit AFTER the artifact's own commit); the gate asserts `git hash-object <file> == <pinned git-blob-id>` (the reproducible, filter-aware in-repo check) AND that the artifact's commit is an ANCESTOR of the run's base ref. Absent a matching pinned hash, the dependent item SKIPs. An unattended run that authors + commits an artifact as its first step does NOT satisfy the gate (no pinned hash / not an ancestor).
+  - **PINNED HASHES (append-only registry; git-blob-id via `git hash-object`, + SHA-256 of the committed LF content):**
+    - `03-implementation/edge-negotiator/ground_rules.yaml` — git-blob-id `44672cf4680b1d213fd897f83ab08c847aea62a0` · sha256 `4667c5917ff523d43a95233d6d8ba3f9a320ddbdd999c370c68bb213c6239eb5` (Phase 1, artifact commit 9093b07; passed 2 alignment batteries + 1 consolidated re-verify, 0 fatal/0 major)
 - Per-run: `slm_calls_ok/total` above threshold; the decider on SLM-measured rows is actually `slm`; every attributed record passed signature + chain + quorum-completeness + cross-audit; an incomplete window returns `INCOMPLETE_DISCLOSURE`.
 - Doc + corridor work gated on NONE of Foundry/Euston/corpus/anchor.
 

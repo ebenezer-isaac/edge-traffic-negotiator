@@ -28,16 +28,39 @@ def initial_halting() -> dict:
     }
 
 
-class FakeLane:
-    """traci.lane stand-in with mutable per-edge observations (for attacks)."""
+# Default lane length (m) reported by getLength when a lane is not given an
+# explicit length -- long enough that a vehicle placed near the stop line is
+# within the controller's default ev_horizon (195 m).
+_DEFAULT_LANE_LEN = 200.0
 
-    def __init__(self, halting: dict):
+
+class FakeLane:
+    """traci.lane stand-in: per-lane halting + (for EV sensing) the vehicle ids
+    currently on a lane and the lane length. All three are read by the emergency
+    controller's local-EV detector (getLastStepVehicleIDs / getLength) and the
+    coordination layer (getLastStepHaltingNumber). Vehicle/length maps default
+    empty so a plain coordination FakeConn(halting) is byte-for-byte unchanged."""
+
+    def __init__(self, halting: dict, vehicles: dict | None = None,
+                 lengths: dict | None = None):
         self._halting = dict(halting)
+        # lane_id -> tuple of vehicle ids on that lane (order = SUMO order).
+        self._vehicles = {k: tuple(v) for k, v in (vehicles or {}).items()}
+        self._lengths = dict(lengths or {})
 
     def getLastStepHaltingNumber(self, lane_id):
         if lane_id not in self._halting:
             raise KeyError(lane_id)
         return self._halting[lane_id]
+
+    def getLastStepVehicleIDs(self, lane_id):
+        """Vehicle ids on ``lane_id`` (empty tuple if none scripted). This is the
+        LANE call the EV detector uses -- NOT a vehicle-object call (build F4)."""
+        return tuple(self._vehicles.get(lane_id, ()))
+
+    def getLength(self, lane_id):
+        """Lane length in metres (default _DEFAULT_LANE_LEN)."""
+        return float(self._lengths.get(lane_id, _DEFAULT_LANE_LEN))
 
     def set_observed(self, sender: str, value: int) -> None:
         """Set the halting A0 observes on edge ``sender->A0`` (e.g. A1 -> A1A0_0)."""
@@ -45,6 +68,48 @@ class FakeLane:
 
     def observed_for(self, sender: str) -> int:
         return self._halting.get(f"{sender}A0_0", 0)
+
+
+class FakeVehicle:
+    """traci.vehicle stand-in exposing ONLY the two per-vehicle calls the EV
+    detector needs: getVehicleClass + getLanePosition. It intentionally does NOT
+    expose getLastStepVehicleIDs -- that is a LANE call (build F4); scripting it
+    here would let a regression silently read vehicle ids off the wrong object."""
+
+    def __init__(self, classes: dict | None = None,
+                 positions: dict | None = None):
+        self._classes = dict(classes or {})
+        self._positions = dict(positions or {})
+
+    def getVehicleClass(self, vid):
+        if vid not in self._classes:
+            raise KeyError(vid)  # mimics SUMO raising on an unknown vehicle
+        return self._classes[vid]
+
+    def getLanePosition(self, vid):
+        if vid not in self._positions:
+            raise KeyError(vid)
+        return float(self._positions[vid])
+
+
+class FakeSimulation:
+    """traci.simulation stand-in with a MONOTONIC clock: getTime() never returns
+    a smaller value than a prior call (advance() rejects negative dt and getTime
+    is side-effect-free), matching SUMO's non-decreasing simulation time."""
+
+    def __init__(self, start: float = 0.0):
+        self._t = float(start)
+
+    def getTime(self):
+        return self._t
+
+    def advance(self, dt: float = 1.0):
+        if not isinstance(dt, (int, float)) or isinstance(dt, bool):
+            raise TypeError("dt must be a number")
+        if dt < 0:
+            raise ValueError("simulation time is monotonic; dt must be >= 0")
+        self._t = self._t + float(dt)
+        return self._t
 
 
 class FakeTL:
@@ -77,9 +142,18 @@ class FakeTL:
 
 
 class FakeConn:
-    def __init__(self, halting: dict):
-        self.lane = FakeLane(halting)
+    """Deterministic TraCI connection stand-in. The coordination path uses only
+    ``lane`` + ``trafficlight``; the emergency path additionally reads ``vehicle``
+    (getVehicleClass/getLanePosition) + monotonic ``simulation`` (getTime). All EV
+    maps default empty so ``FakeConn(halting)`` is unchanged for coordination."""
+
+    def __init__(self, halting: dict, vehicles: dict | None = None,
+                 lengths: dict | None = None, classes: dict | None = None,
+                 positions: dict | None = None, sim_time: float = 0.0):
+        self.lane = FakeLane(halting, vehicles, lengths)
         self.trafficlight = FakeTL()
+        self.vehicle = FakeVehicle(classes, positions)
+        self.simulation = FakeSimulation(sim_time)
 
 
 class NoObsConn:

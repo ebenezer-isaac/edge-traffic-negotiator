@@ -46,10 +46,12 @@ $NetSpine     = Join-Path $Here 'euston_spine.net.xml'
 # their spurious signals). Verified type names = "highway.<osm_value>".
 $KeepTypes = 'highway.trunk,highway.primary,highway.secondary,highway.trunk_link,highway.primary_link,highway.secondary_link'
 
-# Corridor polygon (lon lat pairs) tracing the A501 Euston Road spine, rising
-# gently from the SW (Great Portland St) to the NE (King's Cross), with a ~250 m
-# buffer. Used by --keep-edges.in-geo-boundary to clip the rectangle to the spine.
-$GeoPoly = '-0.1450,51.5218 -0.1215,51.5288 -0.1215,51.5318 -0.1450,51.5248'
+# Corridor polygon (lon lat pairs) clipping to the ~3-4-signal EASTERN Euston Road
+# stretch (Euston-station front -> King's Cross approach): the 4 A501 mainline TLS
+# cluster_110097_110098, 6985146843, cluster_13249075..., cluster_2440680097...
+# Used by --keep-edges.in-geo-boundary. Widen this poly to re-include the western
+# Marylebone-Road end (the full corridor has ~12 A501 TLS).
+$GeoPoly = '-0.13203,51.52659 -0.12310,51.52637 -0.12282,51.53077 -0.13175,51.53099'
 
 # --- Stage 1: OSM fetch -----------------------------------------------------
 # We use Overpass QL directly via curl. The bundled osmGet.py emits the legacy

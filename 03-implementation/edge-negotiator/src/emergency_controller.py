@@ -101,6 +101,11 @@ class EmergencyController(CoordinatedController):
         self.ev_events: list[dict] = []
         # Latch so a single ambulance preemption is announced once per junction.
         self._ev_latched: set[tuple[str, str]] = set()
+        # Per-tl phase locked by an ADMISSIBLE EV preempt on the current tick (set
+        # by decide(), read by _preempt_locked_phase). An admissible preempt
+        # OUTRANKS the anti-starvation override -- the shield never cuts an active
+        # ambulance green for cross-traffic fairness (spec §6.8). None = no lock.
+        self._ev_preempt_phase: dict[str, int | None] = {}
 
     # -- local EV sensing ----------------------------------------------------
 
@@ -233,7 +238,20 @@ class EmergencyController(CoordinatedController):
 
     # -- decision ------------------------------------------------------------
 
+    def _preempt_locked_phase(self, tl: str) -> int | None:
+        """The phase held by an admissible EV preempt on the current tick (or None).
+
+        decide() runs BEFORE step() consults this (see MaxPressureController
+        ._decide_with_anti_starvation), so the lock always reflects THIS tick's
+        emergency decision. A non-admissible / withheld / phantom claim never sets
+        the lock, so only a real admissible preempt outranks the fairness override."""
+        return self._ev_preempt_phase.get(tl)
+
     def decide(self, tl: str, st: dict) -> int:
+        # Default: no admissible preempt locks this tl this tick (cleared here so
+        # every no-preempt path below leaves the lock off; set only when an
+        # admissible preempt actually executes, near the end).
+        self._ev_preempt_phase[tl] = None
         used = super().decide(tl, st)  # normal coordinated / MaxPressure choice
         if tl not in self.slm or tl not in self.identities:
             return used
@@ -317,6 +335,11 @@ class EmergencyController(CoordinatedController):
         executed = preempt if preempt is not None else used
         if escalated and executed != used:
             self.escalation_changed_decisions += 1
+        # Lock this phase for the tick: an admissible preempt that actually holds a
+        # green OUTRANKS the anti-starvation override (a withheld/phantom claim,
+        # or an admissible trigger with no serving phase, leaves the lock off).
+        if admissible and preempt is not None:
+            self._ev_preempt_phase[tl] = preempt
 
         ev = {"tl": tl, "t": int(self._sim_time()), "source": trig["source"],
               "ev_id": trig["ev_id"], "claimer": trig["claimer"],

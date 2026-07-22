@@ -8,10 +8,10 @@ artifacts are the frozen files it writes:
                          SOLE §8 Exp-1 data source (SUPERSEDES the hand-curated
                          ambiguous_decision.generate_dataset, which is retained
                          only as a stdlib unit-test fixture, NOT the §8 source).
-  - exp1_ceilings.json : the frozen nonlinear Bayes ceiling (value + MC 95%
-                         half-width + seed/n/python) and the axis-aligned box
-                         ceiling (the RuleDisambiguator's exact function class,
-                         over its real tuning grid).
+  - exp1_ceilings.json : the frozen nonlinear Bayes ceiling (value + seed/n/python;
+                         EXACT balanced accuracy over the frozen population, no MC)
+                         and the axis-aligned box ceiling (the RuleDisambiguator's
+                         exact function class, over its real tuning grid).
 Because CPython's betavariate/normalvariate are NOT in the cross-version
 reproducibility contract, the COMMITTED JSONs are authoritative; the §10 hash
 pin enforces they are never silently regenerated. Re-running this file on a
@@ -43,7 +43,6 @@ DENSITY_FLOOR = 1e-4                  # analytic ceiling only where mixture p(x)
 OOD_PERCENTILE = 85                   # distance-from-support percentile: > threshold => novel (classifier-independent §8)
 SEED = 20260721
 N_PER_CLASS = 300                     # dataset size per class
-CEIL_MC_N = 200000                    # MC draws for the Bayes-error integral
 # RuleDisambiguator's EXACT tuning grid (mirror of ambiguous_decision.py _*_GRID; update if that changes).
 _CORR_K_GRID = (0, 1, 2); _RESIDUAL_MAX_GRID = (0.75, 1.0, 1.25, 1.5)
 _PERSISTENCE_P_GRID = (1, 2, 3); _AGREEMENT_MIN_GRID = (0.3, 0.5, 0.6, 0.75)
@@ -70,6 +69,8 @@ def posterior_real(x):
     return math.exp(lr-m)/(math.exp(lr-m)+math.exp(ls-m))
 def bayes_decide(x): return "real" if posterior_real(x) >= 0.5 else "spoof_or_fault"
 def mixture_logdensity(x):
+    # NOTE: sums discrete log-PMF (Poisson) + continuous log-PDF (lognormal/beta) -> a
+    # unit-inconsistent TYPICALITY SCORE for the density-floor gate, NOT a true joint density.
     lr = math.log(PRIOR["real"]) + log_likelihood(x, "real")
     ls = math.log(PRIOR["spoof_or_fault"]) + log_likelihood(x, "spoof_or_fault")
     m = max(lr, ls); return m + math.log(math.exp(lr-m)+math.exp(ls-m))
@@ -223,8 +224,7 @@ if __name__ == "__main__":
         "distance_split_note": ood["criterion"],
         "standardizer_mean": ood["standardizer_mean"], "standardizer_std": ood["standardizer_std"],
         "distance_threshold_p85": ood["distance_threshold_p85"],
-        "integration": "bounded-error Monte-Carlo / exact over the frozen population; per-feature "
-                       "likelihood closed-form, the multivariate Bayes-error integral has no closed form",
+        "integration": "EXACT empirical balanced accuracy of the oracle Bayes/box classifiers over the frozen density>floor population (per-feature likelihood closed-form; NO Monte-Carlo). The density-floor effect on the ceiling is negligible (~6e-4) and the tail count is boundary-sensitive - stated, not hidden.",
         "provenance": {"seed": SEED, "n_per_class": N_PER_CLASS, "python": platform.python_version(),
                        "note": "COMMITTED JSONs are authoritative; do not regenerate (§10 hash pin)"},
         "adequacy": ADEQUACY,

@@ -158,6 +158,15 @@ class LegalCorpus:
         """True iff ``statute_ref`` names a real rule in the corpus (else fabrication)."""
         return any(r.statute_ref == statute_ref for r in self.rules)
 
+    def all_rules(self) -> tuple:
+        """Every rule in the corpus, order-stable (CAG: whole-corpus-in-context, §2/§3).
+
+        No retrieval, no ranking, no top-k: the ENTIRE 18-rule policy set is returned
+        so it can be placed in front of the model (Lee's guidance — policies explicit,
+        not guessed). Returns a fresh tuple; never mutates the corpus.
+        """
+        return tuple(self.rules)
+
     # ---- retrieval ---- #
     def retrieve(self, query_terms, k: int = 8) -> tuple:
         """Top-``k`` rules by TF-IDF over the derived query. Deterministic.

@@ -107,6 +107,34 @@ SYSTEM_JOB_A = (
 )
 
 
+# Job-A CAG system prompt (§2/§3 amended). WHOLE-CORPUS-IN-CONTEXT: the model is
+# given the COMPLETE policy set (all 18 rules, no retrieval) — Lee's guidance that
+# policies are placed explicitly in front of the model, not guessed. REASON-THEN-
+# CLASSIFY: the model first emits a per-rule applicability JUDGMENT for EVERY rule
+# (the reasoning stage, each `why` grounded in that rule's "applies when"); the
+# CONTROLLER then DERIVES the cited set from the judgments (classification stage).
+# The model's own free-text cited_rules is kept ONLY as a consistency-check flag and
+# is NEVER the scored output.
+SYSTEM_JOB_A_CAG = (
+    "You are counsel's INTERNAL legal-reasoning assistant for a signalised-junction "
+    "incident on Euston Road (A501), London. You are given (1) the COMPLETE set of UK "
+    "traffic-law rules that make up the policy corpus, each with a citation id, and "
+    "(2) the facts of a flagged event.\n"
+    "REASON THEN CLASSIFY. First, for EVERY rule in the corpus, judge whether it "
+    "applies to THIS event: output one object per rule {\"id\": \"<citation id, "
+    "copied verbatim>\", \"applies\": \"yes\" or \"no\", \"why\": \"<=20 words, "
+    "grounded in that rule's 'applies when'\"}. Judge every rule; do not skip any.\n"
+    "STRICT GROUNDING: use ONLY the citation ids from the corpus verbatim. NEVER "
+    "invent, guess, abbreviate, or misspell an id. candidate_origin names a KEY or "
+    "situation, never a person.\n"
+    "The note is INTERNAL and NON-EVIDENTIAL: it is not a determination of fault.\n"
+    'Reply with ONLY a JSON object, no prose around it: '
+    '{"rule_judgments": [{"id": "<id>", "applies": "yes|no", "why": "<=20 words"}, ...], '
+    '"candidate_origin": "<label>", "cited_rules": ["<id>", ...], '
+    '"reasoning": "<=120 words", "fault_weight_note": "<qualitative, non-numeric>"}'
+)
+
+
 def _service_endpoint() -> str | None:
     """Parse `foundry service status` for the running OpenAI-compatible endpoint."""
     import subprocess
@@ -265,6 +293,121 @@ class SLMAgent:
             return self._parse_note(resp.choices[0].message.content or "")
         except Exception:
             return None
+
+    def reason_note_cag(self, case, corpus_rules, note_max_tokens: int = 1536):
+        """Job A CAG reason-then-classify (§2/§3 amended): the FAIR re-test.
+
+        ``corpus_rules`` is the WHOLE corpus (``corpus.all_rules()`` — all 18 rules,
+        no retrieval). The model emits a per-rule applicability judgment for EVERY
+        rule (reasoning stage). The CONTROLLER then DERIVES ``cited_rules`` as the
+        in-corpus ids judged ``applies == "yes"`` (classification stage); an id judged
+        applicable but NOT in the corpus is a FABRICATION — logged and DROPPED, never
+        scored. The model's own free-text ``cited_rules`` is retained only as a
+        consistency-check flag. Returns the note dict or ``None`` on ANY failure
+        (connection / parse / shape). Temperature 0; call bounded to 90 s. The note is
+        NON-EVIDENTIAL and counsel-gated; it never enters the evidence pack.
+
+        note_max_tokens defaults higher than ``reason_note`` because the per-rule
+        judgment array over 18 rules is a larger emission than a bare cited list.
+        """
+        rules_block = self._format_retrieved_rules(corpus_rules)
+        if not rules_block:
+            return None  # empty corpus -> no grounded note (fail-loud upstream)
+        in_corpus = []
+        for r in corpus_rules:
+            ref = getattr(r, "statute_ref", None)
+            if ref is None and isinstance(r, dict):
+                ref = r.get("statute_ref")
+            if ref:
+                in_corpus.append(ref)
+        user = (
+            "COMPLETE RULE CORPUS (cite ONLY these ids, verbatim):\n" + rules_block
+            + "\n\nFLAGGED EVENT FACTS:\n" + self._case_evidence(case)
+            + "\n\nJudge EVERY rule, then write the internal note as the specified "
+              "JSON object."
+        )
+        try:
+            resp = self.client.chat.completions.create(
+                model=self.model, temperature=0, max_tokens=note_max_tokens,
+                timeout=90,  # bound each call: a stalled generation -> None, never a hang
+                messages=[{"role": "system", "content": SYSTEM_JOB_A_CAG},
+                          {"role": "user", "content": user}],
+            )
+            return self._derive_cited_from_judgments(
+                resp.choices[0].message.content or "", frozenset(in_corpus))
+        except Exception:
+            return None
+
+    @staticmethod
+    def _derive_cited_from_judgments(text: str, in_corpus: frozenset):
+        """Parse a CAG reason-then-classify note; the CONTROLLER derives the cited set.
+
+        The SCORED ``cited_rules`` = the in-corpus ids judged ``applies == "yes"``
+        (dedupe, order-stable). Ids judged applicable but absent from ``in_corpus`` are
+        FABRICATIONS — collected in ``fabrication_attempts`` and DROPPED (never scored).
+        The model's own free-text ``cited_rules`` is parsed separately and kept only as
+        ``model_cited_rules`` + a ``cited_consistent`` flag. Returns None if the object
+        is absent/unparseable or has no ``rule_judgments`` list.
+        """
+        obj = SLMAgent._extract_json_object(text)
+        if obj is None:
+            return None
+        judgments_raw = obj.get("rule_judgments")
+        if not isinstance(judgments_raw, list):
+            return None  # reason-then-classify REQUIRES the per-rule judgment array
+        judgments: list = []
+        cited: list = []
+        fabrication_attempts: list = []
+        for j in judgments_raw:
+            if not isinstance(j, dict):
+                continue
+            jid = j.get("id")
+            jid = jid.strip() if isinstance(jid, str) else ""
+            applies_raw = j.get("applies")
+            if isinstance(applies_raw, bool):
+                applies = applies_raw
+            elif isinstance(applies_raw, str):
+                applies = applies_raw.strip().lower() in ("yes", "true", "applies", "y")
+            else:
+                applies = False
+            why = j.get("why")
+            why = why.strip() if isinstance(why, str) else ""
+            words = why.split()
+            if len(words) > 20:
+                why = " ".join(words[:20])
+            judgments.append({"id": jid, "applies": bool(applies), "why": why})
+            if applies and jid:
+                if jid in in_corpus:
+                    if jid not in cited:
+                        cited.append(jid)
+                elif jid not in fabrication_attempts:
+                    fabrication_attempts.append(jid)  # applicable but not in corpus -> drop
+        # the model's OWN free-text cited list — a CONSISTENCY FLAG only, never scored.
+        model_cited: list = []
+        raw_model = obj.get("cited_rules")
+        if isinstance(raw_model, str) and raw_model.strip():
+            raw_model = [raw_model]
+        if isinstance(raw_model, list):
+            for c in raw_model:
+                if isinstance(c, str) and c.strip() and c.strip() not in model_cited:
+                    model_cited.append(c.strip())
+        reasoning = obj.get("reasoning")
+        reasoning = reasoning.strip() if isinstance(reasoning, str) else ""
+        rwords = reasoning.split()
+        if len(rwords) > 120:
+            reasoning = " ".join(rwords[:120])
+        origin = obj.get("candidate_origin")
+        fwn = obj.get("fault_weight_note")
+        return {
+            "rule_judgments": judgments,
+            "candidate_origin": origin.strip() if isinstance(origin, str) else "unknown",
+            "cited_rules": cited,                       # CONTROLLER-DERIVED = the scored output
+            "model_cited_rules": model_cited,           # consistency-check flag only
+            "cited_consistent": set(model_cited) == set(cited),
+            "fabrication_attempts": fabrication_attempts,  # judged-applicable but out-of-corpus, dropped
+            "reasoning": reasoning,
+            "fault_weight_note": fwn.strip() if isinstance(fwn, str) else "",
+        }
 
     @staticmethod
     def _format_retrieved_rules(retrieved_rules) -> str:

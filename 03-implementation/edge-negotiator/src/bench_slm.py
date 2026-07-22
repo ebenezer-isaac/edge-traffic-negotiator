@@ -27,11 +27,11 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import statistics
 import time
 from dataclasses import dataclass, field
 
 from slm_agent import SLMAgent
+from slm_latency import summarize_latency
 
 
 @dataclass(frozen=True)
@@ -105,33 +105,18 @@ class CallResult:
 @dataclass
 class BenchSummary:
     tag: str
+    job: str
     model_id: str
     base_url: str
     n_calls: int
-    latency_median_s: float
-    latency_p95_s: float
-    latency_max_s: float
-    latency_min_s: float
-    latency_mean_s: float
+    latency: dict            # §8 FLPerformance nearest-rank summary (post-warmup)
     parse_success_pct: float
     argmax_agreement_pct: float
     results: list[CallResult] = field(default_factory=list)
 
 
-def _percentile(sorted_vals: list[float], pct: float) -> float:
-    """Nearest-rank percentile (pct in [0,100]); robust for small n."""
-    if not sorted_vals:
-        return float("nan")
-    if len(sorted_vals) == 1:
-        return sorted_vals[0]
-    rank = pct / 100.0 * (len(sorted_vals) - 1)
-    lo = int(rank)
-    hi = min(lo + 1, len(sorted_vals) - 1)
-    frac = rank - lo
-    return sorted_vals[lo] * (1 - frac) + sorted_vals[hi] * frac
-
-
-def run_bench(tag: str, calls: int, seed: int) -> BenchSummary:
+def run_bench(tag: str, calls: int, seed: int, warmup: int = 1,
+              job: str = "choose_phase") -> BenchSummary:
     agent = SLMAgent()  # auto-discovers endpoint + currently-loaded model
     battery = build_battery(seed)
     # If asked for more calls than the battery has, cycle through it (deterministic).
@@ -150,20 +135,16 @@ def run_bench(tag: str, calls: int, seed: int) -> BenchSummary:
             latency_s=dt, parsed_ok=parsed_ok, agrees=agrees,
         ))
 
-    lats = sorted(r.latency_s for r in results)
     n = len(results)
     n_parsed = sum(r.parsed_ok for r in results)
     n_agree = sum(r.agrees for r in results)
+    # §8: FLPerformance nearest-rank percentiles over successful-call samples, W warmup
+    # calls discarded. Small-N caveat: at N < 100 the P99 index collapses to the last
+    # sample, so P99 == max.
+    lat = summarize_latency([r.latency_s for r in results], warmup=warmup)
     return BenchSummary(
-        tag=tag,
-        model_id=agent.model,
-        base_url=str(agent.client.base_url),
-        n_calls=n,
-        latency_median_s=statistics.median(lats),
-        latency_p95_s=_percentile(lats, 95),
-        latency_max_s=max(lats),
-        latency_min_s=min(lats),
-        latency_mean_s=statistics.fmean(lats),
+        tag=tag, job=job, model_id=agent.model, base_url=str(agent.client.base_url),
+        n_calls=n, latency=lat,
         parse_success_pct=100.0 * n_parsed / n if n else 0.0,
         argmax_agreement_pct=100.0 * n_agree / n if n else 0.0,
         results=results,
@@ -172,12 +153,9 @@ def run_bench(tag: str, calls: int, seed: int) -> BenchSummary:
 
 def _summary_to_dict(s: BenchSummary) -> dict:
     return {
-        "tag": s.tag, "model_id": s.model_id, "base_url": s.base_url,
+        "tag": s.tag, "job": s.job, "model_id": s.model_id, "base_url": s.base_url,
         "n_calls": s.n_calls,
-        "latency_s": {
-            "median": s.latency_median_s, "p95": s.latency_p95_s,
-            "max": s.latency_max_s, "min": s.latency_min_s, "mean": s.latency_mean_s,
-        },
+        "latency_s": s.latency,
         "parse_success_pct": s.parse_success_pct,
         "argmax_agreement_pct": s.argmax_agreement_pct,
         "results": [
@@ -197,23 +175,33 @@ def main() -> None:
                     help="number of timed choose_phase calls (>=50 for the latency dist)")
     ap.add_argument("--tag", default="active",
                     help="human label for the currently-loaded model (e.g. phi-4-mini)")
+    ap.add_argument("--job", default="choose_phase",
+                    help="SLM job being profiled (label; choose_phase is implemented here)")
+    ap.add_argument("--warmup", type=int, default=1,
+                    help="cold-start warmup calls to discard before percentiles (§8, W>=1)")
     ap.add_argument("--seed", type=int, default=20240604)
     ap.add_argument("--out", default=None, help="write the raw JSON summary here")
     args = ap.parse_args()
 
-    s = run_bench(args.tag, args.calls, args.seed)
+    s = run_bench(args.tag, args.calls, args.seed, warmup=args.warmup, job=args.job)
+    lat = s.latency
+    f = lambda x: f"{x:.3f}" if isinstance(x, (int, float)) else "n/a"  # noqa: E731
 
-    print(f"[{s.tag}] model_id={s.model_id}")
+    print(f"[{s.tag}] job={s.job} model_id={s.model_id}")
     print(f"  base_url={s.base_url}")
-    print(f"  calls={s.n_calls}")
-    print(f"  latency_s: median={s.latency_median_s:.3f} p95={s.latency_p95_s:.3f} "
-          f"max={s.latency_max_s:.3f} min={s.latency_min_s:.3f} mean={s.latency_mean_s:.3f}")
+    print(f"  calls={s.n_calls} · latency n={lat['n']} (warmup {lat['warmup_discarded']} "
+          f"discarded)")
+    print(f"  latency_s (nearest-rank): min={f(lat['min'])} p50={f(lat['p50'])} "
+          f"p95={f(lat['p95'])} p99={f(lat['p99'])} max={f(lat['max'])} "
+          f"mean={f(lat['mean'])}")
+    if lat['n'] < 100:
+        print(f"  NOTE: N={lat['n']} < 100 → nearest-rank P99 collapses to observed max.")
     print(f"  parse_success={s.parse_success_pct:.1f}%  "
           f"argmax_agreement={s.argmax_agreement_pct:.1f}%")
 
     if args.out:
-        with open(args.out, "w", encoding="utf-8") as f:
-            json.dump(_summary_to_dict(s), f, indent=2)
+        with open(args.out, "w", encoding="utf-8") as f_out:
+            json.dump(_summary_to_dict(s), f_out, indent=2)
         print(f"  wrote {args.out}")
 
 

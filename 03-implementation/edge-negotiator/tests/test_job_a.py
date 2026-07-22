@@ -298,3 +298,114 @@ def test_parse_note_clamps_reasoning_to_120_words():
     txt = '{"cited_rules": [], "reasoning": "%s"}' % long
     note = SLMAgent._parse_note(txt)
     assert len(note["reasoning"].split()) == 120
+
+
+# --------------------------------------------------------------------------- #
+# 10. CAG reason-then-classify (§2/§3): the CONTROLLER derives the cited set.
+# --------------------------------------------------------------------------- #
+
+def test_cag_controller_derives_cited_from_applies_yes_only(corpus):
+    in_corpus = corpus.statute_refs()
+    txt = (
+        '{"rule_judgments": ['
+        '{"id": "Griffin-v-Mersey", "applies": "yes", "why": "EV apportionment"},'
+        '{"id": "RTA1988-s36", "applies": "no", "why": "no civilian red-crossing"},'
+        '{"id": "Keyse-v-Commissioner", "applies": "yes", "why": "adjust on facts"}],'
+        '"candidate_origin": "emergency_claim",'
+        '"cited_rules": ["RTA1988-s36"],'          # model free-text is WRONG on purpose
+        '"reasoning": "note", "fault_weight_note": "qualitative"}'
+    )
+    note = SLMAgent._derive_cited_from_judgments(txt, in_corpus)
+    # only the applies:"yes" ids, in judgment order — NOT the model's free-text list.
+    assert note["cited_rules"] == ["Griffin-v-Mersey", "Keyse-v-Commissioner"]
+    assert note["model_cited_rules"] == ["RTA1988-s36"]
+    assert note["cited_consistent"] is False        # free-text disagreed with derived
+    assert note["fabrication_attempts"] == []
+
+
+def test_cag_reason_then_classify_ignores_freetext_cited_for_scoring(corpus):
+    # even when the model's free-text cited_rules lists a fabricated id, the SCORED
+    # (controller-derived) set never contains it — reason-then-classify decouples them.
+    in_corpus = corpus.statute_refs()
+    txt = (
+        '{"rule_judgments": ['
+        '{"id": "Bird-v-Pearce", "applies": "yes", "why": "conflicting green"}],'
+        '"cited_rules": ["Totally-Fabricated-Ref-777", "Bird-v-Pearce"],'
+        '"reasoning": "x", "fault_weight_note": "y"}'
+    )
+    note = SLMAgent._derive_cited_from_judgments(txt, in_corpus)
+    assert note["cited_rules"] == ["Bird-v-Pearce"]              # derived, clean
+    assert "Totally-Fabricated-Ref-777" in note["model_cited_rules"]
+    scored = ex.score_case(note["cited_rules"], frozenset({"Bird-v-Pearce"}), corpus)
+    assert scored["has_fabrication"] is False                   # nothing fabricated scored
+
+
+def test_cag_controller_drops_and_counts_out_of_corpus_applies_yes(corpus):
+    # a model that judges a FABRICATED / out-of-corpus id as applicable: the controller
+    # DROPS it from cited AND records it as a fabrication attempt (never scored).
+    in_corpus = corpus.statute_refs()
+    txt = (
+        '{"rule_judgments": ['
+        '{"id": "Griffin-v-Mersey", "applies": "yes", "why": "real rule"},'
+        '{"id": "Made-Up-Statute-2099", "applies": "yes", "why": "hallucinated"}],'
+        '"cited_rules": [], "reasoning": "r", "fault_weight_note": "f"}'
+    )
+    note = SLMAgent._derive_cited_from_judgments(txt, in_corpus)
+    assert note["cited_rules"] == ["Griffin-v-Mersey"]          # in-corpus kept
+    assert note["fabrication_attempts"] == ["Made-Up-Statute-2099"]  # dropped + counted
+    # and the scored set carries NO fabrication (the drop happened pre-scoring).
+    scored = ex.score_case(note["cited_rules"], frozenset({"Griffin-v-Mersey"}), corpus)
+    assert scored["fabricated"] == []
+
+
+def test_cag_parser_none_without_rule_judgments():
+    # reason-then-classify REQUIRES the per-rule judgment array; a bare cited-only
+    # object (the old RAG shape) is a parse failure for the CAG path.
+    assert SLMAgent._derive_cited_from_judgments(
+        '{"cited_rules": ["Griffin-v-Mersey"]}', frozenset({"Griffin-v-Mersey"})) is None
+    assert SLMAgent._derive_cited_from_judgments("no json", frozenset()) is None
+
+
+def test_cag_parser_accepts_boolean_applies(corpus):
+    # some models emit a JSON boolean rather than "yes"/"no"; both must work.
+    in_corpus = corpus.statute_refs()
+    txt = ('{"rule_judgments": [{"id": "Bird-v-Pearce", "applies": true, "why": "x"},'
+           '{"id": "Griffin-v-Mersey", "applies": false, "why": "y"}]}')
+    note = SLMAgent._derive_cited_from_judgments(txt, in_corpus)
+    assert note["cited_rules"] == ["Bird-v-Pearce"]
+
+
+class _StubCagAgent:
+    """Deterministic CAG stub: judges the first rule applicable + fabricates one id."""
+    def reason_note_cag(self, case, candidates, note_max_tokens=1536):
+        first = candidates[0].statute_ref if candidates else None
+        judgments = []
+        if first:
+            judgments.append({"id": first, "applies": True, "why": "stub"})
+        judgments.append({"id": "Stub-Fabricated-Id", "applies": True, "why": "stub"})
+        cited = [first] if first else []
+        return {"rule_judgments": judgments, "candidate_origin": "unknown",
+                "cited_rules": cited, "model_cited_rules": cited,
+                "cited_consistent": True,
+                "fabrication_attempts": ["Stub-Fabricated-Id"],
+                "reasoning": "stub", "fault_weight_note": "qualitative"}
+
+
+def test_cag_arm_scores_controller_derived_and_surfaces_attempts(corpus):
+    cases = [_case("conservation_anomaly", case_id="C-1")]
+    gold = ex.build_gold(cases)
+    agg, pc = ex.score_arm(cases, gold, corpus, ex.make_cag_arm(_StubCagAgent()),
+                           candidate_fn=ex.cag_candidates)
+    assert agg["n"] == 1
+    # scored fabrication is 0 (the fabricated id was dropped by the controller)...
+    assert agg["fabricated_citation_count"] == 0
+    assert agg["fabrication_rate_per_note"] == 0.0
+    # ...but the DROPPED attempt is surfaced per-case for transparency.
+    assert pc[0]["fabrication_attempts"] == 1
+    assert pc[0]["parse_failure"] is False
+
+
+def test_cag_candidates_returns_whole_corpus(corpus):
+    cands = ex.cag_candidates(corpus, _case("emergency_claim"))
+    assert len(cands) == 18                                  # whole corpus, no top-k
+    assert {r.statute_ref for r in cands} == set(corpus.statute_refs())

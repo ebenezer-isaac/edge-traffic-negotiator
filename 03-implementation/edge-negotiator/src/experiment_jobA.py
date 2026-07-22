@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from time import perf_counter
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
@@ -31,6 +32,7 @@ from ambiguous_decision import FlaggedCase                       # noqa: E402
 from legal_corpus import (EmptyCorpusError, LegalCorpus,          # noqa: E402
                           load_corpus, retrieve_for_case)
 from slm_agent import SLMAgent, probe_foundry_determinism        # noqa: E402
+from slm_latency import summarize_latency                        # noqa: E402
 
 _PKG_ROOT = os.path.dirname(_HERE)
 DATASET_PATH = os.path.join(_PKG_ROOT, "fixtures", "exp1_dataset.json")
@@ -183,12 +185,30 @@ def aggregate(per_case: list) -> dict:
     }
 
 
-def score_arm(cases, gold, corpus, arm_fn, k: int = RETRIEVAL_K) -> tuple:
-    """Run one arm over cases. ``arm_fn(case, retrieved) -> (cited_list, meta)``."""
+def rag_candidates(corpus, case, k: int = RETRIEVAL_K):
+    """RAG candidate set: controller-mediated TF-IDF top-k retrieval (the comparator)."""
+    return retrieve_for_case(corpus, case, k=k)
+
+
+def cag_candidates(corpus, case):
+    """CAG candidate set: the WHOLE corpus (all 18 rules, no retrieval) — §2/§3."""
+    return corpus.all_rules()
+
+
+def score_arm(cases, gold, corpus, arm_fn, candidate_fn=None,
+              k: int = RETRIEVAL_K) -> tuple:
+    """Run one arm over cases. ``arm_fn(case, candidates) -> (cited_list, meta)``.
+
+    ``candidate_fn(corpus, case) -> rules`` selects the rules placed in front of the
+    arm. Default = RAG top-k retrieval (backward-compatible); pass ``cag_candidates``
+    for the whole-corpus CAG arm.
+    """
+    if candidate_fn is None:
+        candidate_fn = lambda corpus, case: rag_candidates(corpus, case, k=k)  # noqa: E731
     per_case = []
     for c in cases:
-        retrieved = retrieve_for_case(corpus, c, k=k)
-        cited, meta = arm_fn(c, retrieved)
+        candidates = candidate_fn(corpus, c)
+        cited, meta = arm_fn(c, candidates)
         scored = score_case(cited, gold[c.case_id], corpus)
         scored["case_id"] = c.case_id
         scored["event_type"] = c.event_type
@@ -196,6 +216,10 @@ def score_arm(cases, gold, corpus, arm_fn, k: int = RETRIEVAL_K) -> tuple:
         scored["parse_failure"] = bool(meta.get("parse_failure"))
         if "candidate_origin" in meta:
             scored["candidate_origin"] = meta["candidate_origin"]
+        if "fabrication_attempts" in meta:
+            scored["fabrication_attempts"] = meta["fabrication_attempts"]
+        if "cited_consistent" in meta:
+            scored["cited_consistent"] = meta["cited_consistent"]
         per_case.append(scored)
     return aggregate(per_case), per_case
 
@@ -204,14 +228,45 @@ def score_arm(cases, gold, corpus, arm_fn, k: int = RETRIEVAL_K) -> tuple:
 # The two arms.
 # --------------------------------------------------------------------------- #
 
-def make_slm_arm(agent: SLMAgent):
-    """SLM Job-A arm. A parse/connection failure -> no note (empty cited, flagged)."""
+def make_slm_arm(agent: SLMAgent, latencies=None):
+    """SLM Job-A RAG arm. A parse/connection failure -> no note (empty cited, flagged).
+
+    ``latencies`` (optional list) collects per-call Job-A wall-clock latency (seconds)
+    for §8 profiling; the timing wraps ONLY the ``reason_note`` call.
+    """
     def arm(case, retrieved):
+        t0 = perf_counter()
         note = agent.reason_note(case, retrieved)
+        if latencies is not None:
+            latencies.append(perf_counter() - t0)
         if note is None:
             return [], {"parse_failure": True}
         return note["cited_rules"], {"parse_failure": False,
                                      "candidate_origin": note.get("candidate_origin")}
+    return arm
+
+
+def make_cag_arm(agent: SLMAgent, latencies=None):
+    """SLM Job-A CAG reason-then-classify arm (the fair re-test, §2/§3).
+
+    Scores the CONTROLLER-DERIVED cited set (in-corpus ids judged applicable), NOT the
+    model's free-text list. ``fabrication_attempts`` (judged-applicable ids the
+    controller DROPPED as out-of-corpus) is surfaced in meta for transparency; those
+    ids never reach scoring. ``latencies`` collects per-call Job-A latency.
+    """
+    def arm(case, candidates):
+        t0 = perf_counter()
+        note = agent.reason_note_cag(case, candidates)
+        if latencies is not None:
+            latencies.append(perf_counter() - t0)
+        if note is None:
+            return [], {"parse_failure": True}
+        return note["cited_rules"], {
+            "parse_failure": False,
+            "candidate_origin": note.get("candidate_origin"),
+            "fabrication_attempts": len(note.get("fabrication_attempts", [])),
+            "cited_consistent": bool(note.get("cited_consistent")),
+        }
     return arm
 
 
@@ -233,20 +288,54 @@ def template_arm(case, retrieved):
 # --------------------------------------------------------------------------- #
 
 def determinism_check(agent: SLMAgent, cases, corpus, sample: int = 5,
-                      k: int = RETRIEVAL_K) -> dict:
-    """Re-run the SLM note on the first ``sample`` cases; report identical-citation rate."""
+                      k: int = RETRIEVAL_K, cag: bool = False) -> dict:
+    """Re-run the SLM note on the first ``sample`` cases; report identical-citation rate.
+
+    ``cag=True`` profiles the CAG reason-then-classify arm over the whole corpus;
+    otherwise the RAG top-k arm. The controller-derived ``cited_rules`` is compared.
+    """
     checked = identical = 0
     for c in cases[:sample]:
-        retrieved = retrieve_for_case(corpus, c, k=k)
-        a = agent.reason_note(c, retrieved)
-        b = agent.reason_note(c, retrieved)
+        if cag:
+            candidates = corpus.all_rules()
+            a = agent.reason_note_cag(c, candidates)
+            b = agent.reason_note_cag(c, candidates)
+        else:
+            candidates = retrieve_for_case(corpus, c, k=k)
+            a = agent.reason_note(c, candidates)
+            b = agent.reason_note(c, candidates)
         if a is None or b is None:
             continue
         checked += 1
         if a["cited_rules"] == b["cited_rules"]:
             identical += 1
     return {"sample": sample, "checked": checked, "identical": identical,
-            "identical_rate": (identical / checked) if checked else None}
+            "identical_rate": (identical / checked) if checked else None,
+            "arm": "cag" if cag else "rag"}
+
+
+def cag_minus_rag_delta(cag: dict, rag: dict, cag_fab_attempts: int) -> dict:
+    """CAG-minus-RAG delta block: does whole-corpus reason-then-classify move the needle?
+
+    ``dF1`` and ``dFCR_per_note`` are CAG minus RAG (positive dF1 = CAG better;
+    negative dFCR = CAG cleaner). ``dfabrication`` compares SCORED fabrication rate
+    (CAG's is ~0 by construction — the controller drops out-of-corpus ids); the raw
+    ``cag_fabrication_attempts`` the controller dropped is reported alongside so the
+    drop-to-zero is not mistaken for the model never fabricating.
+    """
+    return {
+        "dF1": cag["citation_correctness_f1"] - rag["citation_correctness_f1"],
+        "dFCR_per_note": cag["fcr_per_note"] - rag["fcr_per_note"],
+        "dfabrication_rate_per_note": (cag["fabrication_rate_per_note"]
+                                       - rag["fabrication_rate_per_note"]),
+        "cag_scored_fabrication_count": cag["fabricated_citation_count"],
+        "rag_scored_fabrication_count": rag["fabricated_citation_count"],
+        "cag_fabrication_attempts_dropped_by_controller": cag_fab_attempts,
+        "note": ("CAG scored-fabrication is ~0 BY CONSTRUCTION: the reason-then-classify "
+                 "controller drops any judged-applicable id absent from the 18-rule "
+                 "corpus. cag_fabrication_attempts_dropped_by_controller counts what the "
+                 "model tried to fabricate before the drop."),
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -284,8 +373,40 @@ def split_dominance_verdict(slm: dict, template: dict) -> dict:
 # Runner.
 # --------------------------------------------------------------------------- #
 
-def run(split: str = "novel", reps: int = 3, write: bool = True) -> dict:
-    """Probe Foundry (SKIP-not-abort), run both arms on ``split``, write results."""
+def _load_committed_rag():
+    """Reuse the committed RAG-arm run (arms.slm/template) if present + OK, else None."""
+    path = os.path.join(RESULTS_DIR, "experiment_jobA.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            old = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    if old.get("status") != "OK":
+        return None
+    arms = old.get("arms") or {}
+    # accept either the new (slm_rag) or the legacy (slm) key for the RAG arm.
+    rag = arms.get("slm_rag") or arms.get("slm")
+    tpl = arms.get("template")
+    if not rag or not tpl:
+        return None
+    pc = old.get("per_case") or {}
+    return {"rag_agg": rag, "tpl_agg": tpl,
+            "rag_pc": pc.get("slm_rag") or pc.get("slm"),
+            "tpl_pc": pc.get("template")}
+
+
+def run(split: str = "novel", reps: int = 3, write: bool = True,
+        reuse_rag: bool = True, det_sample: int = 3) -> dict:
+    """Probe Foundry (SKIP-not-abort), run the 3 arms on ``split``, write results.
+
+    Arms: ``slm_rag`` (TF-IDF k=10 comparator — reused from the committed run when
+    ``reuse_rag`` and available, else re-run live), ``slm_cag`` (the NEW whole-corpus
+    reason-then-classify fair re-test, always run live), ``template`` (un-rigged
+    baseline, re-run live — cheap, deterministic). Emits TWO split-dominance verdicts
+    and the cag_minus_rag delta. Records per-call Job-A latency (§8).
+    """
+    committed = _load_committed_rag() if reuse_rag else None
+    # RAG reuse must be recorded before the file is overwritten.
     agent, skip = probe_foundry_determinism(reps)
     if agent is None:
         result = {"status": "SKIP", "reason": skip, "split": split}
@@ -294,30 +415,65 @@ def run(split: str = "novel", reps: int = 3, write: bool = True) -> dict:
         return result
 
     corpus = load_corpus()  # fail-loud on empty (§10)
-    # a fresh agent sized for the longer note (the probe agent uses the small budget).
     slm = SLMAgent(base_url=None, model=agent.model, max_tokens=768)
     slm.client = agent.client
 
     cases = load_cases(split)
     gold = build_gold(cases)
 
-    slm_agg, slm_pc = score_arm(cases, gold, corpus, make_slm_arm(slm))
-    tpl_agg, tpl_pc = score_arm(cases, gold, corpus, template_arm)
-    det = determinism_check(slm, cases, corpus)
-    verdict = split_dominance_verdict(slm_agg, tpl_agg)
+    # --- RAG comparator arm (reuse or re-run) ---------------------------------- #
+    rag_latency = None
+    if committed is not None:
+        rag_agg, rag_pc = committed["rag_agg"], committed["rag_pc"]
+        rag_source = "REUSED from the committed run (not re-run this session)"
+    else:
+        rag_lat: list = []
+        rag_agg, rag_pc = score_arm(cases, gold, corpus, make_slm_arm(slm, rag_lat),
+                                    candidate_fn=rag_candidates)
+        rag_latency = summarize_latency(rag_lat, warmup=1)
+        rag_source = "RE-RUN live this session (no committed run to reuse)"
+
+    # --- CAG reason-then-classify arm (always live) — the fair re-test ---------- #
+    cag_lat: list = []
+    cag_agg, cag_pc = score_arm(cases, gold, corpus, make_cag_arm(slm, cag_lat),
+                                candidate_fn=cag_candidates)
+    cag_job_a_latency = summarize_latency(cag_lat, warmup=1)
+    cag_fab_attempts = sum(p.get("fabrication_attempts", 0) for p in cag_pc)
+    cag_consistent = sum(1 for p in cag_pc if p.get("cited_consistent"))
+
+    # --- template baseline (re-run live; cheap, deterministic) ----------------- #
+    tpl_agg, tpl_pc = score_arm(cases, gold, corpus, template_arm,
+                                candidate_fn=rag_candidates)
+
+    det_cag = determinism_check(slm, cases, corpus, sample=det_sample, cag=True)
+
+    verdict_rag = split_dominance_verdict(rag_agg, tpl_agg)
+    verdict_cag = split_dominance_verdict(cag_agg, tpl_agg)
+    delta = cag_minus_rag_delta(cag_agg, rag_agg, cag_fab_attempts)
 
     result = {
         "status": "OK",
         "split": split,
         "n": len(cases),
         "model": slm.model,
+        "corpus_presentation": "CAG (whole-corpus-in-context, all 18 rules) is PRIMARY; "
+                               "TF-IDF k=10 RAG retained as head-to-head comparator (§2/§3)",
         "retrieval_k": RETRIEVAL_K,
         "corpus_size": len(corpus),
+        "rag_arm_source": rag_source,
         "gold_kind": "POLICY-BASE-DERIVED PROXY (annotator-blind, event_type->applies_when); "
                      "NOT human-graded; NOT the D5 gate",
-        "determinism": det,
-        "arms": {"slm": slm_agg, "template": tpl_agg},
-        "split_dominance": verdict,
+        "determinism_cag": det_cag,
+        "cag_cited_consistent_with_model_freetext": {
+            "n_consistent": cag_consistent, "n": len(cag_pc),
+            "note": "how often the model's own free-text cited_rules matched the "
+                    "controller-derived set; a DIAGNOSTIC, not scored."},
+        "job_a_latency": cag_job_a_latency,          # PRIMARY (CAG) per-call Job-A latency
+        "job_a_latency_rag": rag_latency,            # None when the RAG arm was reused
+        "arms": {"slm_rag": rag_agg, "slm_cag": cag_agg, "template": tpl_agg},
+        "split_dominance_rag": verdict_rag,
+        "split_dominance_cag": verdict_cag,
+        "cag_minus_rag": delta,
         "thresholds_pinned_pre_run": {"fcr_ceiling_per_note": FCR_CEILING_PER_NOTE,
                                       "mde_f1": MDE_F1,
                                       "note": "PILOT values, not the sealed §8 pre-registration"},
@@ -327,9 +483,12 @@ def run(split: str = "novel", reps: int = 3, write: bool = True) -> dict:
             "2-rater kappa>=0.6). D5 is NOT claimed passed.".format(len(cases)),
             "Citation-correctness is measured vs the proxy gold, not statute-text "
             "faithfulness graded by qualified humans.",
+            "CAG scored-fabrication is ~0 BY CONSTRUCTION (the reason-then-classify "
+            "controller drops out-of-corpus ids); see cag_minus_rag for the raw "
+            "fabrication ATTEMPTS the controller dropped.",
             "The Job-A note is internal/counsel-gated and never enters the evidence pack.",
         ],
-        "per_case": {"slm": slm_pc, "template": tpl_pc},
+        "per_case": {"slm_rag": rag_pc, "slm_cag": cag_pc, "template": tpl_pc},
     }
     if write:
         _write(result)
@@ -344,53 +503,94 @@ def _write(result: dict) -> None:
         fh.write(_summarize_md(result))
 
 
+def _fmt_lat(lat: dict) -> str:
+    """Render a latency summary dict as an inline P50/P95/P99 string."""
+    if not lat or lat.get("n", 0) == 0:
+        return "no measurable samples"
+    f = lambda x: f"{x:.2f}s" if isinstance(x, (int, float)) else "n/a"  # noqa: E731
+    return (f"n={lat['n']} (warmup {lat['warmup_discarded']} discarded) · "
+            f"P50 {f(lat['p50'])} · P95 {f(lat['p95'])} · P99 {f(lat['p99'])} · "
+            f"max {f(lat['max'])} · mean {f(lat['mean'])}")
+
+
 def _summarize_md(r: dict) -> str:
     if r.get("status") != "OK":
         return (f"# Experiment Job-A — SKIPPED\n\n"
                 f"**Status:** {r.get('status')}\n\n**Reason:** {r.get('reason')}\n")
-    s, t = r["arms"]["slm"], r["arms"]["template"]
-    v = r["split_dominance"]
+    rag, cag, t = r["arms"]["slm_rag"], r["arms"]["slm_cag"], r["arms"]["template"]
+    vr, vc = r["split_dominance_rag"], r["split_dominance_cag"]
+    d = r["cag_minus_rag"]
+    det = r["determinism_cag"]
+    row = lambda label, k, fmt="{:.3f}": (  # noqa: E731
+        f"| {label} | " + " | ".join(fmt.format(a[k]) if not isinstance(a[k], str)
+                                      else a[k] for a in (rag, cag, t)) + " |")
     L = [
         "# Experiment Job-A — citation-faithful legal-reasoning note (PILOT)",
         "",
         f"- **Model:** {r['model']} (frozen, Foundry Local, temperature 0)",
         f"- **Split:** {r['split']}  ·  **n = {r['n']}**  ·  corpus = {r['corpus_size']} "
-        f"law_rules  ·  retrieval k = {r['retrieval_k']}",
+        f"law_rules",
+        f"- **Corpus presentation:** {r['corpus_presentation']}",
+        f"- **RAG arm source:** {r['rag_arm_source']}",
         f"- **Gold:** {r['gold_kind']}",
-        f"- **Determinism (temp 0):** {r['determinism']['identical']}/"
-        f"{r['determinism']['checked']} notes byte-identical on re-run "
-        f"(rate {r['determinism']['identical_rate']})",
+        f"- **CAG determinism (temp 0):** {det['identical']}/{det['checked']} notes "
+        f"identical-citation on re-run (rate {det['identical_rate']})",
         "",
         "> PILOT / PROXY. The gold is policy-base-derived (event_type -> applies_when), "
         "annotator-blind, NOT human-graded. This is NOT the §12 D5 gate (which needs "
         "human faithfulness grading + 2-rater kappa >= 0.6). D5 is NOT claimed passed.",
         "",
-        "## Results (novel split)",
+        "## 3-way results (novel split)",
         "",
-        "| Metric | SLM Job-A note | Un-rigged template |",
-        "|---|---|---|",
-        f"| Citation-correctness (mean F1) | {s['citation_correctness_f1']:.3f} | "
-        f"{t['citation_correctness_f1']:.3f} |",
-        f"| Precision (mean) | {s['precision_mean']:.3f} | {t['precision_mean']:.3f} |",
-        f"| Recall (mean) | {s['recall_mean']:.3f} | {t['recall_mean']:.3f} |",
-        f"| Exact-set-match rate | {s['exact_match_rate']:.3f} | {t['exact_match_rate']:.3f} |",
-        f"| **FCR (per note)** | **{s['fcr_per_note']:.3f}** | {t['fcr_per_note']:.3f} |",
-        f"| FCR (per citation) | {s['fcr_per_citation']:.3f} | {t['fcr_per_citation']:.3f} |",
-        f"| Fabrication rate (per note) | {s['fabrication_rate_per_note']:.3f} | "
-        f"{t['fabrication_rate_per_note']:.3f} |",
-        f"| Fabricated citations (count) | {s['fabricated_citation_count']} | "
-        f"{t['fabricated_citation_count']} |",
-        f"| Abstention rate | {s['abstention_rate']:.3f} | {t['abstention_rate']:.3f} |",
-        f"| Parse-failure rate (counts as failure) | {s['parse_failure_rate']:.3f} | "
-        f"{t['parse_failure_rate']:.3f} |",
+        "| Metric | SLM RAG (k=10) | **SLM CAG (primary)** | Un-rigged template |",
+        "|---|---|---|---|",
+        row("Citation-correctness (mean F1)", "citation_correctness_f1"),
+        row("Precision (mean)", "precision_mean"),
+        row("Recall (mean)", "recall_mean"),
+        row("Exact-set-match rate", "exact_match_rate"),
+        row("FCR (per note)", "fcr_per_note"),
+        row("FCR (per citation)", "fcr_per_citation"),
+        row("Fabrication rate (per note, SCORED)", "fabrication_rate_per_note"),
+        row("Fabricated citations (count, SCORED)", "fabricated_citation_count", "{}"),
+        row("Abstention rate", "abstention_rate"),
+        row("Parse-failure rate (counts as failure)", "parse_failure_rate"),
         "",
-        "## Split-dominance verdict (§3 pinned resolution)",
+        "## Split-dominance verdicts (§3 pinned resolution)",
         "",
-        f"- Pinned PRE-RUN (pilot): FCR ceiling (per note) = {v['fcr_ceiling']}, "
-        f"MDE on citation-F1 = {v['mde_f1']}",
-        f"- Citation-F1 delta (SLM - template) = **{v['f1_delta']:+.3f}**  ·  "
-        f"clears MDE: {v['clears_mde']}  ·  under FCR ceiling: {v['under_ceiling']}",
-        f"- **Verdict: {v['verdict']}** — {v['rationale']}",
+        f"- Pinned PRE-RUN (pilot): FCR ceiling (per note) = {vc['fcr_ceiling']}, "
+        f"MDE on citation-F1 = {vc['mde_f1']}",
+        f"- **RAG vs template:** F1 delta = **{vr['f1_delta']:+.3f}** · clears MDE: "
+        f"{vr['clears_mde']} · under FCR ceiling: {vr['under_ceiling']} → "
+        f"**{vr['verdict']}** ({vr['rationale']})",
+        f"- **CAG vs template:** F1 delta = **{vc['f1_delta']:+.3f}** · clears MDE: "
+        f"{vc['clears_mde']} · under FCR ceiling: {vc['under_ceiling']} → "
+        f"**{vc['verdict']}** ({vc['rationale']})",
+        "",
+        "## CAG − RAG delta (does whole-corpus reason-then-classify move the needle?)",
+        "",
+        f"- ΔF1 (CAG − RAG) = **{d['dF1']:+.3f}**",
+        f"- ΔFCR per note (CAG − RAG) = **{d['dFCR_per_note']:+.3f}**",
+        f"- Δfabrication rate per note (CAG − RAG, SCORED) = "
+        f"**{d['dfabrication_rate_per_note']:+.3f}**",
+        f"- CAG fabrication ATTEMPTS dropped by the controller = "
+        f"**{d['cag_fabrication_attempts_dropped_by_controller']}** "
+        f"(scored fabrication count: CAG {d['cag_scored_fabrication_count']} vs "
+        f"RAG {d['rag_scored_fabrication_count']})",
+        f"- {d['note']}",
+        "",
+        "## Per-job latency (§8 FLPerformance nearest-rank; D-lat)",
+        "",
+        f"- **Job A (CAG reason-then-classify):** {_fmt_lat(r['job_a_latency'])}",
+    ]
+    if r.get("job_a_latency_rag"):
+        L.append(f"- **Job A (RAG, this session):** {_fmt_lat(r['job_a_latency_rag'])}")
+    L += [
+        f"- Method: {r['job_a_latency'].get('method')}",
+        "- Small-N caveat: at N < 100 the nearest-rank P99 index collapses to the last "
+        "sample, so Job-A P99 is effectively the observed MAX. Reported with N + warmup.",
+        "- Architectural finding: the tens-of-seconds Job-A P99 is the quantitative "
+        "justification for the §3/§4 invariant that the SLM is post-hoc, non-evidential, "
+        "counsel-gated and NEVER on the real-time gate path.",
         "",
         "## Caveats",
         "",
@@ -405,12 +605,19 @@ if __name__ == "__main__":
     if out.get("status") != "OK":
         print("SKIP:", out.get("reason"))
     else:
-        s, t = out["arms"]["slm"], out["arms"]["template"]
+        rag, cag, t = (out["arms"]["slm_rag"], out["arms"]["slm_cag"],
+                       out["arms"]["template"])
         print(f"n={out['n']} model={out['model']}")
-        print(f"SLM      F1={s['citation_correctness_f1']:.3f} "
-              f"FCR/note={s['fcr_per_note']:.3f} fab={s['fabricated_citation_count']} "
-              f"parsefail={s['parse_failure_rate']:.3f}")
-        print(f"template F1={t['citation_correctness_f1']:.3f} "
-              f"FCR/note={t['fcr_per_note']:.3f}")
-        print("verdict:", out["split_dominance"]["verdict"],
-              "|", out["split_dominance"]["rationale"])
+        for name, a in (("SLM RAG ", rag), ("SLM CAG ", cag), ("template", t)):
+            print(f"{name} F1={a['citation_correctness_f1']:.3f} "
+                  f"FCR/note={a['fcr_per_note']:.3f} "
+                  f"fab={a['fabricated_citation_count']} "
+                  f"parsefail={a['parse_failure_rate']:.3f}")
+        print("RAG verdict:", out["split_dominance_rag"]["verdict"])
+        print("CAG verdict:", out["split_dominance_cag"]["verdict"],
+              "|", out["split_dominance_cag"]["rationale"])
+        d = out["cag_minus_rag"]
+        print(f"CAG-RAG: dF1={d['dF1']:+.3f} dFCR={d['dFCR_per_note']:+.3f} "
+              f"fab_attempts_dropped={d['cag_fabrication_attempts_dropped_by_controller']}")
+        la = out["job_a_latency"]
+        print(f"Job-A latency: n={la['n']} P50={la['p50']} P95={la['p95']} P99={la['p99']}")

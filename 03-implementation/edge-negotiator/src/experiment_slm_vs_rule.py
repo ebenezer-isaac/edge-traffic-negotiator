@@ -25,8 +25,10 @@ import argparse
 import json
 import os
 import sys
+from time import perf_counter
 
 import ambiguous_decision as ad
+from slm_latency import summarize_latency
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESULTS = os.path.normpath(os.path.join(HERE, "..", "results"))
@@ -41,10 +43,13 @@ class _SLMDecider:
         self.agent = agent
         self.parse_failures = 0
         self.calls = 0
+        self.latencies_s: list = []  # per-call Job-B wall-clock (§8 latency profiling)
 
     def decide(self, case) -> str:
         self.calls += 1
+        t0 = perf_counter()
         out = self.agent.classify_case(case)
+        self.latencies_s.append(perf_counter() - t0)
         if out is None:
             self.parse_failures += 1
             return ad.REJECT
@@ -109,6 +114,8 @@ def run(with_slm: bool = False, seed: int = 0, determinism_reps: int = 5) -> dic
             out["slm"]["parse_failures"] = decider.parse_failures
             out["slm"]["calls"] = decider.calls
             out["slm"]["model"] = agent.model
+            # Job-B per-call latency (§8, FLPerformance nearest-rank, W=1 warmup).
+            out["slm"]["job_b_latency"] = summarize_latency(decider.latencies_s, warmup=1)
             novel = [c for c in cases if c.split == "novel"]
             out["slm_determinism_novel"] = _determinism(agent, novel, determinism_reps)
 
@@ -147,6 +154,11 @@ def _print_summary(out: dict, path: str) -> None:
             det = out.get("slm_determinism_novel", {})
             print(f"  SLM determinism (novel, temp 0): {det.get('agreement_pct')}% "
                   f"identical over {det.get('reps')} reps")
+            lat = out["slm"].get("job_b_latency", {})
+            if lat.get("n"):
+                print(f"  SLM Job-B latency (§8 nearest-rank, n={lat['n']}, warmup "
+                      f"{lat['warmup_discarded']}): P50={lat['p50']:.3f}s "
+                      f"P95={lat['p95']:.3f}s P99={lat['p99']:.3f}s max={lat['max']:.3f}s")
     print("=" * 72)
     print(f"  written: {path}")
 

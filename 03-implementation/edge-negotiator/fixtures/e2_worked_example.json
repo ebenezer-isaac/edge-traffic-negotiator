@@ -1,10 +1,12 @@
 {
-  "_doc": "E2 worked-example fixture — FROZEN, READ-ONLY. Pins the E2 tie-break expected origin for the assessment.py / fault_report rewrite (MASTER-SPEC v7 §3, §6.3, §11, build F3). Authored by hand BEFORE the build run; hash-pinned by the §10 prerequisite gate. A build phase MUST NOT regenerate or edit this file (self-authored expected-verdict = tautology).",
-  "_purpose": "Contains TWO decisions at the same junction where the NAIVE causal pick (latest-decision / decision-at-outcome-junction) is the WRONG one, so a mis-built causal selector fails this fixture. The CORRECT selector links the outcome to its driving decision by ev_id match, then applies the overnight computable SET->culprit rule (culprit = attacker-key iff recomputed independent-corroboration count == 0 over driving_input_seqs).",
+  "_doc": "E2 worked-example fixture — FROZEN, READ-ONLY. Pins the E2 tie-break expected origin for the assessment.py / fault_report rewrite (MASTER-SPEC v7 §3, §6.3, §11, build F3). Authored by hand BEFORE the build run; hash-pinned by the §10 prerequisite gate. A build phase MUST NOT regenerate or edit this file (a self-authored expected result is a tautology). Loader contract: IGNORE every key whose name begins with '_' (annotations); consume only `registry`, `records`, `outcomes`; hold `expected` OUT-OF-BAND (do NOT let the implementation read `expected` — feed it only registry+records+outcomes and compare its output to `expected`).",
+  "_purpose": "Two SCORED outcomes with DISTINCT origins, plus a distractor decision, so that ONLY an ev_id-matched causal selector + a corroboration-count-aware attribution rule satisfies BOTH. Every cheaper selector (latest/earliest/lowest-seq/fewest-inputs/t-match/time-window recency) and every cheaper attribution rule (always-attacker-key/length==1/count-claimer-own-key/read-runtime-classification) fails at least one scored outcome. See _discrimination for the enumerated kills.",
   "_consume": {
-    "logic_path": "flatten the records; the outcome names an ev_id; select the causal decision by walking driving_input_seqs -> message -> signed_payload.payload.ev_claim.ev_id == outcome.ev_id (NOT by recency or junction); recompute independent-corroboration count over that decision's driving_input_seqs (a signed input is INDEPENDENT iff its key != the claimer's key AND it is a sighting/claim from a distinct entity); assert origin == expected.origin.",
-    "crypto_path": "this is a LOGICAL vector; sender_signature/*_der are deterministic placeholders. A test exercising the full crypto path (identity.verify + verify_chain) must re-sign each signed_payload with a per-fpr fixture keypair (registry maps fpr->der->fixture key) at load time; a test exercising only the classification logic treats crypto as pre-verified. The tamper test (build F4) is a SEPARATE fixture, not this one.",
-    "scored_origins": "only the 3 provenance-decidable classes are scored (MASTER-SPEC §2/§3): keyless-lone-sighting->sensor-fed-spoof, uncorroborated-signed->attacker-key, corroborated. This fixture asserts the attacker-key case."
+    "causal_selector": "for each outcome, select its causal decision by walking driving_input_seqs -> message -> signed_payload.payload.ev_claim.ev_id == outcome.ev_id (NOT by recency, junction, seq, input-count, or timestamp).",
+    "attribution_rule": "over the causal decision's driving_input_seqs, recompute the INDEPENDENT-corroboration count (a signed input is INDEPENDENT iff its key != the claimer's key AND it is a sighting/claim from a distinct entity); count==0 -> attacker-key (attributed to the claimer key); count>=1 with >=2 keys -> corroborated. Signing-key-count is 1+ here (validly-signed messages), so the count==0 case resolves to attacker-key, NOT keyless-lone-sighting/sensor-fed-spoof (which needs key-count==0).",
+    "origin_is_class_independent": "origin is decided ONLY from verified provenance (key-count + recomputed corroboration + ev_id link); it does NOT read the runtime `classification` field, nor the claimer's authorized entity-class. J-ATT's registry class is intentionally unspecified — it does not affect origin.",
+    "clocks": "signed_payload.t = logical message tick (100-104); decision.t = sim time (150); outcome.t = harm-detection sim time (160, AFTER all decisions) — so a time-window/recency selector includes all decisions and picks the DISTRACTOR (latest), which is wrong for both outcomes.",
+    "scored_origins": "only the 3 provenance-decidable classes are scored (§2/§3): keyless-lone-sighting->sensor-fed-spoof, uncorroborated-signed->attacker-key, corroborated. This fixture asserts attacker-key (o1) AND corroborated (o2)."
   },
   "registry": [
     {"kind": "registry", "seq": 0, "entity_id": "J-ATT",     "key_fingerprint": "att-fpr", "key_der": "DER-ATT", "action": "enrol", "external_root_sig": "PLACEHOLDER", "self_sig": "PLACEHOLDER", "admin_sig": "PLACEHOLDER"},
@@ -15,37 +17,53 @@
     {"kind": "message", "seq": 3, "sender": "J-ATT", "sender_pubkey_fpr": "att-fpr", "sender_pubkey_der": "DER-ATT",
      "signed_payload": {"sender": "J-ATT", "t": 100, "payload": {"ev_claim": {"ev_id": "EV-PH", "target": "J1", "approach": "in_A"}}},
      "sender_signature": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-     "_note": "the attacker's PHANTOM advance-claim: a single validly-signed message, NO independent corroboration"},
-
-    {"kind": "decision", "seq": 4, "driving_input_seqs": [[3, "att-fpr"]], "junction": "J1", "t": 100, "executed": "preempt_in_A", "classification": "LEGITIMATE", "policies_applied": ["corroboration"],
-     "_note": "D_PHANTOM (the HARMFUL decision): preempted on the attacker's uncorroborated claim (naive-victim mode). runtime classification is LEGITIMATE (admissible=true) but that field is NOT read for origin. independent-corroboration count over driving_input_seqs = 0 -> attacker-key."},
-
-    {"kind": "message", "seq": 5, "sender": "J-HONEST-A", "sender_pubkey_fpr": "hA-fpr", "sender_pubkey_der": "DER-HA",
+     "_note": "attacker phantom advance-claim #1 (EV-PH)"},
+    {"kind": "message", "seq": 4, "sender": "J-ATT", "sender_pubkey_fpr": "att-fpr", "sender_pubkey_der": "DER-ATT",
+     "signed_payload": {"sender": "J-ATT", "t": 101, "payload": {"ev_claim": {"ev_id": "EV-PH", "target": "J1", "approach": "in_A"}}},
+     "sender_signature": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+     "_note": "attacker phantom advance-claim #2 (SAME key att-fpr, SAME ev_id EV-PH) — makes D_phantom a >1-input decision so a 'length==1->attacker-key' or 'fewest-inputs' shortcut diverges from the right answer"},
+    {"kind": "decision", "seq": 5, "driving_input_seqs": [[3, "att-fpr"], [4, "att-fpr"]], "junction": "J1", "t": 150, "executed": "preempt_in_A", "classification": "LEGITIMATE", "policies_applied": ["corroboration"],
+     "_note": "D_PHANTOM (harmful, causal for o1): 2 driving inputs, BOTH the claimer's own key att-fpr -> independent-corroboration count == 0 -> attacker-key. runtime classification LEGITIMATE (naive-victim admitted it) is NOT read for origin."},
+    {"kind": "message", "seq": 6, "sender": "J-HONEST-A", "sender_pubkey_fpr": "hA-fpr", "sender_pubkey_der": "DER-HA",
      "signed_payload": {"sender": "J-HONEST-A", "t": 102, "payload": {"ev_claim": {"ev_id": "EV-REAL", "target": "J1", "approach": "in_B"}}},
      "sender_signature": "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-     "_note": "honest A's REAL EV advance-claim"},
-
-    {"kind": "sighting", "seq": 6, "sighter_key": "hB-fpr", "ev_id": "EV-REAL", "approach": "in_B", "t": 103, "position": "upstream_in_B",
+     "_note": "honest A real EV advance-claim (EV-REAL)"},
+    {"kind": "sighting", "seq": 7, "sighter_key": "hB-fpr", "ev_id": "EV-REAL", "approach": "in_B", "t": 103, "position": "upstream_in_B",
      "signature": "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-     "_note": "honest B INDEPENDENTLY corroborates EV-REAL (distinct key from the claimer hA)"},
-
-    {"kind": "decision", "seq": 7, "driving_input_seqs": [[5, "hA-fpr"], [6, "hB-fpr"]], "junction": "J1", "t": 104, "executed": "preempt_in_B", "classification": "LEGITIMATE", "policies_applied": ["corroboration"],
-     "_note": "D_LEGIT: preempted on EV-REAL, corroborated by >=2 independent keys (hA claim + hB sighting). independent-corroboration count = 1 -> corroborated/legitimate. THIS is the naive 'latest decision at J1' pick, and it is the WRONG causal decision for the outcome."}
+     "_note": "honest B INDEPENDENTLY corroborates EV-REAL (key hB != claimer hA)"},
+    {"kind": "decision", "seq": 8, "driving_input_seqs": [[6, "hA-fpr"], [7, "hB-fpr"]], "junction": "J1", "t": 150, "executed": "preempt_in_B", "classification": "LEGITIMATE", "policies_applied": ["corroboration"],
+     "_note": "D_LEGIT (causal for o2): 2 driving inputs, hA claim + hB independent sighting -> independent-corroboration count == 1 (>=2 keys) -> corroborated. SAME runtime classification LEGITIMATE as D_phantom but DIFFERENT origin, so a rule keyed on runtime classification cannot produce both."},
+    {"kind": "message", "seq": 9, "sender": "J-HONEST-A", "sender_pubkey_fpr": "hA-fpr", "sender_pubkey_der": "DER-HA",
+     "signed_payload": {"sender": "J-HONEST-A", "t": 104, "payload": {"ev_claim": {"ev_id": "EV-OTHER", "target": "J1", "approach": "in_C"}}},
+     "sender_signature": "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+     "_note": "distractor claim (EV-OTHER)"},
+    {"kind": "decision", "seq": 10, "driving_input_seqs": [[9, "hA-fpr"]], "junction": "J1", "t": 150, "executed": "preempt_in_C", "classification": "LEGITIMATE", "policies_applied": ["corroboration"],
+     "_note": "D_DISTRACTOR (referenced by NO outcome): the LATEST-seq decision at J1 and the FEWEST-inputs (1) decision -> a latest/highest-seq/fewest-inputs selector picks THIS for both outcomes, which is wrong for both. Forces the ev_id walk."}
   ],
-  "outcome": {
-    "type": "false_preemption", "junction": "J1", "t": 100, "ev_id": "EV-PH",
-    "_note": "the harm is the PHANTOM preemption (EV-PH), driven by decision seq 4"
-  },
-  "expected": {
-    "causal_decision_seq": 4,
-    "origin": "attacker-key",
-    "culprit_key_fpr": "att-fpr",
-    "rationale": "outcome.ev_id 'EV-PH' matches the ev_claim in the message (seq 3) driving decision seq 4; that decision's driving_input_seqs = [[3, att-fpr]] has recomputed independent-corroboration count == 0 (only the claimer's own signed message; no independent sighting) -> attacker-key, attributed to key att-fpr. runtime classification LEGITIMATE is IGNORED for origin (assessment.py never reads it, MASTER-SPEC §3)."
-  },
-  "naive_wrong_pick": {
-    "selector": "latest-decision-at-outcome-junction",
-    "picks_seq": 7,
-    "would_give_origin": "corroborated/legitimate",
-    "why_wrong": "seq 7 is the later decision at J1 but is the LEGITIMATE EV-REAL preemption, NOT the harmful phantom. A selector keyed on recency or junction (both decisions are at J1) fails this fixture; only an ev_id-matched causal link selects the correct decision (seq 4). This is the >=2-decision discriminating case required by build F3."
+  "outcomes": [
+    {"id": "o1", "type": "false_preemption", "junction": "J1", "t": 160, "ev_id": "EV-PH",
+     "_note": "harm = the phantom preemption; detection t=160 is AFTER all decisions (t=150) so a time-window recency selector includes all and picks the distractor (seq 10)"},
+    {"id": "o2", "type": "incident_review", "junction": "J1", "t": 160, "ev_id": "EV-REAL",
+     "_note": "review of the genuinely-corroborated preemption; SAME junction + SAME detection t as o1, DISTINCT ev_id -> only an ev_id-keyed selector distinguishes o1 from o2"}
+  ],
+  "expected": [
+    {"outcome_id": "o1", "causal_decision_seq": 5, "origin": "attacker-key", "culprit_key_fpr": "att-fpr",
+     "rationale": "o1.ev_id 'EV-PH' matches the ev_claim in messages seq 3 & 4, which drive decision seq 5; seq 5's driving_input_seqs = [[3,att-fpr],[4,att-fpr]] are BOTH the claimer's own key, so recomputed independent-corroboration count == 0. The driving inputs are validly-SIGNED messages (signing-key-count == 1, NOT keyless), so the count==0 branch resolves to attacker-key, NOT sensor-fed-spoof (which requires key-count==0). Attributed to key att-fpr. runtime classification LEGITIMATE is IGNORED for origin (§3). system-classifier is NOT triggered: its predicate needs a logged-failed corroboration check contradicted by an independently-signed sighting in the window, which is absent (the AI wrongly ADMITTED, it did not wrongly reject)."},
+    {"outcome_id": "o2", "causal_decision_seq": 8, "origin": "corroborated", "culprit_key_fpr": null,
+     "rationale": "o2.ev_id 'EV-REAL' matches the ev_claim in message seq 6, which (with sighting seq 7) drives decision seq 8; seq 8's driving_input_seqs = [[6,hA-fpr],[7,hB-fpr]] carry >=2 keys with hB's sighting INDEPENDENT of claimer hA -> independent-corroboration count == 1 -> corroborated (legitimate, no single culprit key). This is the NON-attacker scored case; an 'always attacker-key' rule fails here."}
+  ],
+  "_discrimination": {
+    "only_correct_impl_passes_both": "ev_id-matched causal selector + independent-corroboration-count attribution",
+    "kills": [
+      "latest-at-junction / highest-seq -> seq 10 (distractor): wrong for o1 AND o2",
+      "earliest-at-junction / lowest-seq -> seq 5: correct for o1 but WRONG for o2",
+      "time-window recency (window ends at outcome.t=160, includes all t=150 decisions) -> latest = seq 10: wrong for both",
+      "t-match (outcome.t=160) -> no decision has t=160: picks nothing / forces another rule",
+      "fewest-driving-inputs -> seq 10 (1 input): wrong for both",
+      "always-attacker-key -> fails o2 (expected corroborated)",
+      "length==1 -> attacker-key -> seq 5 has 2 inputs so gives corroborated: WRONG for o1",
+      "count the claimer's own key as corroboration -> seq 5 count 0->2: flips o1 to corroborated: WRONG",
+      "read runtime classification for origin -> both causal decisions are LEGITIMATE but origins differ (attacker-key vs corroborated): cannot produce both"
+    ]
   }
 }

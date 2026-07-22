@@ -79,10 +79,13 @@ def test_default_audit_chain_verifies(default_result):
     assert audit["enabled"] is True
     assert audit["verify_chain"] is True, "the hash-chain must verify"
     assert audit["entries"] > 0
-    # Both decisions AND registry events landed in the SAME chain.
-    assert audit["decision_entries"] > 0
+    # Inline §11 records (message + decision) AND registry events share the chain.
+    assert audit["decision_entries"] > 0, "kind:decision records were emitted inline"
+    assert audit["record_kinds"].get("message", 0) > 0, "kind:message records emitted"
     assert audit["registry_entries"] == 4, "4 grid junctions registered + mirrored"
-    assert audit["entries"] == audit["decision_entries"] + audit["registry_entries"]
+    # non_registry_entries carries the sum identity now that decision_entries is
+    # ONLY the decision records (not message/sighting too).
+    assert audit["entries"] == audit["non_registry_entries"] + audit["registry_entries"]
 
 
 def test_default_audit_has_valid_merkle_inclusion_proof(default_result):

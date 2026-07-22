@@ -1,56 +1,32 @@
 """Coordinated controller: authenticated cross-junction coordination layer.
 
-Milestone-2 (brief Wk 3-4). Wraps the existing event-gated hybrid
-(SLM proposes / MaxPressure shield disposes) with a *signed* neighbour-message
-exchange so that adjacent junctions can influence one another's phase choice and
-so that their claims can be reconciled against observation (conservation check).
+Milestone-2 (brief Wk 3-4). Wraps the event-gated hybrid (SLM proposes /
+MaxPressure shield disposes) with a *signed* neighbour-message exchange so
+adjacent junctions influence one another's phase choice and reconcile their
+claims against observation (conservation check). On each SLM-junction decision:
 
-On each SLM-junction decision (i.e. when the parent hybrid would consult the SLM),
-this controller:
+  (a) PUBLISHES a signed ``{"toward": {nb: {"release", "queue_forecast"}}}``
+      message (COORDINATION-ALGORITHM-SPEC §4.1). ``release`` = vehicles released
+      toward that neighbour this phase. ``queue_forecast`` is a documented
+      PLACEHOLDER equal to ``release`` (no roll-forward model yet, spec §6.2);
+      conservation consumes ONLY ``release`` (R1), never a forecast.
+  (b) READS its inbox (verified/authorised/non-replayed messages), sums incoming
+      ``release`` (``expected_incoming``) and attributes it to the green phases
+      serving each in-edge (``incoming_per_phase[gi]``).
+  (c) Channel B (spec §2.2): ``adj_halting[gi] = green_halting[gi] + coord_weight
+      * incoming_per_phase[gi]``; ``coord_weight == 0.0`` reproduces today's
+      choice exactly. ``used`` = SLM proposal if valid else the coord choice.
+  (d) Feeds claims + observed inflows to the ConservationChecker; Detections land
+      on ``self.detections``.
 
-  (a) PUBLISHES a signed message whose payload is
-      ``{"toward": {neighbour_id: {"release": <int>, "queue_forecast": <int>}}}``
-      (per COORDINATION-ALGORITHM-SPEC §4.1). ``release`` is the count of vehicles
-      this junction is about to release toward that neighbour THIS phase -- the
-      upstream halting count on the in-lanes whose served out-lane sits on the edge
-      that leads to that neighbour (edge ``XY`` => src ``X`` -> dst ``Y``; the
-      out-lane's edge dst is the neighbour). ``queue_forecast`` is a short-horizon
-      load forecast for that approach.
-
-      PLACEHOLDER (documented honestly, per spec §6.2): we do not yet have a
-      validated roll-forward model, so ``queue_forecast == release`` -- it carries
-      no extra predictive precision today. The field exists so the wire schema and
-      the conservation contract are cleanly separated (R1): conservation consumes
-      ONLY ``release`` (an actual outflow), never the forecast (you cannot conserve
-      a prediction). When a real forecast lands, only ``_toward_counts`` changes.
-
-  (b) READS its inbox (verified, authorised, non-replayed neighbour messages) and
-      sums the verified incoming ``release`` across neighbours to get
-      ``expected_incoming``, AND attributes each neighbour's incoming release to the
-      LOCAL green phases that serve its in-edge -> ``incoming_per_phase[gi]``.
-
-  (c) Computes a DETERMINISTIC coordination-adjusted reference choice (Channel B,
-      spec §2.2): ``adj_halting[gi] = green_halting[gi] + coord_weight *
-      incoming_per_phase[gi]`` and takes its argmax as the shield's coordinated
-      reference. With ``coord_weight == 0.0`` this reproduces today's behaviour
-      exactly. It passes the per-phase incoming numbers into the SLM note so the
-      prompt reflects per-phase incoming (Channel A), not just a total. The final
-      ``used`` decision is the SLM proposal if valid, else the coordination-adjusted
-      deterministic choice (the shield still disposes).
-
-  (d) Feeds claims (from the inbox, ONLY the actual ``release`` -- never the
-      forecast) + observed inflows (halting on the relevant in-edges) to the
-      ConservationChecker and stashes any Detections on ``self.detections``.
-
-Every SLM decision is logged exactly as the parent does; published / received /
-detection info is ADDED to each event dict. All structures are rebuilt rather
-than mutated (immutability rule): inputs are never mutated in place.
-
-A tiny deterministic :class:`StubAgent` (argmax over the per-phase queue) is
-provided so coordinated/uncoordinated runs are CI-able without Foundry Local.
+Every SLM decision is logged on ``self.events`` (published/received/detection
+info added). With ``audit_log`` injected (§6.2), the §11 message/decision records
+are ALSO emitted inline. All structures are rebuilt, never mutated in place.
+:class:`StubAgent` (argmax over the per-phase queue) makes runs CI-able w/o Foundry.
 """
 from __future__ import annotations
 
+from audit_records import coordination_policies, log_decision, log_messages
 from conservation import ConservationChecker, Detection
 from flow_accounting import FlowWindow
 from flow_conservation import EdgeMeasurement, FlowConservationDetector
@@ -98,9 +74,13 @@ class CoordinatedController(HybridController):
                  coord_override: bool = False,
                  coord_override_threshold: float = 0.0,
                  reconcile_silent_neighbours: bool = False,
-                 flow_window: float = 0.0):
+                 flow_window: float = 0.0, *, audit_log=None):
         super().__init__(conn, tls_ids, agent, slm_junctions=slm_junctions,
                          gate=gate, min_green=min_green, yellow=yellow)
+        # §6.2 producer wiring: keyword-only AuditLog injection. None (default) =
+        # today's behaviour, byte-for-byte (emit NOTHING); when present, decide()
+        # emits the §11 message/decision records inline as it consumes + decides.
+        self.audit_log = audit_log
         # Read-only references; we never mutate the caller's structures.
         self.identities = dict(identities)
         self.registry = registry
@@ -193,23 +173,18 @@ class CoordinatedController(HybridController):
         self.coord_override_decisions = 0
 
         # P3 -- sensor-outage / silent-neighbour reconciliation. OPT-IN (default
-        # False) so existing wiring and the as-built attack-report scenarios are
-        # UNCHANGED. When True, decide() additionally feeds an observed-only edge
-        # to the ConservationChecker for every registered, approved neighbour that
-        # SHOULD have sent a claim this round but went silent AND on whose in-edge
-        # traffic is actually observed -- so a fully-silent neighbour (no claim)
-        # is reconciled and `missing_claim` becomes reachable live.
+        # False) so existing wiring is UNCHANGED. When True, decide() feeds an
+        # observed-only edge to the checker for every registered, approved
+        # neighbour that went silent AND on whose in-edge traffic is observed --
+        # so a fully-silent neighbour makes `missing_claim` reachable live.
         if not isinstance(reconcile_silent_neighbours, bool):
             raise TypeError("reconcile_silent_neighbours must be a bool")
         self.reconcile_silent_neighbours = reconcile_silent_neighbours
-        # WINDOWED ACTUAL-FLOW ACCOUNTING (the false-positive fix). When
-        # flow_window > 0 the LIVE feed compares LIKE-FOR-LIKE actual flow: the
-        # `release` toward a neighbour is the distinct vehicles that ENTERED edge
-        # (self->neighbour) over the window, reconciled by the intelligent
-        # detector (built below). When flow_window == 0 (DEFAULT) the legacy
-        # instantaneous-halting feed + flat ConservationChecker run verbatim, so
-        # the offline attack harness and every existing test stay byte-for-byte
-        # unchanged. Live runners (demo_2node, run_coordinated) opt in.
+        # WINDOWED ACTUAL-FLOW ACCOUNTING (the false-positive fix). flow_window > 0
+        # compares LIKE-FOR-LIKE actual flow (distinct vehicles that ENTERED edge
+        # self->neighbour over the window) via the intelligent detector below;
+        # flow_window == 0 (DEFAULT) runs the legacy instantaneous-halting feed +
+        # flat ConservationChecker verbatim, so existing tests are byte-for-byte.
         if isinstance(flow_window, bool) or not isinstance(flow_window, (int, float)):
             raise TypeError(
                 f"flow_window must be a number, got {type(flow_window).__name__}")
@@ -346,12 +321,9 @@ class CoordinatedController(HybridController):
         neighbour ``X``'s incoming release counts toward phase ``gi`` iff ``gi``
         gives green to *any* movement whose in-lane sits on edge ``X{tl}``.
 
-        Returns ``incoming_per_phase`` with one entry per green phase (fresh list).
-        A neighbour whose release is attributed to several phases that all serve its
-        approach is counted in each such phase (the phases are mutually exclusive
-        green sets, so this reflects "this phase would admit that platoon"). Each
-        neighbour contributes to at least one phase only if a movement off its edge
-        is greened by some phase; un-served approaches contribute nothing.
+        Returns ``incoming_per_phase`` (one entry per green phase, fresh list). A
+        neighbour is counted in EACH green phase serving its approach; un-served
+        approaches contribute nothing.
         """
         ngreen = len(st["green"])
         per_phase = [0] * ngreen
@@ -474,12 +446,10 @@ class CoordinatedController(HybridController):
                           meas_t: dict[str, int] | None = None) -> dict[str, int]:
         """Independent observation of arrivals on each in-edge ``neighbour->recipient``.
 
-        WINDOWED MODE (``flow_window > 0``): the observation is the count of
-        distinct vehicles that ENTERED edge ``neighbour->recipient`` over the
-        window ending at the SENDER's measurement time (``meas_t[nb]``, clamped
-        to <= now), falling back to ``now`` when the sender gave none. Aligning
-        the observation window to the sender's claim window removes the
-        decision-tick misalignment, so benign flow conserves to ~zero residual.
+        WINDOWED MODE (``flow_window > 0``): count of distinct vehicles that
+        ENTERED edge ``neighbour->recipient`` over the window ending at the
+        SENDER's measurement time (``meas_t[nb]``, clamped <= now; else ``now``).
+        Aligning to the sender's claim window removes decision-tick misalignment.
 
         LEGACY MODE (default): instantaneous halting summed over the in-edge's
         lanes (the original feed), preserved for the controlled attack harness.
@@ -520,15 +490,10 @@ class CoordinatedController(HybridController):
         For each reconciled directed edge ``src->tl`` we build an
         :class:`EdgeMeasurement`:
 
-          * ``entered``     = the sender's reconciled `release` (the claim) --
-            distinct vehicles that ENTERED edge ``src->tl`` over the sender's
-            window. This is the count-inflation surface: a spoof inflates it.
-          * ``exited``      = distinct vehicles that LEFT edge ``src->tl`` over
-            the matched window (arrived at ``tl``) -- the downstream side of the
-            balance, read from the flow window's exit log.
-          * ``storage_now`` = vehicles CURRENTLY on edge ``src->tl`` (in transit)
-            so released-but-not-yet-arrived cars are NOT a discrepancy.
-          * occupancy / speed for the spillback test.
+          * ``entered`` = the sender's reconciled `release` (the count-inflation
+            surface); ``exited`` = vehicles that LEFT edge ``src->tl`` over the
+            matched window; ``storage_now`` = vehicles in transit (not a
+            discrepancy); occupancy/speed feed the spillback test.
 
         Each :class:`EdgeVerdict` maps to a :class:`Detection` (``claimed`` =
         entered, ``observed`` = exited) so every existing consumer is unchanged.
@@ -621,6 +586,10 @@ class CoordinatedController(HybridController):
         #     ONLY the actual release feeds expected_incoming / claims / per-phase;
         #     queue_forecast is never conserved (R1, spec §6.2).
         received = []
+        # Verified bus messages consumed THIS decision (§6.2), kept separate from
+        # `received` because the §11 message record needs the raw NeighborMessage
+        # (.signature + sender for the registry DER lookup at consumption).
+        verified_msgs: list = []
         expected_incoming = 0
         incoming_by_neighbour: dict[str, int] = {}
         claims: dict[tuple[str, str], int] = {}
@@ -657,6 +626,7 @@ class CoordinatedController(HybridController):
                 }
                 received = [*received, {"from": m.sender, "t": m.t,
                                         "release": amount, "queue_forecast": forecast}]
+                verified_msgs = [*verified_msgs, m]
                 # Claim: sender claims it released `amount` toward us (edge sender->tl).
                 # CONSERVATION CONSUMES ONLY `release` (actual), never the forecast.
                 #
@@ -675,6 +645,14 @@ class CoordinatedController(HybridController):
                     claims = {**claims, key: claims.get(key, 0) + amount}
         except Exception as exc:
             received = [{"error": type(exc).__name__}]
+
+        # §6.2: append a §11 kind:"message" record per consumed verified message
+        # (its .signature.hex() + the sender_pubkey_der/fpr pulled from the
+        # registry AT CONSUMPTION) and capture the envelope seqs as this
+        # decision's driving_input_seqs. Done OUTSIDE the inbox try so an emit
+        # bug surfaces rather than being swallowed as a transport error.
+        driving_pairs = log_messages(self.audit_log, self.registry,
+                                     self.identities, tl, verified_msgs)
 
         # (c) Channel B: deterministic coordination-adjusted reference choice.
         #     adj_halting[gi] = green_halting[gi] + coord_weight * incoming_per_phase[gi]
@@ -709,13 +687,10 @@ class CoordinatedController(HybridController):
         proposal = self.agent.choose_phase(tl, len(st["green"]), halting, neighbor_note=note)
         # Shield disposes: SLM proposal if valid else the coordination-adjusted choice.
         used = proposal if proposal is not None else coord_choice
-        # P4 -- Channel-B override. By default a VALID SLM proposal always wins, so
-        # the coordination-aware deterministic choice can never override a reliable
-        # SLM (coordination is inert). With coord_override=True, if the coordinated
-        # choice disagrees with a valid proposal AND its adjusted pressure exceeds
-        # the proposal's by more than the threshold, the shield's coordination
-        # choice wins (true "shield disposes"). This only triggers when there is a
-        # genuine coordination signal (coord_weight > 0 and the choices differ).
+        # P4 -- Channel-B override. Default: a VALID SLM proposal always wins
+        # (coordination inert). With coord_override=True, if the coordinated choice
+        # disagrees with a valid proposal by more than the threshold in adjusted
+        # pressure, the shield's coordination choice wins (true "shield disposes").
         coord_overrode = False
         if (self.coord_override and proposal is not None
                 and 0 <= coord_choice < len(adj_halting)
@@ -727,16 +702,10 @@ class CoordinatedController(HybridController):
                 coord_overrode = True
                 self.coord_override_decisions += 1
 
-        # (d) Reconcile claims vs observed inflows; stash Detections.
-        #
-        # P3 -- sensor-outage / silent-neighbour reconciliation. A neighbour that
-        # SHOULD have sent a claim this round but went fully silent (no verified
-        # message -> no claim) would never be reconciled if we only observed the
-        # claim sources. So we observe EVERY registered, approved neighbour's
-        # in-edge: a neighbour with observed inflow but NO claim yields a
-        # `missing_claim` Detection (it withheld / faulted while traffic arrived).
-        # Neighbours that are silent AND show no inflow contribute nothing (no
-        # spurious detections from a genuinely-idle approach).
+        # (d) Reconcile claims vs observed inflows; stash Detections. P3: when
+        # reconcile_silent_neighbours is on, we observe EVERY approved neighbour's
+        # in-edge, so one with observed inflow but NO claim yields `missing_claim`;
+        # a silent AND idle approach contributes nothing (no spurious detection).
         new_detections: list[Detection] = []
         claim_srcs = {src for (src, _dst) in claims.keys()}
         if self.reconcile_silent_neighbours:
@@ -797,4 +766,25 @@ class CoordinatedController(HybridController):
                 for d in new_detections
             ],
         })
+
+        # §6.2: emit the §11 kind:"decision" record inline. driving_input_seqs =
+        # the FULL set of consumed signed inputs (no materiality filter); junction
+        # = the deciding tl; t = SIM time (distinct clock from the signed logical
+        # message.t); executed = the used phase; classification is a RUNTIME label
+        # from detections[].flagged (DISTINCT from ORIGIN -- assessment.py MUST NOT
+        # read it for origin); policies per §6.2 (detection "ran" iff >=1 Detection).
+        classification = ("SPOOFED_OR_FAULTY"
+                          if any(d.flagged for d in new_detections)
+                          else "LEGITIMATE")
+        log_decision(self.audit_log, self.identities, tl, driving_pairs,
+                     self._sim_time(), used, classification,
+                     coordination_policies(bool(new_detections)))
         return used
+
+    def _sim_time(self) -> float:
+        """Simulation-clock read for decision.t (§6.2). DISTINCT from the logical
+        per-message tick that rides inside a signed message.t. Never raises."""
+        try:
+            return float(self.c.simulation.getTime())
+        except Exception:
+            return 0.0

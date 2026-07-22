@@ -39,6 +39,7 @@ like coordination messages.
 """
 from __future__ import annotations
 
+from audit_records import EV_POLICIES, log_decision, log_messages, log_sighting
 from coordinated_controller import CoordinatedController
 from identity import JunctionIdentity
 from message_bus import MessageBus
@@ -152,19 +153,30 @@ class EmergencyController(CoordinatedController):
             pass
         self._ev_tick += 1
 
-    def _ingest_ev_inbox(self, tl: str) -> list[dict]:
+    def _ingest_ev_inbox(self, tl: str) -> tuple[list[dict], list]:
         """Read verified EV messages for ``tl``; update the sighting store.
 
-        Returns the list of authenticated advance-claims addressed to ``tl``
-        (each ``{"from", "ev_id", "approach_edge", "t"}``). Sightings are folded
-        into ``self._sightings`` for corroboration; they are not returned.
+        Returns ``(claims, driving_pairs)``: ``claims`` = authenticated
+        advance-claims addressed to ``tl`` (each ``{"from","ev_id","approach_edge",
+        "t"}``); ``driving_pairs`` = the ``[seq, sighter_key]`` of EVERY consumed
+        verified EV message (§6.2 -- sightings AND claims), for the EV decision's
+        driving_input_seqs. §6.2: STOP DISCARDING ``m.signature`` -- each consumed
+        message is logged as a §11 kind:"message" record (its .signature.hex() +
+        the registry DER at consumption); for a sighting the (seq, sighter_key) is
+        also what the corroboration store references. Sightings are still folded
+        into ``self._sightings`` for the corroboration recompute.
         """
         claims: list[dict] = []
+        driving_pairs: list = []
         try:
             messages = self.ev_bus.inbox(tl)
         except Exception:
-            return claims
+            return claims, driving_pairs
         for m in messages:
+            # §6.2: log the verified message (was discarding m.signature here).
+            msg_pairs = log_messages(self.audit_log, self.registry,
+                                     self.identities, tl, [m])
+            driving_pairs = [*driving_pairs, *msg_pairs]
             payload = m.payload if isinstance(m.payload, dict) else {}
             sighting = payload.get("sighting")
             if isinstance(sighting, dict):
@@ -181,7 +193,7 @@ class EmergencyController(CoordinatedController):
                 if isinstance(ev_id, str) and isinstance(edge, str):
                     claims.append({"from": m.sender, "ev_id": ev_id,
                                    "approach_edge": edge, "t": m.t})
-        return claims
+        return claims, driving_pairs
 
     def _corroborated(self, ev_id: str, claimer: str, tl: str,
                       local_ev: tuple[str, str] | None) -> bool:
@@ -228,12 +240,23 @@ class EmergencyController(CoordinatedController):
         if not self.preemption_enabled:
             return used  # nopreempt mode: plain MaxPressure + coordination
 
+        # driving_input_seqs for THIS EV decision: the FULL set of consumed signed
+        # EV inputs (from the inbox) PLUS the keyless local sighting (a [seq, null]
+        # pair -- §11 keyless encoding: sighting_key AND signature both null).
+        ev_driving_pairs: list = []
+
         local_ev = self._sense_local_ev(tl, st)
         # Publish a signed sighting + advance-claims downstream when we see one.
         # Advance-claims are the cross-junction coordination; maxpressure_preempt
         # disables them (local-sensing preemption only).
+        local_sighting_seq = None
         if local_ev is not None:
             ev_id, ev_edge = local_ev
+            # §6.2: the junction's OWN sensor reading is a KEYLESS local sighting
+            # (§6.4 sensor-fed-spoof surface) -> a §11 kind:"sighting" record with
+            # sighter_key null (its signature is the null envelope sig, issuer=None).
+            local_sighting_seq = log_sighting(
+                self.audit_log, ev_id, ev_edge, self._sim_time())
             self._ev_publish(tl, {"sighting": {"ev_id": ev_id, "edge": ev_edge,
                                                "t": self._ev_tick}})
             if self.advance_claims_enabled:
@@ -242,7 +265,13 @@ class EmergencyController(CoordinatedController):
                         "ev_id": ev_id, "target": nb,
                         "approach_edge": self._edge_id(tl, nb) or ""}})
 
-        claims = self._ingest_ev_inbox(tl) if self.advance_claims_enabled else []
+        if self.advance_claims_enabled:
+            claims, ingest_pairs = self._ingest_ev_inbox(tl)
+            ev_driving_pairs = [*ev_driving_pairs, *ingest_pairs]
+        else:
+            claims = []
+        if local_sighting_seq is not None:
+            ev_driving_pairs = [*ev_driving_pairs, [local_sighting_seq, None]]
 
         # Build the highest-priority admissible EV trigger. Local sensing wins.
         trig = None
@@ -300,6 +329,21 @@ class EmergencyController(CoordinatedController):
               "preempt_phase": preempt, "mp_used": used, "executed": executed}
         self.ev_events.append(ev)
         self._narrate_ev(ev)
+
+        # §6.2 item 4 + item 5 (CAUSAL RECORD RULE, PINNED): emit the §11
+        # kind:"decision" for this EV preempt/withhold (today the EV path emitted
+        # no decision record). When an EV junction fires BOTH a coordination
+        # decision (super().decide, above) AND this EV decision the SAME tick, the
+        # EV decision is the CAUSAL one for attribution -- recognised downstream by
+        # its driving inputs carrying an ev_id (the ev-claim message OR the keyless
+        # sighting), which the coordination decision's inputs never carry. The EV
+        # decision applies policy `corroboration`; classification is the RUNTIME EV
+        # label (LEGITIMATE iff admissible else SPOOFED_OR_FAULTY), DISTINCT from
+        # ORIGIN (assessment.py MUST NOT read it for origin).
+        log_decision(self.audit_log, self.identities, tl, ev_driving_pairs,
+                     self._sim_time(), executed,
+                     "LEGITIMATE" if admissible else "SPOOFED_OR_FAULTY",
+                     list(EV_POLICIES))
         return executed
 
     def _build_flagged_case(self, trig: dict, tl: str, local_ev):
@@ -321,12 +365,6 @@ class EmergencyController(CoordinatedController):
             neighbour_agreement=1.0 if corr > 0 else 0.0,
             local_sensing=local_ev is not None and local_ev[0] == trig["ev_id"],
             severity=0.5, split="novel", label="real")
-
-    def _sim_time(self) -> float:
-        try:
-            return float(self.c.simulation.getTime())
-        except Exception:
-            return 0.0
 
     def _narrate_ev(self, ev: dict) -> None:
         if not self.verbose:

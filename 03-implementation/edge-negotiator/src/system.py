@@ -31,18 +31,15 @@ runs with NO Docker / NO Foundry / NO SUMO, so it is CI-able. Each non-default
 backend is opt-in and LIVE-GATED: it raises a clear error (or its run() skips)
 when the broker / node / SUMO / Foundry is absent.
 
-Composition seam (documented honestly, per the brief)
------------------------------------------------------
-The audit-log design (§7.1) specifies the hook as a one-line addition INSIDE
-``CoordinatedController.decide()``. We MUST NOT edit that file. Instead we mirror
-the controller's PUBLIC ``.events`` list into the AuditLog after each control
-step (``_drain_audit``), signing each decision with the deciding junction's
-identity. This composes transparently — the event dict the controller already
-produces is exactly what ``AuditLog.append`` validates — and yields the identical
-record the in-line hook would, with one named difference: the append happens a
-control-step later (still well before the run ends and the chain/Merkle root are
-produced). See results/integrated_system_design.md for the seam and the exact
-one-line in-file promotion.
+Audit-log wiring (§6.2 producer wiring — the seam is now IN the producer)
+-------------------------------------------------------------------------
+The AuditLog is INJECTED into the controller (keyword-only ``audit_log=``), which
+emits the §11 message/decision/sighting records INLINE as it consumes messages
+and decides (``coordinated_controller`` / ``emergency_controller``). The earlier
+``_drain_audit`` post-hoc ``.events`` mirror is DELETED (it double-wrote decisions
+in a legacy shape). Registry register/revoke events are still mirrored into the
+same chain FIRST (``_mirror_registry``). ``enable_ev_incident=True`` additionally
+stages a naive-victim phantom-claim + real-EV incident over an EmergencyController.
 """
 from __future__ import annotations
 
@@ -240,6 +237,11 @@ class SystemResult:
     audit: dict
     attack_outcomes: tuple[dict, ...] = ()
     backends: dict = field(default_factory=dict)
+    # Populated only by the enable_ev_incident run: the FLATTENED §11 records
+    # (event.* lifted + envelope seq preserved) and a small incident summary, so
+    # a test can verify the ACTUAL emitted records, not a self-reported outcome.
+    audit_entries: tuple[dict, ...] = ()
+    ev_incident: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """Flat, JSON-serialisable dict of the whole bundle (for run_system CLI)."""
@@ -250,6 +252,8 @@ class SystemResult:
             "coordination": self.coordination,
             "audit": self.audit,
             "attack_outcomes": list(self.attack_outcomes),
+            "audit_entries": list(self.audit_entries),
+            "ev_incident": self.ev_incident,
         }
 
 
@@ -272,8 +276,15 @@ class IntegratedSystem:
 
     # -- public entrypoint ---------------------------------------------------- #
 
-    def run(self) -> SystemResult:
-        """Execute one configured run and return the result bundle."""
+    def run(self, *, enable_ev_incident: bool = False) -> SystemResult:
+        """Execute one configured run and return the result bundle.
+
+        ``enable_ev_incident`` (keyword-only, default False = unchanged) stages a
+        NAIVE-victim (corroboration_required=False) scripted phantom-claim + real
+        EV incident (§6.2) over the grid, emitting the §11 EV records inline.
+        """
+        if enable_ev_incident:
+            return self._run_ev_incident()
         if self.config.requires_sumo:
             return self._run_sumo()
         return self._run_fake()
@@ -344,24 +355,22 @@ class IntegratedSystem:
         ctrl = CoordinatedController(
             conn, ["A0"], agent, identities=identities, registry=registry,
             bus=bus, adjacency=adjacency, checker=checker, slm_junctions=["A0"],
-            gate=cfg.gate, coord_weight=cfg.coord_weight,
+            gate=cfg.gate, coord_weight=cfg.coord_weight, audit_log=audit,
         )
 
         publisher = MaliciousPublisher(bus)
         attacks_by_tick = group_attacks(cfg.attacks)
         injected_records: list[dict] = []
 
-        audited_so_far = 0
         # Drive A0's decide() over `rounds` ticks. On each tick: (1) an honest
-        # neighbour (A1) publishes a benign claim matching what A0 observes, so
-        # the conservation books balance on a clean run; (2) any attack scheduled
-        # for this tick is injected; (3) A0 decides; (4) new events are mirrored
-        # into the audit log, signed by the deciding junction.
+        # neighbour (A1) publishes a benign claim matching what A0 observes, so the
+        # conservation books balance on a clean run; (2) any attack scheduled for
+        # this tick is injected; (3) A0 decides -- the injected AuditLog emits the
+        # §11 message/decision records INLINE (no post-hoc _drain_audit mirror).
         for tick in range(cfg.rounds):
             self._inject_tick(publisher, identities, registry, conn,
                               attacks_by_tick.get(tick, ()), tick, injected_records)
             ctrl.decide("A0", ctrl.tls["A0"])
-            audited_so_far = self._drain_audit(audit, ctrl, audited_so_far, identities)
 
         traffic = fake_traffic_summary(cfg.rounds, len(ctrl.events))
         coordination = coordination_counts(ctrl, bus)
@@ -426,6 +435,15 @@ class IntegratedSystem:
         })
 
     # ===================================================================== #
+    # EV incident path (§6.2): naive-victim phantom claim + real EV.
+    # ===================================================================== #
+
+    def _run_ev_incident(self) -> SystemResult:
+        """Stage the §6.2 naive-victim phantom + real-EV incident (see system_ev)."""
+        from system_ev import run_ev_incident
+        return run_ev_incident(self)
+
+    # ===================================================================== #
     # SUMO path: real microsimulation -> real tripinfo metrics.
     # ===================================================================== #
 
@@ -466,9 +484,9 @@ class IntegratedSystem:
                 traci, tls, agent, identities=identities, registry=registry,
                 bus=bus, adjacency=adjacency, checker=checker, slm_junctions=tls,
                 gate=cfg.gate, coord_weight=cfg.coord_weight, edge_map=edge_map,
+                audit_log=audit,
             )
 
-            audited_so_far = 0
             step = 0
             while traci.simulation.getMinExpectedNumber() > 0 and step < cfg.end:
                 traci.simulationStep()
@@ -476,8 +494,9 @@ class IntegratedSystem:
                 for spec in attacks_by_tick.get(step, ()):
                     self._inject_sumo_attack(publisher, identities, registry, spec,
                                              step, injected_records)
+                # ctrl.step() -> decide() per junction, which emits the §11 records
+                # inline via the injected AuditLog (no post-hoc _drain_audit mirror).
                 ctrl.step()
-                audited_so_far = self._drain_audit(audit, ctrl, audited_so_far, identities)
                 step += 1
         finally:
             try:
@@ -619,35 +638,33 @@ class IntegratedSystem:
             appended += 1
         return appended
 
-    def _drain_audit(self, audit: AuditLog | None, ctrl: CoordinatedController,
-                     audited_so_far: int, identities) -> int:
-        """Mirror any NEW controller events into the audit log, signed per junction.
-
-        THE SEAM: the audit-log design specifies a one-line append INSIDE
-        ``decide()``; since we may not edit that file, we mirror the controller's
-        public ``.events`` list here instead. Each new event is appended tagged
-        ``kind="decision"`` and signed by the deciding junction (``event["tls"]``)
-        — giving non-repudiation per decision, exactly as the in-file hook would.
-        """
-        if audit is None:
-            return audited_so_far
-        events = ctrl.events
-        for event in events[audited_so_far:]:
-            jid = event.get("tls")
-            tagged = {"kind": "decision", **event}
-            audit.append(tagged, issuer=identities.get(jid))
-        return len(events)
+    @staticmethod
+    def _record_kinds(audit: AuditLog) -> dict:
+        """Per-kind count of the inline-emitted records (the §6.2 bundle-count fix:
+        it reflects the producer's message/sighting/decision/registry records, not
+        the deleted _drain_audit mirror)."""
+        kinds: dict[str, int] = {}
+        for e in audit.entries():
+            k = e["event"].get("kind")
+            kinds[k] = kinds.get(k, 0) + 1
+        return kinds
 
     def _audit_bundle(self, audit: AuditLog | None, registry_entries: int) -> dict:
         """Produce verify_chain + Merkle root + a sample inclusion proof."""
         if audit is None:
             return {"enabled": False}
         n = len(audit)
+        kinds = self._record_kinds(audit)
         bundle: dict[str, Any] = {
             "enabled": True,
             "entries": n,
             "registry_entries": registry_entries,
-            "decision_entries": n - registry_entries,
+            # ACCURATE per-kind counts (the §6.2 fix): decision_entries is now ONLY
+            # the kind:"decision" records; non_registry_entries carries the sum
+            # identity (message + sighting + decision) = n - registry_entries.
+            "decision_entries": kinds.get("decision", 0),
+            "non_registry_entries": n - registry_entries,
+            "record_kinds": kinds,
             "verify_chain": audit.verify_chain(),
         }
         if n == 0:

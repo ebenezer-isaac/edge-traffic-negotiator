@@ -1,0 +1,5737 @@
+{
+  "status": "OK",
+  "split": "novel",
+  "n": 97,
+  "model": "Phi-4-mini-instruct-generic-gpu:5",
+  "retrieval_k": 10,
+  "corpus_size": 18,
+  "gold_kind": "POLICY-BASE-DERIVED PROXY (annotator-blind, event_type->applies_when); NOT human-graded; NOT the D5 gate",
+  "determinism": {
+    "sample": 5,
+    "checked": 5,
+    "identical": 5,
+    "identical_rate": 1.0
+  },
+  "arms": {
+    "slm": {
+      "n": 97,
+      "citation_correctness_f1": 0.3381116020291278,
+      "precision_mean": 0.4161512027491409,
+      "recall_mean": 0.3427835051546392,
+      "exact_match_rate": 0.0,
+      "fcr_per_note": 0.5257731958762887,
+      "fcr_per_citation": 0.5439330543933054,
+      "fabrication_rate_per_note": 0.05154639175257732,
+      "fabricated_citation_count": 5,
+      "total_citations": 239,
+      "abstention_rate": 0.27835051546391754,
+      "parse_failure_rate": 0.0
+    },
+    "template": {
+      "n": 97,
+      "citation_correctness_f1": 0.4793814432989691,
+      "precision_mean": 1.0,
+      "recall_mean": 0.3161512027491409,
+      "exact_match_rate": 0.0,
+      "fcr_per_note": 0.0,
+      "fcr_per_citation": 0.0,
+      "fabrication_rate_per_note": 0.0,
+      "fabricated_citation_count": 0,
+      "total_citations": 97,
+      "abstention_rate": 0.0,
+      "parse_failure_rate": 0.0
+    }
+  },
+  "split_dominance": {
+    "verdict": "TEMPLATE_WINS",
+    "rationale": "citation-F1 gap -0.141 <= -MDE; the honestly-scored template beats the SLM note",
+    "f1_delta": -0.14126984126984127,
+    "slm_fcr_per_note": 0.5257731958762887,
+    "fcr_ceiling": 0.2,
+    "mde_f1": 0.1,
+    "clears_mde": false,
+    "under_ceiling": false
+  },
+  "thresholds_pinned_pre_run": {
+    "fcr_ceiling_per_note": 0.2,
+    "mde_f1": 0.1,
+    "note": "PILOT values, not the sealed \u00a78 pre-registration"
+  },
+  "caveats": [
+    "Gold is a policy-base-derived PROXY for the \u00a73 human-graded applicable-rule labels; this is a PILOT (n=97), not the \u00a712 D5 gate (needs human grading + 2-rater kappa>=0.6). D5 is NOT claimed passed.",
+    "Citation-correctness is measured vs the proxy gold, not statute-text faithfulness graded by qualified humans.",
+    "The Job-A note is internal/counsel-gated and never enters the evidence pack."
+  ],
+  "per_case": {
+    "slm": [
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 3,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.3333333333333333,
+        "recall": 0.3333333333333333,
+        "f1": 0.3333333333333333,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0006",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0010",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0013",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0016",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0017",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0022",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0040",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0044",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0050",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0052",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0054",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 2,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0056",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0062",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0066",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0074",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0076",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "Griffin-v-Mersey",
+          "HC-Rule176",
+          "Keyse-v-Commissioner",
+          "CivilLiability-Contribution-1978-s1",
+          "TSRGD2016-Sch14-Pt1-para5(3)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 9,
+        "correct": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "HC-Rule176",
+          "Keyse-v-Commissioner",
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.3333333333333333,
+        "recall": 1.0,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0092",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0094",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0102",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0113",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 2,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0114",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "Griffin-v-Mersey",
+          "HC-Rule176",
+          "Keyse-v-Commissioner",
+          "CivilLiability-Contribution-1978-s1",
+          "TSRGD2016-Sch14-Pt1-para5(3)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 9,
+        "correct": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "HC-Rule176",
+          "Keyse-v-Commissioner",
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.3333333333333333,
+        "recall": 1.0,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0116",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0117",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0126",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0142",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0150",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "Griffin-v-Mersey",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.6666666666666666,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0151",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0160",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0162",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0174",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0177",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0183",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0195",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0199",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0203",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "Griffin-v-Mersey",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.6666666666666666,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0210",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0215",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0219",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0223",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "MaintenanceVehicles-no-exemption",
+          "Griffine-v-Mersey",
+          "RTA1988-s36"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "Griffine-v-Mersey",
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "fabricated": [
+          "Griffine-v-Mersey"
+        ],
+        "precision": 0.25,
+        "recall": 0.3333333333333333,
+        "f1": 0.28571428571428575,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": true,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0224",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0225",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0230",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0237",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0249",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "MaintenanceVehicles-no-exemption",
+          "Griffin-v-Mersey",
+          "RTA1988-s36"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0251",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0261",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0269",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0280",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(5)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(5)-(6)",
+          "TfL-London-signals"
+        ],
+        "fabricated": [
+          "TSRGD2016-Sch14-Pt1-para5(5)-(6)"
+        ],
+        "precision": 0.2,
+        "recall": 0.25,
+        "f1": 0.22222222222222224,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": true,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0281",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0287",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0288",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "Griffin-v-Mersey",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.6666666666666666,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0295",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0007",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0012",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0024",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0028",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0029",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0034",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0041",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0042",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 2,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0043",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0044",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0049",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0052",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "MaintenanceVehicles-no-exemption",
+          "Griffine-v-Mersey",
+          "RTA1988-s36"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "Griffine-v-Mersey",
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "fabricated": [
+          "Griffine-v-Mersey"
+        ],
+        "precision": 0.25,
+        "recall": 0.3333333333333333,
+        "f1": 0.28571428571428575,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": true,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0053",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0055",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0062",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0065",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0069",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0094",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "n_cited": 3,
+        "correct": [
+          "Griffin-v-Mersey"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.3333333333333333,
+        "recall": 0.25,
+        "f1": 0.28571428571428575,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0095",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0108",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 2,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0110",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "MaintenanceVehicles-no-exemption",
+          "Griffine-v-Mersey",
+          "RTA1988-s36"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "Griffine-v-Mersey",
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "fabricated": [
+          "Griffine-v-Mersey"
+        ],
+        "precision": 0.25,
+        "recall": 0.3333333333333333,
+        "f1": 0.28571428571428575,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": true,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0120",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0127",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0146",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0151",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "n_cited": 3,
+        "correct": [
+          "Griffin-v-Mersey"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.3333333333333333,
+        "recall": 0.25,
+        "f1": 0.28571428571428575,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0155",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0162",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0173",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "MaintenanceVehicles-no-exemption",
+          "Griffine-v-Mersey",
+          "RTA1988-s36"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "Griffine-v-Mersey",
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36"
+        ],
+        "fabricated": [
+          "Griffine-v-Mersey"
+        ],
+        "precision": 0.25,
+        "recall": 0.3333333333333333,
+        "f1": 0.28571428571428575,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": true,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0179",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0216",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0217",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0218",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0232",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0236",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0238",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0240",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0241",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 2,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0269",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0270",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "RTA1988-s36",
+          "Keyse-v-Commissioner",
+          "Gorringe-v-Calderdale"
+        ],
+        "n_cited": 4,
+        "correct": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner"
+        ],
+        "false": [
+          "Gorringe-v-Calderdale",
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.6666666666666666,
+        "f1": 0.5714285714285715,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0275",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_claim"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0277",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 2,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "RTA1988-s36"
+        ],
+        "fabricated": [],
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0281",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "emergency_plus_incident"
+      },
+      {
+        "cited": [
+          "Bird-v-Pearce"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "Bird-v-Pearce"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0287",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "conflicting-green detection"
+      },
+      {
+        "cited": [
+          "Griffin-v-Mersey",
+          "TfL-London-signals",
+          "MaintenanceVehicles-no-exemption",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "RTA1988-s36"
+        ],
+        "n_cited": 5,
+        "correct": [
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [
+          "MaintenanceVehicles-no-exemption",
+          "RTA1988-s36",
+          "TfL-London-signals"
+        ],
+        "fabricated": [],
+        "precision": 0.4,
+        "recall": 0.5,
+        "f1": 0.4444444444444445,
+        "exact_match": false,
+        "has_false_citation": true,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0294",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "multi_emergency incident at a signalised junction"
+      },
+      {
+        "cited": [],
+        "n_cited": 0,
+        "correct": [],
+        "false": [],
+        "fabricated": [],
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": true,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0296",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false,
+        "candidate_origin": "signal incident"
+      }
+    ],
+    "template": [
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0006",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0010",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0013",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0016",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0017",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0022",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0040",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0044",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0050",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0052",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0054",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0056",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0062",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0066",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0074",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0076",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0092",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0094",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0102",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0113",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0114",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0116",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0117",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0126",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0142",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0150",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0151",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0160",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0162",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0174",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0177",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0183",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0195",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0199",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0203",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0210",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0215",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0219",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0223",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0224",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0225",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0230",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0237",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0249",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0251",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0261",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0269",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0280",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0281",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0287",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0288",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-rea-0295",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0007",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0012",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0024",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0028",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0029",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0034",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0041",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0042",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0043",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0044",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0049",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0052",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0053",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0055",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0062",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0065",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0069",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0094",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0095",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0108",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0110",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0120",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0127",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0146",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0151",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0155",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0162",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0173",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0179",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0216",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0217",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0218",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0232",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0236",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0238",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0240",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0241",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0269",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0270",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0275",
+        "event_type": "emergency_claim",
+        "gold": [
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0277",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0281",
+        "event_type": "emergency_plus_incident",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TfL-London-signals"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TfL-London-signals"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0287",
+        "event_type": "conservation_anomaly",
+        "gold": [
+          "Bird-v-Pearce",
+          "Gorringe-v-Calderdale",
+          "TfL-London-signals"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0294",
+        "event_type": "multi_emergency",
+        "gold": [
+          "CivilLiability-Contribution-1978-s1",
+          "Griffin-v-Mersey",
+          "Keyse-v-Commissioner",
+          "TSRGD2016-Sch14-Pt1-para5(4)-(6)"
+        ],
+        "parse_failure": false
+      },
+      {
+        "cited": [
+          "RTA1988-s36"
+        ],
+        "n_cited": 1,
+        "correct": [
+          "RTA1988-s36"
+        ],
+        "false": [],
+        "fabricated": [],
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "exact_match": false,
+        "has_false_citation": false,
+        "has_fabrication": false,
+        "abstained": false,
+        "correct_refusal": false,
+        "case_id": "INJ-spo-0296",
+        "event_type": "incident_claim",
+        "gold": [
+          "LawReform-ContribNeg-1945-s1",
+          "RTA1988-s36",
+          "TSRGD2016-Sch14-Pt1-para5(3)"
+        ],
+        "parse_failure": false
+      }
+    ]
+  }
+}

@@ -78,7 +78,33 @@ JOB_A_NOTE_SHAPE = {
     "reasoning": "str, <=120 words — rationale; VALIDATED against cited_rules, never trusted on its face",
     "fault_weight_note": "str — a qualitative, NON-numeric note; not a confidence or probability",
 }
-JOB_A_CONTENT_DEFERRED = True  # citation-faithful CONTENT lands in the §9/Job-A phase
+# Citation-faithful CONTENT is now BUILT (`reason_note` below, wired to the
+# controller-mediated `legal_corpus` retrieval + the `experiment_jobA` runner). The
+# note remains INTERNAL / non-evidential / counsel-gated and never enters the pack.
+JOB_A_CONTENT_DEFERRED = False
+JOB_A_CONTENT_BUILT = True
+
+# Job-A system prompt (§3). The model writes the INTERNAL, non-evidential note over
+# the retrieved statute text. GROUNDING is explicit: it must cite ONLY the citation
+# ids it is given (a cited id NOT among them is a hallucination, §3 / Dahl 2024). It
+# never sees the ground-truth label; it must reason about which law governs.
+SYSTEM_JOB_A = (
+    "You are counsel's INTERNAL legal-reasoning assistant for a signalised-junction "
+    "incident on Euston Road (A501), London. You are given (1) a set of RETRIEVED "
+    "UK traffic-law rules, each with a citation id, and (2) the facts of a flagged "
+    "event. Write a SHORT internal note identifying which rules govern fault for "
+    "this situation.\n"
+    "STRICT GROUNDING: cite ONLY the citation ids from the RETRIEVED RULES list "
+    "verbatim. NEVER invent, guess, or cite an id that is not in that list. If no "
+    "provided rule applies, return an empty cited_rules list. Cite every provided "
+    "rule that genuinely applies; do NOT cite a rule merely because it was "
+    "retrieved.\n"
+    "The note is INTERNAL and NON-EVIDENTIAL: it is not a determination of fault. "
+    "candidate_origin names a KEY or situation, never a person.\n"
+    'Reply with ONLY a JSON object, no prose around it: '
+    '{"candidate_origin": "<label>", "cited_rules": ["<id>", ...], '
+    '"reasoning": "<=120 words", "fault_weight_note": "<qualitative, non-numeric>"}'
+)
 
 
 def _service_endpoint() -> str | None:
@@ -209,6 +235,131 @@ class SLMAgent:
             f"Fraction of neighbours whose reports agree: {case.neighbour_agreement:.2f}. "
             f"Reported severity: {case.severity:.2f}."
         )
+
+    def reason_note(self, case, retrieved_rules, note_max_tokens: int = 768):
+        """Job A (§3): the citation-faithful INTERNAL legal-reasoning note.
+
+        ``case`` exposes the ``FlaggedCase`` fields (event facts). ``retrieved_rules``
+        is the controller-mediated candidate list (``legal_corpus.LawRule`` objects,
+        or any object with ``.statute_ref``/``.applies_when``/``.text``); the model
+        may cite ONLY from it. Returns the note dict matching ``JOB_A_NOTE_SHAPE`` or
+        ``None`` on ANY failure (connection / parse / shape) so the caller falls back
+        to NO note. Temperature 0. The note is NON-EVIDENTIAL and counsel-gated; it
+        never enters the evidence pack.
+        """
+        rules_block = self._format_retrieved_rules(retrieved_rules)
+        if not rules_block:
+            return None  # no corpus retrieved -> no grounded note (fail-loud upstream)
+        user = (
+            "RETRIEVED RULES (cite ONLY these ids):\n" + rules_block
+            + "\n\nFLAGGED EVENT FACTS:\n" + self._case_evidence(case)
+            + "\n\nWrite the internal note now as the specified JSON object."
+        )
+        try:
+            resp = self.client.chat.completions.create(
+                model=self.model, temperature=0, max_tokens=note_max_tokens,
+                timeout=90,  # bound each call: a stalled generation -> None (a failure), never a hang
+                messages=[{"role": "system", "content": SYSTEM_JOB_A},
+                          {"role": "user", "content": user}],
+            )
+            return self._parse_note(resp.choices[0].message.content or "")
+        except Exception:
+            return None
+
+    @staticmethod
+    def _format_retrieved_rules(retrieved_rules) -> str:
+        """Render the candidate rules as a numbered, citation-id-labelled block."""
+        lines = []
+        for i, r in enumerate(retrieved_rules or []):
+            ref = getattr(r, "statute_ref", None)
+            if ref is None and isinstance(r, dict):
+                ref = r.get("statute_ref")
+            if not ref:
+                continue
+            applies = getattr(r, "applies_when", "") or (
+                r.get("applies_when", "") if isinstance(r, dict) else "")
+            text = getattr(r, "text", "") or (
+                r.get("text", "") if isinstance(r, dict) else "")
+            lines.append(f'{i + 1}. citation id: "{ref}"\n'
+                         f'   applies when: {applies}\n'
+                         f'   rule: {text}')
+        return "\n".join(lines)
+
+    @staticmethod
+    def _parse_note(text: str):
+        """Strict-ish JSON parse of a Job-A note. None on any failure.
+
+        Extracts the first balanced JSON object, validates the four required keys,
+        and coerces ``cited_rules`` to a list of non-empty strings (deduped, order
+        preserved). ``reasoning`` is clamped to 120 words. Returns None if the object
+        is absent, unparseable, or missing ``cited_rules``.
+        """
+        import json
+
+        obj = SLMAgent._extract_json_object(text)
+        if obj is None:
+            return None
+        raw_cited = obj.get("cited_rules")
+        if not isinstance(raw_cited, list):
+            # a single string is a tolerable near-miss; anything else is a failure.
+            if isinstance(raw_cited, str) and raw_cited.strip():
+                raw_cited = [raw_cited]
+            else:
+                return None
+        cited: list = []
+        for c in raw_cited:
+            if isinstance(c, str) and c.strip() and c.strip() not in cited:
+                cited.append(c.strip())
+        reasoning = obj.get("reasoning")
+        reasoning = reasoning.strip() if isinstance(reasoning, str) else ""
+        words = reasoning.split()
+        if len(words) > 120:
+            reasoning = " ".join(words[:120])
+        origin = obj.get("candidate_origin")
+        fwn = obj.get("fault_weight_note")
+        return {
+            "candidate_origin": origin.strip() if isinstance(origin, str) else "unknown",
+            "cited_rules": cited,
+            "reasoning": reasoning,
+            "fault_weight_note": fwn.strip() if isinstance(fwn, str) else "",
+        }
+
+    @staticmethod
+    def _extract_json_object(text: str):
+        """Return the first balanced top-level ``{...}`` parsed as JSON, or None."""
+        import json
+
+        if not text:
+            return None
+        start = text.find("{")
+        while start != -1:
+            depth = 0
+            in_str = False
+            esc = False
+            for i in range(start, len(text)):
+                ch = text[i]
+                if in_str:
+                    if esc:
+                        esc = False
+                    elif ch == "\\":
+                        esc = True
+                    elif ch == '"':
+                        in_str = False
+                    continue
+                if ch == '"':
+                    in_str = True
+                elif ch == "{":
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            obj = json.loads(text[start:i + 1])
+                        except (ValueError, TypeError):
+                            break
+                        return obj if isinstance(obj, dict) else None
+            start = text.find("{", start + 1)
+        return None
 
     @staticmethod
     def _parse_decision(text: str) -> str | None:

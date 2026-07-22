@@ -87,9 +87,15 @@ class _UnreachableAgent:
 # --------------------------------------------------------------------------- #
 # (a) NO Foundry (the CI condition): SKIP-not-abort, reason names reachability.
 # --------------------------------------------------------------------------- #
-def test_probe_no_foundry_skips_not_raises():
-    # Foundry is absent in CI: the real construction + models.list() must fail
-    # into a recorded skip, NOT an exception.
+def test_probe_no_foundry_skips_not_raises(monkeypatch):
+    # Force Foundry-ABSENT deterministically, independent of whether a real
+    # Foundry Local happens to be running in this environment (it may be up when
+    # a dev runs the experiments). Making SLMAgent construction raise reproduces
+    # the service-down condition exactly. The probe must SKIP-not-abort: return
+    # (None, reason), never raise.
+    def _service_down(*a, **k):
+        raise ConnectionError("Foundry Local not reachable (simulated down)")
+    monkeypatch.setattr(slm_agent, "SLMAgent", _service_down)
     result = probe_foundry_determinism()
     assert isinstance(result, tuple) and len(result) == 2
     agent, reason = result

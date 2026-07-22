@@ -1,13 +1,12 @@
 # Feature Specification: The Edge Negotiator
 
 **Feature Branch**: `001-edge-negotiator`
-**Created**: 2026-06-21
-**Status**: Draft (MVP scope for supervisor review)
+**Status**: Stakeholder specification (the WHAT and WHY)
 **Owner**: Ebenezer Veeraraju (UCL MSc Systems Engineering for IoT, 25153651)
 **Supervisors**: Dr A. Delibasi (UCL), L. Stott (Microsoft)
 **Input**: On-device SLMs at neighbouring traffic junctions coordinate to clear emergencies and handle incidents, and stay safe when a junction's coordination messages are compromised.
 
-> Authored in the GitHub Spec Kit format (Spec-Driven Development). This is the `spec.md` (the WHAT and WHY for stakeholders). Technology and build sequencing live in `plan.md` and `tasks.md`. The single source of truth for direction, scope, and framing is `MASTER-SPEC.md`; `03-implementation/PROJECT-PROPOSAL.md` is the earlier proposal and `03-implementation/DEMO-REPORT.md` records the measured fixture demo.
+> Authored in the GitHub Spec Kit format (Spec-Driven Development). This is the `spec.md` (the WHAT and WHY for stakeholders). The single source of truth for direction, scope, and framing is `MASTER-SPEC.md`; this document defers to it wherever the two touch.
 
 ---
 
@@ -15,9 +14,9 @@
 
 Neighbouring traffic signals increasingly coordinate (green waves, ambulance preemption). The moment they act on each other's messages, a hijacked junction that still holds a valid key can lie, and a naive coordinator acts on the lie: wasted green, starved side streets, or a road cleared for an ambulance that does not exist.
 
-The Edge Negotiator is an on-device, **trust-preserving coordination layer** for a stretch of signalised junctions, each running a small AI model on the junction itself. A classical controller (MaxPressure) stays in charge by default and is the safety net; the AI is consulted only on the hard, ambiguous cases. A deterministic gate refuses a signed-but-uncorroborated emergency preemption from a compromised insider and clears physically-corroborated real emergencies; a signed, hash-chained accountability log (a Certificate-Transparency-style, quorum-anchored, cross-audited design credited to prior art, not claimed novel) makes every decision reconstructable.
+The Edge Negotiator is an on-device system for a stretch of signalised junctions, each running a small language model (SLM) on the junction itself. It asks one two-part question (the full statement is `MASTER-SPEC.md` §1): **H1 performance** — can an on-device SLM traffic-signal controller match or beat the MaxPressure baseline on the real Euston Road (A501), and at what model scale and configuration; and **H2 trust** — is every decision provably auditable, so an accident can be mechanically reconstructed afterwards. A classical controller (MaxPressure) stays in charge by default and is the safety net; the SLM is the candidate controller under study and, on flagged ambiguous cases, a guarded exception handler. A deterministic gate refuses a signed-but-uncorroborated emergency preemption from a compromised insider and clears physically-corroborated real emergencies; a signed, hash-chained accountability log (a Certificate-Transparency-style, quorum-anchored, cross-audited design credited to prior art, not claimed novel) makes every decision reconstructable.
 
-The genuinely new result is not a security mechanism and not a traffic-performance claim. It is a **measured characterisation** of exactly which stealthy insider deviations this layer can and cannot hold accountable, and one specific structural finding: the preemption attack controls the signal phase, which is *also* the variable that gates honest-witness coverage, so executing the attack opens the very coverage gap that would conceal it (the **self-referential coupling**). The honest boundary of what is accountable, not an unconditional guarantee, is the finding.
+This is an exploratory feasibility and scale-threshold study: limitations are explicitly allowed, and a negative or a scale-threshold is a valid result. Within H2, the audit's **measured blind spot** is reported honestly as a supporting result: the preemption attack controls the signal phase, which is *also* the variable that gates honest-witness coverage, so executing the attack opens the very coverage gap that would conceal it (the **self-referential coupling**). The honest boundary of what is accountable, not an unconditional guarantee, is what that result reports.
 
 ---
 
@@ -112,7 +111,7 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 - The headline measurement of the self-referential coupling on Euston A501 (the phase-coupled coverage threshold and the free-deviation boundary).
 - Making the coordination term steer decisions: it is an inert structural zero, reported as such, not a traffic-performance experiment.
 - Coordinated incident reallocation around a blockage.
-- The real on-device model evaluation on Foundry Local (the demo uses a deterministic stand-in; the corroboration gate is deterministic, so the safety result is unchanged). When run, the SLM is a self-contained co-equal contribution: a citation-faithful legal-reasoning note scored on citation-correctness and false-citation-rate against an un-rigged rule-to-text template, plus a characterised disambiguation classifier; a clean null (a demoted claim) leaves the SLM's presence intact.
+- The real on-device model evaluation on Foundry Local (the demo uses a deterministic stand-in; the corroboration gate is deterministic, so the safety result is unchanged). The on-device SLM has two roles: the H1 traffic-signal controller under study (the headline feasibility question, `MASTER-SPEC.md` §3), and an H2 support that writes a citation-faithful legal-reasoning note scored on citation-correctness and false-citation-rate against an un-rigged rule-to-text template, plus a characterised disambiguation classifier; a demoted claim leaves the SLM's presence intact.
 - The full Euston demand sweep calibrated to a named time-resolved source.
 - Defence against colluding insiders (≥2 keys), operator creation-time omission, or a stolen administrative key.
 
@@ -123,7 +122,7 @@ As a city traffic authority, when an emergency vehicle crosses a corridor, I wan
 - **Built and measured (synthetic fixture)**: signed coordination, registry, plausibility check, classical controller and safety net, the corroboration gate, the four-junction fixture, the live demo, and the 30-run metrics. In one defended run: 6 local-sensing preemptions, 7 corroborated downstream preemptions, 6 phantom claims withheld.
 - **Committed, not yet the measured headline**: the real Euston Road (A501) net and its edge map.
 - **Structural, not an experiment**: the normal-traffic coordination term (inert structural zero).
-- **Designed, not yet run**: the headline coupling measurement on Euston A501; the real on-device model on Foundry Local (SLM as a self-contained co-equal contribution: citation-faithful legal reasoning + disambiguation, reported either way including a claim-demoting null, see `experiment-1-slm-vs-rule.md`); incident reallocation; the full Euston demand sweep.
+- **Designed, not yet run**: the headline H1 SLM-vs-MaxPressure model x config sweep on Euston A501 (`MASTER-SPEC.md` §3/§8); the coupling boundary measurement (Experiment D, `MASTER-SPEC.md` §4.5/§8); the real on-device model on Foundry Local (H1 controller + the H2 citation-faithful legal-reasoning note and disambiguation classifier, reported either way including a claim-demoting negative); incident reallocation; the full Euston demand sweep.
 
 ---
 

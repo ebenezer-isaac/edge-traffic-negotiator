@@ -1,7 +1,7 @@
 # The Edge Negotiator: Ground Rules and Decision Policy Base
 
-**Status**: CANONICAL policy source of truth. Created 2026-07-16 in response to Lee's meeting feedback ("where is the policy actually defined?").
-**Purpose**: the single, explicit, versioned, auditable definition of how the system decides whether a flagged signal is legitimate or an attack, and how it steers safely. Both the deterministic rule engine and the SLM (via retrieval) reason against THIS document. Therefore (a) every decision is traceable to a numbered policy (auditability), and (b) the rule-vs-SLM comparison is fair because both consume the same policies.
+**Status**: CANONICAL policy source of truth for decision logic; defers to `MASTER-SPEC.md` for direction, scope, and framing.
+**Purpose**: the single, explicit, auditable definition of how the system decides whether a flagged signal is legitimate or an attack, and how it steers safely. Both the deterministic rule engine and the SLM (via the policy base in context) reason against THIS document. Therefore (a) every decision is traceable to a numbered policy (auditability), and (b) the rule-vs-SLM comparison is fair because both consume the same policies.
 
 > Design intent: this markdown is the human-readable master. A machine-readable mirror (`ground_rules.yaml`, to build) carries the same policy ids for the rule engine, the RAG retrieval corpus, and the audit log, so a decision record can cite `policy_id` verbatim. Nothing here is inferred by the model at runtime: an unmatched case is classified `UNKNOWN` and escalated, never silently guessed.
 
@@ -89,7 +89,7 @@ The reasoning is produced BEFORE the classification so a wrong call is diagnosab
 
 ## F. Auditability guarantee
 
-Every classification (rule or SLM) is written to the tamper-evident hash-chained audit log with its `policies_applied`, `classification`, and `confidence`. Auditability is itself a measured KPI: the fraction of decisions whose `policies_applied` is non-empty and whose classification is consistent with the cited policies. A decision that cites no policy is a defect (it means the system guessed), surfaced by the audit, not hidden.
+Every classification (rule or SLM) is written to the tamper-evident hash-chained audit log with its `policies_applied`, `classification`, and `confidence`. Auditability is itself a measured KPI: the fraction of decisions whose `policies_applied` is non-empty and whose classification is consistent with the cited policies. A DETERMINISTIC decision that cites no policy is a defect (it means the system guessed), surfaced by the audit, not hidden. **Exemption:** the SLM Job-A legal-reasoning note is EXEMPT from the empty-`policies_applied` defect rule (it is a non-evidential, counsel-gated internal note, not a deterministic control decision; `MASTER-SPEC.md` §12 policy-KPI rule).
 
 ---
 

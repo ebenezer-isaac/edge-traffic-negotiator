@@ -1,6 +1,6 @@
 # The Edge Negotiator: Formal Specification (parameters, algorithms, metrics, data flow)
 
-**Status:** Parameter/algorithm spec. The single source of truth for direction, scope, and framing is `MASTER-SPEC.md`; this document is the detailed reference for every parameter (value + justification + status), every equation, every metric formula, the statistical method, and how the modules interlock at runtime. Companion to `PROJECT-PROPOSAL.md` (the earlier proposal) and `METHODOLOGY-AND-IMPLEMENTATION-DESIGN.md` (build plan). Produced 2026-06-20 from a five-specialist research pass; every external claim is cited and was web-verified unless marked otherwise. Where any framing here conflicts with `MASTER-SPEC.md`, the latter governs.
+**Status:** Parameter/algorithm spec. The single source of truth for direction, scope, and framing is `MASTER-SPEC.md`; this document is the detailed reference for every parameter (value + justification + status), every equation, every metric formula, the statistical method, and how the modules interlock at runtime. Every external claim is cited and web-verified unless marked otherwise. Where any framing here conflicts with `MASTER-SPEC.md`, the latter governs.
 
 **Value status legend:** `[D]` derived from first principles/other parameters · `[C]` literature-cited standard · `[K]` must be calibrated (procedure given) · `[E]` engineering threshold, no external standard.
 
@@ -8,12 +8,12 @@
 
 ## In plain terms (read this first)
 
-This document is the engineering rulebook: it fixes *every number* the system uses (timings, thresholds, statistical settings), says where each number comes from, and shows how the pieces fit together at run time. If the proposal is "what we are building and why", this is "exactly how, with all the constants nailed down". Each value is tagged `[D]` derived, `[C]` cited from the literature, `[K]` must be calibrated from data, or `[E]` an engineering choice. Specialist terms are translated in [`GLOSSARY.md`](GLOSSARY.md).
+This document is the engineering rulebook: it fixes *every number* the system uses (timings, thresholds, statistical settings), says where each number comes from, and shows how the pieces fit together at run time. It is "exactly how, with all the constants nailed down". Each value is tagged `[D]` derived, `[C]` cited from the literature, `[K]` must be calibrated from data, or `[E]` an engineering choice. Specialist terms are translated in [`GLOSSARY.md`](GLOSSARY.md).
 
 ## 0. Citation-integrity and calibration registers (read first)
 
-**Citation integrity (re-verified 2026-06-20, 201-agent fact-check):**
-- The conservation law's primary grounding is the **LWR continuity equation** (Lighthill & Whitham 1955, *Proc. R. Soc. A* 229; Richards 1956, *Oper. Res.* 4, both verified). **Derhab et al. 2020** (*Sensors* 20(21):6106, DOI 10.3390/s20216106) is a verified, correctly-described precedent: it uses relaxed flow-conservation as a one-class detector for selective-routing attacks in wireless sensor networks. We cite it for the conservation-residual idea and adopt LWR for the physics; the honest gap is the domain (WSN routing → vehicle flow). (An earlier draft wrongly flagged this citation as unverifiable; that flag was the error, not the citation.)
+**Citation integrity:**
+- The conservation law's primary grounding is the **LWR continuity equation** (Lighthill & Whitham 1955, *Proc. R. Soc. A* 229; Richards 1956, *Oper. Res.* 4, both verified). **Derhab et al. 2020** (*Sensors* 20(21):6106, DOI 10.3390/s20216106) is a verified, correctly-described precedent: it uses relaxed flow-conservation as a one-class detector for selective-routing attacks in wireless sensor networks. We cite it for the conservation-residual idea and adopt LWR for the physics; the honest gap is the domain (WSN routing → vehicle flow).
 - CUSUM concept grounded in Page (1954); the **tabular recursion** is Page (1961)/Lucas (1982)/Hawkins-Olwell (1998); ARL via Siegmund (1985) + Montgomery SQC. MaxPressure in Varaiya (2013); note our `P_i` is the simplified halting-count form, not Varaiya's saturation-flow/turning-ratio-weighted rule (§2). Green-wave concept in Morgan & Little (1964)/Little (1966); the closed-form offset is a modern simplification of their MILP framework. All papers verified (Sources, §10).
 
 **Must-calibrate parameters `[K]` (no guessed values ship):** `coord_weight (λ)`, `shield_margin`, `gate`, `processing`, `outage_persist`, `escalation_cooldown`, `clock_skew_bound`, `sensing_latency`, and the empirical confirmation of `rel_frac` and CUSUM `h`. Each has a procedure below. The dissertation must report the calibrated value + the benign run it was selected on.
@@ -52,7 +52,7 @@ Units: s=seconds, m=metres, m/s, m/s², veh=vehicles, win=windows/decision-round
 | `H` | coordination look-ahead horizon | s | = C_opt (≈60) | [D] | one cycle |
 | **Shield** | | | | | |
 | `shield_margin` | pressure-floor veto tolerance | veh | calibrate; report 0 baseline | [K] | sweep {0,2,4,8,16}; largest passing benign never-regress |
-| `max_skip` | anti-starvation skip bound | decisions | 3 | [D]/PINNED | PINNED anti-starvation shield value (MASTER-SPEC §0 / §6.8); the ⌈C_opt/Δ⌉=⌈78/10⌉=8 cycle figure is a looser upper bound now superseded by the tighter pinned 3 |
+| `max_skip` | anti-starvation skip bound | decisions | 3 | [D]/PINNED | PINNED anti-starvation shield value (MASTER-SPEC §0 / §6.8); the ⌈C_opt/Δ⌉=⌈78/10⌉=8 cycle figure is a looser upper bound, not used |
 | `T_starve` | worst-case wait bound | s | ≤43 | [D] | max_skip·Δ + (min_green+yellow) = 3·10+13 |
 
 ### 1.2 Detection (conservation + CUSUM)
@@ -117,9 +117,9 @@ Units: s=seconds, m=metres, m/s, m/s², veh=vehicles, win=windows/decision-round
 
 **(7) Platoon arrival:** `t_arrive = t_release + ℓ_e/v_free`. **(8) Offset:** `offset_AB = (ℓ_e/v_free) mod C_opt` (Morgan & Little 1964). **(9) Horizon:** `H = C_opt`.
 
-**(10) Channel-B coordinated score:** `adj_halting_i = green_halting_i + λ·incoming_per_phase_i`; `coord_choice = (mp_choice if λ=0 else argmax_i adj_halting_i)`. λ=0 short-circuits to a byte-exact MaxPressure ablation (FR-8). Per MASTER-SPEC §8 the coordination term is an **inert structural zero**, reported as such and NOT an experimental benefit; any delay effect is not a headline claim (no traffic-performance benefit is claimed).
+**(10) Channel-B coordinated score:** `adj_halting_i = green_halting_i + λ·incoming_per_phase_i`; `coord_choice = (mp_choice if λ=0 else argmax_i adj_halting_i)`. λ=0 short-circuits to a byte-exact MaxPressure ablation (FR-8). On the synthetic unit-test grid the coordination term measures as an **inert structural zero**, reported as substrate-specific to that topology; on the real Euston arterial it is an OPEN config-sweep arm ({myopic, +coordination, +prediction}) whose delay effect is measured, not assumed zero (`MASTER-SPEC.md` §3/§8).
 
-**Anti-starvation:** `max_skip = 3` (PINNED anti-starvation shield value, MASTER-SPEC §0 / §6.8; the ⌈C_opt/Δ⌉=⌈78/10⌉=8 cycle figure is a looser upper bound now superseded by the tighter pinned 3); worst-case wait `T_starve ≤ max_skip·Δ + (min_green+yellow) = 3·10+13 = 43 s`.
+**Anti-starvation:** `max_skip = 3` (PINNED anti-starvation shield value, MASTER-SPEC §0 / §6.8; the ⌈C_opt/Δ⌉=⌈78/10⌉=8 cycle figure is a looser upper bound, not used); worst-case wait `T_starve ≤ max_skip·Δ + (min_green+yellow) = 3·10+13 = 43 s`.
 
 ---
 
@@ -236,14 +236,14 @@ At λ=0, no trigger, no SLM override: reduces exactly to `mp_choice`.
 | `stats` | per-seed paired metrics | BCa CI + perm p + Holm + Cliff's δ | paired on seed; primary family FWER-controlled |
 
 ### 7.4 Build status (code map)
-- **Built + tested:** MaxPressure, MessageBus (auth+replay), FlowWindow, FlowConservationDetector (CUSUM), conservation (stateless offline), metrics (traffic), stats, evaluation harness, identity/registry, permissioned-ledger/messaging anchor spikes (demoted to the cited-prior-art anchor option).
+- **Built + tested:** MaxPressure, MessageBus (auth+replay), FlowWindow, FlowConservationDetector (CUSUM), conservation (stateless offline), metrics (traffic), stats, evaluation harness, identity/registry, permissioned-ledger/messaging anchor spikes (the cited-prior-art anchor option, §6.7 of `MASTER-SPEC.md`).
 - **To build (MUST):** `EmergencyController` + `_shield_validate` (V_starve anti-starvation, V3 corroboration gate, V5 pressure floor with calibrated `shield_margin`), `_admissible_ev` + signed sighting log, the 5 trigger evaluators, `emergency_metrics`, `cooperative_naive` victim, `attacks_live` (ev_claim/incident_claim/λ-sweep injectors), the λ-reparameterised free-deviation-boundary sweep + recall-collapse estimator, Cliff's delta + mixed-effects, MDE reporter, max_green enforcement, cross-restart replay high-water-mark, spillback-cap, payload size/depth bound.
 
 ---
 
 ## 8. Formal system properties
 
-Testable, canonical statements of the properties invoked informally elsewhere in this document (the threat model, §5; the trigger predicates, §4; the shield, §7.2-7.3) and in `PROJECT-PROPOSAL.md` §5. Parameters in `[K: ...]` are calibrated/pre-registered per §0, not asserted values. Where a parameter already has a value in §1, that value is authoritative and cited here, not restated.
+Testable, canonical statements of the properties invoked informally elsewhere in this document (the threat model, §5; the trigger predicates, §4; the shield, §7.2-7.3). Parameters in `[K: ...]` are calibrated/pre-registered per §0, not asserted values. Where a parameter already has a value in §1, that value is authoritative and cited here, not restated.
 
 **Robust degradation (testable systems property).** Under any single authenticated-but-compromised neighbour input (spoofed claim, inflated or under-reported release, replay, silence):
 - R1 Detection: a deviation exceeding the plausibility band (`band`, §3) is flagged within `[K: D]` decision windows (measured as detection latency vs lie magnitude). The CUSUM zero-noise bound is `⌈h/(δ-k)⌉=6` windows and the Siegmund expected value is ≈6.4 windows for a sustained 1-band lie (§3, §9 relationship), so `D` is calibrated around that order of magnitude, not asserted independently.
@@ -257,7 +257,7 @@ Testable, canonical statements of the properties invoked informally elsewhere in
 - A2 an authenticated emergency/incident claim has partial evidence (corroboration present but below the hard-accept threshold, or stale/inconsistent, e.g. a sighting older than the route travel-time tolerance `tol`, §4), or
 - A3 two authenticated reports about the same edge contradict beyond the tolerance band (`tol`, §4).
 
-Fully corroborated and zero-evidence claims never escalate; they resolve deterministically in NORMAL regime. The SLM output is a proposal, the shield (§7.2-7.3) validates it against the safety floor below. This predicate is the compact formal gate for the five trigger evaluators of §4 (`emergency_vehicle`, `incident`, `sensor_outage`, `abnormal_demand`, `conservation_anomaly`); `METHODOLOGY-AND-IMPLEMENTATION-DESIGN.md` §2 gives the per-trigger implementation detail.
+Fully corroborated and zero-evidence claims never escalate; they resolve deterministically in NORMAL regime. The SLM output is a proposal, the shield (§7.2-7.3) validates it against the safety floor below. This predicate is the compact formal gate for the five trigger evaluators of §4 (`emergency_vehicle`, `incident`, `sensor_outage`, `abnormal_demand`, `conservation_anomaly`), whose per-trigger implementation detail is given in §4 above.
 
 **Safety floor (invariant set, SLM-independent).** The executed action always satisfies:
 - S1 min/max green bounds (`min_green=10`, `max_green=64`, §1.1/§2).

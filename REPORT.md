@@ -1,5 +1,15 @@
 # The Edge Negotiator — Progress Report & Plain-Language Rundown
 
+> **STATUS (2026-07-23): PILOT COMPLETE AND APPROVED by both supervisors.** The thesis
+> headline is approved; both halves (H1 traffic optimisation, H2 tamper-evident audit)
+> stand on their own. The project is now in the **full-scale implementation +
+> experimentation phase** — nothing is deferred from here on; distinction-level only.
+> Full-scale scope: report **throughput alongside delay**, **multi-seed** robustness,
+> **multiple London map topologies**, **explanatory analysis** of why models differ, a
+> **multi-scenario crash → UK-law audit suite**, and a new **trust-coefficient**
+> mechanism (truth-telling raises trust, lies are penalised extremely, local sensing is
+> the ultimate truth).
+
 A record of what has been built and measured so far, written to be read by someone who
 has not been living inside the jargon. Read Section 2 (the vocabulary) first; the rest
 refers back to it.

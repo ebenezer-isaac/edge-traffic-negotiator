@@ -1,5 +1,12 @@
 # Edge Negotiator — Defense Notes (point-by-point, lay terms)
 
+> STATUS (2026-07-23): the PILOT is COMPLETE and APPROVED by both supervisors; the
+> headline is approved. Now in the full-scale implementation + experimentation phase
+> (nothing deferred, distinction-level). Full-scale scope being built: throughput
+> alongside delay, multi-seed robustness, multi-map London topologies, explanatory
+> "why" analysis, a multi-scenario crash → UK-law audit suite, and a trust-coefficient
+> mechanism (local sensing = ultimate truth; lies penalised extremely).
+
 Short points, grouped, so you can answer anything about the architecture and what was
 done. Pair with `REPORT.md` (narrative) and `results/` (numbers).
 

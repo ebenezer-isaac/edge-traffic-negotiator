@@ -22,7 +22,8 @@
       "completion_rate": 0.6733238231098431,
       "joint_verdict": "clean_win",
       "slm_authored": 157,
-      "slm_calls": 311
+      "slm_calls": 311,
+      "duplicate_of_myopic": false
     },
     {
       "model": "qwen2.5-0.5b",
@@ -38,7 +39,8 @@
       "completion_rate": 0.6733238231098431,
       "joint_verdict": "clean_win",
       "slm_authored": 157,
-      "slm_calls": 311
+      "slm_calls": 311,
+      "duplicate_of_myopic": true
     },
     {
       "model": "qwen2.5-0.5b",
@@ -54,7 +56,8 @@
       "completion_rate": 0.6058732612055642,
       "joint_verdict": "clean_win",
       "slm_authored": 185,
-      "slm_calls": 322
+      "slm_calls": 322,
+      "duplicate_of_myopic": false
     },
     {
       "model": "qwen2.5-1.5b",
@@ -70,7 +73,8 @@
       "completion_rate": 0.6098726114649682,
       "joint_verdict": "clean_win",
       "slm_authored": 210,
-      "slm_calls": 322
+      "slm_calls": 322,
+      "duplicate_of_myopic": false
     },
     {
       "model": "qwen2.5-1.5b",
@@ -86,7 +90,8 @@
       "completion_rate": 0.6098726114649682,
       "joint_verdict": "clean_win",
       "slm_authored": 210,
-      "slm_calls": 322
+      "slm_calls": 322,
+      "duplicate_of_myopic": true
     },
     {
       "model": "qwen2.5-1.5b",
@@ -102,25 +107,29 @@
       "completion_rate": 0.5903225806451613,
       "joint_verdict": "match",
       "slm_authored": 216,
-      "slm_calls": 329
+      "slm_calls": 329,
+      "duplicate_of_myopic": false
     },
     {
       "model": "phi-4-mini-reasoning",
       "config": "myopic",
       "status": "skipped",
-      "reason": "measured choose_phase latency ~8.5s/decision (probe median) "
+      "reason": "measured choose_phase latency ~8.5s/decision (probe median) ",
+      "duplicate_of_myopic": false
     },
     {
       "model": "phi-4-mini-reasoning",
       "config": "coordination",
       "status": "skipped",
-      "reason": "measured choose_phase latency ~8.5s/decision (probe median) "
+      "reason": "measured choose_phase latency ~8.5s/decision (probe median) ",
+      "duplicate_of_myopic": false
     },
     {
       "model": "phi-4-mini-reasoning",
       "config": "prediction",
       "status": "skipped",
-      "reason": "measured choose_phase latency ~8.5s/decision (probe median) "
+      "reason": "measured choose_phase latency ~8.5s/decision (probe median) ",
+      "duplicate_of_myopic": false
     },
     {
       "model": "phi-4-mini",
@@ -136,7 +145,8 @@
       "completion_rate": 0.5769230769230769,
       "joint_verdict": "match",
       "slm_authored": 220,
-      "slm_calls": 315
+      "slm_calls": 315,
+      "duplicate_of_myopic": false
     },
     {
       "model": "phi-4-mini",
@@ -152,7 +162,8 @@
       "completion_rate": 0.5769230769230769,
       "joint_verdict": "match",
       "slm_authored": 220,
-      "slm_calls": 315
+      "slm_calls": 315,
+      "duplicate_of_myopic": true
     },
     {
       "model": "phi-4-mini",
@@ -168,10 +179,13 @@
       "completion_rate": 0.6164817749603804,
       "joint_verdict": "clean_win",
       "slm_authored": 219,
-      "slm_calls": 316
+      "slm_calls": 316,
+      "duplicate_of_myopic": false
     }
   ],
-  "n_clean_win": 6,
+  "n_clean_win_cells": 6,
+  "n_clean_win_distinct_configs": 4,
+  "n_inert_coordination_duplicates": 2,
   "n_trade_off": 0,
   "headline": "qwen2.5-0.5b x myopic is a CLEAN WIN: delay 235.0s (-25.3%) AND throughput 472 completed (+111 vs baseline 361, +30.7%). The delay win does NOT cost throughput -- it improves both.",
   "note": "Descriptive PILOT lens on committed data (n=1/cell); no significance claim. Completion counts comparable (same net+demand+seed)."

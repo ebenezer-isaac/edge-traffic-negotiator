@@ -20,5 +20,5 @@
 | phi-4-mini x coordination | 314.7 | match +0.1% | 360 (-1) | match -0.3% | **match** |
 | phi-4-mini x prediction | 295.8 | beats -5.9% | 389 (+28) | beats +7.8% | **clean win** |
 
-- Clean wins: 6   |   trade-offs: 0
+- Clean wins: **4 distinct configs** (6 cells incl. 2 inert-coordination duplicates of myopic)   |   trade-offs: 0
 - Descriptive PILOT lens on committed data (n=1/cell); no significance claim. Completion counts comparable (same net+demand+seed).

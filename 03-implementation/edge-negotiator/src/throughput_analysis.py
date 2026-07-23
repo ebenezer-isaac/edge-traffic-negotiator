@@ -53,8 +53,21 @@ def analyse(sweep: dict) -> dict:
                 "slm_authored": cell.get("slm_proposal_served"),
                 "slm_calls": cell.get("slm_calls"),
             })
+    # Flag inert-coordination duplicates: on this substrate +coordination changes zero
+    # decisions, so a coordination cell that is byte-identical (delay AND completed) to
+    # its myopic sibling is the SAME run, not a second independent win. Counting it
+    # again would inflate the clean-win tally, so we dedupe for the DISTINCT count.
+    myopic_by_model = {r["model"]: r for r in rows
+                       if r.get("config") == "myopic" and "delay_s" in r}
+    for r in rows:
+        sib = myopic_by_model.get(r.get("model"))
+        r["duplicate_of_myopic"] = bool(
+            r.get("config") == "coordination" and sib is not None
+            and r.get("delay_s") == sib.get("delay_s")
+            and r.get("completed") == sib.get("completed"))
     clean = [r for r in rows if r.get("joint_verdict") == "clean_win"]
     trades = [r for r in rows if r.get("joint_verdict") == "trade_off"]
+    distinct_clean = [r for r in clean if not r.get("duplicate_of_myopic")]
     return {
         "experiment": "H1_delay_and_throughput_joint",
         "question": ("does the SLM's delay win sacrifice throughput? (MaxPressure is "
@@ -62,7 +75,10 @@ def analyse(sweep: dict) -> dict:
         "baseline": {"delay_s": b_delay, "completed": b_comp, "departed": b_dep,
                      "completion_rate": (b_comp / b_dep) if b_dep else None},
         "rows": rows,
-        "n_clean_win": len(clean), "n_trade_off": len(trades),
+        "n_clean_win_cells": len(clean),
+        "n_clean_win_distinct_configs": len(distinct_clean),
+        "n_inert_coordination_duplicates": len(clean) - len(distinct_clean),
+        "n_trade_off": len(trades),
         "headline": _headline(rows, b_comp),
         "note": ("Descriptive PILOT lens on committed data (n=1/cell); no significance "
                  "claim. Completion counts comparable (same net+demand+seed)."),
@@ -130,7 +146,10 @@ def render_md(r: dict) -> str:
                      f"{row['completed']} ({row['completed_delta']:+d}) | "
                      f"{row['throughput_status'].replace('slm_','')} {tr} | **{jv}** |")
     lines.append("")
-    lines.append(f"- Clean wins: {r['n_clean_win']}   |   trade-offs: {r['n_trade_off']}")
+    lines.append(f"- Clean wins: **{r['n_clean_win_distinct_configs']} distinct configs** "
+                 f"({r['n_clean_win_cells']} cells incl. "
+                 f"{r['n_inert_coordination_duplicates']} inert-coordination duplicates "
+                 f"of myopic)   |   trade-offs: {r['n_trade_off']}")
     lines.append(f"- {r['note']}")
     lines.append("")
     return "\n".join(lines)
@@ -140,7 +159,9 @@ def _print(r, jp, mp):
     print("=" * 68)
     print("DELAY + THROUGHPUT JOINT ANALYSIS")
     print("  " + r["headline"])
-    print(f"  clean wins: {r['n_clean_win']}  trade-offs: {r['n_trade_off']}")
+    print(f"  clean wins: {r['n_clean_win_distinct_configs']} distinct configs "
+          f"({r['n_clean_win_cells']} cells, {r['n_inert_coordination_duplicates']} "
+          f"inert-coord duplicates)  trade-offs: {r['n_trade_off']}")
     print("=" * 68)
     print(f"  wrote: {jp}\n  wrote: {mp}")
 

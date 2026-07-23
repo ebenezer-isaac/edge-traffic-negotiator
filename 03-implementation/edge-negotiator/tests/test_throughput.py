@@ -90,9 +90,14 @@ def test_analysis_of_committed_sweep_has_no_trade_offs():
         sweep = json.load(fh)
     r = ta.analyse(sweep)
     assert r["n_trade_off"] == 0            # no delay win came at a throughput cost
-    assert r["n_clean_win"] >= 1
+    # DISTINCT-config clean wins exclude inert-coordination duplicates of myopic
+    # (the audit MAJOR fix): 4 distinct, from 6 cells with 2 coordination duplicates.
+    assert r["n_clean_win_distinct_configs"] == 4
+    assert r["n_inert_coordination_duplicates"] == 2
+    assert r["n_clean_win_cells"] == r["n_clean_win_distinct_configs"] + r["n_inert_coordination_duplicates"]
     # the winning cell improves BOTH delay and throughput
     win = next(row for row in r["rows"]
                if row.get("model") == "qwen2.5-0.5b" and row.get("config") == "myopic")
     assert win["joint_verdict"] == "clean_win"
     assert win["completed_delta"] > 0        # more vehicles completed, not fewer
+    assert win["duplicate_of_myopic"] is False   # the headline win is not a duplicate

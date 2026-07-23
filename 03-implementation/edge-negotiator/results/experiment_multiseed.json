@@ -1,0 +1,124 @@
+{
+  "experiment": "H1_multiseed_robustness",
+  "model": "qwen2.5-0.5b",
+  "config": "myopic",
+  "seeds": [
+    42,
+    1,
+    2,
+    3,
+    7
+  ],
+  "end": 1200,
+  "slm_gated": false,
+  "per_seed": [
+    {
+      "seed": 42,
+      "baseline_delay_s": 314.54647435897436,
+      "baseline_completed": 361,
+      "slm_delay_s": 235.00142653352353,
+      "slm_completed": 472,
+      "delay_status": "slm_beats",
+      "throughput_status": "slm_beats",
+      "joint_verdict": "clean_win",
+      "slm_authored": 157,
+      "slm_calls": 311,
+      "latency_p99": 0.24630900000011025
+    },
+    {
+      "seed": 1,
+      "baseline_delay_s": 373.90583804143125,
+      "baseline_completed": 281,
+      "slm_delay_s": 304.2706270627063,
+      "slm_completed": 362,
+      "delay_status": "slm_beats",
+      "throughput_status": "slm_beats",
+      "joint_verdict": "clean_win",
+      "slm_authored": 187,
+      "slm_calls": 327,
+      "latency_p99": 0.24249070000041684
+    },
+    {
+      "seed": 2,
+      "baseline_delay_s": 275.3343373493976,
+      "baseline_completed": 414,
+      "slm_delay_s": 267.58192955589584,
+      "slm_completed": 415,
+      "delay_status": "slm_beats",
+      "throughput_status": "match",
+      "joint_verdict": "clean_win",
+      "slm_authored": 168,
+      "slm_calls": 320,
+      "latency_p99": 0.25204540000049747
+    },
+    {
+      "seed": 3,
+      "baseline_delay_s": 275.87421383647796,
+      "baseline_completed": 403,
+      "slm_delay_s": 284.17767295597486,
+      "slm_completed": 396,
+      "delay_status": "slm_loses",
+      "throughput_status": "match",
+      "joint_verdict": "regression",
+      "slm_authored": 194,
+      "slm_calls": 337,
+      "latency_p99": 0.26743510000051174
+    },
+    {
+      "seed": 7,
+      "baseline_delay_s": 289.7817014446228,
+      "baseline_completed": 376,
+      "slm_delay_s": 261.59567901234567,
+      "slm_completed": 422,
+      "delay_status": "slm_beats",
+      "throughput_status": "slm_beats",
+      "joint_verdict": "clean_win",
+      "slm_authored": 168,
+      "slm_calls": 313,
+      "latency_p99": 0.25498379999953613
+    }
+  ],
+  "aggregate": {
+    "baseline_delay_s": {
+      "n": 5,
+      "mean": 305.8885130061808,
+      "std": 36.86505657972303,
+      "min": 275.3343373493976,
+      "max": 373.90583804143125
+    },
+    "slm_delay_s": {
+      "n": 5,
+      "mean": 270.52546702408927,
+      "std": 23.132148764761048,
+      "min": 235.00142653352353,
+      "max": 304.2706270627063
+    },
+    "baseline_completed": {
+      "n": 5,
+      "mean": 367,
+      "std": 46.94251804068461,
+      "min": 281,
+      "max": 414
+    },
+    "slm_completed": {
+      "n": 5,
+      "mean": 413.4,
+      "std": 35.9310450724718,
+      "min": 362,
+      "max": 472
+    }
+  },
+  "win_rate": {
+    "n_seeds": 5,
+    "delay_beats": "4/5",
+    "throughput_beats": "3/5",
+    "joint": {
+      "clean_win": 4,
+      "trade_off": 0,
+      "match": 0,
+      "regression": 1
+    }
+  },
+  "robustness_verdict": "Across 5 seeds: mean delay 270.5s vs 305.9s baseline (-11.6%); mean throughput 413 vs 367 completed (+12.6%); 4/5 seeds a clean win on both. Mixed across seeds (see per-seed).",
+  "note": "DESCRIPTIVE multi-seed robustness (Akin), NOT a powered n>=30 significance test -- demand is DfT daily-resolution so inferential significance stays \u00a78-gated until time-resolved TfL counts. A win that holds across seeds is far stronger than a single draw."
+}

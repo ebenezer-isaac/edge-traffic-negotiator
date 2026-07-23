@@ -128,14 +128,15 @@
 <div class="wrap">
   <div class="eyebrow">The Edge Negotiator &middot; H1 performance + H2 trust</div>
   <h1>An on-device small language model runs Euston Road better than the standard traffic controller</h1>
-  <p class="sub">Feasibility + scale study on the real A501 corridor (SUMO). All figures are from
-  committed runs. Traffic results are a <strong>pilot (n=1)</strong> on daily-resolution demand:
-  descriptive, no significance claim.</p>
+  <p class="sub">Feasibility + scale study on real London networks (SUMO). Pilot approved by both
+  supervisors; now full-scale. All figures are from committed runs. Traffic results are
+  <strong>descriptive (n=1 per cell)</strong> on daily-resolution demand &mdash; no significance claim
+  until the powered runs.</p>
   <div class="tags">
-    <span class="tag">Corridor: Euston A501 &middot; 4 junctions</span>
+    <span class="tag">Nets: Euston A501 + Bloomsbury WC1 + 2 grids</span>
     <span class="tag">On-device &middot; Foundry Local</span>
     <span class="tag">Baseline: MaxPressure (Varaiya)</span>
-    <span class="tag">Metric: mean network delay (lower = better)</span>
+    <span class="tag">Delay + throughput + trust</span>
   </div>
 
   <div class="hero">
@@ -278,6 +279,57 @@
     </div>
   </section>
 
+  <!-- FULL-SCALE BAND -->
+  <section>
+    <div class="head"><div class="eyebrow">Full-scale &middot; pilot approved by both supervisors</div></div>
+    <div class="panel">
+      <div class="head"><h2><span class="n">05</span>Delay win is a CLEAN WIN, not a throughput trade (Akin's test)</h2>
+        <p>MaxPressure is throughput-optimal by design, so the real question is whether the SLM sacrifices throughput to win delay. It does not.</p></div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Metric</th><th>MaxPressure</th><th>SLM (qwen2.5-0.5b, myopic)</th><th>Delta</th></tr></thead>
+        <tbody>
+          <tr><td>Mean network delay (lower better)</td><td class="num">314.5 s</td><td class="num">235.0 s</td><td><span class="chip beat">&minus;25.3%</span></td></tr>
+          <tr><td>Throughput / completed (higher better)</td><td class="num">361</td><td class="num">472</td><td><span class="chip beat">+111 (+30.7%)</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="note" style="margin-top:10px"><strong>4 distinct clean-win configurations, 0 trade-offs</strong> across the model&times;config sweep. The delay win improves throughput too (more vehicles depart AND complete), so it is not a stranding artifact.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <div class="head"><h2><span class="n">06</span>Robustness across seeds (Akin's multiseed ask)</h2>
+        <p>qwen2.5-0.5b &times; myopic on Euston, 5 seeds. Descriptive, not a powered significance test.</p></div>
+      <div class="grid2">
+        <div class="tcard"><h3><span class="dot ok"></span>Mean delay</h3><div class="metric">270.5 s</div>
+          <p>vs 305.9 s baseline (<strong>&minus;11.6%</strong>), std 23.1 vs 36.9 &mdash; the SLM is also steadier.</p></div>
+        <div class="tcard"><h3><span class="dot ok"></span>Clean wins</h3><div class="metric">4 / 5 seeds</div>
+          <p>Mean throughput +12.6%. One seed (seed 3) regressed &mdash; reported, not hidden. A win holding across 4/5 seeds is far stronger than a single draw.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <div class="head"><h2><span class="n">07</span>Which model wins depends on the topology &mdash; a congestion-regime effect</h2>
+        <p>4 topologies &times; {qwen2.5-0.5b, qwen3-0.6b}, seed 42. Descriptive n=1/cell. Delay change vs each net's own MaxPressure baseline (negative = SLM wins).</p></div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Topology</th><th>Type</th><th>Baseline gridlock (teleports)</th><th>qwen2.5-0.5b</th><th>qwen3-0.6b</th></tr></thead>
+        <tbody>
+          <tr><td>Euston A501</td><td>real arterial</td><td class="num">65</td><td class="num"><span class="chip beat">&minus;25.3%</span></td><td class="num"><span class="chip beat">&minus;15.1%</span></td></tr>
+          <tr><td>Bloomsbury WC1</td><td>real London grid (OSM)</td><td class="num">105</td><td class="num"><span class="chip lose">+5.0%</span></td><td class="num"><span class="chip beat">&minus;1.8%</span></td></tr>
+          <tr><td>grid3&times;3</td><td>synthetic</td><td class="num">0</td><td class="num"><span class="chip lose">+60.3%</span></td><td class="num"><span class="chip lose">+36.9%</span></td></tr>
+          <tr><td>grid4&times;4</td><td>synthetic</td><td class="num">0</td><td class="num"><span class="chip lose">+112.4%</span></td><td class="num"><span class="chip lose">+41.2%</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="note" style="margin-top:10px"><strong>Honest reading:</strong> the SLM is a <strong>congestion-regime specialist</strong>. It wins on the two real congested London nets (where MaxPressure gridlocks, teleports&gt;0) and loses on the free-flowing synthetic grids (zero teleports, MaxPressure already near-optimal). Mean win +9.3% congested vs &minus;62.7% free-flowing. It is <em>not</em> a monotonic "more gridlock = bigger win" law: within the congested nets the direction inverts (Bloomsbury has more gridlock than Euston yet a smaller win; r<sub>congested</sub> = &minus;0.93). grid4&times;4 (SLM +112% worse) falsifies any "always helps" claim &mdash; reported, not hidden.</p>
+    </div>
+  </section>
+
   <!-- H2 TRUST -->
   <section>
     <div class="head"><div class="eyebrow">H2 &middot; Trust (the tamper-evident audit)</div></div>
@@ -309,6 +361,21 @@
           <p>The attack controls the phase, which gates witness coverage &mdash; an insider can open a
           "coverage desert." Demonstrated as a modelled pilot; the severe statistical claim is honestly gated.</p>
         </div>
+        <div class="tcard">
+          <h3><span class="dot ok"></span>Crash &rarr; UK-law suite</h3>
+          <div class="metric">7 / 7 scenarios</div>
+          <p>Each pre-defined crash (civilian/ambulance/maintenance/amber/conflicting-green/dark-signal/spoofed-EV):
+          chain + signatures verify, an imposter re-sign is caught, and the governing UK rule (RTA 1988 s36,
+          TSRGD 2016, Griffin, Bird v Pearce, HC 176) is <strong>inferred from the verified facts</strong>, not asserted.</p>
+        </div>
+        <div class="tcard">
+          <h3><span class="dot ok"></span>Trust coefficient &middot; local sensing = ultimate truth</h3>
+          <div class="metric" style="font-size:16px">honest 0.93 &middot; liar 0.01 (locked out)</div>
+          <p>A claim is scored against the recipient's own local sensing (never doubted). Truth-telling raises trust
+          (10 truths 0.5&rarr;0.90); a single lie collapses it &minus;0.65. Wired live into EV corroboration as
+          <strong>discount-only</strong>: a caught liar loses corroboration power, but trust never forces a preempt
+          and never gates local sensing &mdash; the phantom-defence cannot regress.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -316,7 +383,7 @@
   <!-- GATES -->
   <section>
     <div class="panel">
-      <div class="head"><h2><span class="n">05</span>Acceptance gates (§12) &mdash; status</h2>
+      <div class="head"><h2><span class="n">08</span>Acceptance gates (§12) &mdash; status</h2>
         <p>Each passes by a real run OR an honest gate with a recorded reason.</p></div>
       <div style="overflow-x:auto">
       <table class="tbl">
@@ -330,6 +397,12 @@
           <tr><td>D6 (coupling)</td><td>The audit's blind-spot boundary</td><td><span class="status"><span class="dot part"></span>Modelled pilot; inference gated</span></td></tr>
           <tr><td>D5 (legal note)</td><td>AI legal note vs template</td><td><span class="status"><span class="dot part"></span>Honest negative &mdash; template wins</span></td></tr>
           <tr><td>D7 (fairness)</td><td>No phase starves, under attack</td><td><span class="status"><span class="dot ok"></span>Pass</span></td></tr>
+          <tr><td>Throughput (Akin)</td><td>Delay win not a throughput trade</td><td><span class="status"><span class="dot ok"></span>Pass &mdash; clean win (+30.7% completed)</span></td></tr>
+          <tr><td>Robustness</td><td>Holds across multiple seeds</td><td><span class="status"><span class="dot ok"></span>Pass &mdash; 4/5 seeds clean win</span></td></tr>
+          <tr><td>Multi-topology (req 5)</td><td>Beyond a single corridor</td><td><span class="status"><span class="dot ok"></span>Pass &mdash; 4 nets incl. real London grid</span></td></tr>
+          <tr><td>Crash&rarr;law (req)</td><td>Audit proves incident + governing law</td><td><span class="status"><span class="dot ok"></span>Pass &mdash; 7/7 scenarios</span></td></tr>
+          <tr><td>Trust coefficient</td><td>Truth raises trust, lie penalised, local sensing rules</td><td><span class="status"><span class="dot ok"></span>Pass &mdash; live, discount-only</span></td></tr>
+          <tr><td>Newest gen (qwen3.5)</td><td>Benchmark the latest on-device models</td><td><span class="status"><span class="dot gate"></span>Blocked &mdash; Foundry runtime cannot serve (500)</span></td></tr>
           <tr><td>Powered (n&ge;30)</td><td>Statistical-significance claims</td><td><span class="status"><span class="dot gate"></span>Gated &mdash; needs hourly TfL data</span></td></tr>
         </tbody>
       </table>
@@ -340,25 +413,29 @@
   <!-- HONESTY -->
   <section>
     <div class="panel honesty">
-      <div class="head"><h2><span class="n">06</span>What is <em>not</em> claimed (read this to the supervisor)</h2></div>
+      <div class="head"><h2><span class="n">09</span>What is <em>not</em> claimed (read this to the supervisor)</h2></div>
       <ul style="margin:0;padding-left:18px;color:var(--ink-soft);font-size:14px;line-height:1.7">
-        <li>Every traffic result is a <strong>pilot, n=1</strong> (one seed, one demand pattern). No
-        statistical-significance claim is made.</li>
-        <li>Demand is calibrated to <strong>daily-average</strong> government counts; the hourly profile is now
-        measured from the DfT raw survey but is still a single survey day, and junction turning counts are still
-        assumed.</li>
+        <li>Every traffic result is <strong>descriptive, n=1</strong> per cell (one seed each; multi-seed uses 5).
+        No statistical-significance claim is made until the powered runs.</li>
+        <li>The SLM is a <strong>congestion-regime specialist, not a universal MaxPressure-beater</strong>: it
+        loses on free-flowing nets, and the multi-topology trend is a regime separation, not a monotonic law.</li>
+        <li>Demand is calibrated to <strong>daily-average</strong> government counts; the hourly profile is
+        measured from one DfT survey day, and junction turning counts are still assumed. Bloomsbury/grid demand
+        is a synthetic magnitude on a real/synthetic topology.</li>
         <li>The powered (n&ge;30) inferential runs are deliberately <strong>gated</strong> until time-resolved
-        TfL hourly + turning data lands &mdash; that is missing data, not missing code.</li>
-        <li>+coordination had <strong>no effect</strong> on this simple corridor (reported as a null, not a
-        benefit).</li>
+        TfL hourly + turning data lands &mdash; missing data, not missing code.</li>
+        <li>The newest <strong>qwen3.5</strong> generation could not be benchmarked: this Foundry Local build
+        cannot parse its model config (HTTP 500). Recorded as an infra gate, not a capability result.</li>
+        <li>The crash&rarr;law output is a <strong>cited evidence pack for a human adjudicator</strong>, not a
+        binding legal verdict; authority fault is legally weak (misfeasance branch only).</li>
         <li>The audit mechanism is credited to Certificate Transparency and the LLM-control idea to LLMLight;
-        the contribution is combining them on a real corridor with an honest feasibility + scale answer.</li>
+        the contribution is combining them on real London nets with an honest feasibility + scale answer.</li>
       </ul>
     </div>
   </section>
 
   <footer>
-    Edge Negotiator &middot; figures from committed runs under results/ &middot; 745 automated tests passing
-    &middot; builder&nbsp;&ne;&nbsp;examiner adversarial review at every stage &middot; pilot / descriptive only
+    Edge Negotiator &middot; figures from committed runs under results/ &middot; 831 automated tests
+    &middot; builder&nbsp;&ne;&nbsp;examiner adversarial review at every stage &middot; full-scale / descriptive (n=1) only
   </footer>
 </div>

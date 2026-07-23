@@ -1,0 +1,364 @@
+<style>
+  :root{
+    --bg:#eef1f4; --panel:#ffffff; --panel-2:#f6f8fa; --ink:#16202b; --ink-soft:#4a5867;
+    --line:#d3dae1; --accent:#0e7c86; --accent-soft:#0e7c8618;
+    --beat:#1f8f4e; --beat-soft:#1f8f4e1a; --match:#c07b12; --match-soft:#c07b121a;
+    --lose:#c23b34; --lose-soft:#c23b341a; --gate:#6b7785;
+    --shadow:0 1px 2px #16202b0d,0 8px 24px -12px #16202b22;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Cascadia Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0e141b; --panel:#161f29; --panel-2:#1b2631; --ink:#e7edf3; --ink-soft:#9fb0c0;
+      --line:#26333f; --accent:#3fb6c1; --accent-soft:#3fb6c122;
+      --beat:#39c06f; --beat-soft:#39c06f1f; --match:#e0a23a; --match-soft:#e0a23a1f;
+      --lose:#e2665e; --lose-soft:#e2665e1f; --gate:#8290a0;
+      --shadow:0 1px 2px #0006,0 10px 30px -14px #000a;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#eef1f4; --panel:#ffffff; --panel-2:#f6f8fa; --ink:#16202b; --ink-soft:#4a5867;
+    --line:#d3dae1; --accent:#0e7c86; --accent-soft:#0e7c8618;
+    --beat:#1f8f4e; --beat-soft:#1f8f4e1a; --match:#c07b12; --match-soft:#c07b121a;
+    --lose:#c23b34; --lose-soft:#c23b341a; --gate:#6b7785;
+    --shadow:0 1px 2px #16202b0d,0 8px 24px -12px #16202b22;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e141b; --panel:#161f29; --panel-2:#1b2631; --ink:#e7edf3; --ink-soft:#9fb0c0;
+    --line:#26333f; --accent:#3fb6c1; --accent-soft:#3fb6c122;
+    --beat:#39c06f; --beat-soft:#39c06f1f; --match:#e0a23a; --match-soft:#e0a23a1f;
+    --lose:#e2665e; --lose-soft:#e2665e1f; --gate:#8290a0;
+    --shadow:0 1px 2px #0006,0 10px 30px -14px #000a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 72px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:600}
+  h1{font-size:clamp(26px,4.4vw,40px);line-height:1.1;margin:.35em 0 .2em;text-wrap:balance;
+    letter-spacing:-.01em}
+  h2{font-size:19px;margin:0;letter-spacing:-.01em}
+  h2 .n{font-family:var(--mono);color:var(--accent);font-size:13px;margin-right:8px}
+  p{color:var(--ink-soft);margin:.4em 0}
+  .sub{font-size:17px;max-width:64ch;color:var(--ink-soft)}
+  .tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+    letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px;
+    border:1px solid var(--line);color:var(--ink-soft);background:var(--panel)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  /* hero stat */
+  .hero{display:grid;grid-template-columns:1.3fr .9fr;gap:24px;align-items:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px;
+    box-shadow:var(--shadow);margin-top:22px}
+  .bigstat{border-left:3px solid var(--beat);padding-left:18px}
+  .bigstat .num{font-family:var(--mono);font-size:clamp(44px,8vw,68px);font-weight:600;
+    color:var(--beat);line-height:.95;font-variant-numeric:tabular-nums}
+  .bigstat .cmp{font-family:var(--mono);font-size:15px;color:var(--ink-soft);margin-top:8px;
+    font-variant-numeric:tabular-nums}
+  .bigstat .who{font-size:13px;color:var(--ink-soft);margin-top:10px}
+  section{margin-top:40px}
+  .head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .head p{margin:0;font-size:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;
+    box-shadow:var(--shadow)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  /* bar chart */
+  .chart{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+  .bar-row{display:grid;grid-template-columns:170px 1fr auto;align-items:center;gap:12px}
+  .bar-lab{font-size:12.5px;color:var(--ink-soft);font-family:var(--mono);text-align:right;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track{position:relative;height:22px;background:var(--panel-2);border-radius:5px;overflow:hidden;
+    border:1px solid var(--line)}
+  .fill{position:absolute;inset:0 auto 0 0;border-radius:4px 0 0 4px;opacity:.9}
+  .fill.beat{background:var(--beat)} .fill.match{background:var(--match)}
+  .fill.lose{background:var(--lose)} .fill.base{background:var(--gate)}
+  .val{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .baseline-mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.55;z-index:3}
+  .axis{position:relative;height:16px;margin:2px 0 0 182px}
+  .axis .baseline-mark{top:0;height:12px}
+  .axis span{position:absolute;font-family:var(--mono);font-size:10px;color:var(--ink-soft);top:0;
+    transform:translateX(-50%)}
+  .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.04em;padding:2px 7px;
+    border-radius:999px;text-transform:uppercase}
+  .chip.beat{color:var(--beat);background:var(--beat-soft)}
+  .chip.match{color:var(--match);background:var(--match-soft)}
+  .chip.lose{color:var(--lose);background:var(--lose-soft)}
+  .chip.gate{color:var(--gate);background:var(--panel-2);border:1px solid var(--line)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--ink-soft)}
+  .legend b{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;
+    vertical-align:-1px}
+  /* table */
+  .tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+  .tbl th,.tbl td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  .tbl th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-soft);font-weight:600}
+  .tbl td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+  .tbl tr:last-child td{border-bottom:none}
+  .status{display:inline-flex;align-items:center;gap:7px;font-size:13.5px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .dot.ok{background:var(--beat)} .dot.part{background:var(--match)} .dot.gate{background:var(--gate)}
+  /* latency */
+  .lat-row{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:center;margin:9px 0}
+  .lat-row .bar-lab{text-align:right}
+  .gaugetrack{position:relative;height:14px;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:7px;overflow:hidden}
+  .gaugefill{position:absolute;inset:0 auto 0 0;background:var(--accent);opacity:.85;border-radius:6px}
+  .gaugefill.over{background:var(--lose)}
+  /* trust cards */
+  .trust{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .tcard{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:16px 17px}
+  .tcard h3{margin:0 0 4px;font-size:14.5px;display:flex;align-items:center;gap:8px}
+  .tcard p{margin:0;font-size:12.5px;line-height:1.45}
+  .tcard .metric{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--beat);margin:6px 0 2px;
+    font-variant-numeric:tabular-nums}
+  .callout{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:18px 20px}
+  .callout .num{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--accent)}
+  .note{font-size:12.5px;color:var(--ink-soft);font-style:normal}
+  .honesty{border-left:3px solid var(--match);background:var(--match-soft)}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;
+    color:var(--ink-soft);font-family:var(--mono)}
+  @media (max-width:760px){
+    .hero{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} .trust{grid-template-columns:1fr}
+    .bar-row{grid-template-columns:120px 1fr auto} .bar-lab{font-size:11px}
+    .axis{margin-left:132px} .lat-row{grid-template-columns:110px 1fr auto}
+  }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">The Edge Negotiator &middot; H1 performance + H2 trust</div>
+  <h1>An on-device small language model runs Euston Road better than the standard traffic controller</h1>
+  <p class="sub">Feasibility + scale study on the real A501 corridor (SUMO). All figures are from
+  committed runs. Traffic results are a <strong>pilot (n=1)</strong> on daily-resolution demand:
+  descriptive, no significance claim.</p>
+  <div class="tags">
+    <span class="tag">Corridor: Euston A501 &middot; 4 junctions</span>
+    <span class="tag">On-device &middot; Foundry Local</span>
+    <span class="tag">Baseline: MaxPressure (Varaiya)</span>
+    <span class="tag">Metric: mean network delay (lower = better)</span>
+  </div>
+
+  <div class="hero">
+    <div class="bigstat">
+      <div class="num">&minus;25%</div>
+      <div class="cmp">235.0 s  vs  314.55 s delay</div>
+      <div class="who">Smallest model tested (<strong>qwen2.5&#8209;0.5B</strong>, 0.68 GB),
+      simplest setting (<strong>myopic</strong>, own-junction only), under saturating demand.
+      This is the <strong>scale threshold</strong>: the win appears at the smallest model and
+      simplest configuration.</div>
+    </div>
+    <div>
+      <div class="callout">
+        <div class="eyebrow" style="color:var(--accent)">The headline, in one line</div>
+        <p style="color:var(--ink);font-size:14.5px;margin-top:8px">A 0.5-billion-parameter model,
+        running locally with no cloud and deciding in under a third of a second, produced
+        <strong>25% less average delay</strong> than the throughput-optimal MaxPressure rule &mdash;
+        using only its own junction's queues.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- H1 FEASIBILITY MAP -->
+  <section>
+    <div class="head">
+      <div class="eyebrow">H1 &middot; Performance</div>
+    </div>
+    <div class="panel">
+      <div class="head"><h2><span class="n">01</span>Feasibility map &mdash; mean delay vs MaxPressure</h2></div>
+      <p style="margin-top:-6px">Saturating demand (horizon 1200 s, seed 42). Each bar is one model &times;
+      configuration; the vertical marker is the MaxPressure baseline (314.55 s). Shorter bars are better.</p>
+      <div class="chart" role="img" aria-label="Mean delay by model and configuration versus the MaxPressure baseline of 314.55 seconds">
+        <!-- axis max 340s; baseline 314.55 -> 92.5% -->
+        <div class="bar-row">
+          <div class="bar-lab">MaxPressure</div>
+          <div class="track"><div class="fill base" style="width:92.5%"></div><div class="baseline-mark" style="left:92.5%"></div></div>
+          <div class="val">314.55 s <span class="chip gate">baseline</span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lab">qwen2.5-0.5b &middot; myopic</div>
+          <div class="track"><div class="fill beat" style="width:69.1%"></div><div class="baseline-mark" style="left:92.5%"></div></div>
+          <div class="val">235.0 s <span class="chip beat">beats &minus;25%</span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lab">qwen2.5-0.5b &middot; +coord</div>
+          <div class="track"><div class="fill beat" style="width:69.1%"></div><div class="baseline-mark" style="left:92.5%"></div></div>
+          <div class="val">235.0 s <span class="chip beat">beats &minus;25%</span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lab">qwen2.5-0.5b &middot; +pred</div>
+          <div class="track"><div class="fill beat" style="width:87.6%"></div><div class="baseline-mark" style="left:92.5%"></div></div>
+          <div class="val">297.9 s <span class="chip beat">beats &minus;5%</span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lab">qwen2.5-1.5b &middot; myopic</div>
+          <div class="track"><div class="fill beat" style="width:90.3%"></div><div class="baseline-mark" style="left:92.5%"></div></div>
+          <div class="val">306.9 s <span class="chip beat">beats &minus;2%</span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lab">qwen2.5-1.5b &middot; +pred</div>
+          <div class="track"><div class="fill match" style="width:92.7%"></div><div class="baseline-mark" style="left:92.5%"></div></div>
+          <div class="val">315.1 s <span class="chip match">match</span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lab">phi-4-mini &middot; myopic</div>
+          <div class="track"><div class="fill match" style="width:92.6%"></div><div class="baseline-mark" style="left:92.5%"></div></div>
+          <div class="val">314.7 s <span class="chip match">match</span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lab">phi-4-mini &middot; +pred</div>
+          <div class="track"><div class="fill beat" style="width:87.0%"></div><div class="baseline-mark" style="left:92.5%"></div></div>
+          <div class="val">295.8 s <span class="chip beat">beats &minus;6%</span></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lab">phi-4-mini-reasoning</div>
+          <div class="track"><div class="fill lose" style="width:8%;opacity:.35"></div></div>
+          <div class="val"><span class="chip gate">latency-gated &middot; ~8.5 s/decision</span></div>
+        </div>
+      </div>
+      <div class="axis">
+        <span style="left:0%">0</span><span style="left:44%">150</span>
+        <span style="left:88%">300</span>
+        <div class="baseline-mark" style="left:92.5%"></div>
+      </div>
+      <div class="legend">
+        <span><b style="background:var(--beat)"></b>beats (&gt;2% lower)</span>
+        <span><b style="background:var(--match)"></b>matches (within 2%)</span>
+        <span><b style="background:var(--gate)"></b>baseline / skipped</span>
+        <span>| vertical line = MaxPressure 314.55 s</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid2" style="margin-top:18px">
+    <div class="panel">
+      <div class="head"><h2><span class="n">02</span>Scale threshold</h2></div>
+      <p style="margin-top:-4px">The dissertation question is "is it possible, and at what scale?"</p>
+      <div class="callout" style="margin-top:6px">
+        <div class="num">qwen2.5-0.5B &times; myopic</div>
+        <p style="color:var(--ink);margin-top:6px;font-size:13.5px">The <strong>smallest</strong> model
+        (0.68 GB) at the <strong>simplest</strong> setting already beats MaxPressure. Counter-intuitively,
+        the larger phi-4-mini only matched at myopic; the tiny models won most decisively.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="head"><h2><span class="n">03</span>Real-time latency</h2></div>
+      <p style="margin-top:-4px">Per-decision time (P99) against the ~10 s control interval. Usable models
+      are 15&ndash;30&times; inside budget.</p>
+      <div style="margin-top:8px">
+        <div class="lat-row"><div class="bar-lab">qwen2.5-0.5b</div><div class="gaugetrack"><div class="gaugefill" style="width:2.9%"></div></div><div class="val">0.29 s</div></div>
+        <div class="lat-row"><div class="bar-lab">qwen2.5-1.5b</div><div class="gaugetrack"><div class="gaugefill" style="width:4.1%"></div></div><div class="val">0.41 s</div></div>
+        <div class="lat-row"><div class="bar-lab">phi-4-mini</div><div class="gaugetrack"><div class="gaugefill" style="width:6.1%"></div></div><div class="val">0.61 s</div></div>
+        <div class="lat-row"><div class="bar-lab">phi-4-mini-reason</div><div class="gaugetrack"><div class="gaugefill over" style="width:85%"></div></div><div class="val">~8.5 s</div></div>
+      </div>
+      <p class="note" style="margin-top:8px">Full track = 10 s budget. The reasoning model is too slow at
+      scale and is honestly gated, not reported.</p>
+    </div>
+  </div>
+
+  <!-- DELAY-AWARE -->
+  <section>
+    <div class="panel">
+      <div class="head"><h2><span class="n">04</span>Delay-aware prompting (SOTA levers) &mdash; honest, mixed</h2>
+        <p>Adding waiting-time priority + switching hysteresis (from the LLM traffic-control literature).</p></div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Model</th><th>Plain myopic</th><th>Delay-aware</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>qwen3-0.6b</td><td class="num">267.1 s &middot; beats</td><td class="num">262.9 s &middot; beats</td><td><span class="chip beat">improved</span></td></tr>
+          <tr><td>phi-4-mini</td><td class="num">314.7 s &middot; match</td><td class="num">270.4 s &middot; beats</td><td><span class="chip beat">lifted match &rarr; beat</span></td></tr>
+          <tr><td>qwen3-1.7b</td><td class="num">233.7 s &middot; beats</td><td class="num">239.8 s &middot; beats</td><td><span class="chip match">slightly worse</span></td></tr>
+          <tr><td>qwen2.5-0.5b</td><td class="num">235.0 s &middot; beats</td><td class="num">291.3 s &middot; beats</td><td><span class="chip lose">worse (still beats)</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="note" style="margin-top:10px"><strong>Honest reading:</strong> the delay-aware prompt helped the
+      weaker model (lifted phi-4-mini to a win) but hurt already-strong small models; a second variant was a net
+      negative and was recorded as such. Uniform gains would need lightweight fine-tuning, not prompt tricks.
+      The headline win stands on the plain result above.</p>
+    </div>
+  </section>
+
+  <!-- H2 TRUST -->
+  <section>
+    <div class="head"><div class="eyebrow">H2 &middot; Trust (the tamper-evident audit)</div></div>
+    <div class="panel">
+      <div class="trust">
+        <div class="tcard">
+          <h3><span class="dot ok"></span>Accident reconstruction</h3>
+          <div class="metric">8 / 8 checks</div>
+          <p>From the verified log alone: WHAT happened (phase sequence), HOW (signed inputs + policies),
+          WHICH KEY drove it. A forged signature that still passes the hash-chain is caught by the
+          per-sender identity check.</p>
+        </div>
+        <div class="tcard">
+          <h3><span class="dot ok"></span>Multi-vehicle authorisation</h3>
+          <div class="metric">P = R = 1.00</div>
+          <p>Ambulance/fire/police may preempt; maintenance never; a works key posing as an ambulance is
+          flagged. Across 26 balanced adversarial cases: <strong>zero dangerous false grants</strong>.</p>
+        </div>
+        <div class="tcard">
+          <h3><span class="dot ok"></span>Ledger + anchor mechanism</h3>
+          <div class="metric" style="font-size:15px">salted root &middot; &ge;2 witnesses</div>
+          <p>Ed25519-signed, hash-chained, Merkle-committed, salted for privacy. A planted "two different
+          histories" (equivocation) attack is detected. Honestly labelled <em>not externally anchored</em>
+          (no write to the public log).</p>
+        </div>
+        <div class="tcard">
+          <h3><span class="dot part"></span>Coupling blind spot</h3>
+          <div class="metric" style="font-size:15px;color:var(--match)">documented boundary</div>
+          <p>The attack controls the phase, which gates witness coverage &mdash; an insider can open a
+          "coverage desert." Demonstrated as a modelled pilot; the severe statistical claim is honestly gated.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GATES -->
+  <section>
+    <div class="panel">
+      <div class="head"><h2><span class="n">05</span>Acceptance gates (§12) &mdash; status</h2>
+        <p>Each passes by a real run OR an honest gate with a recorded reason.</p></div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Gate</th><th>What it demands</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>D-H1-perf</td><td>SLM vs MaxPressure on delay, labelled</td><td><span class="status"><span class="dot ok"></span>Pilot pass &mdash; SLM beats</span></td></tr>
+          <tr><td>D-H1-scale</td><td>Full model&times;config map + scale threshold</td><td><span class="status"><span class="dot ok"></span>Pass &mdash; threshold = 0.5B / myopic</span></td></tr>
+          <tr><td>D-lat</td><td>Per-decision latency reported</td><td><span class="status"><span class="dot ok"></span>Pass &mdash; usable models &lt; 10 s</span></td></tr>
+          <tr><td>D-accident</td><td>Reconstruct a crash + catch tamper</td><td><span class="status"><span class="dot ok"></span>Pass &mdash; 8/8</span></td></tr>
+          <tr><td>D-anchor</td><td>Salted root, &ge;2 witnesses, cross-audit</td><td><span class="status"><span class="dot ok"></span>Mechanism pass (not ext. anchored)</span></td></tr>
+          <tr><td>D6 (coupling)</td><td>The audit's blind-spot boundary</td><td><span class="status"><span class="dot part"></span>Modelled pilot; inference gated</span></td></tr>
+          <tr><td>D5 (legal note)</td><td>AI legal note vs template</td><td><span class="status"><span class="dot part"></span>Honest negative &mdash; template wins</span></td></tr>
+          <tr><td>D7 (fairness)</td><td>No phase starves, under attack</td><td><span class="status"><span class="dot ok"></span>Pass</span></td></tr>
+          <tr><td>Powered (n&ge;30)</td><td>Statistical-significance claims</td><td><span class="status"><span class="dot gate"></span>Gated &mdash; needs hourly TfL data</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- HONESTY -->
+  <section>
+    <div class="panel honesty">
+      <div class="head"><h2><span class="n">06</span>What is <em>not</em> claimed (read this to the supervisor)</h2></div>
+      <ul style="margin:0;padding-left:18px;color:var(--ink-soft);font-size:14px;line-height:1.7">
+        <li>Every traffic result is a <strong>pilot, n=1</strong> (one seed, one demand pattern). No
+        statistical-significance claim is made.</li>
+        <li>Demand is calibrated to <strong>daily-average</strong> government counts; the hourly profile is now
+        measured from the DfT raw survey but is still a single survey day, and junction turning counts are still
+        assumed.</li>
+        <li>The powered (n&ge;30) inferential runs are deliberately <strong>gated</strong> until time-resolved
+        TfL hourly + turning data lands &mdash; that is missing data, not missing code.</li>
+        <li>+coordination had <strong>no effect</strong> on this simple corridor (reported as a null, not a
+        benefit).</li>
+        <li>The audit mechanism is credited to Certificate Transparency and the LLM-control idea to LLMLight;
+        the contribution is combining them on a real corridor with an honest feasibility + scale answer.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Edge Negotiator &middot; figures from committed runs under results/ &middot; 745 automated tests passing
+    &middot; builder&nbsp;&ne;&nbsp;examiner adversarial review at every stage &middot; pilot / descriptive only
+  </footer>
+</div>

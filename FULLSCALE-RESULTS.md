@@ -140,16 +140,21 @@ catalog. Honest status:
 - First Euston probe: qwen3.5 was downloadable but NOT cached, so it SKIPPED-with-record (no
   false parity). Incumbent qwen2.5-0.5b reproduced its exact -25.3% clean win on the same
   run, confirming a stable baseline.
-- After downloading qwen3.5-0.8b (1.3 GB): it loads and answers chat calls, but
-  `choose_phase` returns None on our decision prompt, i.e. it does not emit a parseable
-  single-integer phase index under the current prompt/parser (consistent with a
-  reasoning-style model that wraps its answer). This is a real, honest observation, not a
-  parity claim.
-- Pending (sequenced after the topology re-run to avoid WebGPU device contention, not
-  abandoned): diagnose the raw qwen3.5 output and either adapt the parser (strip reasoning
-  wrapper -> extract the integer) and re-run the Euston comparison, or record qwen3.5 as
-  format-incompatible with the strict decision contract. Real numbers will be appended
-  either way.
+- After downloading qwen3.5-0.8b (1.3 GB): the model CANNOT be served by the installed
+  Foundry Local runtime. Every inference call returns HTTP 500 with:
+  `Error encountered while parsing genai_config.json JSON Error: model:vision: Unknown value
+  "spatial_merge_size"`. i.e. qwen3.5 ships a newer genai_config schema (a vision field) that
+  this build's ONNX GenAI runtime does not recognise. `choose_phase` caught the 500 and
+  returned None -> the sweep SKIPPED-with-record (no false parity). This is a
+  RUNTIME-VERSION incompatibility, not a model-capability result, and it is generation-wide
+  (the qwen3.5 config schema is the blocker, not the specific size).
+- Resolution: serving qwen3.5 would require upgrading Foundry Local / its onnxruntime-genai
+  to a build that parses the new config schema. That upgrade is deliberately NOT attempted
+  unattended, because it risks destabilising the reproducible environment the rest of the
+  thesis depends on. This is an honest INFRA gate (like the TfL-data gate): the qwen2.5 /
+  qwen3 / phi-4 families are the currently-servable on-device frontier on this build, and
+  qwen3.5 is recorded as blocked-by-runtime with the exact error, to be revisited if/when a
+  compatible Foundry Local build is installed.
 
 ## 7. What is honestly NOT claimed
 

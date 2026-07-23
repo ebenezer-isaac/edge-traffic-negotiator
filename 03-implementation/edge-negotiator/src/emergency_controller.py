@@ -45,6 +45,7 @@ from identity import JunctionIdentity
 from message_bus import MessageBus
 from net_topology import edge_of_lane as _edge_of_lane
 from registry import Registry
+from trust import TrustLedger
 
 
 class EmergencyController(CoordinatedController):
@@ -56,6 +57,8 @@ class EmergencyController(CoordinatedController):
                  corroboration_required: bool = True,
                  preemption_enabled: bool = True,
                  advance_claims_enabled: bool = True,
+                 trust_gating: bool = False,
+                 trust_claim_ttl: float = 120.0,
                  disambiguator=None, **kwargs):
         super().__init__(*args, **kwargs)
         # Independent signed channel for EV sightings + advance-claims.
@@ -71,6 +74,40 @@ class EmergencyController(CoordinatedController):
         self.corroboration_required = bool(corroboration_required)
         self.preemption_enabled = bool(preemption_enabled)
         self.advance_claims_enabled = bool(advance_claims_enabled)
+        # Trust coefficient (opt-in; both supervisors, full-scale phase). When OFF
+        # (default) nothing below changes -- every existing mode/result is preserved
+        # byte-identical. When ON, a per-neighbour TrustLedger is scored against LOCAL
+        # SENSING (the ultimate, never-doubted truth): a claim later confirmed by a
+        # local sensing of that vehicle is a TRUTH (trust up, diminishing); a claim that
+        # expires with the vehicle never locally sensed anywhere is a LIE (trust collapses
+        # x0.25). Trust is DISCOUNT-ONLY -- a caught liar can no longer help corroborate a
+        # neighbour's claim, but trust NEVER adds preemption on zero evidence and NEVER
+        # gates local sensing. So a real ambulance is always preempted via its own sensor
+        # regardless of trust; only cross-junction advance-corroboration is trust-gated.
+        self.trust_gating = bool(trust_gating)
+        if isinstance(trust_claim_ttl, bool) or not isinstance(trust_claim_ttl, (int, float)):
+            raise TypeError("trust_claim_ttl must be a number")
+        if not (trust_claim_ttl > 0):
+            raise ValueError("trust_claim_ttl must be > 0")
+        self.trust_claim_ttl = float(trust_claim_ttl)
+        self.trust = TrustLedger()
+        # (ev_id, claimer) -> sim-time the claim was first seen; and the set of ev_ids
+        # ever locally sensed anywhere (the ground truth a claim is scored against), plus
+        # the (ev_id, claimer) pairs already settled (truth/lie) so none is scored twice.
+        self._claim_first: dict[tuple[str, str], float] = {}
+        self._locally_confirmed: set[str] = set()
+        # A claim is TRUTH-settled once local sensing confirms it (terminal). An unconfirmed
+        # claim past its TTL becomes a PROVISIONAL lie, tracked as a per-source COUNT that
+        # discounts EFFECTIVE trust multiplicatively (committed trust holds only confirmed
+        # truths). This is order-independent by construction: a count is commutative and the
+        # committed ledger never carries a reversible penalty, so N concurrent provisional
+        # lies from one source compose cleanly and each is undone exactly when (if) its
+        # vehicle is later locally sensed (vindication). A claim never confirmed stays
+        # discounted -- effectively a permanent lie -- so a phantom attacker is still locked
+        # out. See _effective_trust / _live_can_corroborate.
+        self._truth_settled: set[tuple[str, str]] = set()
+        self._provisional_keys: set[tuple[str, str]] = set()
+        self._provisional_lies: dict[str, int] = {}
         # Optional disambiguator for the TRIGGERED regime: a callable
         # (FlaggedCase -> "escalate_real"|"reject") that decides an ambiguous
         # advance-claim in place of the deterministic gate. None (default) keeps
@@ -209,11 +246,98 @@ class EmergencyController(CoordinatedController):
         making the claim. A phantom vehicle satisfies neither.
         """
         if local_ev is not None and local_ev[0] == ev_id:
-            return True
+            return True  # local sensing = ultimate truth, NEVER trust-gated
         for junction in self._sightings.get(ev_id, {}):
             if junction != claimer and junction != tl:
+                # DISCOUNT-ONLY: a neighbour caught lying by local sensing (trust below
+                # the floor) can no longer lend corroboration. This can only WITHHOLD a
+                # cross-junction corroboration, never add one -- so it strictly tightens
+                # the gate, never loosens it (the headline phantom-defence cannot regress).
+                if getattr(self, "trust_gating", False) and not self._live_can_corroborate(junction):
+                    continue
                 return True
         return False
+
+    def _trust_observe(self, tl: str, local_ev, claims: list[dict]) -> None:
+        """Score neighbour claims against LOCAL SENSING (the ground truth). No-op unless
+        trust_gating is on, so every non-trust mode is unaffected.
+
+        * Any advance-claim from a neighbour is registered (once) with its first-seen time.
+        * A local sensing of an ev_id confirms it GLOBALLY (the vehicle physically exists):
+          every outstanding claim for that ev_id settles as a TRUTH (trust up).
+        * A claim whose ev_id is never locally sensed anywhere within trust_claim_ttl
+          settles as a LIE (trust collapses x lie_factor). Local sensing is never doubted.
+        Trust only ever DISCOUNTS corroboration (see _corroborated); it cannot add a preempt.
+        """
+        if not self.trust_gating:
+            return
+        now = float(self._sim_time())
+        # 1. Register new claims (claimer != target; a junction never claims to itself).
+        for c in claims:
+            claimer = c.get("from")
+            ev_id = c.get("ev_id")
+            if not isinstance(claimer, str) or not isinstance(ev_id, str) or claimer == tl:
+                continue
+            key = (ev_id, claimer)
+            if (key not in self._claim_first and key not in self._truth_settled
+                    and key not in self._provisional_keys):
+                self._claim_first[key] = now
+                self.trust = self.trust.record_claim(claimer)
+        # 2. Local sensing confirms an ev_id GLOBALLY -> every claim for it is a TRUTH
+        #    (committed, permanent). If that claim was a PROVISIONAL lie, its provisional
+        #    discount is lifted here (VINDICATION): local sensing is never doubted, so a
+        #    late-arriving real vehicle fully clears the penalty. Order-independent: the
+        #    provisional count just decrements and a committed truth is added.
+        if local_ev is not None:
+            confirmed_id = local_ev[0]
+            self._locally_confirmed.add(confirmed_id)
+            pending = ([k for k in self._claim_first if k[0] == confirmed_id]
+                       + [k for k in self._provisional_keys if k[0] == confirmed_id])
+            for key in pending:
+                if key in self._truth_settled:
+                    continue
+                ev_id, claimer = key
+                if key in self._provisional_keys:                   # lift the provisional lie
+                    self._provisional_keys.discard(key)
+                    self._provisional_lies[claimer] = max(
+                        0, self._provisional_lies.get(claimer, 0) - 1)
+                self.trust = self.trust.verify(claimer, True)       # committed truth
+                self._truth_settled.add(key)
+                self._claim_first.pop(key, None)
+        # 3. Expiry sweep: a claim past its TTL, never locally confirmed anywhere -> a
+        #    PROVISIONAL lie (a per-source multiplicative discount, NOT a committed lie).
+        #    Reversible by a later local sensing (step 2); if the vehicle never arrives the
+        #    discount persists, so a phantom attacker stays locked out.
+        for (ev_id, claimer), first_t in list(self._claim_first.items()):
+            key = (ev_id, claimer)
+            if ev_id in self._locally_confirmed:
+                # Some junction physically saw this vehicle -> the claim was TRUTHFUL
+                # (local sensing anywhere is the ground truth that the vehicle exists).
+                # Credit the truth once and PRUNE, so a claim about an already-confirmed
+                # vehicle does not linger in _claim_first (the publisher-sensed-first flow,
+                # which is the common case) -- fixes the per-claim sweep leak.
+                if key not in self._truth_settled:
+                    self.trust = self.trust.verify(claimer, True)
+                    self._truth_settled.add(key)
+                self._claim_first.pop(key, None)
+                continue
+            if (now - first_t) > self.trust_claim_ttl:
+                if key not in self._provisional_keys:
+                    self._provisional_keys.add(key)
+                    self._provisional_lies[claimer] = self._provisional_lies.get(claimer, 0) + 1
+                self._claim_first.pop(key, None)                    # stop re-sweeping; retained above
+
+    def _effective_trust(self, source: str) -> float:
+        """Committed trust (confirmed truths) discounted by any OUTSTANDING provisional lies
+        for this source: base * lie_factor ** n. Order-independent (n is a commutative count),
+        so multiple concurrent provisional lies never leave an honest source wrongly stuck."""
+        base = self.trust.trust_of(source)
+        n = self._provisional_lies.get(source, 0) if hasattr(self, "_provisional_lies") else 0
+        return base * (self.trust.lie_factor ** n)
+
+    def _live_can_corroborate(self, source: str) -> bool:
+        """As TrustLedger.can_corroborate but on EFFECTIVE trust (provisional lies included)."""
+        return self._effective_trust(source) >= self.trust.floor
 
     def _admissible_ev(self, source: str, ev_id: str, claimer: str | None,
                        tl: str, local_ev: tuple[str, str] | None) -> bool:
@@ -290,6 +414,9 @@ class EmergencyController(CoordinatedController):
             claims = []
         if local_sighting_seq is not None:
             ev_driving_pairs = [*ev_driving_pairs, [local_sighting_seq, None]]
+
+        # Score neighbour claims against local sensing (opt-in; no-op when trust off).
+        self._trust_observe(tl, local_ev, claims)
 
         # Build the highest-priority admissible EV trigger. Local sensing wins.
         trig = None

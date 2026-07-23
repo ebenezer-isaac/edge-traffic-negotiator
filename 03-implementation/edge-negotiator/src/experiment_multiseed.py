@@ -33,6 +33,9 @@ _MODEL_IDS = {
     "qwen2.5-1.5b": "qwen2.5-1.5b-instruct-generic-gpu:4",
     "qwen3-0.6b": "qwen3-0.6b-generic-gpu:2",
     "qwen3-1.7b": "qwen3-1.7b-generic-gpu:2",
+    "qwen3.5-0.8b": "qwen3.5-0.8b-generic-gpu:2",
+    "qwen3.5-2b": "qwen3.5-2b-generic-gpu:2",
+    "qwen3.5-4b": "qwen3.5-4b-generic-gpu:2",
     "phi-4-mini": "Phi-4-mini-instruct-generic-gpu:5",
 }
 

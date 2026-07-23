@@ -37,6 +37,9 @@ _SUMO = os.path.normpath(os.path.join(_HERE, "..", "sumo"))
 _MODEL_IDS = {
     "qwen2.5-0.5b": "qwen2.5-0.5b-instruct-generic-gpu:4",
     "qwen3-0.6b": "qwen3-0.6b-generic-gpu:2",
+    "qwen3.5-0.8b": "qwen3.5-0.8b-generic-gpu:2",
+    "qwen3.5-2b": "qwen3.5-2b-generic-gpu:2",
+    "qwen3.5-4b": "qwen3.5-4b-generic-gpu:2",
     "phi-4-mini": "Phi-4-mini-instruct-generic-gpu:5",
 }
 
@@ -81,7 +84,7 @@ def _tls_count(net_path: str) -> int:
 
 
 def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2,
-        topologies=None) -> dict:
+        topologies=None, out_basename: str | None = None) -> dict:
     tops = topologies if topologies is not None else _topologies()
     agents = {}
     for m in models:
@@ -89,8 +92,9 @@ def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2
         agents[m] = (a, reason)
 
     os.makedirs(RESULTS, exist_ok=True)
-    jp = os.path.join(RESULTS, "experiment_topology.json")
-    mp = os.path.join(RESULTS, "experiment_topology.md")
+    _base = out_basename or "experiment_topology"
+    jp = os.path.join(RESULTS, f"{_base}.json")
+    mp = os.path.join(RESULTS, f"{_base}.md")
 
     def _flush(cells_so_far):
         # Incremental write after each topology so a long multi-topology run preserves
@@ -280,9 +284,23 @@ def _parser():
     ap.add_argument("--models", nargs="*", default=["qwen2.5-0.5b"])
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--end", type=int, default=1200)
+    ap.add_argument("--topologies", nargs="*", default=None,
+                    help="subset of topology labels to run (default: all). "
+                         "e.g. --topologies euston_corridor")
+    ap.add_argument("--out", default=None,
+                    help="optional alternate results basename (avoids clobbering the "
+                         "full multi-topology run's experiment_topology.json)")
     return ap
 
 
 if __name__ == "__main__":
     ns = _parser().parse_args()
-    run(models=tuple(ns.models), seed=ns.seed, end=ns.end)
+    tops = None
+    if ns.topologies:
+        want = set(ns.topologies)
+        tops = [t for t in _topologies() if t["label"] in want]
+        if not tops:
+            raise SystemExit(f"no topology matched {sorted(want)}; "
+                             f"known: {[t['label'] for t in _topologies()]}")
+    run(models=tuple(ns.models), seed=ns.seed, end=ns.end, topologies=tops,
+        out_basename=ns.out)

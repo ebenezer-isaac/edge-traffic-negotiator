@@ -1,0 +1,66 @@
+{
+  "experiment": "H1_multi_topology",
+  "models": [
+    "qwen2.5-0.5b",
+    "qwen3.5-0.8b",
+    "qwen3.5-2b"
+  ],
+  "seed": 42,
+  "end": 1200,
+  "topologies": [
+    "euston_corridor"
+  ],
+  "cells": [
+    {
+      "topology": "euston_corridor",
+      "structure": "real linear arterial (A501)",
+      "tls": 4,
+      "baseline": {
+        "delay_s": 314.54647435897436,
+        "completed": 361,
+        "departed": 624,
+        "teleports": 65
+      },
+      "models": {
+        "qwen2.5-0.5b": {
+          "delay_s": 235.00142653352353,
+          "completed": 472,
+          "teleports": 33,
+          "delay_status": "slm_beats",
+          "throughput_status": "slm_beats",
+          "joint_verdict": "clean_win",
+          "delay_rel": -0.252888060460886,
+          "slm_authored": 157,
+          "slm_calls": 311,
+          "latency_p99": 0.2507415000000037
+        },
+        "qwen3.5-0.8b": {
+          "skipped": true,
+          "reason": "qwen3.5-0.8b-generic-gpu:2 did not answer a well-formed decision"
+        },
+        "qwen3.5-2b": {
+          "skipped": true,
+          "reason": "qwen3.5-2b-generic-gpu:2 did not answer a well-formed decision"
+        }
+      }
+    }
+  ],
+  "explanatory": {
+    "hypothesis": "the SLM's delay+throughput advantage is largest where MaxPressure gridlocks hardest (constrained/saturated topology) and narrows where the network self-regulates",
+    "observations": [
+      {
+        "topology": "euston_corridor",
+        "model": "qwen2.5-0.5b",
+        "tls": 4,
+        "baseline_gridlock_proxy": 107.1,
+        "baseline_teleports": 65,
+        "baseline_stranded_frac": 0.421,
+        "delay_rel_pct": -25.3,
+        "joint": "clean_win"
+      }
+    ],
+    "trend": null,
+    "reading": "Compare each row's baseline gridlock proxy (teleports + stranded%) to the delay-win size. The mechanism: MaxPressure's eager myopic switching wastes the most time exactly where gridlock compounds, so the steadier SLM controller gains most there."
+  },
+  "note": "DESCRIPTIVE multi-topology pilot (n=1/cell); inferential significance \u00a78-gated. Grids are SYNTHETIC contrasts to the real Euston corridor; real-London multi-area OSM nets are the next infra step (harness is net-agnostic). Which model wins where + WHY, from the joint verdicts."
+}

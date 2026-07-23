@@ -1,0 +1,400 @@
+<style>
+  :root{
+    --bg:#eceef0; --panel:#ffffff; --panel-2:#f4f6f7; --ink:#141d26; --ink-soft:#4c5a68;
+    --line:#d5dbe1; --hair:#e4e9ee;
+    --accent:#0d7d86; --accent-soft:#0d7d8614;
+    --m1:#0d7d86; --m2:#4b62b0;            /* model identity: teal vs indigo (not verdict hues) */
+    --win:#1f8f4e; --win-s:#1f8f4e18; --match:#b8791a; --match-s:#b8791a18;
+    --lose:#c0392b; --lose-s:#c0392b18; --mut:#6b7785;
+    --shadow:0 1px 2px #141d260d,0 10px 30px -16px #141d2626;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono","SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0c1218; --panel:#141d26; --panel-2:#19232e; --ink:#e7edf3; --ink-soft:#9db0c0;
+      --line:#26333f; --hair:#1e2934;
+      --accent:#45b9c4; --accent-soft:#45b9c422;
+      --m1:#45b9c4; --m2:#8098e6;
+      --win:#3fc072; --win-s:#3fc0721e; --match:#e0a23a; --match-s:#e0a23a1e;
+      --lose:#e0685e; --lose-s:#e0685e1e; --mut:#8090a0;
+      --shadow:0 1px 2px #0006,0 12px 34px -18px #000a;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#eceef0; --panel:#ffffff; --panel-2:#f4f6f7; --ink:#141d26; --ink-soft:#4c5a68;
+    --line:#d5dbe1; --hair:#e4e9ee; --accent:#0d7d86; --accent-soft:#0d7d8614;
+    --m1:#0d7d86; --m2:#4b62b0; --win:#1f8f4e; --win-s:#1f8f4e18; --match:#b8791a;
+    --match-s:#b8791a18; --lose:#c0392b; --lose-s:#c0392b18; --mut:#6b7785;
+    --shadow:0 1px 2px #141d260d,0 10px 30px -16px #141d2626;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0c1218; --panel:#141d26; --panel-2:#19232e; --ink:#e7edf3; --ink-soft:#9db0c0;
+    --line:#26333f; --hair:#1e2934; --accent:#45b9c4; --accent-soft:#45b9c422;
+    --m1:#45b9c4; --m2:#8098e6; --win:#3fc072; --win-s:#3fc0721e; --match:#e0a23a;
+    --match-s:#e0a23a1e; --lose:#e0685e; --lose-s:#e0685e1e; --mut:#8090a0;
+    --shadow:0 1px 2px #0006,0 12px 34px -18px #000a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:940px;margin:0 auto;padding:40px 22px 96px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent);font-weight:600}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,5vw,46px);line-height:1.08;
+    letter-spacing:-.01em;margin:.3em 0 .25em;text-wrap:balance}
+  h2{font-family:var(--serif);font-weight:600;font-size:23px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+  h3{font-size:14px;margin:0 0 6px;letter-spacing:.01em}
+  p{color:var(--ink-soft);margin:.5em 0;max-width:68ch}
+  .lead{font-size:18.5px;color:var(--ink-soft);max-width:64ch}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-soft)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:5px 10px;border-radius:6px;
+    border:1px solid var(--line);color:var(--ink-soft);background:var(--panel)}
+  section{margin-top:52px}
+  .snum{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.1em}
+  .head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;border-bottom:1px solid var(--line);
+    padding-bottom:12px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;
+    box-shadow:var(--shadow);margin-top:18px}
+  .fig{margin-top:18px}
+  .figcap{font-size:12.5px;color:var(--mut);margin-top:10px;font-family:var(--mono);max-width:74ch}
+  .figcap b{color:var(--ink-soft);font-weight:600}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--hair);vertical-align:middle}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);
+    font-weight:600}
+  td.n,th.n{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:none}
+  .cell{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;border-radius:6px;
+    padding:4px 8px;display:inline-block;min-width:64px;text-align:center;font-size:12.5px}
+  .beat{color:var(--win);background:var(--win-s)} .match{color:var(--match);background:var(--match-s)}
+  .lose{color:var(--lose);background:var(--lose-s)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--ink-soft);
+    font-family:var(--mono)}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .kpi .v{font-family:var(--mono);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+  .kpi .k{font-size:12px;color:var(--mut);margin-top:8px}
+  .vbar{display:flex;height:30px;border-radius:7px;overflow:hidden;border:1px solid var(--line);margin-top:6px;
+    font-family:var(--mono);font-size:11.5px;font-weight:600}
+  .vbar span{display:flex;align-items:center;justify-content:center;color:#fff;white-space:nowrap}
+  .callout{border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 10px 10px 0;
+    padding:14px 18px;margin-top:18px}
+  .warn{border-left:3px solid var(--match);background:var(--match-s)}
+  .refs{font-size:12.5px;color:var(--ink-soft);font-family:var(--mono);line-height:1.9}
+  .refs li{margin:2px 0}
+  ul.body{color:var(--ink-soft);font-size:14.5px;padding-left:20px;max-width:70ch}
+  ul.body li{margin:7px 0}
+  footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--mut);
+    font-family:var(--mono);line-height:1.8}
+  @media (max-width:720px){ .kpis{grid-template-columns:1fr} table{min-width:460px} }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">The Edge Negotiator &middot; full-scale phase &middot; model &times; scenario analysis</div>
+  <h1>Why the same on-device model wins one junction and loses another</h1>
+  <p class="lead">A small language model that beats the standard MaxPressure controller by 25% on a
+  congested London arterial makes traffic <em>worse</em> on a free-flowing grid. This report explains
+  that gap with the methodology benchmark suites use to separate a model effect from a scenario effect
+  &mdash; and shows, honestly, what our single-seed data can and cannot support.</p>
+  <div class="tags">
+    <span class="tag">2 models &times; 4 topologies + 4 models &times; 3 configs</span>
+    <span class="tag">baseline: MaxPressure (Varaiya 2013)</span>
+    <span class="tag">metric: mean network delay</span>
+    <span class="tag">n = 1 seed / cell &middot; descriptive</span>
+  </div>
+
+  <!-- 01 THE TWO QUESTIONS -->
+  <section>
+    <div class="head"><span class="snum">01</span><h2>Two questions, one matrix</h2></div>
+    <p>The supervisors asked us to infer <b>why</b> results move: why the <em>same scenario</em> yields
+    different results from different models, and why <em>one model</em> yields different results across
+    scenarios. Both are read off a single (model &times; scenario) matrix of delay change versus each
+    net's own MaxPressure baseline. Negative is a win.</p>
+    <div class="kpis">
+      <div class="kpi"><div class="v" style="color:var(--win)">&minus;25.3%</div>
+        <div class="k">qwen2.5-0.5b on Euston (its best cell) &mdash; delay vs MaxPressure</div></div>
+      <div class="kpi"><div class="v" style="color:var(--lose)">+112.4%</div>
+        <div class="k">the same model on grid4&times;4 (its worst cell) &mdash; same metric</div></div>
+      <div class="kpi"><div class="v" style="color:var(--accent)">0.80</div>
+        <div class="k">share of outcome variance explained by <em>scenario</em>, not model (&eta;&sup2;, descriptive)</div></div>
+    </div>
+    <p style="margin-top:18px">The headline: <b>scenario dominates</b> (which junction you are on explains
+    far more than which model), but there is a genuine <b>model&times;scenario interaction</b> on top of it
+    &mdash; the model ranking reverses between the arterial and the grids.</p>
+  </section>
+
+  <!-- 02 THE INTERACTION -->
+  <section>
+    <div class="head"><span class="snum">02</span><h2>The interaction: a rank reversal</h2></div>
+    <p>In factorial analysis a <b>disordinal interaction</b> is exactly when the lines cross &mdash; the
+    rank order of the models reverses across scenarios (Loftus, 1978). That is precisely what we see:
+    <b>qwen2.5-0.5b wins Euston</b> and is beaten everywhere else; <b>qwen3-0.6b wins on all three grids</b>
+    and only comes second on Euston. Nets are ordered left-to-right by how hard MaxPressure gridlocks.</p>
+    <div class="panel fig">
+      <svg viewBox="0 0 720 340" role="img" aria-label="Slope chart: delay change per model across four topologies ordered by baseline gridlock; the two model lines cross, showing a rank reversal.">
+        <!-- gridlines + zero -->
+        <line x1="90" y1="40" x2="90" y2="300" stroke="var(--line)" stroke-width="1"/>
+        <line x1="90" y1="248" x2="660" y2="248" stroke="var(--mut)" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="84" y="252" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--mut)">0%</text>
+        <text x="84" y="57" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--mut)">+120</text>
+        <text x="84" y="303" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--mut)">&minus;30</text>
+        <text x="70" y="170" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--mut)" transform="rotate(-90 70 170)">delay change vs MaxPressure</text>
+        <!-- category labels -->
+        <g font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)" text-anchor="middle">
+          <text x="110" y="320">grid4&times;4</text><text x="110" y="333" fill="var(--mut)" font-size="9">gridlock 0</text>
+          <text x="287" y="320">grid3&times;3</text><text x="287" y="333" fill="var(--mut)" font-size="9">36</text>
+          <text x="463" y="320">Euston</text><text x="463" y="333" fill="var(--mut)" font-size="9">107</text>
+          <text x="640" y="320">Bloomsbury</text><text x="640" y="333" fill="var(--mut)" font-size="9">186</text>
+        </g>
+        <!-- qwen2.5-0.5b (m1) -->
+        <polyline points="110,53.2 287,143.5 463,291.9 640,239.3" fill="none" stroke="var(--m1)" stroke-width="2.5"/>
+        <g fill="var(--m1)"><circle cx="110" cy="53.2" r="4.5"/><circle cx="287" cy="143.5" r="4.5"/><circle cx="463" cy="291.9" r="4.5"/><circle cx="640" cy="239.3" r="4.5"/></g>
+        <!-- qwen3-0.6b (m2) -->
+        <polyline points="110,176.6 287,184 463,274.2 640,251.1" fill="none" stroke="var(--m2)" stroke-width="2.5" stroke-dasharray="6 3"/>
+        <g fill="var(--m2)"><circle cx="110" cy="176.6" r="4.5"/><circle cx="287" cy="184" r="4.5"/><circle cx="463" cy="274.2" r="4.5"/><circle cx="640" cy="251.1" r="4.5"/></g>
+        <!-- value labels -->
+        <g font-family="var(--mono)" font-size="10" font-weight="600">
+          <text x="110" y="46" fill="var(--m1)" text-anchor="middle">+112</text>
+          <text x="463" y="285" fill="var(--m1)" text-anchor="middle">&minus;25</text>
+          <text x="110" y="197" fill="var(--m2)" text-anchor="middle">+41</text>
+          <text x="640" y="245" fill="var(--m2)" text-anchor="middle">&minus;2</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--m1)"></span>qwen2.5-0.5b (corridor specialist)</span>
+        <span><span class="sw" style="background:var(--m2)"></span>qwen3-0.6b (robust all-rounder)</span>
+        <span style="color:var(--mut)">lines cross &rarr; disordinal interaction</span>
+      </div>
+      <p class="figcap"><b>Fig 1.</b> The lines cross between the grids and Euston: qwen2.5-0.5b has the
+      single best cell (Euston &minus;25%) yet the worst grid collapse (+112%), while qwen3-0.6b is
+      flatter and more robust. A crossing = the model ranking depends on the scenario. Descriptive,
+      n=1/cell (Alin &amp; Kurt, 2006): no significance is claimed on the interaction itself.</p>
+    </div>
+    <p><b>Why the two models differ on the same net.</b> qwen3-0.6b is the newer-generation, slightly
+    larger model; across every topology it is steadier (its worst cell is +41% vs qwen2.5's +112%). The
+    smaller qwen2.5-0.5b is higher-variance &mdash; it finds the biggest single win but also the biggest
+    blow-up. Model capacity buys robustness to the harder substrate, not a bigger peak.</p>
+  </section>
+
+  <!-- 03 SIMPSON -->
+  <section>
+    <div class="head"><span class="snum">03</span><h2>The trap: Simpson's paradox</h2></div>
+    <p>It is tempting to say "the win grows with congestion." Pooled across all four topologies the
+    correlation between baseline gridlock and win size is <b>+0.73</b> (Spearman +0.73) &mdash; positive.
+    But that number is a <b>sign-reversing Simpson's paradox</b> (Yule&ndash;Simpson): <em>within</em> the
+    two genuinely congested nets the correlation is <b>&minus;0.93</b>. Bloomsbury has more gridlock than
+    Euston (186 vs 107) yet a <em>smaller</em> win. The positive pooled number is manufactured by the two
+    free-flowing grids sitting at the bottom-left.</p>
+    <div class="panel fig">
+      <svg viewBox="0 0 720 330" role="img" aria-label="Scatter of win versus baseline gridlock. Pooled trend is positive but the within-congested trend is negative, illustrating Simpson's paradox.">
+        <line x1="90" y1="30" x2="90" y2="300" stroke="var(--line)"/>
+        <line x1="90" y1="300" x2="680" y2="300" stroke="var(--line)"/>
+        <line x1="90" y1="92" x2="680" y2="92" stroke="var(--mut)" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="84" y="96" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--mut)">win 0</text>
+        <text x="84" y="46" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--win)">+30</text>
+        <text x="84" y="290" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--lose)">&minus;110</text>
+        <text x="385" y="325" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--mut)">baseline gridlock proxy (teleports + stranded) &rarr;</text>
+        <!-- pooled positive trend (all 8 pts): from low-left to upper-right -->
+        <line x1="95" y1="235" x2="670" y2="120" stroke="var(--mut)" stroke-width="1.5" stroke-dasharray="2 4"/>
+        <text x="620" y="112" font-family="var(--mono)" font-size="9.5" fill="var(--mut)">pooled r=+0.73</text>
+        <!-- congested-only negative trend (the 4 congested pts, proxy>100): downward -->
+        <line x1="405" y1="48" x2="655" y2="103" stroke="var(--lose)" stroke-width="2"/>
+        <text x="470" y="44" font-family="var(--mono)" font-size="9.5" fill="var(--lose)" font-weight="600">congested-only r=&minus;0.93</text>
+        <!-- free-flowing points (squares) -->
+        <g fill="var(--mut)">
+          <rect x="86" y="283" width="8" height="8"/><rect x="195" y="192" width="8" height="8"/>
+          <rect x="86" y="159" width="8" height="8"/><rect x="195" y="152" width="8" height="8"/>
+        </g>
+        <!-- congested points: circles colored by model -->
+        <circle cx="411" cy="48" r="5" fill="var(--m1)"/><circle cx="647" cy="101" r="5" fill="var(--m1)"/>
+        <circle cx="411" cy="66" r="5" fill="var(--m2)"/><circle cx="647" cy="89" r="5" fill="var(--m2)"/>
+        <g font-family="var(--mono)" font-size="9" fill="var(--ink-soft)">
+          <text x="415" y="42">Euston</text><text x="628" y="118">Bloomsbury</text>
+          <text x="70" y="278" fill="var(--mut)">grids</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--mut);border-radius:0"></span>free-flowing grid (0 teleports)</span>
+        <span><span class="sw" style="background:var(--m1)"></span>qwen2.5-0.5b</span>
+        <span><span class="sw" style="background:var(--m2)"></span>qwen3-0.6b</span>
+      </div>
+      <p class="figcap"><b>Fig 2.</b> Pooled trend (grey dashed, <b>+0.73</b>) points up; the within-congested
+      trend (red, <b>&minus;0.93</b>) points down. Reporting only the pooled number would be the paradox.
+      A Pearson r on four topology points is fragile, so we report Spearman and leave-one-out alongside it
+      and treat the <b>stratified</b> (within-regime) correlation as primary (Croux &amp; Dehon; Agarwal
+      et&nbsp;al., 2021).</p>
+    </div>
+    <div class="callout"><b>What this means for the thesis.</b> The honest claim is a <b>regime
+    separation</b>, not a graded law: the SLM helps in the congested regime and hurts in the free-flowing
+    one. Where it helps, more gridlock does <em>not</em> mean a bigger win.</div>
+  </section>
+
+  <!-- 04 BENCHMARK -->
+  <section>
+    <div class="head"><span class="snum">04</span><h2>The benchmark, at a glance</h2></div>
+    <p>Delay change versus each net's own MaxPressure baseline (HELM-style per-scenario cells; green beats,
+    amber matches within 2%, red loses). Two matrices: models across <b>topologies</b>, and a fuller set of
+    models across <b>configurations</b> on Euston.</p>
+    <div class="panel fig">
+      <h3>Models &times; topologies</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Model</th><th class="n">Euston<br><span style="font-weight:400">arterial</span></th>
+          <th class="n">Bloomsbury<br><span style="font-weight:400">real grid</span></th>
+          <th class="n">grid3&times;3<br><span style="font-weight:400">synthetic</span></th>
+          <th class="n">grid4&times;4<br><span style="font-weight:400">synthetic</span></th>
+          <th class="n">win rate</th></tr></thead>
+        <tbody>
+          <tr><td>qwen2.5-0.5b</td>
+            <td class="n"><span class="cell beat">&minus;25.3</span></td>
+            <td class="n"><span class="cell lose">+5.0</span></td>
+            <td class="n"><span class="cell lose">+60.3</span></td>
+            <td class="n"><span class="cell lose">+112.4</span></td>
+            <td class="n">1 / 4</td></tr>
+          <tr><td>qwen3-0.6b</td>
+            <td class="n"><span class="cell beat">&minus;15.1</span></td>
+            <td class="n"><span class="cell beat">&minus;1.8</span></td>
+            <td class="n"><span class="cell lose">+36.9</span></td>
+            <td class="n"><span class="cell lose">+41.2</span></td>
+            <td class="n">2 / 4</td></tr>
+        </tbody>
+      </table></div>
+      <div class="legend"><span><span class="sw" style="background:var(--win)"></span>beats</span>
+        <span><span class="sw" style="background:var(--match)"></span>matches (&plusmn;2%)</span>
+        <span><span class="sw" style="background:var(--lose)"></span>loses</span></div>
+    </div>
+    <div class="panel fig">
+      <h3>Models &times; configuration &mdash; Euston corridor</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Model</th><th class="n">myopic</th><th class="n">+coordination</th>
+          <th class="n">+prediction</th></tr></thead>
+        <tbody>
+          <tr><td>qwen2.5-0.5b</td><td class="n"><span class="cell beat">&minus;25.3</span></td>
+            <td class="n"><span class="cell beat">&minus;25.3</span></td><td class="n"><span class="cell beat">&minus;5.3</span></td></tr>
+          <tr><td>qwen2.5-1.5b</td><td class="n"><span class="cell beat">&minus;2.4</span></td>
+            <td class="n"><span class="cell beat">&minus;2.4</span></td><td class="n"><span class="cell match">+0.2</span></td></tr>
+          <tr><td>phi-4-mini</td><td class="n"><span class="cell match">+0.1</span></td>
+            <td class="n"><span class="cell match">+0.1</span></td><td class="n"><span class="cell beat">&minus;5.9</span></td></tr>
+          <tr><td>phi-4-mini-reasoning</td><td class="n" colspan="3" style="color:var(--mut);font-family:var(--mono)">skipped &mdash; probe latency &gt; 3&nbsp;s gate (no false parity)</td></tr>
+        </tbody>
+      </table></div>
+      <p class="figcap"><b>Fig 3.</b> +coordination is byte-identical to myopic on this corridor (a genuine
+      null, reported as such). The smallest model at the simplest setting is the strongest cell &mdash; the
+      scale threshold. qwen2.5-0.5b wins every Euston config (3/3) but only 1/4 topologies: a <b>corridor
+      specialist</b>. qwen3-0.6b wins 2/4 topologies: a <b>robust all-rounder</b>.</p>
+    </div>
+  </section>
+
+  <!-- 05 WHY / MECHANISM -->
+  <section>
+    <div class="head"><span class="snum">05</span><h2>Why: substrate, then a real interaction</h2></div>
+    <p>Decomposing the outcome variance across the model&times;topology matrix (descriptive &eta;&sup2;,
+    two-way, n=1/cell) attributes it as:</p>
+    <div class="panel fig">
+      <div class="vbar" aria-label="Variance decomposition: scenario 80%, interaction 13%, model 7%">
+        <span style="width:80.1%;background:var(--accent)">scenario 80%</span>
+        <span style="width:12.7%;background:var(--m2)">interaction 13%</span>
+        <span style="width:7.2%;background:var(--mut)">model 7%</span>
+      </div>
+      <p class="figcap"><b>Fig 4.</b> <b>Which junction you are on</b> explains ~6&times; more than which
+      model. But the 13% interaction is the rank reversal &mdash; not noise, a real effect the matrix would
+      hide if you averaged over scenarios. Residual folds into interaction at n=1 (no error d.f.).</p>
+    </div>
+    <p><b>The mechanism behind the losses.</b> The SLM is event-gated: it only overrides MaxPressure above a
+    queue threshold. On the free-flowing grids it fires far more often and its proposals are served far more
+    often than on Euston &mdash; and that is exactly where it hurts. "Authored share" is the fraction of
+    consultations whose SLM proposal was served (a policy-divergence proxy: how much the SLM steers away
+    from the MaxPressure shield).</p>
+    <div class="panel fig">
+      <div class="scroll"><table>
+        <thead><tr><th>Cell</th><th class="n">SLM consultations</th><th class="n">authored share</th>
+          <th class="n">outcome</th></tr></thead>
+        <tbody>
+          <tr><td>qwen2.5-0.5b &middot; Euston</td><td class="n">311</td><td class="n">0.51</td><td class="n"><span class="cell beat">&minus;25.3</span></td></tr>
+          <tr><td>qwen2.5-0.5b &middot; grid3&times;3</td><td class="n">903</td><td class="n">0.75</td><td class="n"><span class="cell lose">+60.3</span></td></tr>
+          <tr><td>qwen2.5-0.5b &middot; grid4&times;4</td><td class="n">1376</td><td class="n">0.73</td><td class="n"><span class="cell lose">+112.4</span></td></tr>
+          <tr><td>qwen3-0.6b &middot; grid4&times;4</td><td class="n">1118</td><td class="n">0.96</td><td class="n"><span class="cell lose">+41.2</span></td></tr>
+        </tbody>
+      </table></div>
+      <p class="figcap"><b>Fig 5.</b> On Euston the SLM authors ~half of a modest number of decisions and
+      wins; on the grids it authors three-quarters or more of a much larger number and loses. MaxPressure is
+      throughput-optimal and near-ideal when traffic flows freely, so every extra myopic override is a
+      chance to disrupt coordination it cannot see. Raising the gate to mute this (a swept congestion gate,
+      2&rarr;5&rarr;12) reduces but never removes the grid loss &mdash; and it also erodes the real wins, so
+      it is a partial lever, not a fix (recorded as an honest negative).</p>
+    </div>
+  </section>
+
+  <!-- 06 METHODOLOGY -->
+  <section>
+    <div class="head"><span class="snum">06</span><h2>How the literature does this &mdash; and how we replicated it</h2></div>
+    <ul class="body">
+      <li><b>Interaction, not anomaly.</b> A rank reversal across scenarios is a <b>disordinal
+      interaction</b>; when it is disordinal the main effects are not interpretable alone and you report
+      the per-scenario (simple) effects (Loftus, 1978). We lead with the slope chart (Fig 1) because a
+      crossing makes the interaction unmistakable.</li>
+      <li><b>Variance attribution.</b> Two-way decomposition into model / scenario / interaction with
+      &eta;&sup2; = SS<sub>effect</sub>/SS<sub>total</sub> (Montgomery). At one observation per cell the
+      interaction is not inferentially testable (Alin &amp; Kurt, 2006), so we report &eta;&sup2; as
+      descriptive and never attach a p-value.</li>
+      <li><b>Cross-model benchmarking.</b> Per-scenario normalised cells + win rate, the HELM convention
+      (Liang et&nbsp;al., 2022); normalised score in the BIG-bench NPM sense (Srivastava et&nbsp;al., 2022).
+      A critical-difference diagram (Demsar, 2006) would need many more tasks than four, so we do not draw
+      one &mdash; stated, not faked.</li>
+      <li><b>Simpson's paradox.</b> Our +0.73 pooled / &minus;0.93 within-congested sign flip is the
+      textbook Yule&ndash;Simpson effect; the fix is to report the stratified correlation as primary, add a
+      rank-based Spearman (robust to leverage; Croux &amp; Dehon), and run leave-one-out because an r on
+      four points is otherwise uninterpretable (Agarwal et&nbsp;al., 2021).</li>
+      <li><b>Mechanistic error analysis.</b> Attributing a policy's win to a regime by <b>bucketing outcomes
+      by a covariate</b> (here congestion) and reporting behavioural divergence from the baseline
+      (agreement/override rate; our "authored share") &mdash; standard policy-distance practice (Schulman
+      et&nbsp;al., 2015).</li>
+    </ul>
+    <div class="callout warn"><b>The pitfalls we actively guarded against:</b> over-reading single seeds
+    (kept everything descriptive), Simpson's paradox (stratified-first), leverage on a 4-point correlation
+    (Spearman + leave-one-out), and cherry-picked thresholds (the congestion gate was <em>swept</em>, not
+    tuned to a winning value).</div>
+  </section>
+
+  <!-- 07 LIMITS -->
+  <section>
+    <div class="head"><span class="snum">07</span><h2>What n=1 does and does not license</h2></div>
+    <ul class="body">
+      <li><b>Licensed now (large within-run sample):</b> the interaction plot, the normalised benchmark
+      heatmaps, win rate, and every per-decision behavioural metric (consultations, authored share,
+      congestion-bucketed trends).</li>
+      <li><b>Not licensed until &ge;2 seeds/cell:</b> any inferential interaction test, cross-seed
+      confidence intervals, interquartile-mean performance profiles, and trustworthy 4-point correlations.
+      These are flagged as exploratory throughout.</li>
+      <li><b>Coverage is uneven by design:</b> the topology axis covers 2 models, the config axis covers 4
+      on Euston. It is not one balanced grid, and the report never treats it as one.</li>
+      <li><b>Powered significance stays gated</b> on real time-resolved TfL hourly + turning data &mdash;
+      missing data, not missing code.</li>
+    </ul>
+    <div class="panel">
+      <h3>References</h3>
+      <ul class="refs" style="list-style:none;padding-left:0">
+        <li>Loftus (1978), <i>On interpretation of interactions</i>, Memory &amp; Cognition 6(3).</li>
+        <li>Simpson (1951) / Yule&ndash;Simpson effect; aggregation-reversal in evaluation, arXiv:2104.08912.</li>
+        <li>Liang et&nbsp;al. (2022), <i>Holistic Evaluation of Language Models (HELM)</i>, arXiv:2211.09110.</li>
+        <li>Srivastava et&nbsp;al. (2022), <i>Beyond the Imitation Game (BIG-bench)</i>, arXiv:2206.04615.</li>
+        <li>Agarwal et&nbsp;al. (2021), <i>Deep RL at the Edge of the Statistical Precipice</i>, arXiv:2108.13264.</li>
+        <li>Demsar (2006), <i>Statistical Comparisons of Classifiers over Multiple Data Sets</i>, JMLR 7.</li>
+        <li>Alin &amp; Kurt (2006), <i>Testing non-additivity with no replication</i>, Stat Methods Med Res.</li>
+        <li>Schulman et&nbsp;al. (2015), <i>Trust Region Policy Optimization</i>, arXiv:1502.05477.</li>
+        <li>Croux &amp; Dehon, <i>Influence functions of the Spearman and Kendall correlations</i>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Edge Negotiator &middot; every figure computed by src/model_scenario_analysis.py from committed
+    results/*.json &middot; delay vs MaxPressure (Varaiya 2013) &middot; descriptive, n=1 seed/cell &middot;
+    builder &ne; examiner adversarial review at every stage
+  </footer>
+</div>

@@ -1,0 +1,80 @@
+{
+  "experiment": "H2_anchor_salted_root_quorum_crossaudit",
+  "gate": "D-anchor (\u00a76.7/\u00a77.7)",
+  "label": "euston-batch-0",
+  "batch_entries": 12,
+  "salted_root": "8f1f71820d89aca074fcc0ae6fa1fe6d1f47092c0a223e957ad7626770abbde1",
+  "unsalted_root": "4d54e829fd607db5457582f24ff095099d629d8ae78ce093b69dcd0bdd1912f1",
+  "salt_is_offchain_erasable": true,
+  "salted_inclusion": {
+    "index": 11,
+    "valid": true,
+    "forged_salt_valid": false
+  },
+  "local_cross_audit": {
+    "cross_auditor": "euston-cross-auditor",
+    "label": "euston-batch-0",
+    "witness_roots": {
+      "local-ledger-A": "8f1f71820d89aca074fcc0ae6fa1fe6d1f47092c0a223e957ad7626770abbde1",
+      "local-ledger-B": "8f1f71820d89aca074fcc0ae6fa1fe6d1f47092c0a223e957ad7626770abbde1"
+    },
+    "witnesses_present": 2,
+    "quorum_met": true,
+    "roots_agree": true,
+    "equivocation_detected": false,
+    "consistent": true
+  },
+  "equivocation_test": {
+    "cross_auditor": "euston-cross-auditor",
+    "label": "euston-batch-0",
+    "witness_roots": {
+      "local-ledger-A": "8f1f71820d89aca074fcc0ae6fa1fe6d1f47092c0a223e957ad7626770abbde1",
+      "rogue-witness": "dededededededededededededededededededededededededededededededede"
+    },
+    "witnesses_present": 2,
+    "quorum_met": true,
+    "roots_agree": false,
+    "equivocation_detected": true,
+    "consistent": false
+  },
+  "witness_append_only_refused_overwrite": true,
+  "per_signer_counts": {
+    "A0": 8,
+    "A1": 1,
+    "B0": 1,
+    "B1": 1,
+    "<unsigned>": 1
+  },
+  "external_witnesses": {
+    "besu": {
+      "skipped": true,
+      "reason": "Besu RPC http://127.0.0.1:8545 not reachable (node not running). Start it: docker compose -f .qbft-spike/docker-compose.yml up -d"
+    },
+    "rekor": {
+      "url": "https://rekor.sigstore.dev/api/v1/log",
+      "tree_size": 2099218962,
+      "root_hash": "3c00de56a3b66180",
+      "write": "WITHHELD (would permanently publish to the public log)"
+    },
+    "public_writes_performed": 0
+  },
+  "externally_anchored": false,
+  "mechanism_checks": {
+    "salt_applied_root_differs": true,
+    "salted_inclusion_proof_valid": true,
+    "forged_salt_rejected": true,
+    "local_quorum_ge_2": true,
+    "cross_audit_consistent": true,
+    "equivocation_detected": true,
+    "witness_append_only": true,
+    "per_signer_reconciled": true
+  },
+  "mechanism_passed": true,
+  "d_anchor_status": "MECHANISM_PASS_NOT_EXTERNALLY_ANCHORED",
+  "honest_label": "The >=2-witness non-equivocation MECHANISM + cross-audit + salted-root completeness commitment are DEMONSTRATED and pass over independent local witnesses (equivocation is caught). This run is NOT externally anchored to a public >=2-witness quorum: the Rekor write is WITHHELD (public-log pollution) and no live Besu node was written; so the non-equivocation claim OVER PUBLIC witnesses is REFUSED (\u00a74.2/\u00a74.5), stated not hidden.",
+  "caveats": [
+    "Salt is off-chain + erasable (\u00a77.7): the published root commits completeness but reveals no pseudonymous fingerprint; erase the salt -> the commitment is unlinkable (forward privacy).",
+    "A single/local/withheld-write anchor cannot assert ecosystem-wide non-equivocation; the cross-auditor's honesty is an UNVERIFIED assumption on par with the identity root (\u00a74.2).",
+    "To externally anchor: bring up the ledger witness (docker compose -f .qbft-spike/docker-compose.yml up -d) and enable the Rekor write intentionally; then >=2 public witnesses + a passing cross-audit would flip externally_anchored to true."
+  ]
+}

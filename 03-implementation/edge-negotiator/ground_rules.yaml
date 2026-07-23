@@ -1,22 +1,16 @@
-# ground_rules.yaml — machine-readable mirror of GROUND-RULES-POLICY.md + the UK-law fault KB.
-# CANONICAL policy base for the Edge Negotiator. This file is the source of truth for the
-# YET-TO-BE-BUILT RAG/retrieval + producer layer and the citation oracle; a decision's reasoning
-# trace will NAME the P1-P8 policy ids that fired (auditability), the decision record will carry
-# the §6.2 check-stage vocab in its `policies_applied` field (there is no separate `policy_id`
-# field in the pinned decision schema), and the SLM Job-A note will cite `cited_rules` by
-# `statute_ref`. NOTE (real state): the current
-# ambiguous_decision.RuleDisambiguator is a DECOUPLED, pure-stdlib Exp-1 yardstick and does
-# NOT load this file; slm_agent does no RAG yet. Wiring both to this base is a later build
-# phase (MASTER-SPEC §11 step 2-4). Nothing is inferred at runtime: an unmatched case -> UNKNOWN.
+# ground_rules.yaml — the machine-readable CANONICAL policy base for the Edge Negotiator:
+# the authorised-entity taxonomy (§A), the legitimacy criteria (§B), the attack taxonomy (§C),
+# the decision policies (§D), the safety invariants, and the UK-law fault KB (law_rules).
+# It is the source of truth for the vehicle-authorisation classifier (vehicle_authorization.py,
+# which loads §A to decide whether a claimed authorised vehicle may preempt), the legal-citation
+# corpus (legal_corpus.py, which loads law_rules cross-linked by statute_ref), and the citation
+# oracle. A decision's reasoning trace NAMES the P1-P8 policy ids that fired (auditability); the
+# decision record carries the §6.2 check-stage vocab in its `policies_applied` field (there is no
+# separate `policy_id` field in the decision schema); the SLM Job-A note cites `cited_rules` by
+# `statute_ref`. Nothing is inferred at runtime: an unmatched case resolves to UNKNOWN.
 #
-# Provenance: policies mirror GROUND-RULES-POLICY.md (2026-07-16) §A-§F. Points that TRACK
-# MASTER-SPEC v7 AHEAD of the still-unamended master (reconciled by a doc-remediation build
-# phase): B3/P1 spoofable (§5.6/§6.4); the §F SLM exemption (§5.7); B2 key-bound-recompute +
-# B5 per-claim nonce + P4 >=2-key condition & magnitude-bound (§6.6). None contradicts the
-# master; all are spec-forward refinements;
 # law_rules mirror 01-research/uk-traffic-law.md (statute_ref == that file's `id` field).
-# Substrate: Euston Road (A501), London (TLRN) — NOT the prior synthetic corridor.
-# Schema per MASTER-SPEC.md v7 §9. To be hash-pinned in the spec (§10 gate) before the Job-A phase.
+# Substrate: Euston Road (A501), London (TLRN). Hash-pinned in MASTER-SPEC §10.
 
 version: 1
 substrate: "Euston Road (A501), London — TLRN"
@@ -36,28 +30,58 @@ policies_applied_mapping:
     if_detection_ran: [conservation_band]
 
 # --- A. Authorized entities (GROUND-RULES §A) ------------------------------------------
+# Each row carries BOTH the human-readable allowed/signature prose AND the structured
+# fields the runtime vehicle-authorisation classifier consumes:
+#   preemption_allowed      : may this class ever be GRANTED signal preemption?
+#   actions_allowed         : the actions this class may legitimately request.
+#   authorising_key_classes : the registered signing-key authority classes that may
+#                             assert this vehicle class (a mismatch = signal_tampering).
+#   key_required            : must a valid registered key be present (B1)?
+# The actions that REQUEST signal preemption (so a grant is preemption_allowed AND
+# the action is one of these); any other allowed action is legitimate but not a preempt.
+preemption_actions: [preempt, corridor, escort_hold]
 entities:
   - class: ambulance
     priority: 1
     allowed: "request preemption along route; run active corridor"
     signature: "vClass=emergency, registered EV key, plausible route + speed"
+    preemption_allowed: true
+    actions_allowed: [preempt, corridor]
+    authorising_key_classes: [emergency]
+    key_required: true
   - class: fire
     priority: 1
     allowed: "request preemption; may request lane hold at scene"
     signature: "vClass=emergency, registered EV key"
+    preemption_allowed: true
+    actions_allowed: [preempt, lane_hold]
+    authorising_key_classes: [emergency]
+    key_required: true
   - class: police
     priority: 2
     allowed: "request preemption (pursuit) or escort hold"
     signature: "vClass=emergency, registered EV key; escort may be multi-vehicle"
+    preemption_allowed: true
+    actions_allowed: [preempt, escort_hold]
+    authorising_key_classes: [emergency]
+    key_required: true
   - class: maintenance
     priority: 3
     allowed: "request lane closure / incident reservation, NOT preemption"
     signature: "registered works key; static or slow, scheduled window"
     note: "a maintenance key asserting an ambulance preemption is signal_tampering (see attacks); maintenance gets NO red-light exemption (LR-maintenance-no-exemption)"
+    preemption_allowed: false
+    actions_allowed: [lane_closure, incident_reservation]
+    authorising_key_classes: [works]
+    key_required: true
   - class: civilian
     priority: null
     allowed: "no priority; counted as normal traffic"
     signature: "no EV key"
+    preemption_allowed: false
+    actions_allowed: [normal]
+    authorising_key_classes: []
+    key_required: false
 
 # --- B. Legitimacy criteria (GROUND-RULES §B) — the 5 features rule + SLM both receive ---
 legitimacy_criteria:
@@ -69,7 +93,7 @@ legitimacy_criteria:
     text: "an independent junction (not the claimer) has physically sensed the same entity; recomputed from independently-signed sighting records, never a self-asserted scalar (MASTER-SPEC §6.6)"
   - id: B3
     name: local_sensing
-    text: "this junction physically senses the entity on its own approach — strong evidence, but SPOOFABLE (a lone keyless local reading cannot force sustained preemption; MASTER-SPEC §6.4/§5.6, tracking the spec ahead of the still-unamended master §B3)"
+    text: "this junction physically senses the entity on its own approach — strong evidence, but SPOOFABLE (a lone keyless local reading cannot force sustained preemption; MASTER-SPEC §6.4/§5.6)"
   - id: B4
     name: plausibility
     text: "consistent with vehicle-conservation (counts inside the plausibility band) and a physically feasible route/speed"
@@ -186,11 +210,12 @@ safety_invariants:
   - id: S4
     text: "preemption only for a LEGITIMATE (corroborated or locally-sensed) entity; the shield substitutes the deterministic choice if a classification would violate S1-S4"
 
-# --- F. Policy-KPI exemption (MASTER-SPEC §5.7). TARGET-STATE: the engine MUST NOT apply the
-# exemption until GROUND-RULES §F + TEST-AUDIT:39/127 are amended (a doc-remediation phase).
+# --- F. Policy-KPI exemption (MASTER-SPEC §5.7). The SLM Job-A note is exempt from the
+# empty-policies_applied defect gate (it carries statute_refs, not P1-P8 ids); the exemption
+# is gated OFF by default so a deterministic decision can never hide behind it.
 policy_kpi_rule:
-  status: target_state
-  enabled: false            # engine honors this: the SLM exemption is NOT active until the master is amended
+  status: gated_off
+  enabled: false            # the SLM policy-KPI exemption is NOT active by default
   auditability_kpi: "fraction of decisions whose policies_applied is non-empty AND whose classification is consistent with the cited policies (master §F, both halves)"
   deterministic_records: "a deterministic decision record with empty policies_applied is a defect (the engine guessed)"
   slm_job_a_note_exempt_when_enabled: true

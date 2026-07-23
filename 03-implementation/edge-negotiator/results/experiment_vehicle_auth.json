@@ -1,0 +1,108 @@
+{
+  "experiment": "H2_vehicle_authorisation_categorised_eval",
+  "gate": "multi-authorised-vehicle KB (\u00a74/\u00a76) + Lee balanced categorised eval",
+  "classifier": "deterministic KB gate (vehicle_authorization.classify)",
+  "dataset_size": 26,
+  "categories": [
+    "contradictory",
+    "invalid_id",
+    "missing_metadata",
+    "signal_tampering",
+    "unknown_vehicle",
+    "valid_ambulance",
+    "valid_civilian",
+    "valid_fire",
+    "valid_fire_lanehold",
+    "valid_maintenance_hold",
+    "valid_police"
+  ],
+  "class_accuracy": 1.0,
+  "grant_accuracy": 1.0,
+  "all_correct": true,
+  "confusion_grant_deny": {
+    "positive_class": "should be DENIED preemption",
+    "tp": 18,
+    "fp": 0,
+    "fn": 0,
+    "tn": 8,
+    "precision": 1.0,
+    "recall": 1.0,
+    "false_positive_rate": 0.0,
+    "false_negative_rate": 0.0,
+    "dangerous_false_grants": 0
+  },
+  "per_category": {
+    "valid_ambulance": {
+      "n": 3,
+      "class_correct": 3,
+      "grant_correct": 3,
+      "misses": []
+    },
+    "valid_police": {
+      "n": 3,
+      "class_correct": 3,
+      "grant_correct": 3,
+      "misses": []
+    },
+    "valid_fire": {
+      "n": 2,
+      "class_correct": 2,
+      "grant_correct": 2,
+      "misses": []
+    },
+    "valid_fire_lanehold": {
+      "n": 1,
+      "class_correct": 1,
+      "grant_correct": 1,
+      "misses": []
+    },
+    "valid_maintenance_hold": {
+      "n": 2,
+      "class_correct": 2,
+      "grant_correct": 2,
+      "misses": []
+    },
+    "valid_civilian": {
+      "n": 1,
+      "class_correct": 1,
+      "grant_correct": 1,
+      "misses": []
+    },
+    "unknown_vehicle": {
+      "n": 3,
+      "class_correct": 3,
+      "grant_correct": 3,
+      "misses": []
+    },
+    "invalid_id": {
+      "n": 3,
+      "class_correct": 3,
+      "grant_correct": 3,
+      "misses": []
+    },
+    "signal_tampering": {
+      "n": 3,
+      "class_correct": 3,
+      "grant_correct": 3,
+      "misses": []
+    },
+    "missing_metadata": {
+      "n": 3,
+      "class_correct": 3,
+      "grant_correct": 3,
+      "misses": []
+    },
+    "contradictory": {
+      "n": 2,
+      "class_correct": 2,
+      "grant_correct": 2,
+      "misses": []
+    }
+  },
+  "wall_time_s_total": 9.180000051856041e-05,
+  "notes": [
+    "Balanced across authorised classes + every KB attack family; positive class is 'should be DENIED preemption' so recall measures catching illegitimate claims and FNR measures dangerous false grants.",
+    "Deterministic KB gate: no model, sub-ms per claim; correctness/coverage eval, not a latency study.",
+    "maintenance/civilian are LEGITIMATE entities but are NEVER granted preemption (preemption_allowed=false) -- a correct deny is not a miss."
+  ]
+}

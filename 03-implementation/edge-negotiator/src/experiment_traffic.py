@@ -429,24 +429,33 @@ def coordination_stats(ctrl) -> dict | None:
 
 
 def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
-            config: str = "myopic") -> dict:
-    """Run ONE controller arm end-to-end on the Euston net; return its result dict.
+            config: str = "myopic", net: str | None = None,
+            routes: str | None = None) -> dict:
+    """Run ONE controller arm end-to-end on a SUMO net; return its result dict.
 
     Live-gated on SUMO (imports traci/sumolib inside). Builds the config-appropriate
     controller (myopic HybridController, or a CoordinatedController for the
     +coordination / +prediction arms), injects a fresh AuditLog and mirrors every
     controller decision into it, then asserts audit integrity. For coordinated arms
     the audit is signed by the SAME per-junction identities the controller uses.
+
+    ``net``/``routes`` override the default Euston net/demand (default = the module
+    NET/ROUTES), so the SAME controller + audit can run on ANY topology (the multi-
+    topology study). The controller is built from the net's own TLS list, so it is
+    topology-agnostic; ``config != "myopic"`` on a non-Euston net would need the
+    coordination scaffolding derived from that net (myopic needs none).
     """
     import traci
     from sumolib import checkBinary
 
+    net = net or NET
+    routes = routes or ROUTES
     binary = checkBinary("sumo")
     tripinfo = os.path.join(_SUMO_EUSTON, f"tripinfo_h1_{arm}_s{seed}.xml")
     # write-unfinished + write-undeparted so metrics.py sees the WHOLE population
     # (departed/running/undeparted), not just survivors. time-to-teleport 300 so
     # gridlock surfaces honestly as teleports (matches sumo/euston/euston.sumocfg).
-    traci.start([binary, "-n", NET, "-r", ROUTES,
+    traci.start([binary, "-n", net, "-r", routes,
                  "--tripinfo-output", tripinfo,
                  "--tripinfo-output.write-unfinished", "true",
                  "--tripinfo-output.write-undeparted", "true",

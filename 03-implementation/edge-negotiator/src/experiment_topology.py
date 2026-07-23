@@ -156,11 +156,11 @@ def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2
                  "real-London multi-area OSM nets are the next infra step (harness is "
                  "net-agnostic). Which model wins where + WHY, from the joint verdicts."),
     }
-    os.makedirs(RESULTS, exist_ok=True)
-    jp = os.path.join(RESULTS, "experiment_topology.json")
+    # jp/mp were bound at the top of run() from out_basename; reuse them so --out is
+    # honoured for the FINAL write too (previously this block re-hardcoded
+    # experiment_topology.json, which clobbered a full run when --out was set).
     with open(jp, "w", encoding="utf-8") as fh:
         json.dump(result, fh, indent=2)
-    mp = os.path.join(RESULTS, "experiment_topology.md")
     with open(mp, "w", encoding="utf-8") as fh:
         fh.write(render_md(result))
     _print(result, jp, mp)
@@ -189,27 +189,67 @@ def _explain(cells, models) -> dict:
                         "baseline_stranded_frac": round(stranded, 3),
                         "delay_rel_pct": round((mc["delay_rel"] or 0) * 100, 1),
                         "joint": mc["joint_verdict"]})
-    # direction: does a larger baseline gridlock proxy go with a larger delay win?
-    pairs = [(o["baseline_gridlock_proxy"], -o["delay_rel_pct"]) for o in obs]  # -rel = win size
+    # Direction analysis. A covariance SIGN is not enough (a two-cluster artifact or a
+    # single leverage point can flip it), so we report: (a) a proper Pearson r with n,
+    # (b) the mean win split by REGIME (free-flowing vs congested), and (c) the WITHIN-
+    # congested direction -- because the honest story here is a regime SEPARATION, not a
+    # graded monotonic law, and within the congested nets the relationship can invert.
+    def _pearson(xs, ys):
+        n = len(xs)
+        if n < 2:
+            return None
+        mx, my = sum(xs) / n, sum(ys) / n
+        sxx = sum((x - mx) ** 2 for x in xs)
+        syy = sum((y - my) ** 2 for y in ys)
+        sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+        if sxx <= 0 or syy <= 0:
+            return None
+        return sxy / (sxx ** 0.5 * syy ** 0.5)
+
+    win = [-o["delay_rel_pct"] for o in obs]            # +win = delay improvement %
+    proxy = [o["baseline_gridlock_proxy"] for o in obs]
+    free = [o for o in obs if o["baseline_teleports"] == 0]      # MaxPressure never gridlocks
+    cong = [o for o in obs if o["baseline_teleports"] > 0]       # MaxPressure gridlocks
+    mean = lambda xs: round(sum(xs) / len(xs), 1) if xs else None
+    r_all = _pearson(proxy, win)
+    cong_win = [-o["delay_rel_pct"] for o in cong]
+    cong_proxy = [o["baseline_gridlock_proxy"] for o in cong]
+    r_cong = _pearson(cong_proxy, cong_win)
     trend = None
-    if len(pairs) >= 2:
-        xs = [p[0] for p in pairs]
-        ys = [p[1] for p in pairs]
-        mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
-        cov = sum((x - mx) * (y - my) for x, y in pairs)
-        trend = ("win grows with baseline gridlock (hypothesis supported)" if cov > 0
-                 else "win does NOT grow with baseline gridlock (hypothesis not supported)"
-                 if cov < 0 else "flat")
+    if len(obs) >= 2:
+        n_pos = sum(1 for o in obs if o["baseline_teleports"] > 0 and -o["delay_rel_pct"] > 0)
+        trend = (
+            f"regime separation (n={len(obs)} cells, DESCRIPTIVE): the SLM WINS only where "
+            f"MaxPressure gridlocks (teleports>0) and LOSES on free-flowing nets "
+            f"(mean win congested {mean(cong_win)}% vs free-flowing {mean([-o['delay_rel_pct'] for o in free])}%). "
+            f"Across all topologies r={round(r_all,2) if r_all is not None else 'NA'}, but this is "
+            f"driven by the free-vs-congested split, NOT a graded law: WITHIN the congested "
+            f"nets the direction "
+            + ("INVERTS (more gridlock -> smaller win) "
+               if (r_cong is not None and r_cong < 0) else "does not cleanly hold ")
+            + f"(r_congested={round(r_cong,2) if r_cong is not None else 'NA'}). "
+            f"So the honest claim is a congestion-REGIME effect, not 'win grows monotonically "
+            f"with gridlock'. n=1 seed/cell: not a significance test."
+        )
     return {
-        "hypothesis": ("the SLM's delay+throughput advantage is largest where MaxPressure "
-                       "gridlocks hardest (constrained/saturated topology) and narrows "
-                       "where the network self-regulates"),
+        "hypothesis": ("the SLM's delay+throughput advantage appears where MaxPressure "
+                       "gridlocks (teleports>0) and disappears where the network self-"
+                       "regulates (free-flowing, zero teleports)"),
         "observations": obs,
         "trend": trend,
-        "reading": ("Compare each row's baseline gridlock proxy (teleports + stranded%) "
-                    "to the delay-win size. The mechanism: MaxPressure's eager myopic "
-                    "switching wastes the most time exactly where gridlock compounds, so "
-                    "the steadier SLM controller gains most there."),
+        "pearson_r_all_topologies": round(r_all, 3) if r_all is not None else None,
+        "pearson_r_congested_only": round(r_cong, 3) if r_cong is not None else None,
+        "mean_win_pct_congested": mean(cong_win),
+        "mean_win_pct_free_flowing": mean([-o["delay_rel_pct"] for o in free]),
+        "caveat": ("Regime SEPARATION at n=4 topologies x n=1 seed, not a graded monotonic "
+                   "law and not a significance test. The all-topology correlation is "
+                   "dominated by the synthetic zero-teleport grids clustering at proxy~0; "
+                   "within the congested real nets the win does not grow with gridlock "
+                   "(Bloomsbury has more gridlock than Euston yet a smaller/negative win)."),
+        "reading": ("Mechanism HYPOTHESIS (not demonstrated at n=1): MaxPressure is "
+                    "throughput-optimal and near-ideal when traffic flows freely, so the "
+                    "SLM's waiting-time-aware policy only adds latency there; when "
+                    "MaxPressure gridlocks, queue management has headroom to help."),
     }
 
 

@@ -24,30 +24,34 @@ def _cell(label, tls, b_delay, b_completed, b_departed, b_teleports,
                              "throughput_status": "slm_beats", "delay_status": "slm_beats"}}}
 
 
-def test_explain_trend_supported_when_win_grows_with_gridlock():
-    # High-gridlock topology (many teleports + stranded) has the BIG delay win; low-
-    # gridlock has a small one -> hypothesis supported.
+def test_explain_reports_regime_separation_not_a_monotonic_law():
+    # Honest framing: the SLM WINS on the congested net (teleports>0) and LOSES on the
+    # free-flowing net (teleports==0). _explain must report a REGIME SEPARATION, not claim
+    # a graded "win grows with gridlock" law.
     cells = [
-        _cell("hi_gridlock", 4, 314.0, 361, 624, 65, -0.25, "clean_win"),   # -25% win
-        _cell("lo_gridlock", 9, 96.0, 290, 300, 2, -0.02, "match"),         # ~0% win
+        _cell("congested", 4, 314.0, 361, 624, 65, -0.25, "clean_win"),   # +25% win
+        _cell("free_flow", 9, 143.0, 1000, 1000, 0, +0.60, "regression"),  # -60% win
     ]
     ex = tp._explain(cells, ["M"])
-    assert "supported" in ex["trend"]
-    assert len(ex["observations"]) == 2
-    # the high-gridlock row must carry the larger gridlock proxy
-    hi = next(o for o in ex["observations"] if o["topology"] == "hi_gridlock")
-    lo = next(o for o in ex["observations"] if o["topology"] == "lo_gridlock")
-    assert hi["baseline_gridlock_proxy"] > lo["baseline_gridlock_proxy"]
+    assert "regime separation" in ex["trend"].lower()
+    assert ex["mean_win_pct_congested"] > 0            # wins where MaxPressure gridlocks
+    assert ex["mean_win_pct_free_flowing"] < 0         # loses where it flows free
+    # and the honest caveat about the cluster-driven correlation is present
+    assert "not a graded monotonic law" in ex["caveat"]
 
 
-def test_explain_trend_not_supported_when_inverted():
-    # Win is BIG where gridlock is LOW -> hypothesis NOT supported (honest negative).
+def test_explain_flags_within_congested_inversion():
+    # Two CONGESTED nets: the one with MORE gridlock has the SMALLER win (Bloomsbury-vs-
+    # Euston pattern). _explain must surface that the within-congested direction INVERTS,
+    # so the covariance sign is not mistaken for a monotonic law.
     cells = [
-        _cell("hi_gridlock", 4, 314.0, 361, 624, 65, -0.02, "match"),
-        _cell("lo_gridlock", 9, 96.0, 290, 300, 2, -0.25, "clean_win"),
+        _cell("euston", 4, 314.0, 361, 624, 65, -0.25, "clean_win"),      # less gridlock, big win
+        _cell("bloomsbury", 9, 516.0, 267, 560, 105, +0.05, "regression"),  # more gridlock, negative
     ]
     ex = tp._explain(cells, ["M"])
-    assert "not supported" in ex["trend"]
+    assert ex["pearson_r_congested_only"] is not None
+    assert ex["pearson_r_congested_only"] < 0          # more gridlock -> smaller win
+    assert "INVERTS" in ex["trend"]
 
 
 def test_explain_skips_gated_and_skipped_cells():

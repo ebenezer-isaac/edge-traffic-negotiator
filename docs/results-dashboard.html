@@ -326,7 +326,11 @@
         </tbody>
       </table>
       </div>
-      <p class="note" style="margin-top:10px"><strong>Honest reading:</strong> the SLM is a <strong>congestion-regime specialist</strong>. It wins on the two real congested London nets (where MaxPressure gridlocks, teleports&gt;0) and loses on the free-flowing synthetic grids (zero teleports, MaxPressure already near-optimal). Mean win +9.3% congested vs &minus;62.7% free-flowing. It is <em>not</em> a monotonic "more gridlock = bigger win" law: within the congested nets the direction inverts (Bloomsbury has more gridlock than Euston yet a smaller win; r<sub>congested</sub> = &minus;0.93). grid4&times;4 (SLM +112% worse) falsifies any "always helps" claim &mdash; reported, not hidden.</p>
+      <p class="note" style="margin-top:10px"><strong>Honest reading:</strong> the SLM is a <strong>congestion-regime specialist</strong>. It wins on the two real congested London nets (where MaxPressure gridlocks, teleports&gt;0) and loses on the free-flowing synthetic grids (zero teleports, MaxPressure already near-optimal). Mean win +9.3% congested vs &minus;62.7% free-flowing. It is <em>not</em> a monotonic "more gridlock = bigger win" law: within the congested nets the direction inverts (Bloomsbury has more gridlock than Euston yet a smaller win; r<sub>congested</sub> = &minus;0.93). grid4&times;4 (SLM +112% worse) falsifies any "always helps" claim &mdash; reported, not hidden.
+      A follow-up <strong>congestion gate</strong> (fire the SLM only above a queue threshold) was tested and
+      swept (gate 2/5/12): it is an <strong>honest negative</strong> &mdash; it reduces but never removes the
+      grid regressions (grid4&times;4 still +76% at gate 12) while also shrinking some real wins, so it does not
+      overturn the result. The safe deployment is per-(net, model) validation, not a per-tick gate.</p>
     </div>
   </section>
 

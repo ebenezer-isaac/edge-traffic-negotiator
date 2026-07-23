@@ -132,3 +132,35 @@ MaxPressure selects the phase maximising `Σ (upstream queue − downstream queu
 - **EvolveSignal's result is vs Webster fixed-time, not vs MaxPressure**: it reports "reducing average delay by 20.1% and average stops by 47.1%" over Webster, and it discovers *fixed-time* code offline — relevant as a source of switching/green-allocation heuristics to hard-code into your shield, not as a real-time SLM controller.
 - **iLLM-TSC's 17.5% waiting-time reduction is a *correction layer over an RL agent* under degraded communication**, not a standalone myopic single-junction controller; use its "LLM validates/adjusts a base policy" pattern as an analogue to your shield, not as a delay benchmark.
 - Some 2026-dated arXiv sources surfaced (e.g., "Capacity, Not Format," SignalClaw, the Gemma small-model constrained-choice paper); they corroborate 2024–25 findings but should be double-checked for final provenance before formal citation.
+## Measured on OUR harness (Euston A501, SUMO, end=1200, seed 42, PILOT n=1)
+
+Applying the playbook to the real corridor (baseline myopic MaxPressure mean network
+delay = 314.55 s; on-device models, temperature 0, `/no_think` for qwen3):
+
+| Model | plain myopic (queue only) | delay-aware v1 (queue + accumulated wait, model weighs) | delay-aware v2 (A1: rank one pre-computed delay_score) |
+|---|---|---|---|
+| qwen2.5-0.5b | **235.0 s (beat)** | 291.3 s (beat) | 307.3 s (beat) |
+| qwen3-1.7b | **233.7 s (beat)** | 239.8 s (beat) | 337.5 s (LOSES) |
+| qwen3-0.6b | 267.1 s (beat) | **262.9 s (beat)** | 287.3 s (beat) |
+| phi-4-mini | 314.7 s (match) | **270.4 s (beat, LIFTED)** | 326.7 s (LOSES) |
+
+Honest findings (descriptive pilot, n=1, no significance claim per §8):
+1. **Plain myopic SLM already beats MaxPressure on delay** for the small qwen models
+   (qwen2.5-0.5b best at 235 s, -25%). The H1 "can a myopic SLM beat MaxPressure"
+   question is answered YES at the smallest scale, without any delay-aware scaffolding.
+2. **The delay-aware v1 framing (present queue AND accumulated wait, let the model
+   weigh them) helped the WEAKER models** — it lifted phi-4-mini from match to beat
+   (314.7 -> 270.4 s) and nudged qwen3-0.6b — **but HURT the already-strong small
+   models** (qwen2.5-0.5b 235 -> 291 s). Not a uniform win.
+3. **A1 as a single pre-computed delay_score (v2) was a NET NEGATIVE vs v1**: it
+   dropped phi-4-mini and qwen3-1.7b back to LOSES. Collapsing queue+wait into one
+   "rank the highest accumulated-wait phase" number made a greedily-serve-oldest policy
+   that over-serves few-but-old queues; the richer two-number framing let the model
+   balance backlog against age better. On this task/scale, giving the small model the
+   raw signals to weigh beat pre-digesting them into one score.
+4. We did NOT keep iterating the prompt on one seed (that would be p-hacking). The
+   shipped delay-aware controller is v1; v2 is recorded as a measured negative.
+5. Consistent with the playbook's own caveat: raw sub-4B models beating MaxPressure is
+   real here but prompt-only gains are uneven; the route to a UNIFORM, reliable win
+   across the smallest models is Tier-C LoRA/QLoRA imitation fine-tuning on a
+   delay-optimising oracle (LLMLight recipe), not further prompt tuning.

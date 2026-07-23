@@ -1,0 +1,456 @@
+{
+  "experiment": "H2_crash_uk_law_audit_suite",
+  "n_scenarios": 7,
+  "all_proven": true,
+  "claim": "for each predefined crash scenario, the signed audit proves the incident beyond doubt (chain + signatures verify, a tamper is caught) and the governing UK traffic law is inferred directly from the verified audit record + cited to the KB.",
+  "scenarios": [
+    {
+      "name": "civilian_runs_red",
+      "description": "A civilian car crosses the stop line against a red indication and collides.",
+      "audit_log": [
+        {
+          "seq": 0,
+          "issuer": "J",
+          "event": {
+            "authority_class": null,
+            "claim_key": null,
+            "conflicting_green": false,
+            "corroborated": false,
+            "crossing_class": "civilian",
+            "ev_id": "EV-civilian_runs_red",
+            "junction": "J",
+            "key_present": false,
+            "key_valid": false,
+            "kind": "incident",
+            "second_party_on_green": false,
+            "signal_state": "red",
+            "t": 100.0
+          },
+          "hash": "a0bb851cd145884d"
+        }
+      ],
+      "verify_chain": true,
+      "verify_signatures": true,
+      "verified_facts": {
+        "authority_class": null,
+        "claim_key": null,
+        "conflicting_green": false,
+        "corroborated": false,
+        "crossing_class": "civilian",
+        "ev_id": "EV-civilian_runs_red",
+        "junction": "J",
+        "key_present": false,
+        "key_valid": false,
+        "kind": "incident",
+        "second_party_on_green": false,
+        "signal_state": "red",
+        "t": 100.0
+      },
+      "governing_law": [
+        {
+          "rule_id": "LR-driver-red",
+          "statute_ref": "RTA1988-s36",
+          "fault_weight": "high",
+          "binding": "MUST",
+          "text": "A driver who fails to comply with a lawfully-placed prescribed traffic sign (incl. traffic light signals) commits a criminal offence.",
+          "why": "the vehicle crossed the stop line against a red indication -- a criminal offence (RTA 1988 s36 / TS10)"
+        },
+        {
+          "rule_id": "LR-red-prohibition",
+          "statute_ref": "TSRGD2016-Sch14-Pt1-para5(3)",
+          "fault_weight": "high",
+          "binding": "MUST",
+          "text": "The red signal conveys the prohibition that vehicular traffic must not proceed beyond the stop line.",
+          "why": "the red signal conveys the prohibition that vehicular traffic must not proceed beyond the stop line"
+        }
+      ],
+      "expected_rule": "LR-driver-red",
+      "expected_rule_inferred": true,
+      "tamper_caught": true,
+      "proven": true
+    },
+    {
+      "name": "ambulance_crosses_red_exempt",
+      "description": "An authorised, corroborated ambulance crosses red on an emergency run and conflicts with a car lawfully on green.",
+      "audit_log": [
+        {
+          "seq": 0,
+          "issuer": "J",
+          "event": {
+            "authority_class": "emergency",
+            "claim_key": null,
+            "conflicting_green": false,
+            "corroborated": true,
+            "crossing_class": "ambulance",
+            "ev_id": "EV-ambulance_crosses_red_exempt",
+            "junction": "J",
+            "key_present": true,
+            "key_valid": true,
+            "kind": "incident",
+            "second_party_on_green": true,
+            "signal_state": "red",
+            "t": 100.0
+          },
+          "hash": "a08f8ce6eab6aab8"
+        }
+      ],
+      "verify_chain": true,
+      "verify_signatures": true,
+      "verified_facts": {
+        "authority_class": "emergency",
+        "claim_key": null,
+        "conflicting_green": false,
+        "corroborated": true,
+        "crossing_class": "ambulance",
+        "ev_id": "EV-ambulance_crosses_red_exempt",
+        "junction": "J",
+        "key_present": true,
+        "key_valid": true,
+        "kind": "incident",
+        "second_party_on_green": true,
+        "signal_state": "red",
+        "t": 100.0
+      },
+      "governing_law": [
+        {
+          "rule_id": "LR-ev-exemption",
+          "statute_ref": "TSRGD2016-Sch14-Pt1-para5(4)-(6)",
+          "fault_weight": "medium",
+          "binding": "MUST",
+          "text": "An emergency vehicle may treat red as give-way and is NOT at fault merely for crossing red; fault arises ONLY on the para 5(5) endangerment test (it forced evasive action / endangered others).",
+          "why": "an authorised, corroborated emergency vehicle crossed red; not at fault merely for crossing (fault only on the endangerment test)"
+        },
+        {
+          "rule_id": "LR-griffin-calibration",
+          "statute_ref": "Griffin-v-Mersey",
+          "fault_weight": "medium",
+          "binding": "common_law",
+          "text": "Where a green-light driver collides with a red-crossing emergency vehicle, the default apportionment anchor is 60/40 against the non-emergency (green) driver.",
+          "why": "apportioning the EV-vs-other conflict: the default anchor is 60/40 against the non-emergency party"
+        },
+        {
+          "rule_id": "LR-green-due-regard",
+          "statute_ref": "TSRGD2016-Sch14-Pt1-para5(14)",
+          "fault_weight": "low",
+          "binding": "MUST",
+          "text": "Traffic proceeding beyond a stop line on green must proceed with due regard to the safety of other road users.",
+          "why": "the other party was on green but must proceed with due regard; typically the minority share (Joseph Eva)"
+        }
+      ],
+      "expected_rule": "LR-ev-exemption",
+      "expected_rule_inferred": true,
+      "tamper_caught": true,
+      "proven": true
+    },
+    {
+      "name": "maintenance_runs_red",
+      "description": "A highway maintenance/works vehicle crosses red; it is NOT an emergency vehicle.",
+      "audit_log": [
+        {
+          "seq": 0,
+          "issuer": "J",
+          "event": {
+            "authority_class": "works",
+            "claim_key": null,
+            "conflicting_green": false,
+            "corroborated": false,
+            "crossing_class": "maintenance",
+            "ev_id": "EV-maintenance_runs_red",
+            "junction": "J",
+            "key_present": true,
+            "key_valid": true,
+            "kind": "incident",
+            "second_party_on_green": false,
+            "signal_state": "red",
+            "t": 100.0
+          },
+          "hash": "2588b67c5eb13178"
+        }
+      ],
+      "verify_chain": true,
+      "verify_signatures": true,
+      "verified_facts": {
+        "authority_class": "works",
+        "claim_key": null,
+        "conflicting_green": false,
+        "corroborated": false,
+        "crossing_class": "maintenance",
+        "ev_id": "EV-maintenance_runs_red",
+        "junction": "J",
+        "key_present": true,
+        "key_valid": true,
+        "kind": "incident",
+        "second_party_on_green": false,
+        "signal_state": "red",
+        "t": 100.0
+      },
+      "governing_law": [
+        {
+          "rule_id": "LR-maintenance-no-exemption",
+          "statute_ref": "MaintenanceVehicles-no-exemption",
+          "fault_weight": "high",
+          "binding": "MUST",
+          "text": "Highway maintenance/works vehicles are NOT 'emergency vehicles' for the red-light exemption; a works vehicle crossing red is at fault exactly like an ordinary driver.",
+          "why": "a highway maintenance/works vehicle is NOT an emergency vehicle for the red-light exemption; crossing red it is at fault exactly like an ordinary driver"
+        },
+        {
+          "rule_id": "LR-driver-red",
+          "statute_ref": "RTA1988-s36",
+          "fault_weight": "high",
+          "binding": "MUST",
+          "text": "A driver who fails to comply with a lawfully-placed prescribed traffic sign (incl. traffic light signals) commits a criminal offence.",
+          "why": "crossing the stop line against red is a criminal offence (TS10); near-conclusive of driver fault"
+        }
+      ],
+      "expected_rule": "LR-maintenance-no-exemption",
+      "expected_rule_inferred": true,
+      "tamper_caught": true,
+      "proven": true
+    },
+    {
+      "name": "driver_crosses_on_amber",
+      "description": "A driver crosses on a steady amber when a safe stop was possible.",
+      "audit_log": [
+        {
+          "seq": 0,
+          "issuer": "J",
+          "event": {
+            "authority_class": null,
+            "claim_key": null,
+            "conflicting_green": false,
+            "corroborated": false,
+            "crossing_class": "civilian",
+            "ev_id": "EV-driver_crosses_on_amber",
+            "junction": "J",
+            "key_present": false,
+            "key_valid": false,
+            "kind": "incident",
+            "second_party_on_green": false,
+            "signal_state": "amber",
+            "t": 100.0
+          },
+          "hash": "172cf2721cae4aa7"
+        }
+      ],
+      "verify_chain": true,
+      "verify_signatures": true,
+      "verified_facts": {
+        "authority_class": null,
+        "claim_key": null,
+        "conflicting_green": false,
+        "corroborated": false,
+        "crossing_class": "civilian",
+        "ev_id": "EV-driver_crosses_on_amber",
+        "junction": "J",
+        "key_present": false,
+        "key_valid": false,
+        "kind": "incident",
+        "second_party_on_green": false,
+        "signal_state": "amber",
+        "t": 100.0
+      },
+      "governing_law": [
+        {
+          "rule_id": "LR-amber",
+          "statute_ref": "TSRGD2016-Sch14-Pt1-para5(9)",
+          "fault_weight": "high",
+          "binding": "MUST",
+          "text": "A steady amber has the same effect as red; a driver who could have stopped safely but crossed is at fault. No fault only where too close to stop safely.",
+          "why": "the vehicle crossed on a steady amber when a safe stop was possible (same effect as red)"
+        }
+      ],
+      "expected_rule": "LR-amber",
+      "expected_rule_inferred": true,
+      "tamper_caught": true,
+      "proven": true
+    },
+    {
+      "name": "conflicting_green_fault",
+      "description": "The signal system emits a conflicting green (a positively-wrong indication); two movements are released at once.",
+      "audit_log": [
+        {
+          "seq": 0,
+          "issuer": "J",
+          "event": {
+            "authority_class": null,
+            "claim_key": null,
+            "conflicting_green": true,
+            "corroborated": false,
+            "crossing_class": "civilian",
+            "ev_id": "EV-conflicting_green_fault",
+            "junction": "J",
+            "key_present": false,
+            "key_valid": false,
+            "kind": "incident",
+            "second_party_on_green": false,
+            "signal_state": "green",
+            "t": 100.0
+          },
+          "hash": "93dc0a0bc66941d3"
+        }
+      ],
+      "verify_chain": true,
+      "verify_signatures": true,
+      "verified_facts": {
+        "authority_class": null,
+        "claim_key": null,
+        "conflicting_green": true,
+        "corroborated": false,
+        "crossing_class": "civilian",
+        "ev_id": "EV-conflicting_green_fault",
+        "junction": "J",
+        "key_present": false,
+        "key_valid": false,
+        "kind": "incident",
+        "second_party_on_green": false,
+        "signal_state": "green",
+        "t": 100.0
+      },
+      "governing_law": [
+        {
+          "rule_id": "LR-authority-misfeasance",
+          "statute_ref": "Bird-v-Pearce",
+          "fault_weight": "low",
+          "binding": "common_law",
+          "text": "An authority CAN be liable where it positively creates a trap (e.g. conflicting green signals) \u2014 misfeasance, not omission.",
+          "why": "the audit shows the system emitted a conflicting green (a positively-wrong indication) -- misfeasance, not omission"
+        },
+        {
+          "rule_id": "LR-authority-nonfeasance",
+          "statute_ref": "Gorringe-v-Calderdale",
+          "fault_weight": "low",
+          "binding": "common_law",
+          "text": "A highway authority owes no private-law duty to provide/erect signs or warn (nonfeasance), and s.41 does not extend to signs/signals (Lord Hoffmann); liability only for misfeasance.",
+          "why": "authority fault otherwise defaults to zero; it turns non-zero only on this misfeasance/conflicting-green branch (low-confidence; legal_causation NOT_ASSESSED)"
+        }
+      ],
+      "expected_rule": "LR-authority-misfeasance",
+      "expected_rule_inferred": true,
+      "tamper_caught": true,
+      "proven": true
+    },
+    {
+      "name": "dark_signal",
+      "description": "The signals are dark/inoperative at the time; a collision occurs at the junction.",
+      "audit_log": [
+        {
+          "seq": 0,
+          "issuer": "J",
+          "event": {
+            "authority_class": null,
+            "claim_key": null,
+            "conflicting_green": false,
+            "corroborated": false,
+            "crossing_class": "civilian",
+            "ev_id": "EV-dark_signal",
+            "junction": "J",
+            "key_present": false,
+            "key_valid": false,
+            "kind": "incident",
+            "second_party_on_green": false,
+            "signal_state": "dark",
+            "t": 100.0
+          },
+          "hash": "e286877ce5f77be1"
+        }
+      ],
+      "verify_chain": true,
+      "verify_signatures": true,
+      "verified_facts": {
+        "authority_class": null,
+        "claim_key": null,
+        "conflicting_green": false,
+        "corroborated": false,
+        "crossing_class": "civilian",
+        "ev_id": "EV-dark_signal",
+        "junction": "J",
+        "key_present": false,
+        "key_valid": false,
+        "kind": "incident",
+        "second_party_on_green": false,
+        "signal_state": "dark",
+        "t": 100.0
+      },
+      "governing_law": [
+        {
+          "rule_id": "LR-dark-signals",
+          "statute_ref": "HC-Rule176",
+          "fault_weight": "low",
+          "binding": "should",
+          "text": "When traffic lights are not working (dark), the MUST duty to obey the signal falls away and each driver reverts to ordinary care as at an unmarked junction.",
+          "why": "the signal was dark/inoperative at the incident time, so the duty to obey it falls away (each driver reverts to ordinary care)"
+        }
+      ],
+      "expected_rule": "LR-dark-signals",
+      "expected_rule_inferred": true,
+      "tamper_caught": true,
+      "proven": true
+    },
+    {
+      "name": "spoofed_ev_triggers_red_run",
+      "description": "A compromised-but-approved neighbour signs a PHANTOM ambulance claim that commandeers the signal; a civilian then crosses the resulting red and collides. The audit attributes the triggering claim to the signing KEY.",
+      "audit_log": [
+        {
+          "seq": 0,
+          "issuer": "J",
+          "event": {
+            "authority_class": null,
+            "claim_key": "compromised-neighbour-key",
+            "conflicting_green": false,
+            "corroborated": false,
+            "crossing_class": "civilian",
+            "ev_id": "EV-spoofed_ev_triggers_red_run",
+            "junction": "J",
+            "key_present": false,
+            "key_valid": false,
+            "kind": "incident",
+            "second_party_on_green": false,
+            "signal_state": "red",
+            "t": 100.0
+          },
+          "hash": "885ddf3be6d3bdac"
+        }
+      ],
+      "verify_chain": true,
+      "verify_signatures": true,
+      "verified_facts": {
+        "authority_class": null,
+        "claim_key": "compromised-neighbour-key",
+        "conflicting_green": false,
+        "corroborated": false,
+        "crossing_class": "civilian",
+        "ev_id": "EV-spoofed_ev_triggers_red_run",
+        "junction": "J",
+        "key_present": false,
+        "key_valid": false,
+        "kind": "incident",
+        "second_party_on_green": false,
+        "signal_state": "red",
+        "t": 100.0
+      },
+      "governing_law": [
+        {
+          "rule_id": "LR-driver-red",
+          "statute_ref": "RTA1988-s36",
+          "fault_weight": "high",
+          "binding": "MUST",
+          "text": "A driver who fails to comply with a lawfully-placed prescribed traffic sign (incl. traffic light signals) commits a criminal offence.",
+          "why": "the vehicle crossed the stop line against a red indication -- a criminal offence (RTA 1988 s36 / TS10)"
+        },
+        {
+          "rule_id": "LR-red-prohibition",
+          "statute_ref": "TSRGD2016-Sch14-Pt1-para5(3)",
+          "fault_weight": "high",
+          "binding": "MUST",
+          "text": "The red signal conveys the prohibition that vehicular traffic must not proceed beyond the stop line.",
+          "why": "the red signal conveys the prohibition that vehicular traffic must not proceed beyond the stop line"
+        }
+      ],
+      "expected_rule": "LR-driver-red",
+      "expected_rule_inferred": true,
+      "tamper_caught": true,
+      "proven": true
+    }
+  ],
+  "note": "Evidence-pack mapping (audited facts -> which rule governs) with the KB's own fault_weight; NOT a determination of fault against a person (keys/origins, never names). Law grounding: 01-research/uk-traffic-law.md."
+}

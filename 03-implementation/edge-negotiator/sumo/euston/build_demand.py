@@ -181,11 +181,83 @@ def build_smoke(keep_tmp: bool) -> int:
     return n
 
 
+def _measured_scale() -> tuple[float, dict]:
+    """Ratio (measured-peak / assumed-peak) for the A501 corridor, from the DfT raw
+    manual survey (src/hourly_demand.py). The current base demand is calibrated to the
+    ASSUMED peak-hour flow (AADF x PEAK_FRACTION); the measured survey gives the REAL
+    peak-hour magnitude, so this ratio rescales the demand to the measured level."""
+    src = os.path.normpath(os.path.join(HERE, "..", "..", "src"))
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from hourly_demand import measured_profile
+    p = measured_profile()
+    measured_per_dir = p["peak_hour_total_veh"] / 2.0
+    # The assumption base.rou.xml was built under: A501 AADF 38863 x 0.085 / 2.
+    assumed_per_dir = 38863 * 0.085 / 2.0
+    return measured_per_dir / assumed_per_dir, p
+
+
+def build_hourly(keep_tmp: bool) -> int:
+    """Build base_hourly.rou.xml: base.rou.xml rescaled to the MEASURED peak-hour
+    magnitude from the DfT raw survey. Deterministic subsample (seeded) of the
+    calibrated base vehicles by the measured/assumed ratio -- preserves the route,
+    vehicle-mix, and departure-time distributions of the calibrated demand while
+    setting the ABSOLUTE magnitude to the measured level. No SUMO tools needed.
+
+    Honest scope: this upgrades the peak-hour MAGNITUDE + temporal basis from ASSUMED
+    (peak fraction 0.085) to MEASURED (DfT raw survey); it does NOT unlock an
+    inferential claim (single survey day, no turning counts; §8 gate stands)."""
+    scale, prof = _measured_scale()
+    base = os.path.join(HERE, "base.rou.xml")
+    out = os.path.join(HERE, "base_hourly.rou.xml")
+    tree = ET.parse(base)
+    root = tree.getroot()
+    vehicles = root.findall("vehicle")
+    # Deterministic subsample: keep a vehicle iff a seeded hash-uniform < scale. Stable
+    # across runs (no RNG state), so the measured demand is reproducible.
+    import hashlib
+    kept = []
+    for v in vehicles:
+        h = hashlib.sha256(f"{SEED}:{v.get('id')}".encode()).digest()
+        u = int.from_bytes(h[:8], "big") / float(1 << 64)  # uniform [0,1)
+        if u < scale:
+            kept.append(v)
+    vtypes = _vtype_distribution()
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(_HEADER)
+        f.write(f"<!-- base_hourly: base.rou.xml rescaled to the MEASURED peak-hour "
+                f"magnitude (DfT raw survey {prof['year']}, peak hour {prof['peak_hour']}:00, "
+                f"{prof['peak_hour_total_veh']} veh/h both-dir); scale={scale:.3f} vs the "
+                f"assumed peak-fraction demand; {len(kept)}/{len(vehicles)} vehicles. "
+                f"MEASURED magnitude, still PILOT (n=1 survey day, section 8 gate). -->\n")
+        f.write('<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+                'xsi:noNamespaceSchemaLocation='
+                '"http://sumo.dlr.de/xsd/routes_file.xsd">\n')
+        f.write(vtypes + "\n")
+        for i, veh in enumerate(kept):
+            route = veh.find("route")
+            f.write(f'  <vehicle id="{i}" type="A501_MIX" depart="{veh.get("depart","0")}">\n')
+            f.write(f'    <route edges="{route.get("edges")}"/>\n')
+            f.write("  </vehicle>\n")
+        f.write("</routes>\n")
+    print(f"wrote base_hourly.rou.xml ({len(kept)} vehicles, scale={scale:.3f} to the "
+          f"measured peak {prof['peak_hour_total_veh']} veh/h at {prof['peak_hour']}:00)")
+    return len(kept)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--keep-tmp", action="store_true",
                     help="keep intermediate _cand/_sampled files")
+    ap.add_argument("--hourly", action="store_true",
+                    help="build base_hourly.rou.xml (base rescaled to the MEASURED "
+                         "DfT peak-hour magnitude) instead of the full pipeline")
     args = ap.parse_args()
+    if args.hourly:
+        n = build_hourly(args.keep_tmp)
+        print(f"MEASURED-hourly demand: {n} vehicles (peak-hour magnitude from the DfT "
+              "raw survey; section-8 PILOT -- single survey day, turning still assumed).")
+        return 0
     if not TOOLS or not os.path.isdir(TOOLS):
         print("ERROR: SUMO_HOME/tools not found; set SUMO_HOME.", file=sys.stderr)
         return 2

@@ -75,7 +75,10 @@ from slm_latency import summarize_latency  # noqa: E402
 RESULTS = os.path.normpath(os.path.join(_HERE, "..", "results"))
 _SUMO_EUSTON = os.path.normpath(os.path.join(_HERE, "..", "sumo", "euston"))
 NET = os.path.join(_SUMO_EUSTON, "euston_spine.net.xml")
-ROUTES = os.path.join(_SUMO_EUSTON, "base.rou.xml")
+# Default demand = base.rou.xml (DfT-daily-AADF, assumed peak fraction). Set
+# EUSTON_ROUTES=base_hourly.rou.xml to run against the MEASURED peak-hour magnitude
+# (DfT raw survey; still a §8 PILOT). Default unchanged, so committed runs are stable.
+ROUTES = os.environ.get("EUSTON_ROUTES") or os.path.join(_SUMO_EUSTON, "base.rou.xml")
 
 # The event-gated decision interval the SLM must keep up with (§3: "~10 s"). This
 # equals HybridController's min_green, so it is the cadence choose_phase runs at.

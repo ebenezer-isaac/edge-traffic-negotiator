@@ -141,13 +141,14 @@ catalog. Honest status:
   false parity). Incumbent qwen2.5-0.5b reproduced its exact -25.3% clean win on the same
   run, confirming a stable baseline.
 - After downloading qwen3.5-0.8b (1.3 GB): the model CANNOT be served by the installed
-  Foundry Local runtime. Every inference call returns HTTP 500 with:
+  Foundry Local runtime (v0.8.119). Every inference call returns HTTP 500 with:
   `Error encountered while parsing genai_config.json JSON Error: model:vision: Unknown value
   "spatial_merge_size"`. i.e. qwen3.5 ships a newer genai_config schema (a vision field) that
   this build's ONNX GenAI runtime does not recognise. `choose_phase` caught the 500 and
   returned None -> the sweep SKIPPED-with-record (no false parity). This is a
-  RUNTIME-VERSION incompatibility, not a model-capability result, and it is generation-wide
-  (the qwen3.5 config schema is the blocker, not the specific size).
+  RUNTIME-VERSION incompatibility, not a model-capability result (the model never emits a
+  token). The exact 500 payload is captured in `results/qwen35_probe_error.json` (a direct
+  chat-completion call, so the failure is the runtime rejecting the config, not our parser).
 - Resolution: serving qwen3.5 would require upgrading Foundry Local / its onnxruntime-genai
   to a build that parses the new config schema. That upgrade is deliberately NOT attempted
   unattended, because it risks destabilising the reproducible environment the rest of the

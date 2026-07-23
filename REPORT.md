@@ -371,7 +371,7 @@ plain template **beats** the AI on citation correctness (D5, a reported negative
    rather than a false pass. And a third: a delay-aware reader was calling a SUMO
    function that doesn't exist, silently feeding the AI zeros — caught and fixed.
 
-**Engineering health:** 745 automated tests pass; the repo is greenfield-clean; every
+**Engineering health:** 831 automated tests pass; the repo is greenfield-clean; every
 phase was reviewed by a separate adversarial agent (builder ≠ examiner) before commit.
 
 ---

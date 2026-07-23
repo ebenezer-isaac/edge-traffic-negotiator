@@ -146,7 +146,7 @@ done. Pair with `REPORT.md` (narrative) and `results/` (numbers).
 95. The §8 demand gate: our demand is calibrated to daily-average real counts, not hour-by-hour, so any significance claim is held back until proper hourly data lands.
 96. The "battery": before any work is accepted, a SEPARATE adversarial AI reviewer (that did not write the code) tries to break it; zero fatal + zero major findings required to proceed.
 97. builder != examiner: the agent that builds never grades its own work; reviewers run synchronously so they cannot silently vanish.
-98. Every phase was committed only after passing its battery; 745 automated tests pass.
+98. Every phase was committed only after passing its battery; 831 automated tests pass.
 
 ## S. Bugs the reviewers caught (shows the process works)
 99. FATAL audit bug: the log recorded the proposed phase, not the served phase after the fairness override. Fixed and re-verified.
@@ -161,7 +161,7 @@ done. Pair with `REPORT.md` (narrative) and `results/` (numbers).
 106. Still missing for full significance: time-resolved TfL hourly + junction turning counts. That is data, not code, and is the one genuine external blocker.
 
 ## U. Engineering
-107. The whole thing is a Python codebase with a large automated test suite (745 passing).
+107. The whole thing is a Python codebase with a large automated test suite (831 collected).
 108. The traffic simulator is SUMO 1.26 driven live via its TraCI control interface.
 109. The repo is "greenfield-clean": it reads as one coherent design, with iteration history only in git.
 110. Certain critical files are "hash-pinned" in the spec so they cannot silently change; the one deliberate change (adding the vehicle rules) re-pinned carefully.

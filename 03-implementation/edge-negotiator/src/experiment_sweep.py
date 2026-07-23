@@ -72,28 +72,38 @@ MODEL_CATALOG = [
 def _probe_model(base_url: str, model_id: str, reps: int = 3):
     """Per-MODEL precondition probe (same two-dimension contract as
     slm_agent.probe_foundry_determinism, but for an ARBITRARY model id):
-    reachability + temp-0 determinism on a canned decision. Returns
-    ``(SLMAgent, None)`` on success else ``(None, reason)``. NEVER raises."""
+    reachability + temp-0 determinism on a canned decision, AND the median
+    per-decision latency of the probe calls (used by the sweep's latency gate).
+    Returns ``(SLMAgent, None, latency_s)`` on success else ``(None, reason, lat)``
+    where ``lat`` is the measured median probe latency (None if unmeasured). NEVER
+    raises."""
+    import statistics
+    from time import perf_counter
+
     from slm_agent import SLMAgent
     if reps < 2:
-        return None, "determinism probe needs reps >= 2"
+        return None, "determinism probe needs reps >= 2", None
     try:
         agent = SLMAgent(base_url=base_url, model=model_id)
         agent.client.models.list()  # cheap real call: dead service fails here
     except Exception as exc:  # noqa: BLE001
-        return None, f"model {model_id} not reachable ({type(exc).__name__})"
+        return None, f"model {model_id} not reachable ({type(exc).__name__})", None
     seen: list[int] = []
+    lat: list[float] = []
     for _ in range(reps):
         try:
+            t0 = perf_counter()
             phase = agent.choose_phase("PROBE", 2, [8, 0])
+            lat.append(perf_counter() - t0)
         except Exception as exc:  # noqa: BLE001
-            return None, f"probe decision raised {type(exc).__name__}: {exc}"
+            return None, f"probe decision raised {type(exc).__name__}: {exc}", None
         if phase is None:
-            return None, "model did not answer a well-formed decision"
+            return None, "model did not answer a well-formed decision", None
         seen.append(phase)
+    med = statistics.median(lat) if lat else None
     if len(set(seen)) != 1:
-        return None, f"non-deterministic at temp 0 over {reps} reps: {sorted(set(seen))}"
-    return agent, None
+        return None, f"non-deterministic at temp 0 over {reps} reps: {sorted(set(seen))}", med
+    return agent, None, med
 
 
 def _discover_base():
@@ -240,7 +250,7 @@ def _scale_threshold(cells: dict, models, configs) -> dict:
 
 
 def run_sweep(models=None, configs=CONFIGS, *, seed: int = 42, end: int = 1200,
-              gate: int = 2) -> dict:
+              gate: int = 2, max_probe_latency_s: float = 3.0) -> dict:
     """Run the model x config sweep on Euston; write the feasibility map + scale
     threshold. ONE myopic MaxPressure baseline; every SLM cell compares to it.
 
@@ -294,12 +304,32 @@ def run_sweep(models=None, configs=CONFIGS, *, seed: int = 42, end: int = 1200,
         alias, model_id = m["alias"], m["model_id"]
         result["cells"][alias] = {}
         print(f"[sweep] probing model {alias} ({model_id}) ...", flush=True)
-        agent, reason = _probe_model(base_url, model_id)
+        agent, reason, probe_lat = _probe_model(base_url, model_id)
         if agent is None:
             for config in configs:
                 result["cells"][alias][config] = {"skipped": True,
                                                   "reason": f"model probe failed: {reason}"}
             print(f"[sweep]   SKIP all configs for {alias}: {reason}", flush=True)
+            _flush()
+            continue
+        # LATENCY GATE (D-lat / sweep cost): a model whose MEASURED per-decision
+        # latency is too high to sweep at the saturating horizon in-session is
+        # SKIPPED-with-the-measured-number (never fabricated, never a false green).
+        # The measured latency + the thin headroom vs the decision interval are the
+        # honest finding; the estimated per-arm runtime is reported.
+        if probe_lat is not None and probe_lat > max_probe_latency_s:
+            est_min = probe_lat * 320 / 60.0  # ~320 saturated decisions/arm (observed)
+            reason_lat = (
+                f"measured choose_phase latency ~{probe_lat:.1f}s/decision (probe "
+                f"median) > {max_probe_latency_s:.1f}s gate; a full end={end} "
+                f"saturating sweep is ~{est_min:.0f} min/arm, computationally "
+                f"impractical in-session. Headroom vs the {DECISION_INTERVAL_S}s "
+                f"decision interval is thin. Recorded, not run.")
+            for config in configs:
+                result["cells"][alias][config] = {
+                    "skipped": True, "latency_gated": True,
+                    "measured_latency_s": probe_lat, "reason": reason_lat}
+            print(f"[sweep]   LATENCY-GATE SKIP {alias}: {reason_lat}", flush=True)
             _flush()
             continue
         for config in configs:
@@ -427,6 +457,10 @@ def _build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--gate", type=int, default=2, help="event-gate (default 2)")
     ap.add_argument("--models", nargs="*", default=None,
                     help="subset of model aliases to run (default: full catalog)")
+    ap.add_argument("--max-probe-latency-s", type=float, default=3.0,
+                    help="skip (with the measured latency) any model whose probe "
+                         "median choose_phase latency exceeds this, as too slow to "
+                         "sweep at the saturating horizon in-session (default 3.0)")
     return ap
 
 
@@ -439,4 +473,5 @@ if __name__ == "__main__":
             print(f"no catalog models match {args.models}; "
                   f"known: {[m['alias'] for m in MODEL_CATALOG]}")
             raise SystemExit(2)
-    run_sweep(models=catalog, seed=args.seed, end=args.end, gate=args.gate)
+    run_sweep(models=catalog, seed=args.seed, end=args.end, gate=args.gate,
+              max_probe_latency_s=args.max_probe_latency_s)

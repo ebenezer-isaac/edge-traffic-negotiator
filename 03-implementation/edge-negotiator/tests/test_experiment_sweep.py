@@ -136,6 +136,19 @@ def test_feasibility_map_row_per_cell_with_skips():
     assert any("device lost" in r["reason"] for r in skipped_rows)
 
 
+def test_latency_gated_cell_is_skipped_and_not_parity():
+    # A model skipped by the latency gate carries its MEASURED latency + reason and
+    # must be a skipped map row that can never be a scale threshold.
+    models = _models("phi-4-mini-reasoning")
+    gated = {"skipped": True, "latency_gated": True, "measured_latency_s": 7.5,
+             "reason": "measured choose_phase latency ~7.5s/decision > 3.0s gate ..."}
+    cells = {"phi-4-mini-reasoning": {c: gated for c in sw.CONFIGS}}
+    rows = sw._feasibility_map(cells, models, sw.CONFIGS)
+    assert all(r["status"] == "skipped" for r in rows)
+    assert any("7.5s" in r["reason"] for r in rows)
+    assert sw._scale_threshold(cells, models, sw.CONFIGS)["reached"] is False
+
+
 def test_feasibility_map_missing_cell_is_skipped_not_crash():
     # A model with NO cells recorded (e.g. sweep aborted before it) -> skipped rows.
     models = _models("phi-4-mini")
@@ -148,13 +161,13 @@ def test_feasibility_map_missing_cell_is_skipped_not_crash():
 # Per-model probe SKIP contract (offline: unreachable + non-deterministic).
 # --------------------------------------------------------------------------- #
 def test_probe_model_reps_guard():
-    agent, reason = sw._probe_model("http://127.0.0.1:1/v1", "x", reps=1)
-    assert agent is None and "reps" in reason
+    agent, reason, lat = sw._probe_model("http://127.0.0.1:1/v1", "x", reps=1)
+    assert agent is None and "reps" in reason and lat is None
 
 
 def test_probe_model_unreachable_skips_with_reason():
     # A dead endpoint must SKIP-with-record, never raise.
-    agent, reason = sw._probe_model("http://127.0.0.1:1/v1", "no-such-model")
+    agent, reason, lat = sw._probe_model("http://127.0.0.1:1/v1", "no-such-model")
     assert agent is None
     assert "not reachable" in reason
 
@@ -181,7 +194,7 @@ def test_probe_model_nondeterministic_skips(monkeypatch):
             return self._n % 2  # alternates 1,0,1 -> not all identical
 
     monkeypatch.setattr(slm_agent, "SLMAgent", _FlipAgent)
-    agent, reason = sw._probe_model("http://x/v1", "flip", reps=3)
+    agent, reason, _lat = sw._probe_model("http://x/v1", "flip", reps=3)
     assert agent is None
     assert "non-deterministic" in reason
 
@@ -251,6 +264,6 @@ def test_probe_model_none_answer_skips(monkeypatch):
             return None
 
     monkeypatch.setattr(slm_agent, "SLMAgent", _NoneAgent)
-    agent, reason = sw._probe_model("http://x/v1", "none", reps=3)
+    agent, reason, _lat = sw._probe_model("http://x/v1", "none", reps=3)
     assert agent is None
     assert "well-formed" in reason

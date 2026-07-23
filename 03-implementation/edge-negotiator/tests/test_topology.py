@@ -4,6 +4,7 @@ The live cross-topology run needs Foundry+SUMO; these pin the PURE explanatory l
 (gridlock proxy + the win-grows-with-gridlock trend) so the "why" analysis cannot
 misreport its own direction."""
 import os
+import re
 import sys
 
 _SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
@@ -74,3 +75,28 @@ def test_topology_list_has_euston_and_grids():
     labels = [t["label"] for t in tp._topologies()]
     assert "euston_corridor" in labels
     assert any("grid" in l for l in labels)
+
+
+def test_topology_list_has_real_london_bloomsbury():
+    # Full-scale req 5: "not just a straight corridor but also multiple variations of the
+    # map in london". Bloomsbury is a REAL London grid (OSM), not a synthetic one.
+    tops = tp._topologies()
+    labels = [t["label"] for t in tops]
+    assert "bloomsbury_grid" in labels
+    bloom = next(t for t in tops if t["label"] == "bloomsbury_grid")
+    # its net/routes must point at the real extracted London assets, not a synthetic grid
+    assert "bloomsbury" in bloom["net"].replace("\\", "/").lower()
+    assert os.path.exists(bloom["net"]), "bloomsbury net must be committed"
+    assert os.path.exists(bloom["routes"]), "bloomsbury demand must be committed"
+    # PROVENANCE (not just filename): the net must carry a real OSM->UTM projection and a
+    # geo-boundary inside the Bloomsbury WC1 bbox. A synthetic grid saved at this path would
+    # have no such projParameter/origBoundary and would fail here.
+    with open(bloom["net"], encoding="utf-8") as fh:
+        head = fh.read(4000)
+    assert "+proj=utm" in head, "real OSM net must be UTM-projected, not synthetic"
+    m = re.search(r'origBoundary="([^"]+)"', head)
+    assert m, "real OSM net must carry an origBoundary (lat/lon extent)"
+    lon0, lat0, lon1, lat1 = (float(x) for x in m.group(1).split(","))
+    # Bloomsbury WC1 is ~51.52N, -0.12W; assert the boundary sits in that real-London box.
+    assert 51.51 < lat0 < 51.53 and 51.51 < lat1 < 51.53, f"lat outside Bloomsbury: {lat0},{lat1}"
+    assert -0.14 < lon0 < -0.11 and -0.14 < lon1 < -0.11, f"lon outside Bloomsbury: {lon0},{lon1}"

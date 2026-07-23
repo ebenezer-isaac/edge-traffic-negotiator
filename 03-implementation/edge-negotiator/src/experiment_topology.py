@@ -46,6 +46,9 @@ def _topologies() -> list:
         {"label": "euston_corridor", "structure": "real linear arterial (A501)",
          "net": os.path.join(_SUMO, "euston", "euston_spine.net.xml"),
          "routes": os.path.join(_SUMO, "euston", "base.rou.xml")},
+        {"label": "bloomsbury_grid", "structure": "REAL London grid (Bloomsbury WC1, 9 signals)",
+         "net": os.path.join(_SUMO, "bloomsbury", "bloomsbury.net.xml"),
+         "routes": os.path.join(_SUMO, "bloomsbury", "bloomsbury.rou.xml")},
         {"label": "grid3x3", "structure": "synthetic 3x3 grid (more routes)",
          "net": os.path.join(_SUMO, "grid3x3", "grid3x3.net.xml"),
          "routes": os.path.join(_SUMO, "grid3x3", "grid3x3.rou.xml")},
@@ -85,6 +88,20 @@ def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2
         a, reason = _probe(m)
         agents[m] = (a, reason)
 
+    os.makedirs(RESULTS, exist_ok=True)
+    jp = os.path.join(RESULTS, "experiment_topology.json")
+    mp = os.path.join(RESULTS, "experiment_topology.md")
+
+    def _flush(cells_so_far):
+        # Incremental write after each topology so a long multi-topology run preserves
+        # progress if interrupted (grids have many signals -> many slow SLM calls).
+        partial = {"experiment": "H1_multi_topology", "models": list(models),
+                   "seed": seed, "end": end, "topologies": [t["label"] for t in tops],
+                   "cells": cells_so_far, "explanatory": _explain(cells_so_far, models),
+                   "note": "partial (in progress)"}
+        with open(jp, "w", encoding="utf-8") as fh:
+            json.dump(partial, fh, indent=2)
+
     cells = []
     for top in tops:
         if not (os.path.exists(top["net"]) and os.path.exists(top["routes"])):
@@ -122,6 +139,7 @@ def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2
                 "latency_p99": summarize_latency(timing.latencies_s, warmup=1).get("p99"),
             }
         cells.append(row)
+        _flush(cells)   # persist after each topology (long-run resilience)
 
     result = {
         "experiment": "H1_multi_topology",

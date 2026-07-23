@@ -48,10 +48,20 @@ force a win, we are trying to measure the truth.
 ### The controller design
 
 - **The shield (HybridController)** — the safety wrapper. The AI *proposes* a green
-  phase; the MaxPressure rule *checks* it. If the AI gives a nonsense or empty answer,
-  the shield ignores it and uses MaxPressure instead. So the AI can never make things
-  worse than "just use MaxPressure" on validity — it can only try to do better. "SLM
+  phase; the shield *checks it is a legal answer* and otherwise uses MaxPressure. "SLM
   proposes, shield disposes."
+  - **What "valid" means, exactly** (this is a legality/parse check, NOT a quality
+    check): an AI answer is used only if (1) the model call returned without error,
+    (2) a non-negative integer is extractable from the reply (a JSON `{"phase": N}`
+    preferred, else a keyed `phase: N`, else the first bare integer), and (3) that
+    integer is a legal green-phase index for the junction (`0 <= phase < num_phases`).
+    Any failure → the deterministic MaxPressure phase is served.
+  - The shield deliberately does NOT reject a legal-but-different phase — otherwise the
+    AI could never diverge from MaxPressure and never beat it. Safety comes instead
+    from: only a legal phase can be served; minimum-green + yellow clearance are enforced
+    on every transition; anti-starvation forces any phase skipped > 3 times; and an
+    admissible emergency-vehicle preemption outranks the AI. So the shield guarantees a
+    legal action, a sensible fallback, and fairness — not optimality.
 
 - **Phase** — one legal green-light configuration at a junction (e.g. "north-south
   goes"). Choosing a phase = choosing who moves next.

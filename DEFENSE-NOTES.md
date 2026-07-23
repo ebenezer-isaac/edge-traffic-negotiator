@@ -22,7 +22,11 @@ done. Pair with `REPORT.md` (narrative) and `results/` (numbers).
 12. Every ~10 seconds (a "decision interval") each junction decides which green phase to serve next.
 13. Step 1 event-gate: if the junction is nearly empty, skip the AI and let MaxPressure handle it (saves compute).
 14. Step 2: otherwise, build a short text prompt of the junction state and ask the SLM for a phase index.
-15. Step 3 shield: if the AI's answer is valid, use it; if it is empty, out-of-range, or nonsense, fall back to MaxPressure's choice.
+15. Step 3 shield: if the AI's answer is VALID use it, else fall back to MaxPressure. "Valid" has an exact 3-part definition, see points 15a-15d.
+15a. Valid = ALL of: (1) the model call returned without error; (2) a non-negative integer is extractable from the reply (priority: a JSON object {"phase": N}, else a keyed phase:N, else the first bare integer); (3) that integer is a legal green-phase index for this junction, 0 <= phase < num_phases.
+15b. num_phases = the count of green phases the junction actually has (typically 2 to 4). Out-of-range, unparseable, or a failed call all become None.
+15c. CRITICAL nuance: validity is a LEGALITY/parse check, NOT a quality check. The shield never rejects a legal-but-different phase; it only rejects illegal/absent answers. This is deliberate, so the AI can diverge from MaxPressure and beat it.
+15d. Safety therefore comes from four OTHER guarantees, not from judging the AI's choice: only a legal phase can be served; min-green + yellow clearance are enforced on every transition; anti-starvation forces any phase skipped > max_skip (=3) times; an admissible EV preemption outranks the AI.
 16. Step 4 anti-starvation: a fairness override forces a direction that has been skipped too many times, so nobody waits forever.
 17. Step 5: the chosen phase is served; the light physically switches (with a yellow clearance) or holds.
 18. Consequence: the AI can never be worse than "just MaxPressure" on validity; it can only try to improve delay.

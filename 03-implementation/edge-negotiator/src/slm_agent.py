@@ -25,6 +25,34 @@ SYSTEM = (
     'Reply with ONLY JSON {"phase": <index>} and nothing else.'
 )
 
+# Delay-aware myopic prompt (SOTA-informed, single junction, own-approach info only).
+# Encodes two levers MaxPressure structurally lacks, both targeting DELAY rather than
+# throughput and both grounded in the LLM-TSC literature:
+#   * WAITING-TIME PRIORITY (LLMLight, arXiv:2312.16044): MaxPressure privileges only
+#     instantaneous queue length and is memoryless on how long vehicles have waited,
+#     which inflates average waiting time; prioritising phases whose vehicles have
+#     ALREADY waited long attacks the delay metric directly.
+#   * SWITCHING HYSTERESIS / STOP REDUCTION (EvolveSignal, arXiv:2509.03335): every
+#     phase switch forces vehicles to stop and restart; the discovered delay-optimal
+#     policy cut stops ~47%. Keeping the current phase unless another is clearly
+#     worse-off reduces stops and hence delay.
+# Output stays terse (single JSON, no long chain-of-thought) so per-decision latency
+# remains inside the real-time interval.
+SYSTEM_DELAY_AWARE = (
+    "You control ONE traffic-signal junction (this junction only; no neighbour "
+    "information). For each green phase you are given: the number of waiting "
+    "(queued) vehicles, the TOTAL accumulated waiting time of those vehicles in "
+    "seconds, and whether it is the phase currently green. Choose the phase to serve "
+    "next to MINIMISE total vehicle waiting time and unnecessary stops -- not simply "
+    "the longest queue.\n"
+    "Guidance: (1) prefer a phase that has BOTH many waiting vehicles AND a high "
+    "accumulated waiting time, because long-waiting vehicles contribute the most "
+    "delay; (2) never leave a phase that has already waited a long time unserved "
+    "(avoid starvation); (3) keep the CURRENT phase unless another phase is clearly "
+    "worse-off, because switching makes a whole queue stop and restart, adding delay. "
+    'Reply with ONLY JSON {"phase": <index>} and nothing else.'
+)
+
 # Prompt for the ambiguous-case disambiguation job (Experiment 1). The model
 # judges a flagged event as real or fake/faulty from partial evidence, the one
 # decision a fixed per-junction rule cannot cleanly settle. We give qualitative
@@ -182,19 +210,37 @@ class SLMAgent:
             base_url, model = base_url or d_base, model or d_model
         self.model = model
         self.max_tokens = max_tokens
+        # Qwen3 models default to a <think> reasoning trace that costs ~7 s/decision
+        # (measured) -- far too slow for the ~10 s real-time control interval, and it
+        # buries the JSON. Qwen3's documented soft switch `/no_think` disables it,
+        # dropping latency to ~0.3 s with a clean JSON reply (measured). Auto-append
+        # it for qwen3 only; the suffix is empty for every other model, so their
+        # prompts are byte-for-byte unchanged.
+        self.think_suffix = " /no_think" if "qwen3" in (model or "").lower() else ""
         self.client = OpenAI(base_url=base_url,
                              api_key=os.environ.get("FOUNDRY_LOCAL_API_KEY", "local"))
 
     def choose_phase(self, junction_id: str, num_phases: int,
                      halting_per_phase: list[int],
-                     neighbor_note: str = "") -> int | None:
+                     neighbor_note: str = "",
+                     phase_context: list | None = None) -> int | None:
         """Ask the SLM which green phase to serve. None on any failure (-> shield).
 
         ``neighbor_note`` (optional) is a concise coordination hint from adjacent
         junctions (e.g. "Neighbours about to send ~7 vehicles toward you."). When
         non-empty it is appended to the user prompt so cross-junction coordination
         can influence the choice; default "" leaves the prompt identical to before.
+
+        ``phase_context`` (optional) switches to the SOTA DELAY-AWARE myopic mode: a
+        list with one dict per phase ``{"queue": int, "waiting": float, "current":
+        bool}`` (own-junction info only). When given, the richer waiting-time +
+        current-phase state is sent under ``SYSTEM_DELAY_AWARE`` so the model can beat
+        MaxPressure on DELAY (waiting-time priority + switching hysteresis). Default
+        None leaves the prompt byte-for-byte identical to the queue-only behaviour.
         """
+        if phase_context is not None:
+            return self._choose_phase_delay_aware(junction_id, num_phases,
+                                                  phase_context)
         per_phase = ", ".join(f"phase {i} = {n}" for i, n in enumerate(halting_per_phase))
         user = (f"Junction {junction_id}. Waiting vehicles per phase: {per_phase}. "
                 'Which phase should get green now? Reply ONLY {"phase": <index>}.')
@@ -203,7 +249,31 @@ class SLMAgent:
         try:
             resp = self.client.chat.completions.create(
                 model=self.model, temperature=0, max_tokens=self.max_tokens,
-                messages=[{"role": "system", "content": SYSTEM},
+                messages=[{"role": "system", "content": SYSTEM + self.think_suffix},
+                          {"role": "user", "content": user}],
+            )
+            return self._parse(resp.choices[0].message.content or "", num_phases)
+        except Exception:
+            return None
+
+    def _choose_phase_delay_aware(self, junction_id: str, num_phases: int,
+                                  phase_context: list) -> int | None:
+        """Delay-aware myopic decision (SYSTEM_DELAY_AWARE). Builds a per-phase state
+        line with queue + accumulated waiting time (s) + current-phase marker. None
+        on failure."""
+        parts = []
+        for i, ctx in enumerate(phase_context):
+            q = int(ctx.get("queue", 0))
+            w = float(ctx.get("waiting", 0.0))
+            cur = " (CURRENT)" if ctx.get("current") else ""
+            parts.append(f"phase {i}: queued={q}, wait={w:.0f}s{cur}")
+        user = (f"Junction {junction_id}. " + "; ".join(parts)
+                + '. Which phase should get green now? Reply ONLY {"phase": <index>}.')
+        try:
+            resp = self.client.chat.completions.create(
+                model=self.model, temperature=0, max_tokens=self.max_tokens,
+                messages=[{"role": "system",
+                           "content": SYSTEM_DELAY_AWARE + self.think_suffix},
                           {"role": "user", "content": user}],
             )
             return self._parse(resp.choices[0].message.content or "", num_phases)

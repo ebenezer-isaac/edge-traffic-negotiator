@@ -44,11 +44,19 @@ def served_by(slm_phase, shield_phase, used, served) -> str:
 
 class HybridController(MaxPressureController):
     def __init__(self, conn, tls_ids, agent, slm_junctions=None,
-                 gate: int = 2, min_green: int = 10, yellow: int = 3):
+                 gate: int = 2, min_green: int = 10, yellow: int = 3,
+                 delay_aware: bool = False):
         super().__init__(conn, tls_ids, min_green=min_green, yellow=yellow)
         self.agent = agent
         self.slm = set(slm_junctions) if slm_junctions else set(tls_ids)
         self.gate = gate
+        # SOTA DELAY-AWARE myopic mode (default OFF -> byte-for-byte the queue-only
+        # controller). When ON, decide() passes the agent a per-phase context with
+        # queue + mean waiting time + current-phase marker (own-junction info only),
+        # so a delay-aware SLM can beat MaxPressure on delay via waiting-time priority
+        # + switching hysteresis. It ONLY enriches what the agent sees; the shield,
+        # anti-starvation, and served-phase audit are unchanged.
+        self.delay_aware = bool(delay_aware)
         self.events: list[dict] = []  # decision log
         # Per-interval decision context, set by decide(), consumed by _on_served
         # so it can repair the SERVED phase on the just-logged event (or emit one
@@ -72,7 +80,21 @@ class HybridController(MaxPressureController):
                                 "emitted": False}
             return mp_choice
 
-        proposal = self.agent.choose_phase(tl, len(st["green"]), halting)
+        if self.delay_aware:
+            # Own-junction delay context: queue + mean waiting time per phase +
+            # which phase is currently green (for switching hysteresis). Myopic:
+            # no neighbour / upstream info.
+            cur = st["cur"]
+            phase_context = [
+                {"queue": int(halting[gi]),
+                 "waiting": self.green_waiting(st, gi),
+                 "current": gi == cur}
+                for gi in range(len(st["green"]))
+            ]
+            proposal = self.agent.choose_phase(tl, len(st["green"]), halting,
+                                               phase_context=phase_context)
+        else:
+            proposal = self.agent.choose_phase(tl, len(st["green"]), halting)
         used = proposal if proposal is not None else mp_choice
         # `served` is PROVISIONAL (== used); _on_served repairs it to the served
         # phase post-anti-starvation. On a directly-driven decide() (no step()),

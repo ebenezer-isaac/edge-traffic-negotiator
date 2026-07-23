@@ -1,0 +1,836 @@
+{
+  "experiment": "H1_sota_delayaware_myopic_vs_maxpressure",
+  "label": "PILOT / SMOKE",
+  "technique": "delay-aware myopic: waiting-time priority (LLMLight) + switching hysteresis (EvolveSignal); own-junction info only",
+  "corridor": "Euston Road A501 spine (euston_spine.net.xml, 4 TLS)",
+  "baseline_controller": "myopic MaxPressure (Varaiya)",
+  "seed": 42,
+  "end": 1200,
+  "gate": 2,
+  "decision_interval_s": 10,
+  "caveats": [
+    "PILOT n=1, DfT daily-AADF demand (temporal profile assumed) -> DESCRIPTIVE only, NO significance claim (\u00a78).",
+    "SOTA arm is still MYOPIC (own-junction only): the levers are waiting-time priority + switching hysteresis, not coordination or prediction.",
+    "Audit live on every arm; degraded (all-shield) arms are skip-recorded."
+  ],
+  "baseline": {
+    "arm": "maxpressure",
+    "config": "myopic",
+    "controller_model": "maxpressure(null-agent-shield)",
+    "controlled_tls": [
+      "GS_6985146843",
+      "GS_cluster_110097_110098",
+      "GS_cluster_13249075_6985146839_6985146845",
+      "cluster_2440680097_253308874_3837973624_427931760_#2more"
+    ],
+    "metrics": {
+      "loaded": 1071,
+      "departed": 624,
+      "completed": 361,
+      "running_at_end": 263,
+      "undeparted": 447,
+      "mean_network_delay_s": 314.54647435897436,
+      "avg_travel_time_completed_s": 130.37396121883657,
+      "median_travel_time_completed_s": 75.0,
+      "teleports": 65,
+      "sim_steps": 1200,
+      "write_unfinished_present": true,
+      "write_undeparted_present": true
+    },
+    "decision_stats": {
+      "decisions": 332,
+      "served_by": {
+        "slm": 0,
+        "shield": 225,
+        "anti_starvation": 107
+      },
+      "slm_valid_proposals": 0,
+      "slm_proposal_served": 0,
+      "slm_agreed_with_shield": 0,
+      "slm_diverged_and_served": 0,
+      "shield_fallbacks_none": 225,
+      "anti_starvation_overrides": 107
+    },
+    "coordination": null,
+    "audit": {
+      "enabled": true,
+      "entries": 332,
+      "decision_entries": 332,
+      "verify_chain": true,
+      "verify_signatures": true,
+      "merkle_root": "17d2477b2a922e023366d28a9f5e2fe0d2f60586af9c968cd521c388f292a29d",
+      "inclusion_sample_index": 331,
+      "inclusion_branch_len": 9,
+      "inclusion_proof_valid": true
+    },
+    "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_maxpressure_s42.xml"
+  },
+  "cells": {
+    "qwen3-0.6b": {
+      "size_gb": 0.52,
+      "myopic": {
+        "arm": "qwen3-0.6b_myopic",
+        "config": "myopic",
+        "controller_model": "qwen3-0.6b-generic-gpu:2",
+        "controlled_tls": [
+          "GS_6985146843",
+          "GS_cluster_110097_110098",
+          "GS_cluster_13249075_6985146839_6985146845",
+          "cluster_2440680097_253308874_3837973624_427931760_#2more"
+        ],
+        "metrics": {
+          "loaded": 1071,
+          "departed": 653,
+          "completed": 411,
+          "running_at_end": 242,
+          "undeparted": 418,
+          "mean_network_delay_s": 267.09188361408883,
+          "avg_travel_time_completed_s": 119.77372262773723,
+          "median_travel_time_completed_s": 74.0,
+          "teleports": 43,
+          "sim_steps": 1200,
+          "write_unfinished_present": true,
+          "write_undeparted_present": true
+        },
+        "decision_stats": {
+          "decisions": 335,
+          "served_by": {
+            "slm": 217,
+            "shield": 0,
+            "anti_starvation": 118
+          },
+          "slm_valid_proposals": 318,
+          "slm_proposal_served": 217,
+          "slm_agreed_with_shield": 79,
+          "slm_diverged_and_served": 138,
+          "shield_fallbacks_none": 0,
+          "anti_starvation_overrides": 118
+        },
+        "coordination": null,
+        "audit": {
+          "enabled": true,
+          "entries": 335,
+          "decision_entries": 335,
+          "verify_chain": true,
+          "verify_signatures": true,
+          "merkle_root": "f2e657bab3af2da18acf01a6625bc2c19cd9414bbb5b1ec993425a91905bd77f",
+          "inclusion_sample_index": 334,
+          "inclusion_branch_len": 9,
+          "inclusion_proof_valid": true
+        },
+        "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_qwen3-0.6b_myopic_s42.xml",
+        "model": "qwen3-0.6b-generic-gpu:2",
+        "model_alias": "qwen3-0.6b",
+        "slm_calls": 318,
+        "slm_none_returns": 0,
+        "slm_proposal_served": 217,
+        "latency": {
+          "n": 317,
+          "warmup_discarded": 1,
+          "min": 0.37405659999058116,
+          "p50": 0.4411517999978969,
+          "p95": 0.5322578000050271,
+          "p99": 0.5926794999977574,
+          "max": 0.7656956000137143,
+          "mean": 0.4504216340691261,
+          "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+        },
+        "verdict": {
+          "status": "slm_beats",
+          "metric": "mean_network_delay_s (lower is better)",
+          "baseline_delay_s": 314.54647435897436,
+          "slm_delay_s": 267.09188361408883,
+          "slm_minus_baseline_s": -47.454590744885536,
+          "slm_relative_delay": -0.15086670687247397,
+          "baseline_completed": 361,
+          "slm_completed": 411,
+          "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+        },
+        "latency_viability": {
+          "decision_interval_s": 10,
+          "p50_s": 0.4411517999978969,
+          "p95_s": 0.5322578000050271,
+          "p99_s": 0.5926794999977574,
+          "p99_within_interval": true,
+          "p95_within_interval": true
+        }
+      },
+      "sota": {
+        "arm": "qwen3-0.6b_sota",
+        "config": "sota",
+        "controller_model": "qwen3-0.6b-generic-gpu:2",
+        "controlled_tls": [
+          "GS_6985146843",
+          "GS_cluster_110097_110098",
+          "GS_cluster_13249075_6985146839_6985146845",
+          "cluster_2440680097_253308874_3837973624_427931760_#2more"
+        ],
+        "metrics": {
+          "loaded": 1071,
+          "departed": 673,
+          "completed": 433,
+          "running_at_end": 240,
+          "undeparted": 398,
+          "mean_network_delay_s": 262.9108469539376,
+          "avg_travel_time_completed_s": 118.64896073903002,
+          "median_travel_time_completed_s": 78.0,
+          "teleports": 31,
+          "sim_steps": 1200,
+          "write_unfinished_present": true,
+          "write_undeparted_present": true
+        },
+        "decision_stats": {
+          "decisions": 338,
+          "served_by": {
+            "slm": 194,
+            "shield": 0,
+            "anti_starvation": 144
+          },
+          "slm_valid_proposals": 319,
+          "slm_proposal_served": 194,
+          "slm_agreed_with_shield": 111,
+          "slm_diverged_and_served": 83,
+          "shield_fallbacks_none": 0,
+          "anti_starvation_overrides": 144
+        },
+        "coordination": null,
+        "audit": {
+          "enabled": true,
+          "entries": 338,
+          "decision_entries": 338,
+          "verify_chain": true,
+          "verify_signatures": true,
+          "merkle_root": "b6482d5c69037547c5b21ec1442d5151bca7792f94a8dd3978c9b2d43de17f59",
+          "inclusion_sample_index": 337,
+          "inclusion_branch_len": 9,
+          "inclusion_proof_valid": true
+        },
+        "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_qwen3-0.6b_sota_s42.xml",
+        "model": "qwen3-0.6b-generic-gpu:2",
+        "model_alias": "qwen3-0.6b",
+        "slm_calls": 319,
+        "slm_none_returns": 0,
+        "slm_proposal_served": 194,
+        "latency": {
+          "n": 318,
+          "warmup_discarded": 1,
+          "min": 0.4924368000065442,
+          "p50": 0.6049448999983724,
+          "p95": 0.7988377000001492,
+          "p99": 1.044605600007344,
+          "max": 1.7091076000069734,
+          "mean": 0.6259000135220312,
+          "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+        },
+        "verdict": {
+          "status": "slm_beats",
+          "metric": "mean_network_delay_s (lower is better)",
+          "baseline_delay_s": 314.54647435897436,
+          "slm_delay_s": 262.9108469539376,
+          "slm_minus_baseline_s": -51.63562740503676,
+          "slm_relative_delay": -0.16415897685792497,
+          "baseline_completed": 361,
+          "slm_completed": 433,
+          "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+        },
+        "latency_viability": {
+          "decision_interval_s": 10,
+          "p50_s": 0.6049448999983724,
+          "p95_s": 0.7988377000001492,
+          "p99_s": 1.044605600007344,
+          "p99_within_interval": true,
+          "p95_within_interval": true
+        }
+      },
+      "delta": {
+        "myopic_status": "slm_beats",
+        "sota_status": "slm_beats",
+        "myopic_delay_s": 267.09188361408883,
+        "sota_delay_s": 262.9108469539376,
+        "sota_minus_myopic_s": -4.181036660151221,
+        "sota_improved_delay": true,
+        "sota_lifted_verdict": false
+      }
+    },
+    "qwen2.5-0.5b": {
+      "size_gb": 0.68,
+      "myopic": {
+        "arm": "qwen2.5-0.5b_myopic",
+        "config": "myopic",
+        "controller_model": "qwen2.5-0.5b-instruct-generic-gpu:4",
+        "controlled_tls": [
+          "GS_6985146843",
+          "GS_cluster_110097_110098",
+          "GS_cluster_13249075_6985146839_6985146845",
+          "cluster_2440680097_253308874_3837973624_427931760_#2more"
+        ],
+        "metrics": {
+          "loaded": 1071,
+          "departed": 701,
+          "completed": 472,
+          "running_at_end": 229,
+          "undeparted": 370,
+          "mean_network_delay_s": 235.00142653352353,
+          "avg_travel_time_completed_s": 127.7542372881356,
+          "median_travel_time_completed_s": 76.0,
+          "teleports": 33,
+          "sim_steps": 1200,
+          "write_unfinished_present": true,
+          "write_undeparted_present": true
+        },
+        "decision_stats": {
+          "decisions": 331,
+          "served_by": {
+            "slm": 157,
+            "shield": 42,
+            "anti_starvation": 132
+          },
+          "slm_valid_proposals": 261,
+          "slm_proposal_served": 157,
+          "slm_agreed_with_shield": 84,
+          "slm_diverged_and_served": 73,
+          "shield_fallbacks_none": 42,
+          "anti_starvation_overrides": 132
+        },
+        "coordination": null,
+        "audit": {
+          "enabled": true,
+          "entries": 331,
+          "decision_entries": 331,
+          "verify_chain": true,
+          "verify_signatures": true,
+          "merkle_root": "99a777900d5e314a3dde34ea1abca2a8400ec0682712f553ff36384da7c1a0ec",
+          "inclusion_sample_index": 330,
+          "inclusion_branch_len": 9,
+          "inclusion_proof_valid": true
+        },
+        "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_qwen2.5-0.5b_myopic_s42.xml",
+        "model": "qwen2.5-0.5b-instruct-generic-gpu:4",
+        "model_alias": "qwen2.5-0.5b",
+        "slm_calls": 311,
+        "slm_none_returns": 50,
+        "slm_proposal_served": 157,
+        "latency": {
+          "n": 310,
+          "warmup_discarded": 1,
+          "min": 0.19246789999306202,
+          "p50": 0.22266869999293704,
+          "p95": 0.30666099999507423,
+          "p99": 0.37405899999430403,
+          "max": 0.5284526000032201,
+          "mean": 0.23355038322573116,
+          "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+        },
+        "verdict": {
+          "status": "slm_beats",
+          "metric": "mean_network_delay_s (lower is better)",
+          "baseline_delay_s": 314.54647435897436,
+          "slm_delay_s": 235.00142653352353,
+          "slm_minus_baseline_s": -79.54504782545084,
+          "slm_relative_delay": -0.252888060460886,
+          "baseline_completed": 361,
+          "slm_completed": 472,
+          "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+        },
+        "latency_viability": {
+          "decision_interval_s": 10,
+          "p50_s": 0.22266869999293704,
+          "p95_s": 0.30666099999507423,
+          "p99_s": 0.37405899999430403,
+          "p99_within_interval": true,
+          "p95_within_interval": true
+        }
+      },
+      "sota": {
+        "arm": "qwen2.5-0.5b_sota",
+        "config": "sota",
+        "controller_model": "qwen2.5-0.5b-instruct-generic-gpu:4",
+        "controlled_tls": [
+          "GS_6985146843",
+          "GS_cluster_110097_110098",
+          "GS_cluster_13249075_6985146839_6985146845",
+          "cluster_2440680097_253308874_3837973624_427931760_#2more"
+        ],
+        "metrics": {
+          "loaded": 1071,
+          "departed": 651,
+          "completed": 399,
+          "running_at_end": 252,
+          "undeparted": 420,
+          "mean_network_delay_s": 291.3010752688172,
+          "avg_travel_time_completed_s": 131.49624060150376,
+          "median_travel_time_completed_s": 82.0,
+          "teleports": 39,
+          "sim_steps": 1200,
+          "write_unfinished_present": true,
+          "write_undeparted_present": true
+        },
+        "decision_stats": {
+          "decisions": 338,
+          "served_by": {
+            "slm": 206,
+            "shield": 0,
+            "anti_starvation": 132
+          },
+          "slm_valid_proposals": 326,
+          "slm_proposal_served": 206,
+          "slm_agreed_with_shield": 122,
+          "slm_diverged_and_served": 84,
+          "shield_fallbacks_none": 0,
+          "anti_starvation_overrides": 132
+        },
+        "coordination": null,
+        "audit": {
+          "enabled": true,
+          "entries": 338,
+          "decision_entries": 338,
+          "verify_chain": true,
+          "verify_signatures": true,
+          "merkle_root": "6e3aff98fd405c1034655c9823921c999fb57515b76a62c014784a654b33a9c0",
+          "inclusion_sample_index": 337,
+          "inclusion_branch_len": 9,
+          "inclusion_proof_valid": true
+        },
+        "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_qwen2.5-0.5b_sota_s42.xml",
+        "model": "qwen2.5-0.5b-instruct-generic-gpu:4",
+        "model_alias": "qwen2.5-0.5b",
+        "slm_calls": 326,
+        "slm_none_returns": 0,
+        "slm_proposal_served": 206,
+        "latency": {
+          "n": 325,
+          "warmup_discarded": 1,
+          "min": 0.2606768999976339,
+          "p50": 0.2964700000011362,
+          "p95": 0.3518521999940276,
+          "p99": 0.4067337000014959,
+          "max": 0.546800299998722,
+          "mean": 0.3011835498463076,
+          "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+        },
+        "verdict": {
+          "status": "slm_beats",
+          "metric": "mean_network_delay_s (lower is better)",
+          "baseline_delay_s": 314.54647435897436,
+          "slm_delay_s": 291.3010752688172,
+          "slm_minus_baseline_s": -23.24539909015715,
+          "slm_relative_delay": -0.0739013181995754,
+          "baseline_completed": 361,
+          "slm_completed": 399,
+          "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+        },
+        "latency_viability": {
+          "decision_interval_s": 10,
+          "p50_s": 0.2964700000011362,
+          "p95_s": 0.3518521999940276,
+          "p99_s": 0.4067337000014959,
+          "p99_within_interval": true,
+          "p95_within_interval": true
+        }
+      },
+      "delta": {
+        "myopic_status": "slm_beats",
+        "sota_status": "slm_beats",
+        "myopic_delay_s": 235.00142653352353,
+        "sota_delay_s": 291.3010752688172,
+        "sota_minus_myopic_s": 56.29964873529369,
+        "sota_improved_delay": false,
+        "sota_lifted_verdict": false
+      }
+    },
+    "qwen3-1.7b": {
+      "size_gb": 1.39,
+      "myopic": {
+        "arm": "qwen3-1.7b_myopic",
+        "config": "myopic",
+        "controller_model": "qwen3-1.7b-generic-gpu:2",
+        "controlled_tls": [
+          "GS_6985146843",
+          "GS_cluster_110097_110098",
+          "GS_cluster_13249075_6985146839_6985146845",
+          "cluster_2440680097_253308874_3837973624_427931760_#2more"
+        ],
+        "metrics": {
+          "loaded": 1071,
+          "departed": 664,
+          "completed": 458,
+          "running_at_end": 206,
+          "undeparted": 407,
+          "mean_network_delay_s": 233.7289156626506,
+          "avg_travel_time_completed_s": 126.23144104803494,
+          "median_travel_time_completed_s": 74.5,
+          "teleports": 31,
+          "sim_steps": 1200,
+          "write_unfinished_present": true,
+          "write_undeparted_present": true
+        },
+        "decision_stats": {
+          "decisions": 306,
+          "served_by": {
+            "slm": 190,
+            "shield": 0,
+            "anti_starvation": 116
+          },
+          "slm_valid_proposals": 276,
+          "slm_proposal_served": 190,
+          "slm_agreed_with_shield": 105,
+          "slm_diverged_and_served": 85,
+          "shield_fallbacks_none": 0,
+          "anti_starvation_overrides": 116
+        },
+        "coordination": null,
+        "audit": {
+          "enabled": true,
+          "entries": 306,
+          "decision_entries": 306,
+          "verify_chain": true,
+          "verify_signatures": true,
+          "merkle_root": "c5e93b38a13c9dda3b58dc1dedf5d205c05ffcfc6e7d500b160eaeed90f1bc6d",
+          "inclusion_sample_index": 305,
+          "inclusion_branch_len": 9,
+          "inclusion_proof_valid": true
+        },
+        "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_qwen3-1.7b_myopic_s42.xml",
+        "model": "qwen3-1.7b-generic-gpu:2",
+        "model_alias": "qwen3-1.7b",
+        "slm_calls": 276,
+        "slm_none_returns": 0,
+        "slm_proposal_served": 190,
+        "latency": {
+          "n": 275,
+          "warmup_discarded": 1,
+          "min": 0.437447099990095,
+          "p50": 0.4987794000044232,
+          "p95": 0.5787189999973634,
+          "p99": 0.6721350000007078,
+          "max": 0.8388454999949317,
+          "mean": 0.5050641232727371,
+          "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+        },
+        "verdict": {
+          "status": "slm_beats",
+          "metric": "mean_network_delay_s (lower is better)",
+          "baseline_delay_s": 314.54647435897436,
+          "slm_delay_s": 233.7289156626506,
+          "slm_minus_baseline_s": -80.81755869632377,
+          "slm_relative_delay": -0.25693360213629735,
+          "baseline_completed": 361,
+          "slm_completed": 458,
+          "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+        },
+        "latency_viability": {
+          "decision_interval_s": 10,
+          "p50_s": 0.4987794000044232,
+          "p95_s": 0.5787189999973634,
+          "p99_s": 0.6721350000007078,
+          "p99_within_interval": true,
+          "p95_within_interval": true
+        }
+      },
+      "sota": {
+        "arm": "qwen3-1.7b_sota",
+        "config": "sota",
+        "controller_model": "qwen3-1.7b-generic-gpu:2",
+        "controlled_tls": [
+          "GS_6985146843",
+          "GS_cluster_110097_110098",
+          "GS_cluster_13249075_6985146839_6985146845",
+          "cluster_2440680097_253308874_3837973624_427931760_#2more"
+        ],
+        "metrics": {
+          "loaded": 1071,
+          "departed": 673,
+          "completed": 465,
+          "running_at_end": 208,
+          "undeparted": 398,
+          "mean_network_delay_s": 239.76968796433877,
+          "avg_travel_time_completed_s": 122.06666666666666,
+          "median_travel_time_completed_s": 84.0,
+          "teleports": 27,
+          "sim_steps": 1200,
+          "write_unfinished_present": true,
+          "write_undeparted_present": true
+        },
+        "decision_stats": {
+          "decisions": 310,
+          "served_by": {
+            "slm": 203,
+            "shield": 0,
+            "anti_starvation": 107
+          },
+          "slm_valid_proposals": 286,
+          "slm_proposal_served": 203,
+          "slm_agreed_with_shield": 88,
+          "slm_diverged_and_served": 115,
+          "shield_fallbacks_none": 0,
+          "anti_starvation_overrides": 107
+        },
+        "coordination": null,
+        "audit": {
+          "enabled": true,
+          "entries": 310,
+          "decision_entries": 310,
+          "verify_chain": true,
+          "verify_signatures": true,
+          "merkle_root": "6c8ba2cd62a56a72fd39503bd4e975c5e43e2bda9d61b135b4518066d6437f2f",
+          "inclusion_sample_index": 309,
+          "inclusion_branch_len": 9,
+          "inclusion_proof_valid": true
+        },
+        "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_qwen3-1.7b_sota_s42.xml",
+        "model": "qwen3-1.7b-generic-gpu:2",
+        "model_alias": "qwen3-1.7b",
+        "slm_calls": 286,
+        "slm_none_returns": 0,
+        "slm_proposal_served": 203,
+        "latency": {
+          "n": 285,
+          "warmup_discarded": 1,
+          "min": 0.5932725000020582,
+          "p50": 0.7028667999984464,
+          "p95": 0.8416876999981469,
+          "p99": 0.9344009000051301,
+          "max": 0.9960472999955527,
+          "mean": 0.7078512515786938,
+          "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+        },
+        "verdict": {
+          "status": "slm_beats",
+          "metric": "mean_network_delay_s (lower is better)",
+          "baseline_delay_s": 314.54647435897436,
+          "slm_delay_s": 239.76968796433877,
+          "slm_minus_baseline_s": -74.7767863946356,
+          "slm_relative_delay": -0.23772889696832847,
+          "baseline_completed": 361,
+          "slm_completed": 465,
+          "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+        },
+        "latency_viability": {
+          "decision_interval_s": 10,
+          "p50_s": 0.7028667999984464,
+          "p95_s": 0.8416876999981469,
+          "p99_s": 0.9344009000051301,
+          "p99_within_interval": true,
+          "p95_within_interval": true
+        }
+      },
+      "delta": {
+        "myopic_status": "slm_beats",
+        "sota_status": "slm_beats",
+        "myopic_delay_s": 233.7289156626506,
+        "sota_delay_s": 239.76968796433877,
+        "sota_minus_myopic_s": 6.040772301688179,
+        "sota_improved_delay": false,
+        "sota_lifted_verdict": false
+      }
+    },
+    "phi-4-mini": {
+      "size_gb": 3.72,
+      "myopic": {
+        "arm": "phi-4-mini_myopic",
+        "config": "myopic",
+        "controller_model": "Phi-4-mini-instruct-generic-gpu:5",
+        "controlled_tls": [
+          "GS_6985146843",
+          "GS_cluster_110097_110098",
+          "GS_cluster_13249075_6985146839_6985146845",
+          "cluster_2440680097_253308874_3837973624_427931760_#2more"
+        ],
+        "metrics": {
+          "loaded": 1071,
+          "departed": 624,
+          "completed": 360,
+          "running_at_end": 264,
+          "undeparted": 447,
+          "mean_network_delay_s": 314.70512820512823,
+          "avg_travel_time_completed_s": 128.0361111111111,
+          "median_travel_time_completed_s": 74.0,
+          "teleports": 64,
+          "sim_steps": 1200,
+          "write_unfinished_present": true,
+          "write_undeparted_present": true
+        },
+        "decision_stats": {
+          "decisions": 332,
+          "served_by": {
+            "slm": 220,
+            "shield": 0,
+            "anti_starvation": 112
+          },
+          "slm_valid_proposals": 315,
+          "slm_proposal_served": 220,
+          "slm_agreed_with_shield": 197,
+          "slm_diverged_and_served": 23,
+          "shield_fallbacks_none": 0,
+          "anti_starvation_overrides": 112
+        },
+        "coordination": null,
+        "audit": {
+          "enabled": true,
+          "entries": 332,
+          "decision_entries": 332,
+          "verify_chain": true,
+          "verify_signatures": true,
+          "merkle_root": "2b2e6fdc1ff0c44af8d3c2bc22e19ff357a6bb2bb8ccf021d19f872a075807de",
+          "inclusion_sample_index": 331,
+          "inclusion_branch_len": 9,
+          "inclusion_proof_valid": true
+        },
+        "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_phi-4-mini_myopic_s42.xml",
+        "model": "Phi-4-mini-instruct-generic-gpu:5",
+        "model_alias": "phi-4-mini",
+        "slm_calls": 315,
+        "slm_none_returns": 0,
+        "slm_proposal_served": 220,
+        "latency": {
+          "n": 314,
+          "warmup_discarded": 1,
+          "min": 0.44439499999862164,
+          "p50": 0.47720429999753833,
+          "p95": 0.5181672000035178,
+          "p99": 0.6012396000005538,
+          "max": 0.796653299999889,
+          "mean": 0.481349882483538,
+          "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+        },
+        "verdict": {
+          "status": "match",
+          "metric": "mean_network_delay_s (lower is better)",
+          "baseline_delay_s": 314.54647435897436,
+          "slm_delay_s": 314.70512820512823,
+          "slm_minus_baseline_s": 0.15865384615386802,
+          "slm_relative_delay": 0.0005043892050521133,
+          "baseline_completed": 361,
+          "slm_completed": 360,
+          "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+        },
+        "latency_viability": {
+          "decision_interval_s": 10,
+          "p50_s": 0.47720429999753833,
+          "p95_s": 0.5181672000035178,
+          "p99_s": 0.6012396000005538,
+          "p99_within_interval": true,
+          "p95_within_interval": true
+        }
+      },
+      "sota": {
+        "arm": "phi-4-mini_sota",
+        "config": "sota",
+        "controller_model": "Phi-4-mini-instruct-generic-gpu:5",
+        "controlled_tls": [
+          "GS_6985146843",
+          "GS_cluster_110097_110098",
+          "GS_cluster_13249075_6985146839_6985146845",
+          "cluster_2440680097_253308874_3837973624_427931760_#2more"
+        ],
+        "metrics": {
+          "loaded": 1071,
+          "departed": 675,
+          "completed": 423,
+          "running_at_end": 252,
+          "undeparted": 396,
+          "mean_network_delay_s": 270.4222222222222,
+          "avg_travel_time_completed_s": 123.7612293144208,
+          "median_travel_time_completed_s": 78.0,
+          "teleports": 45,
+          "sim_steps": 1200,
+          "write_unfinished_present": true,
+          "write_undeparted_present": true
+        },
+        "decision_stats": {
+          "decisions": 312,
+          "served_by": {
+            "slm": 243,
+            "shield": 0,
+            "anti_starvation": 69
+          },
+          "slm_valid_proposals": 299,
+          "slm_proposal_served": 243,
+          "slm_agreed_with_shield": 170,
+          "slm_diverged_and_served": 73,
+          "shield_fallbacks_none": 0,
+          "anti_starvation_overrides": 69
+        },
+        "coordination": null,
+        "audit": {
+          "enabled": true,
+          "entries": 312,
+          "decision_entries": 312,
+          "verify_chain": true,
+          "verify_signatures": true,
+          "merkle_root": "1b62b60e24067db93f542876d9fbe2ff8c7464f68fe38d41b07d8637b76f376c",
+          "inclusion_sample_index": 311,
+          "inclusion_branch_len": 9,
+          "inclusion_proof_valid": true
+        },
+        "tripinfo": "E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\sumo\\euston\\tripinfo_h1_phi-4-mini_sota_s42.xml",
+        "model": "Phi-4-mini-instruct-generic-gpu:5",
+        "model_alias": "phi-4-mini",
+        "slm_calls": 299,
+        "slm_none_returns": 0,
+        "slm_proposal_served": 243,
+        "latency": {
+          "n": 298,
+          "warmup_discarded": 1,
+          "min": 0.7830290999991121,
+          "p50": 0.8367543999920599,
+          "p95": 1.020452099997783,
+          "p99": 1.2626331000064965,
+          "max": 1.362369900001795,
+          "mean": 0.868772971811927,
+          "method": "FLPerformance nearest-rank (index=ceil(p/100*N)-1); warmup discarded"
+        },
+        "verdict": {
+          "status": "slm_beats",
+          "metric": "mean_network_delay_s (lower is better)",
+          "baseline_delay_s": 314.54647435897436,
+          "slm_delay_s": 270.4222222222222,
+          "slm_minus_baseline_s": -44.12425213675215,
+          "slm_relative_delay": -0.14027895949771668,
+          "baseline_completed": 361,
+          "slm_completed": 423,
+          "note": "SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- descriptive only, NO significance/inferential claim (\u00a78)."
+        },
+        "latency_viability": {
+          "decision_interval_s": 10,
+          "p50_s": 0.8367543999920599,
+          "p95_s": 1.020452099997783,
+          "p99_s": 1.2626331000064965,
+          "p99_within_interval": true,
+          "p95_within_interval": true
+        }
+      },
+      "delta": {
+        "myopic_status": "match",
+        "sota_status": "slm_beats",
+        "myopic_delay_s": 314.70512820512823,
+        "sota_delay_s": 270.4222222222222,
+        "sota_minus_myopic_s": -44.282905982906016,
+        "sota_improved_delay": true,
+        "sota_lifted_verdict": true
+      }
+    }
+  },
+  "summary": {
+    "models_run": [
+      "phi-4-mini",
+      "qwen2.5-0.5b",
+      "qwen3-0.6b",
+      "qwen3-1.7b"
+    ],
+    "sota_improved_delay_over_myopic": [
+      "phi-4-mini",
+      "qwen3-0.6b"
+    ],
+    "sota_lifted_verdict_over_myopic": [
+      "phi-4-mini"
+    ],
+    "sota_beats_maxpressure": [
+      "phi-4-mini",
+      "qwen2.5-0.5b",
+      "qwen3-0.6b",
+      "qwen3-1.7b"
+    ],
+    "note": "Descriptive pilot: 'improved' = lower delay than vanilla myopic for the same model; 'lifted verdict' = moved loses->match or match->beats."
+  }
+}

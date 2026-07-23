@@ -75,6 +75,30 @@ class MaxPressureController:
         return sum(halting(st["in_lanes"][i]) for i, ch in enumerate(st["green"][gi])
                    if ch in "Gg" and st["in_lanes"][i])
 
+    def green_waiting(self, st: dict, gi: int) -> float:
+        """Accumulated waiting time (s) on the in-lanes green phase ``gi`` serves.
+
+        The own-junction DELAY signal MaxPressure IGNORES (it is memoryless on how
+        long vehicles have waited; it scores on halting COUNT only). Uses the real
+        TraCI reader ``traci.lane.getWaitingTime`` (total waiting seconds of the
+        vehicles on a lane) summed over the phase's served in-lanes -> total
+        accumulated waiting on that phase's approaches. Transport-safe: a missing
+        reader or a failed read contributes 0, so a stub connection with no waiting
+        API (e.g. the pinned FakeConn) reports 0 and the delay-aware path degrades to
+        queue-only. Read-only; no control effect."""
+        getw = getattr(self.c.lane, "getWaitingTime", None)
+        if getw is None:
+            return 0.0
+        total = 0.0
+        for i, ch in enumerate(st["green"][gi]):
+            lane = st["in_lanes"][i]
+            if ch in "Gg" and lane:
+                try:
+                    total += float(getw(lane))
+                except Exception:
+                    continue
+        return total
+
     def decide(self, tl: str, st: dict) -> int:
         """Choose which green phase to serve. Default = max pressure; subclasses may override."""
         return max(range(len(st["green"])), key=lambda gi: self._pressure(st, gi))

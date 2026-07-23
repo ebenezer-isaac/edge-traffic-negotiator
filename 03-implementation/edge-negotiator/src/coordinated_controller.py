@@ -52,7 +52,7 @@ class StubAgent:
     model = "stub"
 
     def choose_phase(self, junction_id, num_phases, halting_per_phase,
-                     neighbor_note: str = ""):  # noqa: ARG002 - note unused in stub
+                     neighbor_note: str = "", phase_context=None):  # noqa: ARG002
         if not halting_per_phase:
             return None
         return max(range(len(halting_per_phase)), key=lambda i: halting_per_phase[i])

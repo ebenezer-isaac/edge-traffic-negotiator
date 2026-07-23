@@ -58,10 +58,13 @@ from experiment_traffic import (  # noqa: E402
 # (Foundry lazily loads a cached model on first request by this id -- verified). If
 # an id is stale on a given Foundry build, that model's probe SKIPS-with-record.
 MODEL_CATALOG = [
+    {"alias": "qwen3-0.6b", "model_id": "qwen3-0.6b-generic-gpu:2", "size_gb": 0.52},
     {"alias": "qwen2.5-0.5b", "model_id": "qwen2.5-0.5b-instruct-generic-gpu:4",
      "size_gb": 0.68},
+    {"alias": "qwen3-1.7b", "model_id": "qwen3-1.7b-generic-gpu:2", "size_gb": 1.39},
     {"alias": "qwen2.5-1.5b", "model_id": "qwen2.5-1.5b-instruct-generic-gpu:4",
      "size_gb": 1.51},
+    {"alias": "qwen3-4b", "model_id": "qwen3-4b-generic-gpu:2", "size_gb": 2.87},
     {"alias": "phi-4-mini-reasoning", "model_id": "Phi-4-mini-reasoning-generic-gpu:3",
      "size_gb": 3.15},
     {"alias": "phi-4-mini", "model_id": "Phi-4-mini-instruct-generic-gpu:5",

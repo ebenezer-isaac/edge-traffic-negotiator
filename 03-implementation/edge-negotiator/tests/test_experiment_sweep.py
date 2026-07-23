@@ -41,7 +41,7 @@ def _skipped(reason="foundry down"):
 def test_catalog_ordered_small_to_large():
     sizes = [m["size_gb"] for m in sw.MODEL_CATALOG]
     assert sizes == sorted(sizes)
-    assert sw.MODEL_CATALOG[0]["alias"] == "qwen2.5-0.5b"      # smallest
+    assert sw.MODEL_CATALOG[0]["alias"] == "qwen3-0.6b"        # smallest (newest gen)
     assert sw.MODEL_CATALOG[-1]["alias"] == "phi-4-mini"        # largest
 
 

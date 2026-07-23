@@ -97,7 +97,7 @@ class NullAgent:
     model = "maxpressure(null-agent-shield)"
 
     def choose_phase(self, junction_id, num_phases, halting_per_phase,
-                     neighbor_note: str = ""):  # noqa: ARG002 - myopic, note unused
+                     neighbor_note: str = "", phase_context=None):  # noqa: ARG002
         return None
 
 
@@ -124,10 +124,15 @@ class TimingAgent:
         self.notes_forwarded = 0
 
     def choose_phase(self, junction_id, num_phases, halting_per_phase,
-                     neighbor_note: str = ""):
+                     neighbor_note: str = "", phase_context=None):
         self.calls += 1
         t0 = perf_counter()
-        if self.forward_note:
+        if phase_context is not None:
+            # SOTA delay-aware myopic mode: forward the per-phase delay context (the
+            # note channel is independent and unused here).
+            out = self.inner.choose_phase(junction_id, num_phases, halting_per_phase,
+                                          phase_context=phase_context)
+        elif self.forward_note:
             if neighbor_note:
                 self.notes_forwarded += 1
             out = self.inner.choose_phase(junction_id, num_phases, halting_per_phase,
@@ -206,11 +211,17 @@ def build_controller(conn, tls_ids, agent, *, config: str = "myopic", gate: int 
     Reusing one shield keeps the arms apples-to-apples: only the SLM's information
     (and the deterministic fallback reference) changes, never the safety floor.
     """
-    if config not in CONFIGS:
-        raise ValueError(f"config must be one of {CONFIGS}, got {config!r}")
+    if config not in CONFIGS and config != "sota":
+        raise ValueError(f"config must be one of {CONFIGS + ('sota',)}, got {config!r}")
     if config == "myopic":
         return HybridController(conn, tls_ids, agent, gate=gate,
                                 min_green=min_green, yellow=yellow)
+    if config == "sota":
+        # SOTA delay-aware MYOPIC (own-junction only): the queue-only myopic shield
+        # plus the delay-aware agent context (waiting-time priority + switching
+        # hysteresis). No coordination / no neighbour note.
+        return HybridController(conn, tls_ids, agent, gate=gate,
+                                min_green=min_green, yellow=yellow, delay_aware=True)
     if coordination is None:
         raise ValueError(f"config {config!r} requires coordination scaffolding "
                          "(call build_coordination first)")
@@ -451,7 +462,8 @@ def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
     coordination = None
     try:
         tls = list(traci.trafficlight.getIDList())
-        if config == "myopic":
+        if config in ("myopic", "sota"):
+            # Myopic + SOTA delay-aware are own-junction only: no coordination layer.
             identities = {tl: JunctionIdentity(tl) for tl in tls}
         else:
             # Coordinated arms sign the audit with the controller's OWN identities.

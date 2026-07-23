@@ -45,11 +45,25 @@ def served_by(slm_phase, shield_phase, used, served) -> str:
 class HybridController(MaxPressureController):
     def __init__(self, conn, tls_ids, agent, slm_junctions=None,
                  gate: int = 2, min_green: int = 10, yellow: int = 3,
-                 delay_aware: bool = False):
+                 delay_aware: bool = False, gate_mode: str = "sum"):
+        if gate_mode not in ("sum", "max"):
+            raise ValueError(f"gate_mode must be 'sum' or 'max', got {gate_mode!r}")
         super().__init__(conn, tls_ids, min_green=min_green, yellow=yellow)
         self.agent = agent
         self.slm = set(slm_junctions) if slm_junctions else set(tls_ids)
         self.gate = gate
+        # Congestion gate mode (default "sum" -> byte-identical to prior behaviour).
+        #   "sum": consult the SLM when TOTAL halting across phases >= gate. This SCALES
+        #          with the number of phases, so a 4-phase grid junction trips it more
+        #          easily than a 2-phase corridor junction (topology-dependent).
+        #   "max": consult the SLM only when the LARGEST single-phase queue >= gate, i.e.
+        #          a real standing queue on some approach. Topology-INVARIANT: a free-
+        #          flowing net (short queues everywhere) defers to MaxPressure regardless
+        #          of phase count, so the SLM acts only under genuine congestion -- the
+        #          "congestion-gated hybrid" (match MaxPressure in free flow, beat it under
+        #          gridlock). Chosen from the mechanism (SLM helps only where MaxPressure
+        #          gridlocks), applied UNIFORMLY across topologies (not tuned per net).
+        self.gate_mode = gate_mode  # validated at the top of __init__
         # SOTA DELAY-AWARE myopic mode (default OFF -> byte-for-byte the queue-only
         # controller). When ON, decide() passes the agent a per-phase context with
         # queue + mean waiting time + current-phase marker (own-junction info only),
@@ -72,7 +86,9 @@ class HybridController(MaxPressureController):
             return mp_choice
 
         halting = [self.green_halting(st, gi) for gi in range(len(st["green"]))]
-        if sum(halting) < self.gate:  # event-gate: quiet -> shield only
+        quiet = (max(halting) < self.gate if self.gate_mode == "max"
+                 else sum(halting) < self.gate)
+        if quiet:  # congestion gate: below threshold -> shield only (defer to MaxPressure)
             self._served_ctx = {"tl": tl, "recorded": mp_choice, "event_index": None,
                                 "gate_skipped": True, "mp_choice": mp_choice,
                                 "slm_phase": None,

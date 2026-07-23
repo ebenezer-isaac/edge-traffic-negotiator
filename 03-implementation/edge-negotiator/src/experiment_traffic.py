@@ -200,7 +200,7 @@ def build_coordination(tls_ids, net_path: str = NET):
 
 def build_controller(conn, tls_ids, agent, *, config: str = "myopic", gate: int = 2,
                      min_green: int = DECISION_INTERVAL_S, yellow: int = 3,
-                     coordination: dict | None = None):
+                     coordination: dict | None = None, gate_mode: str = "sum"):
     """Build the shield-gated controller for one arm at a given config.
 
     ALL arms share the MaxPressure shield (SLM proposes, shield disposes,
@@ -218,13 +218,14 @@ def build_controller(conn, tls_ids, agent, *, config: str = "myopic", gate: int 
         raise ValueError(f"config must be one of {CONFIGS + ('sota',)}, got {config!r}")
     if config == "myopic":
         return HybridController(conn, tls_ids, agent, gate=gate,
-                                min_green=min_green, yellow=yellow)
+                                min_green=min_green, yellow=yellow, gate_mode=gate_mode)
     if config == "sota":
         # SOTA delay-aware MYOPIC (own-junction only): the queue-only myopic shield
         # plus the delay-aware agent context (waiting-time priority + switching
         # hysteresis). No coordination / no neighbour note.
         return HybridController(conn, tls_ids, agent, gate=gate,
-                                min_green=min_green, yellow=yellow, delay_aware=True)
+                                min_green=min_green, yellow=yellow, delay_aware=True,
+                                gate_mode=gate_mode)
     if coordination is None:
         raise ValueError(f"config {config!r} requires coordination scaffolding "
                          "(call build_coordination first)")
@@ -430,7 +431,7 @@ def coordination_stats(ctrl) -> dict | None:
 
 def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
             config: str = "myopic", net: str | None = None,
-            routes: str | None = None) -> dict:
+            routes: str | None = None, gate_mode: str = "sum") -> dict:
     """Run ONE controller arm end-to-end on a SUMO net; return its result dict.
 
     Live-gated on SUMO (imports traci/sumolib inside). Builds the config-appropriate
@@ -482,7 +483,7 @@ def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
             coordination = build_coordination(tls)
             identities = coordination["identities"]
         ctrl = build_controller(traci, tls, agent, config=config, gate=gate,
-                                coordination=coordination)
+                                coordination=coordination, gate_mode=gate_mode)
         while traci.simulation.getMinExpectedNumber() > 0 and step < end:
             traci.simulationStep()
             ctrl.step()

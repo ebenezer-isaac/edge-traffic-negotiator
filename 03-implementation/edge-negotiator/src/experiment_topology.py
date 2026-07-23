@@ -84,7 +84,7 @@ def _tls_count(net_path: str) -> int:
 
 
 def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2,
-        topologies=None, out_basename: str | None = None) -> dict:
+        topologies=None, out_basename: str | None = None, gate_mode: str = "sum") -> dict:
     tops = topologies if topologies is not None else _topologies()
     agents = {}
     for m in models:
@@ -114,7 +114,8 @@ def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2
             continue
         n_tls = _tls_count(top["net"])
         base = run_arm(f"top_{top['label']}_mp", NullAgent(), seed=seed, end=end,
-                       gate=gate, config="myopic", net=top["net"], routes=top["routes"])
+                       gate=gate, config="myopic", net=top["net"], routes=top["routes"],
+                       gate_mode=gate_mode)
         bm = base["metrics"]
         row = {"topology": top["label"], "structure": top["structure"], "tls": n_tls,
                "baseline": {"delay_s": bm["mean_network_delay_s"],
@@ -129,7 +130,7 @@ def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2
             timing = TimingAgent(agent, forward_note=False)
             slm = run_arm(f"top_{top['label']}_{m}", timing, seed=seed, end=end,
                           gate=gate, config="myopic", net=top["net"],
-                          routes=top["routes"])
+                          routes=top["routes"], gate_mode=gate_mode)
             v = verdict(base, slm)
             sm = slm["metrics"]
             row["models"][m] = {
@@ -148,6 +149,7 @@ def run(models=("qwen2.5-0.5b",), seed: int = 42, end: int = 1200, gate: int = 2
     result = {
         "experiment": "H1_multi_topology",
         "models": list(models), "seed": seed, "end": end,
+        "gate": gate, "gate_mode": gate_mode,
         "topologies": [t["label"] for t in tops],
         "cells": cells,
         "explanatory": _explain(cells, models),
@@ -330,6 +332,11 @@ def _parser():
     ap.add_argument("--out", default=None,
                     help="optional alternate results basename (avoids clobbering the "
                          "full multi-topology run's experiment_topology.json)")
+    ap.add_argument("--gate", type=int, default=2,
+                    help="congestion-gate threshold (default 2)")
+    ap.add_argument("--gate-mode", choices=("sum", "max"), default="sum",
+                    help="'sum' (total halting, default, phase-count-scaled) or 'max' "
+                         "(largest per-phase queue, topology-invariant congestion gate)")
     return ap
 
 
@@ -343,4 +350,4 @@ if __name__ == "__main__":
             raise SystemExit(f"no topology matched {sorted(want)}; "
                              f"known: {[t['label'] for t in _topologies()]}")
     run(models=tuple(ns.models), seed=ns.seed, end=ns.end, topologies=tops,
-        out_basename=ns.out)
+        out_basename=ns.out, gate=ns.gate, gate_mode=ns.gate_mode)

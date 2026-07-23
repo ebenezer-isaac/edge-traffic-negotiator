@@ -131,6 +131,53 @@ The takeaway is a scoped, honest capability claim: on-device SLM signal control 
 MaxPressure on delay AND throughput on real congested London arterials, and the size of the
 benefit tracks how badly MaxPressure gridlocks; it is not a universal replacement.
 
+### 6b. Can a congestion gate flip the grid regressions? (honest negative)
+
+The grid regressions come from the SLM firing on free-flowing nets where MaxPressure is
+already near-optimal. The hybrid already has a congestion gate (consult the SLM only above a
+queue threshold), but the default is on TOTAL halting, which scales with phase count and so
+under-gates grids. We added a topology-invariant `gate_mode="max"` (fire only when the
+LARGEST single-phase queue >= gate) and swept it. Result (`experiment_topology_gated.json`
+gate=5, `experiment_topology_gate12.json` gate=12; delay change vs each net's baseline):
+
+| Cell | ungated (sum,2) | max,5 | max,12 |
+|---|---|---|---|
+| Euston qwen2.5-0.5b | -25.3% clean | -14.4% clean | -11.4% clean |
+| Euston qwen3-0.6b | -15.1% clean | -22.9% clean | -19.5% clean |
+| Bloomsbury qwen2.5-0.5b | +5.0% reg | +6.9% reg | +7.3% reg |
+| Bloomsbury qwen3-0.6b | -1.8% clean | +1.1% match | +3.1% reg |
+| grid3x3 qwen2.5-0.5b | +60.3% reg | +55.1% reg | +44.6% reg |
+| grid3x3 qwen3-0.6b | +36.9% reg | +42.5% reg | +42.0% reg |
+| grid4x4 qwen2.5-0.5b | +112.4% reg | +94.9% reg | +76.4% reg |
+| grid4x4 qwen3-0.6b | +41.2% reg | +20.8% reg | +28.1% reg |
+
+**Honest verdict: the congestion gate does NOT overturn the verdicts.** Two reasons, both
+visible in the full sweep above:
+
+1. The grids are BUSY, not gridlocked: transient max-queues exceed even gate=12, so the SLM
+   keeps firing (grid4x4 still ~640 calls at gate=12) and still regresses at every gate (grid
+   cells span +28% to +76% at gate=12). The SLM's myopic per-junction decisions are
+   intrinsically worse than MaxPressure's on free-flowing grid coordination, independent of
+   firing frequency; a gate reduces the damage but never removes it.
+2. Gating has a MIXED effect on the genuine wins, not a uniform improvement: Euston
+   qwen2.5-0.5b decays (-25%->-14%->-11%) and Bloomsbury qwen3-0.6b degrades
+   (clean_win->match->regression), while Euston qwen3-0.6b actually improves at gate=5
+   (-15%->-23%) before falling back. Because the max-queue signal cannot tell a busy grid from
+   a gridlocked arterial (both carry standing queues), no single uniform gate value gives
+   "match-or-better everywhere" -- some real wins shrink while the grids still lose.
+
+**The actionable rule is net-level regime selection, not a per-tick gate -- with a caveat.**
+The direction that helps is: probe MaxPressure on the target net and prefer the SLM only where
+MaxPressure gridlocks. But teleports>0 is NECESSARY, not SUFFICIENT, and the choice is
+model-dependent: Bloomsbury has 105 baseline teleports yet qwen2.5-0.5b REGRESSES there (+5%
+to +7% at every gate) while qwen3-0.6b wins/matches. So a teleport probe alone does not
+guarantee match-or-better -- the safe deployment is per-(net, model) validation (run both
+controllers on a representative day and keep the SLM only where it demonstrably wins or
+matches). That still recovers match-or-better by construction (you do not deploy the SLM where
+it loses), but it is a validation protocol, not a one-line teleport threshold. The
+`gate_mode="max"` knob is retained as a tested, available softening, characterised here as a
+PARTIAL lever, not a fix. The regime-separation result of §6 stands unchanged.
+
 ### 6a. Newest-generation model check (qwen3.5)
 
 The Foundry Local catalog on the test machine contains no Kimi/Gemma (not served by this

@@ -520,8 +520,52 @@ def _num(x):
     return x if isinstance(x, (int, float)) else None
 
 
+def _bml(slm_val, base_val, *, lower_is_better: bool, band: float = 0.02):
+    """Classify SLM vs baseline as slm_beats / match / slm_loses on one metric.
+
+    ``band`` is the relative tie-window (2%). Returns (status, relative_change) where
+    relative_change = (slm - base)/base. For a lower-is-better metric (delay) a
+    negative change is good; for higher-is-better (throughput) a positive change is
+    good. A tie inside the band is 'match'."""
+    if slm_val is None or base_val is None:
+        return "indeterminate", None
+    rel = (slm_val - base_val) / base_val if base_val else float("inf")
+    if abs(rel) <= band:
+        return "match", rel
+    better = (slm_val < base_val) if lower_is_better else (slm_val > base_val)
+    return ("slm_beats" if better else "slm_loses"), rel
+
+
+def _joint_verdict(delay_status: str, thru_status: str) -> str:
+    """Combine the delay + throughput verdicts into an honest joint outcome.
+
+    MaxPressure is throughput-OPTIMAL by design, so the key question (Akin) is whether
+    a delay win quietly SACRIFICES throughput. Labels:
+      * clean_win  -- at least one metric beats and NEITHER loses (wins without a cost);
+      * trade_off  -- one metric beats but the other loses (an honest trade);
+      * match      -- both within the tie band;
+      * regression -- at least one loses and neither beats.
+    """
+    if "indeterminate" in (delay_status, thru_status):
+        return "indeterminate"
+    s = {delay_status, thru_status}
+    if "slm_beats" in s and "slm_loses" not in s:
+        return "clean_win"
+    if "slm_beats" in s and "slm_loses" in s:
+        return "trade_off"
+    if delay_status == "match" and thru_status == "match":
+        return "match"
+    return "regression"
+
+
 def verdict(baseline: dict, slm: dict | None) -> dict:
-    """Honest match/beat/lose on delay at THIS config (no significance claim)."""
+    """Honest joint verdict on DELAY and THROUGHPUT at this config (no significance).
+
+    ``status`` remains the DELAY verdict (slm_beats/match/slm_loses) for backward
+    compatibility with the sweep/sota consumers. Added: ``throughput_status`` (on
+    completed vehicles, higher is better) and ``joint_verdict`` (clean_win / trade_off
+    / match / regression) -- so a delay win is never reported without checking it did
+    not cost throughput (MaxPressure is throughput-optimal by design)."""
     if slm is None or slm.get("skipped"):
         return {"status": "no_comparison",
                 "reason": "SLM arm skipped (Foundry precondition unmet); baseline only"}
@@ -530,25 +574,27 @@ def verdict(baseline: dict, slm: dict | None) -> dict:
     bd, sd = _num(b.get("mean_network_delay_s")), _num(s.get("mean_network_delay_s"))
     if bd is None or sd is None:
         return {"status": "indeterminate", "reason": "a mean_network_delay is undefined (nobody departed?)"}
-    # Lower delay is better. 2% band = "match"; else beat/lose.
-    rel = (sd - bd) / bd if bd else float("inf")
-    if abs(rel) <= 0.02:
-        status = "match"
-    elif sd < bd:
-        status = "slm_beats"
-    else:
-        status = "slm_loses"
+    delay_status, rel = _bml(sd, bd, lower_is_better=True)
+    # Throughput = completed vehicles (arrival>=0); higher is better. Same net+demand+
+    # seed, so absolute completed counts are directly comparable.
+    bc, sc = _num(b.get("completed")), _num(s.get("completed"))
+    thru_status, thru_rel = _bml(sc, bc, lower_is_better=False)
     return {
-        "status": status,
+        "status": delay_status,               # DELAY verdict (unchanged contract)
         "metric": "mean_network_delay_s (lower is better)",
         "baseline_delay_s": bd,
         "slm_delay_s": sd,
         "slm_minus_baseline_s": sd - bd,
         "slm_relative_delay": rel,
-        "baseline_completed": b.get("completed"),
-        "slm_completed": s.get("completed"),
+        "baseline_completed": bc,
+        "slm_completed": sc,
+        "throughput_status": thru_status,      # on completed vehicles (higher is better)
+        "throughput_relative": thru_rel,
+        "throughput_completed_delta": (sc - bc) if (sc is not None and bc is not None) else None,
+        "joint_verdict": _joint_verdict(delay_status, thru_status),
         "note": ("SMOKE / PILOT: n=1, short horizon, DfT-daily-AADF demand -- "
-                 "descriptive only, NO significance/inferential claim (§8)."),
+                 "descriptive only, NO significance/inferential claim (§8). Delay AND "
+                 "throughput both reported; MaxPressure is throughput-optimal by design."),
     }
 
 

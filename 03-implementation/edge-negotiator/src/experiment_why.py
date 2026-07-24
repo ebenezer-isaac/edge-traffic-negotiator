@@ -126,8 +126,12 @@ def run(models=("qwen2.5-0.5b", "qwen3-0.6b"), seeds=(42, 7, 123), end=1200, gat
     mech = {"pearson_override_vs_delay": round(_pearson(ov, dl), 3) if _pearson(ov, dl) is not None else None,
             "spearman_override_vs_delay": round(_spearman(ov, dl), 3) if _spearman(ov, dl) is not None else None,
             "n_cells": len(ov),
-            "reading": ("higher override rate (SLM steering away from MaxPressure) going with a "
-                        "higher delay-change = the SLM's own divergence drives the loss.")}
+            "reading": ("Correlational only (per-cell mean override rate vs per-cell mean delay "
+                        "change, across all model x scenario cells): a POSITIVE value means cells "
+                        "where the SLM diverged from MaxPressure more often tend to show a larger "
+                        "delay change. Read strength from BOTH coefficients -- a large Pearson-"
+                        "minus-Spearman gap indicates the linear correlation is outlier-driven, "
+                        "not a monotone trend. Does not establish causation.")}
 
     result = {
         "experiment": "H1_why_multiseed",

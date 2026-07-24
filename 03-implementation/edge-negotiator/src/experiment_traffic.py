@@ -480,7 +480,10 @@ def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
             identities = {tl: JunctionIdentity(tl) for tl in tls}
         else:
             # Coordinated arms sign the audit with the controller's OWN identities.
-            coordination = build_coordination(tls)
+            # Derive adjacency from the ACTUAL net being simulated (net, not the default
+            # Euston NET) -- otherwise coordination/prediction on any other topology would
+            # use Euston's neighbour graph, which is wrong.
+            coordination = build_coordination(tls, net_path=net)
             identities = coordination["identities"]
         ctrl = build_controller(traci, tls, agent, config=config, gate=gate,
                                 coordination=coordination, gate_mode=gate_mode)

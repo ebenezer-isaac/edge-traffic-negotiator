@@ -41,18 +41,19 @@ def _agg(xs):
             "min": round(min(xs), 2), "max": round(max(xs), 2), "n": len(xs), "values": xs}
 
 
-def run(models=("qwen2.5-0.5b", "qwen3-0.6b"), seeds=(42, 7, 123), end=1200, gate=2) -> dict:
+def run(models=("qwen2.5-0.5b", "qwen3-0.6b"), seeds=(42, 7, 123), end=1200, gate=2,
+        out_name="experiment_why.json", exp_name="H1_why_multiseed") -> dict:
     tops = _topologies()
     agents = {m: _probe(m) for m in models}
     os.makedirs(RESULTS, exist_ok=True)
-    jp = os.path.join(RESULTS, "experiment_why.json")
+    jp = os.path.join(RESULTS, out_name)
 
     cells = []                       # per (topology) row
     anova_cells = {}                 # {(model, topology): [delay_rel per seed]}
     override_cells = {}              # {(model, topology): [override_rate per seed]}
 
     def _flush(partial_note):
-        out = {"experiment": "H1_why_multiseed", "models": list(models),
+        out = {"experiment": exp_name, "models": list(models),
                "seeds": list(seeds), "end": end, "gate": gate, "cells": cells,
                "note": partial_note}
         with open(jp, "w", encoding="utf-8") as fh:
@@ -134,7 +135,7 @@ def run(models=("qwen2.5-0.5b", "qwen3-0.6b"), seeds=(42, 7, 123), end=1200, gat
                         "not a monotone trend. Does not establish causation.")}
 
     result = {
-        "experiment": "H1_why_multiseed",
+        "experiment": exp_name,
         "models": list(models), "seeds": list(seeds), "end": end, "gate": gate,
         "cells": cells,
         "interaction_anova": anova_res,
@@ -176,5 +177,10 @@ if __name__ == "__main__":
     ap.add_argument("--models", nargs="*", default=["qwen2.5-0.5b", "qwen3-0.6b"])
     ap.add_argument("--seeds", nargs="*", type=int, default=[42, 7, 123])
     ap.add_argument("--end", type=int, default=1200)
+    ap.add_argument("--out", default="experiment_why.json",
+                    help="output filename under results/ (default: experiment_why.json)")
+    ap.add_argument("--exp-name", default="H1_why_multiseed",
+                    help="experiment label written into the JSON")
     ns = ap.parse_args()
-    run(models=tuple(ns.models), seeds=tuple(ns.seeds), end=ns.end)
+    run(models=tuple(ns.models), seeds=tuple(ns.seeds), end=ns.end,
+        out_name=ns.out, exp_name=ns.exp_name)

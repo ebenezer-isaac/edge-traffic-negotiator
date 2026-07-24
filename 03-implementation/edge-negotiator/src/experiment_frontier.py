@@ -108,6 +108,31 @@ def _warm_probe(agent, tries=6, sleep_s=8.0):
     return False, f"probe failed after {tries} tries: {last}"
 
 
+def _is_conn_error(detail: str) -> bool:
+    return "Connection" in (detail or "") or "APIConnection" in (detail or "")
+
+
+def _ensure_foundry():
+    """Revive a crashed/hung Foundry Local service and return the (possibly new) endpoint.
+
+    This hardware's Foundry service dies under sustained inference; on a connection failure we
+    restart it and re-discover the port so a crash mid-sweep self-heals instead of recording a
+    wall of false 'blocked' cells."""
+    import subprocess
+    for cmd in (["foundry", "service", "restart"], ["foundry", "service", "start"]):
+        try:
+            subprocess.run(cmd, timeout=90, capture_output=True)
+            break
+        except Exception:  # noqa: BLE001
+            continue
+    time.sleep(12)
+    try:
+        base, _ = discover_endpoint()
+        return base
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _baseline(label, net, routes, seed, end, gate):
     p = _baseline_path(label, seed)
     if os.path.exists(p):
@@ -134,8 +159,20 @@ def _run_cell(model, model_id, label, net, routes, config, seed, end, gate, base
         base, _ = discover_endpoint()
         agent = SLMAgent(base_url=base, model=model_id)
         ok, detail = _warm_probe(agent)
+        # Self-heal: if Foundry is unreachable, revive it and retry once with the fresh port.
+        if not ok and _is_conn_error(detail):
+            new_base = _ensure_foundry()
+            if new_base:
+                agent = SLMAgent(base_url=new_base, model=model_id)
+                ok, detail = _warm_probe(agent)
         rec["probe"] = detail
         if not ok:
+            # A persistent CONNECTION failure is Foundry-down, NOT a model verdict: DEFER
+            # (write no file) so a later pass re-attempts it. Only a real 400/unparseable/OOM
+            # is recorded as a blocked cell.
+            if _is_conn_error(detail):
+                rec.update({"status": "deferred", "reason": detail})
+                return rec
             rec.update({"status": "blocked", "reason": detail})
             with open(p, "w", encoding="utf-8") as fh:
                 json.dump(rec, fh, indent=2)
@@ -185,6 +222,7 @@ def sweep(models, configs=DEFAULT_CONFIGS, seeds=DEFAULT_SEEDS, end=DEFAULT_END,
     print(f"frontier sweep: {len(models)} models x {len(configs)} configs x {len(tops)} topologies "
           f"x {len(seeds)} seeds = {total} cells", flush=True)
     done = 0
+    deferred = 0
     for top in tops:
         label, net, routes = top["label"], top["net"], top["routes"]
         for s in seeds:
@@ -200,11 +238,14 @@ def sweep(models, configs=DEFAULT_CONFIGS, seeds=DEFAULT_SEEDS, end=DEFAULT_END,
                         continue
                     rec = _run_cell(m, mid, label, net, routes, cfg, s, end, gate, base_delay)
                     st = rec.get("status")
+                    if st == "deferred":
+                        deferred += 1
                     extra = (f"delay={rec.get('slm_delay_s',0):.1f}s rel={rec.get('delay_rel_pct')}% "
                              f"ovr={rec.get('override_rate')} p99={rec.get('latency_summary',{}).get('p99')}"
                              if st == "measured" else rec.get("reason", "")[:60])
                     print(f"    [{done}/{total}] {m:20s} {cfg:12s} {st:9s} {extra}", flush=True)
-    print("sweep pass complete", flush=True)
+    print(f"sweep pass complete (deferred={deferred})", flush=True)
+    return deferred
 
 
 def _agg(xs):
@@ -308,10 +349,20 @@ if __name__ == "__main__":
     ap.add_argument("--end", type=int, default=DEFAULT_END)
     ap.add_argument("--gate", type=int, default=DEFAULT_GATE)
     ap.add_argument("--aggregate", action="store_true", help="only roll up existing raw cells")
+    ap.add_argument("--max-passes", type=int, default=12,
+                    help="re-run passes until no cells are deferred (Foundry-down self-heal)")
     ns = ap.parse_args()
     if ns.aggregate:
         aggregate(seeds=tuple(ns.seeds), end=ns.end, gate=ns.gate)
     else:
         ms = ns.models if ns.models else list(CATALOG.keys())
-        sweep(ms, configs=tuple(ns.configs), seeds=tuple(ns.seeds), end=ns.end, gate=ns.gate)
-        aggregate(seeds=tuple(ns.seeds), end=ns.end, gate=ns.gate)
+        for pass_i in range(1, ns.max_passes + 1):
+            _ensure_foundry()  # make sure the service is up before each pass
+            print(f"===== PASS {pass_i}/{ns.max_passes} =====", flush=True)
+            deferred = sweep(ms, configs=tuple(ns.configs), seeds=tuple(ns.seeds),
+                             end=ns.end, gate=ns.gate)
+            aggregate(seeds=tuple(ns.seeds), end=ns.end, gate=ns.gate)
+            if not deferred:
+                print(f"all cells resolved after pass {pass_i}", flush=True)
+                break
+            print(f"pass {pass_i}: {deferred} cells deferred (Foundry-down); retrying", flush=True)

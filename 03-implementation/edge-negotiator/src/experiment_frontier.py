@@ -82,18 +82,28 @@ def _baseline_path(label, seed):
 
 
 def _warm_probe(agent, tries=6, sleep_s=8.0):
-    """Warm a possibly-cold model. NO latency skip: retry the well-formedness probe across
-    cold-load. Returns (ok, detail). Only a persistent malformed/blocked reply fails."""
+    """Warm a possibly-cold model. NO latency skip: retry across cold-load. Returns (ok, detail).
+
+    Makes a RAW chat call so the TRUE error surfaces (SLMAgent.choose_phase swallows exceptions
+    to None, which previously masked HTTP 400 = model-not-downloaded as 'malformed decision').
+    Fails FAST on a 400 (not on disk / not loadable in this runtime -- retrying wastes time);
+    retries on transient/connection/5xx (genuine cold-load)."""
     last = "no attempt"
     for i in range(tries):
         try:
-            agent.client.models.list()
-            out = agent.choose_phase("PROBE", 2, [8, 0])
-            if out is not None:
-                return True, f"probe ok on attempt {i + 1}"
-            last = "malformed decision (None)"
+            r = agent.client.chat.completions.create(
+                model=agent.model, temperature=0, max_tokens=48,
+                messages=[{"role": "system", "content": 'Reply ONLY JSON {"phase": <index>}.'},
+                          {"role": "user", "content": 'phase 0=8, phase 1=0. Reply {"phase": <index>}.'}])
+            content = (r.choices[0].message.content or "")
+            if agent.choose_phase("PROBE", 2, [8, 0]) is not None:
+                return True, f"probe ok attempt {i + 1}"
+            last = f"unparseable output: {content[:90]!r}"
         except Exception as exc:  # noqa: BLE001
-            last = f"{type(exc).__name__}: {str(exc)[:120]}"
+            code = getattr(exc, "status_code", None) or getattr(getattr(exc, "response", None), "status_code", None)
+            last = f"{type(exc).__name__}({code}): {str(exc)[:110]}"
+            if code == 400 or " 400" in str(exc) or "400 -" in str(exc):
+                return False, f"HTTP 400 (model not downloaded/loadable in this runtime): {last}"
         time.sleep(sleep_s)
     return False, f"probe failed after {tries} tries: {last}"
 

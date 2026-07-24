@@ -165,9 +165,13 @@ FLOW_WINDOW_S = 30.0
 PREDICT_WEIGHT = 1.0
 
 
-def build_coordination(tls_ids, net_path: str = NET):
+def build_coordination(tls_ids, net_path: str = NET, bus_factory=None):
     """Build the coordination scaffolding for a real net (identities + registry +
     signed bus + checker + derived adjacency/edge_map).
+
+    ``bus_factory`` (opt-in): callable (registry, adjacency) -> bus. Defaults to the honest
+    MessageBus. The H2 trust axis passes a LyingBus factory to inject insider-liar claims;
+    default None keeps behaviour byte-identical.
 
     Adjacency and the explicit ``(src,dst)->edge_id`` map are DERIVED from the real
     net via ``edge_map_from_net`` (chain mode: two TLS are neighbours iff a path of
@@ -188,7 +192,7 @@ def build_coordination(tls_ids, net_path: str = NET):
         registry.register(jid, ident.public_key)
     # The bus needs an adjacency for EVERY signalised junction (default empty).
     bus_adjacency = {jid: list(adjacency.get(jid, ())) for jid in tls_ids}
-    bus = MessageBus(registry, bus_adjacency)
+    bus = bus_factory(registry, bus_adjacency) if bus_factory else MessageBus(registry, bus_adjacency)
     return {
         "identities": identities,
         "registry": registry,
@@ -431,7 +435,8 @@ def coordination_stats(ctrl) -> dict | None:
 
 def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
             config: str = "myopic", net: str | None = None,
-            routes: str | None = None, gate_mode: str = "sum") -> dict:
+            routes: str | None = None, gate_mode: str = "sum",
+            liars: dict | None = None) -> dict:
     """Run ONE controller arm end-to-end on a SUMO net; return its result dict.
 
     Live-gated on SUMO (imports traci/sumolib inside). Builds the config-appropriate
@@ -483,7 +488,11 @@ def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
             # Derive adjacency from the ACTUAL net being simulated (net, not the default
             # Euston NET) -- otherwise coordination/prediction on any other topology would
             # use Euston's neighbour graph, which is wrong.
-            coordination = build_coordination(tls, net_path=net)
+            bus_factory = None
+            if liars:
+                from trust_injection import LyingBus
+                bus_factory = lambda r, a: LyingBus(r, a, liars=liars)  # noqa: E731
+            coordination = build_coordination(tls, net_path=net, bus_factory=bus_factory)
             identities = coordination["identities"]
         ctrl = build_controller(traci, tls, agent, config=config, gate=gate,
                                 coordination=coordination, gate_mode=gate_mode)
@@ -501,7 +510,7 @@ def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
 
     public_keys = {jid: ident.public_key for jid, ident in identities.items()}
     events = ctrl.events if ctrl is not None else []
-    return {
+    result = {
         "arm": arm,
         "config": config,
         "controller_model": getattr(agent, "model", "unknown"),
@@ -512,6 +521,13 @@ def run_arm(arm: str, agent, *, seed: int, end: int, gate: int = 2,
         "audit": audit_bundle(audit, public_keys),
         "tripinfo": tripinfo,
     }
+    if liars:
+        # H2 trust axis: expose the raw detection events (for offline TrustLedger replay) and
+        # the bus's lie-injection log so the caller can quantify caught-vs-uncaught insider lies.
+        result["events"] = events
+        bus_obj = coordination.get("bus") if coordination else None
+        result["lie_log"] = list(getattr(bus_obj, "lie_log", []))
+    return result
 
 
 # --------------------------------------------------------------------------- #

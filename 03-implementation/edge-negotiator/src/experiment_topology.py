@@ -52,6 +52,12 @@ def _topologies() -> list:
         {"label": "bloomsbury_grid", "structure": "REAL London grid (Bloomsbury WC1, 9 signals)",
          "net": os.path.join(_SUMO, "bloomsbury", "bloomsbury.net.xml"),
          "routes": os.path.join(_SUMO, "bloomsbury", "bloomsbury.rou.xml")},
+        {"label": "oldstreet_junction",
+         "structure": "REAL complex London junction (Old St EC1, 9 signals incl. a 5-arm/17-movement junction)",
+         "net": os.path.join(_SUMO, "oldstreet", "oldstreet.net.xml"),
+         # oldstreet_light.rou.xml = demand-calibrated (481 veh): the default randomTrips (1716)
+         # gridlocked this small dense junction (baseline 550s, 187 teleports). Light = 0 teleports.
+         "routes": os.path.join(_SUMO, "oldstreet", "oldstreet_light.rou.xml")},
         {"label": "grid3x3", "structure": "synthetic 3x3 grid (more routes)",
          "net": os.path.join(_SUMO, "grid3x3", "grid3x3.net.xml"),
          "routes": os.path.join(_SUMO, "grid3x3", "grid3x3.rou.xml")},

@@ -119,13 +119,13 @@ def _ensure_foundry():
     restart it and re-discover the port so a crash mid-sweep self-heals instead of recording a
     wall of false 'blocked' cells."""
     import subprocess
-    for cmd in (["foundry", "service", "restart"], ["foundry", "service", "start"]):
-        try:
-            subprocess.run(cmd, timeout=90, capture_output=True)
-            break
-        except Exception:  # noqa: BLE001
-            continue
-    time.sleep(12)
+    # Only `start` -- it returns fast whether the service is down or already up. `restart` hangs
+    # on this runtime (spawns detached children that wedge subprocess pipes), so never call it here.
+    try:
+        subprocess.run(["foundry", "service", "start"], timeout=40, capture_output=True)
+    except Exception:  # noqa: BLE001
+        pass
+    time.sleep(8)
     try:
         base, _ = discover_endpoint()
         return base
@@ -215,9 +215,11 @@ def _run_cell(model, model_id, label, net, routes, config, seed, end, gate, base
     return rec
 
 
-def sweep(models, configs=DEFAULT_CONFIGS, seeds=DEFAULT_SEEDS, end=DEFAULT_END, gate=DEFAULT_GATE):
+def sweep(models, configs=DEFAULT_CONFIGS, seeds=DEFAULT_SEEDS, end=DEFAULT_END, gate=DEFAULT_GATE,
+          topologies=None):
     os.makedirs(RAW, exist_ok=True)
-    tops = [t for t in _topologies() if os.path.exists(t["net"]) and os.path.exists(t["routes"])]
+    tops = [t for t in _topologies() if os.path.exists(t["net"]) and os.path.exists(t["routes"])
+            and (topologies is None or t["label"] in topologies)]
     total = len(models) * len(configs) * len(tops) * len(seeds)
     print(f"frontier sweep: {len(models)} models x {len(configs)} configs x {len(tops)} topologies "
           f"x {len(seeds)} seeds = {total} cells", flush=True)
@@ -345,6 +347,8 @@ if __name__ == "__main__":
                     help="model aliases (default: entire <=6GB CATALOG, smallest first)")
     ap.add_argument("--configs", nargs="*", default=list(DEFAULT_CONFIGS),
                     help="prompting configs (myopic sota coordination prediction)")
+    ap.add_argument("--topologies", nargs="*", default=None,
+                    help="restrict to these topology labels (default: all)")
     ap.add_argument("--seeds", nargs="*", type=int, default=list(DEFAULT_SEEDS))
     ap.add_argument("--end", type=int, default=DEFAULT_END)
     ap.add_argument("--gate", type=int, default=DEFAULT_GATE)
@@ -360,7 +364,7 @@ if __name__ == "__main__":
             _ensure_foundry()  # make sure the service is up before each pass
             print(f"===== PASS {pass_i}/{ns.max_passes} =====", flush=True)
             deferred = sweep(ms, configs=tuple(ns.configs), seeds=tuple(ns.seeds),
-                             end=ns.end, gate=ns.gate)
+                             end=ns.end, gate=ns.gate, topologies=ns.topologies)
             aggregate(seeds=tuple(ns.seeds), end=ns.end, gate=ns.gate)
             if not deferred:
                 print(f"all cells resolved after pass {pass_i}", flush=True)

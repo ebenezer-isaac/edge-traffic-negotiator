@@ -334,6 +334,50 @@
     </div>
   </section>
 
+  <!-- 08 FIXED-TIME FLOOR -->
+  <section>
+    <div class="panel">
+      <div class="head"><h2><span class="n">08</span>The baseline matters &mdash; MaxPressure is weak on real London geometry</h2>
+        <p>A naive <strong>fixed-time</strong> floor (SUMO default signal programs) added as a second baseline. n=3 seeds; independently re-verified by adversarial recomputation.</p></div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Topology</th><th>Type</th><th>MaxPressure vs fixed-time</th><th>Best SLM vs fixed-time floor</th></tr></thead>
+        <tbody>
+          <tr><td>Euston A501</td><td>real arterial</td><td class="num"><span class="chip lose">+15.4% MP worse</span></td><td class="num"><span class="chip beat">&minus;16.1%</span></td></tr>
+          <tr><td>Old Street EC1</td><td>real complex junction</td><td class="num"><span class="chip lose">+5.4% MP worse</span></td><td class="num"><span class="chip beat">&minus;14.0%*</span></td></tr>
+          <tr><td>Bloomsbury WC1</td><td>real London grid</td><td class="num"><span class="chip lose">+2.9% MP worse</span></td><td class="num"><span class="chip beat">&minus;2.1%</span></td></tr>
+          <tr><td>grid3&times;3</td><td>synthetic</td><td class="num"><span class="chip beat">&minus;19.1% MP better</span></td><td class="num"><span class="chip beat">&minus;21.4%</span></td></tr>
+          <tr><td>grid4&times;4</td><td>synthetic</td><td class="num"><span class="chip beat">&minus;27.0% MP better</span></td><td class="num"><span class="chip beat">&minus;27.8%</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="note" style="margin-top:10px"><strong>The finding:</strong> MaxPressure's throughput-optimality does <em>not</em> transfer to irregular real London geometry &mdash; on every real net it is <strong>worse than plain fixed-time</strong> (Euston +15%); it only dominates on the synthetic grids it was designed for. So the SLM's headline "&minus;26% vs MaxPressure" on Euston partly reflects MaxPressure's own weakness there. Measured against the naive <strong>fixed-time floor</strong>, the honest, baseline-proof result is that the SLM beats the floor on <strong>every</strong> topology (&minus;2% to &minus;28%). Both baselines are now reported; a trained deep-RL controller (SOTA) remains scoped future work.
+      <br>*Old Street at n=3 is seed-noise-dominated (its MaxPressure baseline itself swings 138&ndash;210s across 3 seeds), so its figure is directional only &mdash; the powered n=30 run is required there.</p>
+    </div>
+  </section>
+
+  <!-- 09 DECISION BATTERY -->
+  <section>
+    <div class="panel">
+      <div class="head"><h2><span class="n">09</span>Cloud vs on-device per-decision quality &mdash; and the closed-loop paradox</h2>
+        <p>80 identical junction states sampled from the real scenarios; agreement with the delay-optimal move. Claude models run via in-session subagents (no API for closed-loop).</p></div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Model</th><th>Class</th><th>Agreement with delay-optimal</th></tr></thead>
+        <tbody>
+          <tr><td>Claude Sonnet</td><td>cloud frontier</td><td class="num"><span class="chip beat">96%</span></td></tr>
+          <tr><td>Claude Opus</td><td>cloud frontier</td><td class="num"><span class="chip beat">94%</span></td></tr>
+          <tr><td>Claude Haiku</td><td>cloud frontier</td><td class="num"><span class="chip beat">92%</span></td></tr>
+          <tr><td>phi-4-mini</td><td>on-device</td><td class="num">72%</td></tr>
+          <tr><td>qwen2.5-0.5b</td><td>on-device</td><td class="num"><span class="chip lose">56%</span></td></tr>
+          <tr><td>qwen3-1.7b / qwen3-0.6b</td><td>on-device</td><td class="num"><span class="chip lose">~51%</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="note" style="margin-top:10px"><strong>The paradox:</strong> cloud models reason far better per-decision (92&ndash;96%) than the on-device SLMs (51&ndash;72%), yet <strong>qwen3-1.7b is near-chance per-decision (51%) and still won Euston closed-loop (&minus;26%)</strong>. Per-decision quality does <em>not</em> predict closed-loop performance &mdash; the SLM's value is <strong>systemic</strong> (the hybrid SLM + MaxPressure shield + event-gating), not raw single-junction reasoning.</p>
+    </div>
+  </section>
+
   <!-- H2 TRUST -->
   <section>
     <div class="head"><div class="eyebrow">H2 &middot; Trust (the tamper-evident audit)</div></div>

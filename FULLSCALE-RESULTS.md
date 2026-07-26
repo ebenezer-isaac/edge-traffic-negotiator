@@ -213,3 +213,76 @@ catalog. Honest status:
   (randomTrips / measured-magnitude subsample), not vehicle-by-vehicle real counts.
 - The crash-law output is a cited evidence pack for a human adjudicator, not a binding legal
   verdict.
+
+## 8. Frontier sweep: model × config × topology, a fixed-time floor, and a decision battery
+
+A wider sweep of every Foundry-servable model as the SLM controller, across all topologies and
+prompting configs, with two new comparators the earlier chapter lacked: a **naive fixed-time
+floor** and a **cloud-vs-local per-decision battery**. All results here are n=3, DfT
+daily-resolution demand (§8): descriptive/exploratory, not powered.
+
+### 8.1 The model × topology matrix (report PER MAP, never pooled)
+
+Seven servable models (the 6 GB Foundry card caps the ladder at ~4 B — 7 B-class and qwen3-8b
+OOM-crash the runtime, and the qwen3.5/VL variants fail to load; both recorded in
+`results/frontier_vram_ceiling.json`) × {myopic, sota, coordination, prediction} × 5 topologies ×
+seeds {42, 7, 123}. Best SLM per map (myopic, vs MaxPressure): **Euston qwen3-1.7b −26%**,
+Bloomsbury coder-0.5b −5%, Old Street qwen2.5-1.5b −18% (but see §8.3), synthetic grids ~neutral
+with **phi-4-mini the most robust** across topologies. Pooling across maps is a Simpson's-paradox
+trap (the corridor win and the grid blow-ups average to a meaningless mean), so every claim is
+conditioned on topology.
+
+### 8.2 Fixed-time floor: MaxPressure is only strong on the synthetic grids it was designed for
+
+Adding the naive fixed-time baseline (`experiment_fixedtime.py`, SUMO default TLS programs) is the
+most important rigour addition, and it flips the framing. MaxPressure vs fixed-time (negative =
+MaxPressure better):
+
+| Topology | MaxPressure vs fixed-time |
+|---|---|
+| grid4×4 (synthetic) | −27% (MP much better) |
+| grid3×3 (synthetic) | −19% (MP much better) |
+| Bloomsbury (real) | **+3% (MP worse)** |
+| Old Street (real) | **+5% (MP worse; seed 7 +37%)** |
+| Euston (real, main map) | **+15% (MP worse than fixed-time)** |
+
+MaxPressure's throughput-optimality does **not** transfer to irregular real London geometry — on
+every real topology it is *worse than naive fixed-time*; it only dominates on the regular
+synthetic grids. Consequence: the SLM's "−26% vs MaxPressure" on Euston is partly MaxPressure's
+own weakness there. Measured against the **fixed-time floor**, the honest, baseline-proof result
+is that the SLM beats the naive floor on **every** topology: Euston −16%, Bloomsbury −2%,
+Old Street −14% (seed-noisy), grid3×3 −21%, grid4×4 −28%. Both baselines are now reported; the
+SLM wins over the naive floor everywhere, and over the strong adaptive baseline specifically where
+that baseline breaks down (real roads).
+
+### 8.3 Old Street complex junction: real hard-case, but n=3 is uninterpretable there
+
+A real EC1 junction (`oldstreet_junction`: 9 signals including a single 5-arm/17-movement junction,
+extracted from OSM, demand-calibrated to 481 veh after the default randomTrips gridlocked it). At
+n=3 it cannot rank models: the MaxPressure baseline itself swings **138–210 s across three seeds**,
+and the SLM's apparent "improvement" is dominated by how badly MaxPressure happened to do that seed
+(seed 7 MaxPressure gridlocks at 210 s → every model looks ~−30 %; seed 123 MaxPressure fine at
+138 s → every model looks +10 %). The junction sits near a congestion tipping point, so relative
+improvement at low n is baseline noise. This is the concrete evidence for the powered n=30 run.
+
+### 8.4 Cloud-vs-local decision battery, and the closed-loop paradox
+
+On 80 identical junction states, agreement with the delay-optimal heuristic: **Claude Sonnet 96 % /
+Opus 94 % / Haiku 92 %** ≫ local **phi-4-mini 72 % > qwen2.5-0.5b 56 % > qwen3-1.7b / qwen3-0.6b
+~51 %** (near chance on 2-phase junctions). Cloud frontier models are far better *per-decision*
+reasoners. Yet **qwen3-1.7b is near-chance per-decision and still won Euston closed-loop (−26 %)** —
+so per-decision quality does **not** predict closed-loop performance. The SLM's value is *systemic*
+(the hybrid SLM + MaxPressure shield + event-gating), not raw single-junction reasoning. (Claude
+cannot be run closed-loop in this environment: no API key, and the SUMO subprocess cannot call the
+agent loop per decision, so this is an open-loop decision battery, stated as such.)
+
+### 8.5 Honest limitations for §8
+
+- n = 3 seeds (descriptive; a powered n = 30 run on Euston + Old Street is the next step).
+- Demand temporal profile is assumed (DfT daily-AADF magnitude; a TfL FOI is filed for SCOOT
+  flows / signal timings / turning counts, and the DfT hourly API is the free instant partial fix).
+- Model ladder capped at ~4 B by the 6 GB Foundry card (a hard requirement: this is research *for*
+  Microsoft, so Foundry Local is non-negotiable).
+- Comparators are classical (fixed-time floor + MaxPressure), **not** trained deep-RL SOTA
+  (CoLight / MPLight / SCOOT-SCATS). The contribution is on-device feasibility + auditability at
+  parity-with-a-strong-classical-baseline; RL SOTA comparison is scoped future work.

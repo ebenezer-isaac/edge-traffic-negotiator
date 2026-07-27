@@ -1,0 +1,15 @@
+{
+  "model": "qwen2.5-1.5b",
+  "model_id": "qwen2.5-1.5b-instruct-generic-gpu:4",
+  "topology": "euston_corridor",
+  "seed": 123,
+  "config": "coordination",
+  "end": 1200,
+  "gate": 2,
+  "baseline_delay_s": 337.9548611111111,
+  "probe": "probe ok attempt 1",
+  "status": "error",
+  "reason": "MetricsError: duplicate vehicle id '160' in tripinfo",
+  "traceback": "Traceback (most recent call last):\n  File \"E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\src\\experiment_frontier.py\", line 146, in _run_cell\n    json.dump({\"topology\": label, \"seed\": seed, \"mean_network_delay_s\": d,\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n               \"metrics\": b[\"metrics\"], \"decision_stats\": b.get(\"decision_stats\")}, fh, indent=2)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\src\\experiment_traffic.py\", line 509, in run_arm\n    pass\n    \n  File \"E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\src\\experiment_traffic.py\", line 376, in metrics_from_tripinfo\n    completed = arrival>=0 (metrics.throughput), NEVER len(tripinfo). mean delay =\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"E:\\assignments\\edge-traffic-negotiator\\03-implementation\\edge-negotiator\\src\\metrics.py\", line 211, in parse_tripinfo\n    raise MetricsError(f\"duplicate vehicle id {veh_id!r} in tripinfo\")\nmetrics.MetricsError: duplicate vehicle id '160' in tripinfo\n",
+  "wall_clock_s": 1153.83
+}

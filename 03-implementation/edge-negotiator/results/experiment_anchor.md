@@ -3,7 +3,7 @@
 **Mechanism: PASS**  |  D-anchor status: **MECHANISM_PASS_NOT_EXTERNALLY_ANCHORED**
 
 - Batch entries: 12  |  label: `euston-batch-0`
-- Salted root: `8f1f71820d89aca074fc...`  (unsalted: `4d54e829fd607db54575...` -- differ: True)
+- Salted root: `8b8d11ac4028a6d7b43a...`  (unsalted: `e5387ea45f6a6ced4355...` -- differ: True)
 
 ## Salted completeness (reveals no fingerprint)
 
@@ -20,7 +20,7 @@
 ## External witnesses (attempted)
 
 - Besu ledger: SKIP -- Besu RPC http://127.0.0.1:8545 not reachable (node not running). Start it: docker compose -f .qbft-spike/docker-compose.yml up -d
-- Rekor: {'url': 'https://rekor.sigstore.dev/api/v1/log', 'tree_size': 2099218962, 'root_hash': '3c00de56a3b66180', 'write': 'WITHHELD (would permanently publish to the public log)'}
+- Rekor: {'url': 'https://rekor.sigstore.dev/api/v1/log', 'tree_size': 2239922579, 'root_hash': 'b127f74c62540c49', 'write': 'WITHHELD (would permanently publish to the public log)'}
 - Public writes performed: 0  |  externally anchored: **False**
 
 ## Honest label

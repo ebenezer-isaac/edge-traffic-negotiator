@@ -8,7 +8,7 @@
 ## Verification the reconstruction stands on
 
 - verify_chain: **True**  |  verify_signatures: **True**  |  entries: 12
-- Merkle completeness commitment: root `b966f2dbe7f73511...`, sample inclusion proof valid: **True**
+- Merkle completeness commitment: root `21ca3e487ba3a612...`, sample inclusion proof valid: **True**
 - External quorum anchor + cross-auditor: DEFERRED to D-anchor (>=2 witnesses: Rekor + ledger RPC) -- live step, not this demo
 
 ## WHAT happened (executed-phase sequence)

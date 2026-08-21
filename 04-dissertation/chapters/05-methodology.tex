@@ -93,6 +93,14 @@ compiled one in quantisation recipe even when healthy. Holding the
 compilation pipeline fixed isolates the single manipulated variable ---
 the fine-tuned weights.
 
+One model class is excluded by measurement rather than swept:
+phi-4-mini-reasoning's p99 decision latency (9.7\,s) consumes the entire
+10\,s decision interval on this hardware, so closed-loop cells would
+measure a controller acting on stale state; it is recorded as
+latency-excluded (its single corridor probe is retained descriptively)
+--- itself a deployability finding about reasoning-class models at the
+edge.
+
 Two further controls target specific hypotheses. A \textbf{leave-one-topology-out}
 (LOTO) student, trained with all Old Street states removed, tests whether
 distillation gains are topology memorisation. Four \textbf{format-specialist}

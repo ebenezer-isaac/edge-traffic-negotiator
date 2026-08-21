@@ -5,7 +5,7 @@
 I present results in the order the evidence was built: the baseline landscape
 that reframed the project (\S\ref{sec:res-maxpressure}), the base-model
 factorial (\S\ref{sec:res-factorial}), the offline distillation tables
-(\S\ref{sec:res-offline}), the closed-loop verdict
+(\S\ref{sec:res-offline}), the closed-loop outcome
 (\S\ref{sec:res-closedloop}), the authorship finding this dissertation
 headlines (\S\ref{sec:res-authorship}), the audit and trust results
 (\S\ref{sec:res-audit}, \S\ref{sec:res-trust}), and the serving-reliability
@@ -145,7 +145,7 @@ with waiting-time state the myopic prompt hides, an Orca-style label-only
 distillation cost \cite{mukherjee2023orca} disclosed as a design property,
 not noise.
 
-\section{Closed-loop verdict: delay decouples from accuracy}\label{sec:res-closedloop}
+\section{Closed-loop outcome: delay decouples from accuracy}\label{sec:res-closedloop}
 Table~\ref{tab:closedloop-full} reports the Qwen3-0.6B closed-loop sweep:
 fine-tuned (ft) versus identically-compiled stock, three topologies
 $\times$ 30 training-disjoint seeds, paired per-seed against fixed-time.
@@ -247,6 +247,43 @@ served decisions to the fallback policy; the same audit over the distilled
 deployment attributes them to the certified, versioned model the operator
 can retrain and re-certify. Causal accountability is what moved, and it
 moved by a factor of four.
+
+\section{Failure forensics: the audit layer explains the tail}\label{sec:res-forensics}
+The audit architecture's value shows most clearly when control fails. Across
+all 270 closed-loop cells, 14 (5.2\%) are catastrophic (delay
+$\ge{+}20\%$ vs baseline) --- and every one of their signed decision chains
+verifies, so each failure has a provable record to interrogate. Three
+findings emerge from that interrogation.
+
+First, \finding{failures are a controller property, not seed hardness}: the
+catastrophic seeds are baseline-easy or median demand realisations (baseline
+delay ranks 1--20 of $\sim$35, never the hard tail), and no seed breaks all
+three arms.
+
+Second, the two failure regimes have different, attributable mechanisms. The
+stock model's five failures are its own served decisions: in the worst cell
+(Euston s13, $+110.3\%$), the verified chain shows 214 of 335 decisions
+SLM-authored with 119 divergent proposals served (override 0.556), zero
+shield fallbacks, and anti-starvation at its normal rate --- the scaffold
+did not cause the collapse, the model's policy did, and the chain proves it.
+The same-seed fine-tuned arms sit at $+1.1\%$ and $+5.5\%$.
+
+Third, \finding{the two fine-tuned students fail as near-clones}: qwen-ft
+and phi-ft share all four of their catastrophic (topology, seed) pairs with
+per-seed relative delay matching to $\pm$0.2 points and near-identical
+decision compositions. Two independently trained students --- different
+architectures, $6\times$ apart in scale --- converged onto effectively the
+same policy, which is the behavioural face of the saturation finding: the
+distillation ceiling is not just an accuracy ceiling but a policy
+attractor. Their remaining failures are policy$\times$realisation
+mismatches invisible in aggregate statistics, exposed only by the
+seed-matched baseline pairing.
+
+One honest gap: this campaign persisted aggregate decision statistics per
+cell, not per-step audit records, so \emph{when} within a run the
+divergence concentrated is unrecoverable here; the per-step chain is
+retained in the dedicated accident-suite runs (\S\ref{sec:res-audit}).
+Full tables in \texttt{results/failure\_forensics.md}.
 
 \section{Audit and crash reconstruction}\label{sec:res-audit}
 The audit layer was evaluated on seven pre-defined collision scenarios

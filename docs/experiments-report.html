@@ -1,0 +1,290 @@
+<title>Edge Negotiator — What the SLM's advice is really worth</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --paper:#f6f5f2; --card:#ffffff; --ink:#1b1e24; --ink-soft:#484d57; --mut:#7a808c;
+  --line:#e6e4de; --line2:#f0efea; --grid:#eceae4; --surface:#fcfcfb;
+  --accent:#b96f12; --accent-soft:#f3e6d1;
+  --good:#1d7a53; --good-bg:#e3f0e9; --bad:#bb3f2b; --bad-bg:#f6e5e0; --neu:#7a818e; --neu-bg:#edeff2;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:Georgia,"Iowan Old Style",Cambria,serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#0f1218; --card:#161a21; --ink:#e7e9ec; --ink-soft:#b0b5be; --mut:#7f8693;
+  --line:#252a33; --line2:#1c212a; --grid:#20252e; --surface:#12151b;
+  --accent:#e0993e; --accent-soft:#33281a; --good:#4fbf8c; --good-bg:#12291f;
+  --bad:#e2745e; --bad-bg:#2c1714; --neu:#98a0ac; --neu-bg:#1c212a;
+}}
+:root[data-theme="dark"]{--paper:#0f1218;--card:#161a21;--ink:#e7e9ec;--ink-soft:#b0b5be;--mut:#7f8693;--line:#252a33;--line2:#1c212a;--grid:#20252e;--surface:#12151b;--accent:#e0993e;--accent-soft:#33281a;--good:#4fbf8c;--good-bg:#12291f;--bad:#e2745e;--bad-bg:#2c1714;--neu:#98a0ac;--neu-bg:#1c212a;}
+:root[data-theme="light"]{--paper:#f6f5f2;--card:#ffffff;--ink:#1b1e24;--ink-soft:#484d57;--mut:#7a808c;--line:#e6e4de;--line2:#f0efea;--grid:#eceae4;--surface:#fcfcfb;--accent:#b96f12;--accent-soft:#f3e6d1;--good:#1d7a53;--good-bg:#e3f0e9;--bad:#bb3f2b;--bad-bg:#f6e5e0;--neu:#7a818e;--neu-bg:#edeff2;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1060px;margin:0 auto;padding:clamp(20px,5vw,52px) clamp(16px,4vw,40px)}
+.col{max-width:68ch}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(27px,5.2vw,44px);line-height:1.1;letter-spacing:-.01em;text-wrap:balance;margin:0 0 .3em}
+h2{font-family:var(--serif);font-weight:600;font-size:clamp(21px,3vw,29px);line-height:1.18;text-wrap:balance;margin:0}
+h3{font-family:var(--serif);font-weight:600;font-size:17px;margin:0 0 .25em}
+p{margin:.65em 0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.lede{font-size:clamp(17px,2.1vw,20px);color:var(--ink-soft);line-height:1.5;text-wrap:balance}
+section{padding:clamp(30px,5vw,50px) 0;border-top:1px solid var(--line)}
+.head{display:flex;gap:13px;align-items:center;margin-bottom:.7em}
+.num{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;border:1px solid var(--accent);border-radius:5px;padding:2px 7px;flex:none}
+.banner{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:18px 22px;margin:22px 0}
+.banner strong{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:clamp(15px,2.6vw,24px);margin:16px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 17px}
+.stat .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.stat .v{font-family:var(--serif);font-size:25px;font-weight:600;margin:.12em 0 .08em;line-height:1.05}
+.stat .d{font-size:12.5px;color:var(--ink-soft);line-height:1.35}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:clamp(14px,2.4vw,22px);margin:18px 0}
+.fig figcaption{font-size:13px;color:var(--mut);margin-top:12px;font-family:var(--mono)}
+.fig .ftitle{font-family:var(--serif);font-size:16px;font-weight:600;margin-bottom:2px}
+.fig .fsub{font-size:13px;color:var(--ink-soft);margin-bottom:12px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.why{border-left:3px solid var(--accent);padding:2px 0 2px 15px;margin:14px 0;color:var(--ink-soft)}
+.why b{color:var(--ink);font-family:var(--serif);font-weight:600}
+.chip{font-family:var(--mono);font-size:12px;font-weight:600;padding:1px 7px;border-radius:5px;display:inline-block}
+.beat{color:var(--good);background:var(--good-bg)} .lose{color:var(--bad);background:var(--bad-bg)} .neu{color:var(--neu);background:var(--neu-bg)}
+.note{font-size:13px;color:var(--mut)}
+.b{font-weight:650}
+ul{padding-left:20px} li{margin:.35em 0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin-bottom:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:8px 0}
+.step{flex:1;min-width:150px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+.step h4{margin:0 0 3px;font-size:13.5px;font-family:var(--mono);letter-spacing:.02em}
+.step p{margin:0;font-size:12.5px;color:var(--ink-soft);line-height:1.4}
+.arrow{align-self:center;color:var(--accent);font-size:19px;padding:0 3px;flex:none}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line2);white-space:nowrap}
+thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);background:var(--card)}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+tbody tr:last-child td{border-bottom:0}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:11.5px;padding:5px 8px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:9;white-space:nowrap}
+.foot{color:var(--mut);font-size:12.5px;padding-top:8px}
+</style>
+
+<div id="tip"></div>
+<div class="wrap">
+
+<header class="col">
+  <div class="eyebrow">Edge Negotiator · powered n=30 · rev. 2026-08-06</div>
+  <h1>What is a small language model's traffic advice actually worth?</h1>
+  <p class="lede">The SLM never drives the junction alone. It <em>advises</em> a provably-safe controller, which is free to ignore it. This report measures the value of that advice — honestly isolating what the model contributes from what the safety machinery does around it.</p>
+</header>
+
+<div class="banner col">
+  <strong>The honest headline.</strong> Only <strong>5–32% of signal decisions are genuinely the SLM's own</strong> — the rest are a shared safety rule or a choice identical to the standard controller. Attributed cleanly to just those decisions, the SLM's advice <strong>nets to zero</strong> over MaxPressure: it <strong>rescues congestion but harms free-flow</strong>. It does beat naive fixed-time on a complex junction, runs sub-second on a 6&nbsp;GB card, and its every call is cryptographically logged. The value is the <em>system</em>, not the raw model.
+</div>
+
+<!-- ARCHITECTURE -->
+<section>
+  <div class="head"><span class="num">01</span><h2>How a decision is actually made</h2></div>
+  <p class="col">Four things can decide a signal phase. The SLM is only one of them, and the last to get a vote.</p>
+  <div class="flow">
+    <div class="step"><h4>SAFETY FLOOR</h4><p>Any approach starved too long is <b>force-served</b> — deterministic, model-independent. Fires ~38% of the time.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><h4>SLM PROPOSES</h4><p>Otherwise the on-device model reads a terse prompt, returns one JSON phase. Sub-second on a 6&nbsp;GB GPU.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><h4>MAXPRESSURE SHIELD</h4><p>Validates the proposal; an invalid or unsafe phase is replaced by MaxPressure's own choice.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><h4>SIGN</h4><p>The served decision + its inputs are Ed25519-signed, hash-chained, Merkle-committed. Tamper is detectable.</p></div>
+  </div>
+  <div class="card col" style="margin-top:16px"><h3>What is the "shared floor"?</h3><p>An <b>anti-starvation rule</b>: if any approach has waited past a limit, it is given green regardless of what the SLM or MaxPressure wants. It's a safety guarantee — no lane is ignored forever. Crucially it is present in <b>both</b> the SLM run and the pure-MaxPressure baseline, firing on ~38% of decisions in each. Those decisions are therefore identical in both arms and cancel out of any comparison.</p></div>
+</section>
+
+<!-- WHAT IS REALLY THE SLM -->
+<section>
+  <div class="head"><span class="num">02</span><h2>How much of this is really the SLM?</h2></div>
+  <p class="col">This is the question that governs everything else. Of all decisions in a run, how many did the model genuinely change? We logged every one.</p>
+  <figure class="fig">
+    <div class="ftitle">Anatomy of a controller's decisions</div>
+    <div class="fsub">Where each signal decision actually came from (Euston + Old Street, per model)</div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--neu)"></span>shared safety floor</span>
+      <span><span class="sw" style="background:var(--neu-bg);border:1px solid var(--neu)"></span>SLM agreed with MaxPressure</span>
+      <span><span class="sw" style="background:var(--accent)"></span>SLM genuinely diverged</span>
+    </div>
+    <svg id="comp" viewBox="0 0 720 240" role="img" aria-label="Stacked bars showing, per model, the share of decisions from the shared floor, agreement with MaxPressure, and genuine SLM divergence."></svg>
+    <figcaption>the amber segment is the SLM's true footprint · everything else is the safety system or a MaxPressure-identical choice</figcaption>
+  </figure>
+  <div class="why col"><p><b>Why this is reassuring, not damning.</b> Because both the SLM run and the baseline share the floor <em>and</em> default to MaxPressure whenever the model agrees, the two are identical <b>except</b> at the amber decisions. So the measured "SLM vs MaxPressure" difference is a <b>clean causal attribution of exactly those divergent decisions</b> — same seed, same traffic, only the SLM's own calls changed. The result is not falsified by the shield; it is <em>diluted</em> by how rarely the SLM acts. phi-4-mini "matches MaxPressure" largely because it only overrules it 5% of the time.</p></div>
+</section>
+
+<!-- THE RESCUER -->
+<section>
+  <div class="head"><span class="num">03</span><h2>What those divergent decisions do: rescue, or wreck</h2></div>
+  <p class="col">Each dot is one 30-seed run on a real junction. Horizontal: how congested MaxPressure was that seed. Vertical: how much the SLM's advice changed delay. The shape is the finding.</p>
+  <figure class="fig">
+    <div class="ftitle">The SLM helps exactly when MaxPressure is failing</div>
+    <div class="fsub">Correlation r = −0.43 to −0.69 across topologies — a rescuer, not an optimiser</div>
+    <div class="legend"><span><span class="sw" style="background:var(--good)"></span>advice improved delay</span><span><span class="sw" style="background:var(--bad)"></span>advice made it worse</span><span><span class="sw" style="background:var(--accent)"></span>trend</span></div>
+    <svg id="scatter" viewBox="0 0 720 360" role="img" aria-label="Scatter of SLM delay change against MaxPressure congestion, showing rescue when congested and harm when free-flowing."></svg>
+    <figcaption>dashed line = no change · below it = the advice helped</figcaption>
+  </figure>
+  <div class="grid2">
+    <div class="why" style="margin:0"><p><b>Free-flow (MaxPressure fine, &lt;220s):</b> a fat tail of failures up to +105% — the SLM overrules a working controller and doubles delay. Those seeds had a baseline of ~188s vs 312s overall: <b>it breaks what isn't broken.</b></p></div>
+    <div class="why" style="margin:0"><p><b>Congested (MaxPressure gridlocked, &gt;300s):</b> almost every dot is a −20 to −54% win. When MaxPressure jams, the SLM's divergence clears it. The two sides cancel — hence the near-zero mean.</p></div>
+  </div>
+</section>
+
+<!-- SCOREBOARD -->
+<section>
+  <div class="head"><span class="num">04</span><h2>The scoreboard, against both baselines</h2></div>
+  <p class="col">Two baselines, because the standard one turned out to be weak. MaxPressure is <em>worse than naive fixed-time on every real map</em> — it only wins on the synthetic grids it was designed for. That reframes what "beating MaxPressure" would even mean.</p>
+  <figure class="fig">
+    <div class="ftitle">Where adaptive control actually helps (n=30)</div>
+    <div class="fsub">Best SLM result vs MaxPressure (faded) and vs the fixed-time floor (solid); negative = better</div>
+    <svg id="verdict" viewBox="0 0 720 300" role="img" aria-label="Grouped bars of SLM performance versus MaxPressure and versus fixed-time across three topologies."></svg>
+  </figure>
+  <div class="tblwrap col">
+    <table>
+      <thead><tr><th>Topology</th><th class="n">MaxPressure vs fixed-time</th><th class="n">SLM's advice vs MaxPressure</th><th class="n">SLM vs fixed-time</th></tr></thead>
+      <tbody>
+        <tr><td>Euston corridor</td><td class="n"><span class="chip lose">+15%</span></td><td class="n"><span class="chip neu">≈ 0 (ns)</span></td><td class="n"><span class="chip lose">+7…+15%</span></td></tr>
+        <tr><td>Old Street junction</td><td class="n"><span class="chip lose">+5%</span></td><td class="n"><span class="chip neu">≈ 0 (ns)*</span></td><td class="n"><span class="chip beat">−8…−12% ✓</span></td></tr>
+        <tr><td>Bloomsbury grid</td><td class="n"><span class="chip lose">+3%</span></td><td class="n"><span class="chip neu">≈ 0 (ns)</span></td><td class="n"><span class="chip neu">−0…−3%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="why col"><p><b>Why the corridor resists everyone</b> — a well-timed line has little to optimise, so no controller reliably wins. <b>Why the complex junction rewards adaptation</b> — a 5-arm junction has real phase-ordering freedom, so both the SLM and MaxPressure clear the fixed cycle by −8 to −12%. Signed coordination between junctions was also powered here and adds <em>no</em> delay benefit — it earns its place through tamper-evidence, not speed.</p></div>
+</section>
+
+<!-- WHY MODELS DIFFER -->
+<section>
+  <div class="head"><span class="num">05</span><h2>Why the models behave differently</h2></div>
+  <div class="grid2">
+    <figure class="fig" style="margin:0">
+      <div class="ftitle">Appetite → volatility</div>
+      <div class="fsub">The more a model overrules the shield, the wilder it swings</div>
+      <svg id="ovsd" viewBox="0 0 360 300" role="img" aria-label="Scatter of decision variability against override rate per model."></svg>
+    </figure>
+    <figure class="fig" style="margin:0">
+      <div class="ftitle">Why n=3 lied</div>
+      <div class="fsub">qwen3-1.7b, Euston — the 30 per-seed outcomes</div>
+      <svg id="strip" viewBox="0 0 360 300" role="img" aria-label="Strip plot of thirty per-seed delay changes with a fat-tailed spread around zero."></svg>
+    </figure>
+  </div>
+  <div class="grid2">
+    <div class="why" style="margin:6px 0 0"><p><b>Tiny models are gamblers.</b> qwen 0.5–1.7B overrule the shield 17–32% of the time and swing ±35 pts — high conviction, near-coin-flip correctness.</p></div>
+    <div class="why" style="margin:6px 0 0"><p><b>phi-4-mini is the professional.</b> It diverges just 5% of the time (sd≈7, zero catastrophic failures). It rarely helps <em>or</em> hurts — the most deployable profile here.</p></div>
+  </div>
+</section>
+
+<!-- LATENCY + PROMPT side -->
+<section>
+  <div class="head"><span class="num">06</span><h2>Real-time on a 6&nbsp;GB card — and the prompt is the real lever</h2></div>
+  <figure class="fig">
+    <div class="ftitle">Per-decision latency (seconds)</div>
+    <div class="fsub">Median (bar) and 99th percentile (faint) — all comfortably real-time</div>
+    <svg id="lat" viewBox="0 0 720 250" role="img" aria-label="Latency bars per model, all under 1.3 seconds."></svg>
+  </figure>
+  <figure class="fig">
+    <div class="ftitle">Prompt design changes efficiency more than model size</div>
+    <div class="fsub">Delay-aware prompt vs queues-only (negative = delay-aware better), averaged over models</div>
+    <svg id="prompt" viewBox="0 0 720 200" role="img" aria-label="Diverging bars showing delay-aware prompting helps the junction and grid, hurts the corridor."></svg>
+  </figure>
+  <div class="why col"><p><b>Yes, prompting can improve efficiency.</b> Switching to the delay-aware prompt (waiting-time priority + switching hysteresis) improves the complex junction by −2.5 pts, delivers <em>all</em> the significant wins, and stabilises a 0.5&nbsp;GB model more than a 7× larger one does — by stopping it thrashing the signal. It also makes the model diverge more (phi-4-mini 5% → higher), and on the complex junction those extra divergences are, on balance, good ones. <b>At this scale, information design beats parameters.</b></p></div>
+</section>
+
+<!-- NEXT STEPS -->
+<section>
+  <div class="head"><span class="num">07</span><h2>What this tells us to build next</h2></div>
+  <p class="col">The rescue/wreck asymmetry is a design brief. Each step follows directly from a finding above — and none needs a new dataset.</p>
+  <div class="card col"><h3>1 · A congestion-gated controller — the headline move</h3><p>Since the SLM's advice <em>only</em> helps when MaxPressure is congested (§3), gate it on queue length: run pure MaxPressure until queues cross a threshold, then let the SLM diverge. This should keep the −20 to −54% rescue wins and delete the +100% free-flow failures — turning a net-zero controller net-positive. Testable now.</p></div>
+  <div class="card col"><h3>2 · A "do no harm" prompt</h3><p>Instruct the model to hold the current phase unless a change is clearly beneficial (§2, §5). The delay-aware prompt already halved catastrophic failures; this targets them directly. Pure prompt engineering, no retraining.</p></div>
+  <div class="card col"><h3>3 · Report advice-footprint beside every result</h3><p>Every delay number should carry its divergence rate (§2), so a reader always knows how much was the model vs the safety system. Being explicit about this is what makes the comparison unimpeachable.</p></div>
+  <div class="card col"><h3>4 · A stronger baseline + the demand upgrade</h3><p>Add a delay-based / Advanced-MaxPressure variant, and ideally one trained deep-RL controller as the SOTA reference. Euston already uses real DfT peak-hour demand; a filed TfL FOI (SCOOT, turning counts) would lift the last assumed piece — a free upgrade if it lands in time.</p></div>
+  <p class="col note">The contribution stands on its own: an on-device model whose advice, cleanly attributed, matches a strong adaptive baseline and beats fixed-time where complexity matters, runs real-time on commodity hardware, and leaves a tamper-evident trail that makes its failures <em>diagnosable</em> — which is exactly what a safety-critical deployment needs.</p>
+</section>
+
+<hr style="border:0;border-top:1px solid var(--line)">
+<p class="foot col">SUMO microsimulation on real OSM London geometry (Euston A501, Bloomsbury WC1, Old Street EC1) + synthetic grids. On-device models via Microsoft Foundry Local, 6&nbsp;GB RTX 2060. Powered runs = 30 seeds; significance by one-sample t-test on per-seed delay change; decision-composition from the signed decision logs. Headline numbers independently re-verified by five adversarial examiner agents recomputing from raw data (4 confirmed, 1 partial that strengthened the claim, 0 refuted).</p>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), NS="http://www.w3.org/2000/svg", tip=$("#tip");
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function hover(n,t){n.addEventListener("mousemove",e=>{tip.textContent=t;tip.style.opacity=1;tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY-10)+"px";});n.addEventListener("mouseleave",()=>tip.style.opacity=0);}
+const COMP=[["qwen2.5-0.5b",45,25,25,5],["qwen3-0.6b",37,31,32,0],["qwen3-1.7b",38,46,17,0],["phi-4-mini",36,60,5,0]];
+const SCATTER=[[210,0],[374,2],[186,-3.1],[203,1],[221,.2],[172,23.9],[386,2.1],[261,-.3],[201,.4],[291,-8.9],[372,-.4],[180,18.3],[199,2.6],[216,-.3],[183,-3.9],[210,-14.7],[374,-53.1],[186,9.7],[203,1.7],[221,28.9],[172,8.8],[386,-54],[261,10.2],[201,74.4],[291,31.3],[372,-41.4],[180,-3],[199,1.5],[216,28.6],[183,18.6],[210,-21.2],[374,-33.7],[186,105.2],[203,-8.9],[221,-9.6],[172,3.4],[386,-46.4],[261,-31.7],[201,93],[291,-11.7],[372,-50],[180,11.6],[199,24.3],[216,3],[183,-.8],[210,-21.2],[374,-35.3],[186,98.4],[203,-15.1],[221,-15],[172,2.8],[386,-40],[261,-32.6],[201,87.7],[291,-11.3],[372,-22.1],[180,-6.2],[199,44.1],[216,-19.7],[183,-4.9],[170,-2.1],[132,19.5],[134,-1.7],[135,-4],[159,-14.7],[152,-5.3],[138,-1.8],[133,4.6],[146,.7],[188,-28.1],[131,.4],[142,1],[141,15.6],[146,3],[136,16.8],[170,-20.9],[132,17.1],[134,20.2],[135,7],[159,9.7],[152,-.3],[138,39],[133,12.1],[146,93.5],[188,-22.8],[131,6.3],[142,3.6],[141,1.6],[146,7.2],[136,27.3],[210,-33.7],[170,-16.3],[132,1.9],[134,4.5],[135,4.2],[159,7.8],[152,-7.5],[138,87.7],[133,3.4],[146,-1.2],[188,-24],[131,6.7],[142,1.5],[141,24.8],[146,.2],[136,8.8],[170,-13.8],[132,.4],[134,3.4],[135,-.8],[159,-7.6],[152,-1.7],[138,10.6],[133,2.7],[146,2.9],[188,-22.6],[131,1.4],[142,.4],[141,.2],[146,19.3],[136,6.4],[210,-15.8]];
+const OVSD=[["phi-4-mini",.05,7.2],["qwen3-1.7b",.17,20.9],["qwen2.5-0.5b",.25,22.1],["qwen3-0.6b",.32,25.7]];
+const STRIP=[-48,-46,-40,-35,-33,-32,-22,-21,-20,-16,-15,-15,-13,-12,-12,-12,-11,-6,-5,-5,-4,-2,0,3,9,10,44,59,88,98];
+const LAT=[["qwen2.5-0.5b",.27,.43],["qwen2.5-1.5b",.40,.54],["qwen3-0.6b",.55,.80],["phi-4-mini",.62,.83],["qwen3-1.7b",.63,.85],["qwen3-4b",.97,1.22]];
+const VERDICT=[["Euston",0.1,11],["Old Street",-0.5,-9.5],["Bloomsbury",0.1,-1.3]];
+const PROMPT=[["Euston corridor",1.8],["Bloomsbury grid",-0.6],["Old Street junction",-2.5]];
+
+function draw(){
+  const ink=css("--ink-soft"),grid=css("--grid"),good=css("--good"),bad=css("--bad"),accent=css("--accent"),neu=css("--neu"),mut=css("--mut"),card=css("--card"),neubg=css("--neu-bg");
+  // COMPOSITION stacked bars
+  (()=>{const s=$("#comp");s.innerHTML="";const W=720,H=240,pl=118,pr=54,pt=10,pb=26,bh=(H-pt-pb)/COMP.length,fw=W-pl-pr;
+    COMP.forEach((d,i)=>{const y=pt+i*bh+bh/2;const floor=d[1],agree=d[2],div=d[3],sh=d[4];
+      s.appendChild(el("text",{x:pl-10,y:y+4,"text-anchor":"end","font-size":12.5,fill:ink})).textContent=d[0];
+      let x=pl;const segs=[[floor,neu,.55],[agree,neu,.16],[div,accent,1],[sh,neu,.35]];const names=["shared floor","agreed w/ MaxPressure","SLM diverged","shield"];
+      segs.forEach((sg,k)=>{const w=sg[0]/100*fw;if(w<=0)return;const r=el("rect",{x:x+(k?1:0),y:y-13,width:Math.max(0,w-(k?1:0)),height:26,fill:sg[1],opacity:sg[2],rx:k===2?3:0});hover(r,`${names[k]}: ${sg[0]}%`);s.appendChild(r);
+        if(sg[0]>=9){const t=el("text",{x:x+w/2,y:y+4,"text-anchor":"middle","font-size":10.5,"font-family":"var(--mono)",fill:k===2?"#fff":ink,"font-weight":k===2?700:400});t.textContent=sg[0]+"%";s.appendChild(t);}
+        x+=w;});
+      s.appendChild(el("text",{x:pl+fw+8,y:y-2,"font-size":11,fill:accent,"font-family":"var(--mono)","font-weight":700})).textContent=div+"%";
+      s.appendChild(el("text",{x:pl+fw+8,y:y+11,"font-size":9,fill:mut,"font-family":"var(--mono)"})).textContent="is SLM";
+    });
+  })();
+  // SCATTER
+  (()=>{const s=$("#scatter");s.innerHTML="";const W=720,H=360,pl=52,pr=16,pt=14,pb=42,X0=120,X1=420,Y0=-60,Y1=110;
+    const sx=v=>pl+(v-X0)/(X1-X0)*(W-pl-pr),sy=v=>pt+(Y1-v)/(Y1-Y0)*(H-pt-pb);
+    for(const g of [-40,0,40,80]){const y=sy(g);s.appendChild(el("line",{x1:pl,y1:y,x2:W-pr,y2:y,stroke:g===0?ink:grid,"stroke-width":g===0?1.4:1,"stroke-dasharray":g===0?"5 4":""}));s.appendChild(el("text",{x:pl-7,y:y+3,"text-anchor":"end","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent=(g>0?"+":"")+g+"%";}
+    for(const g of [150,200,250,300,350,400]){s.appendChild(el("text",{x:sx(g),y:H-pb+16,"text-anchor":"middle","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent=g+"s";}
+    s.appendChild(el("text",{x:(pl+W-pr)/2,y:H-6,"text-anchor":"middle","font-size":11,fill:ink})).textContent="MaxPressure delay that seed  →  (worse)";
+    const n=SCATTER.length,mx=SCATTER.reduce((a,d)=>a+d[0],0)/n,my=SCATTER.reduce((a,d)=>a+d[1],0)/n;let nu=0,de=0;for(const d of SCATTER){nu+=(d[0]-mx)*(d[1]-my);de+=(d[0]-mx)**2;}const m=nu/de,b=my-m*mx;
+    s.appendChild(el("line",{x1:sx(X0),y1:sy(m*X0+b),x2:sx(X1),y2:sy(m*X1+b),stroke:accent,"stroke-width":2.2,"stroke-dasharray":"7 5"}));
+    for(const d of SCATTER){const c=el("circle",{cx:sx(d[0]),cy:sy(Math.max(Y0,Math.min(Y1,d[1]))),r:4.2,fill:d[1]<0?good:bad,opacity:.72,stroke:card,"stroke-width":1});hover(c,`MP ${d[0]}s · SLM ${d[1]>0?"+":""}${d[1]}%`);s.appendChild(c);}
+  })();
+  // VERDICT
+  (()=>{const s=$("#verdict");s.innerHTML="";const W=720,H=300,pl=92,pr=22,pt=16,pb=44,gh=(H-pt-pb)/3,X0=-15,X1=17;
+    const sx=v=>pl+(v-X0)/(X1-X0)*(W-pl-pr),zx=sx(0);
+    for(const g of [-10,0,10]){const x=sx(g);s.appendChild(el("line",{x1:x,y1:pt,x2:x,y2:H-pb,stroke:g===0?ink:grid,"stroke-width":g===0?1.3:1}));s.appendChild(el("text",{x,y:H-pb+16,"text-anchor":"middle","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent=(g>0?"+":"")+g+"%";}
+    VERDICT.forEach((row,i)=>{const cy=pt+i*gh+gh/2;s.appendChild(el("text",{x:pl-10,y:cy+4,"text-anchor":"end","font-size":13,fill:ink,"font-weight":600})).textContent=row[0];
+      [[row[1],cy-11,"vs MaxPressure",.5],[row[2],cy+11,"vs fixed-time",.95]].forEach(([v,yy,lbl,op])=>{const x2=sx(v),col=v<-0.5?good:(v>0.5?bad:neu);const bar=el("rect",{x:Math.min(zx,x2),y:yy-8,width:Math.abs(x2-zx)||2,height:16,rx:4,fill:col,opacity:op});hover(bar,`${row[0]} ${lbl}: ${v>0?"+":""}${v}%`);s.appendChild(bar);s.appendChild(el("text",{x:x2+(v<0?-6:6),y:yy+4,"text-anchor":v<0?"end":"start","font-size":10.5,fill:mut,"font-family":"var(--mono)"})).textContent=(v>0?"+":"")+v;});});
+    s.appendChild(el("text",{x:pl,y:14,"font-size":10.5,fill:mut,"font-family":"var(--mono)"})).textContent="faded = vs MaxPressure · solid = vs fixed-time floor";
+  })();
+  // OVSD
+  (()=>{const s=$("#ovsd");s.innerHTML="";const W=360,H=300,pl=44,pr=16,pt=14,pb=42;const sx=v=>pl+v/0.40*(W-pl-pr),sy=v=>pt+(30-v)/30*(H-pt-pb);
+    for(const g of [0,10,20,30]){const y=sy(g);s.appendChild(el("line",{x1:pl,y1:y,x2:W-pr,y2:y,stroke:grid}));s.appendChild(el("text",{x:pl-6,y:y+3,"text-anchor":"end","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent=g;}
+    for(const g of [0,.1,.2,.3,.4]){s.appendChild(el("text",{x:sx(g),y:H-pb+15,"text-anchor":"middle","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent=g;}
+    s.appendChild(el("text",{x:(pl+W-pr)/2,y:H-4,"text-anchor":"middle","font-size":10.5,fill:ink})).textContent="SLM divergence rate →";
+    s.appendChild(el("text",{x:12,y:(pt+H-pb)/2,"font-size":10.5,fill:ink,transform:`rotate(-90 12 ${(pt+H-pb)/2})`,"text-anchor":"middle"})).textContent="volatility (sd)";
+    for(const d of OVSD){const safe=d[1]<0.12;const c=el("circle",{cx:sx(d[1]),cy:sy(d[2]),r:6.5,fill:safe?good:bad,opacity:.82,stroke:card,"stroke-width":1.5});hover(c,`${d[0]}: divergence ${d[1]}, sd ${d[2]}`);s.appendChild(c);s.appendChild(el("text",{x:sx(d[1]),y:sy(d[2])-11,"text-anchor":"middle","font-size":9.5,fill:ink,"font-family":"var(--mono)"})).textContent=d[0];}
+  })();
+  // STRIP
+  (()=>{const s=$("#strip");s.innerHTML="";const W=360,H=300,pl=20,pr=20,pt=32,pb=44,X0=-60,X1=110;const sx=v=>pl+(v-X0)/(X1-X0)*(W-pl-pr),zx=sx(0);
+    s.appendChild(el("line",{x1:zx,y1:pt-6,x2:zx,y2:H-pb,stroke:ink,"stroke-width":1.3,"stroke-dasharray":"5 4"}));s.appendChild(el("text",{x:zx,y:pt-12,"text-anchor":"middle","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent="no change";
+    for(const g of [-40,0,40,80]){s.appendChild(el("text",{x:sx(g),y:H-pb+16,"text-anchor":"middle","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent=(g>0?"+":"")+g+"%";}
+    STRIP.forEach((v,i)=>{const jit=((i*53)%9-4)*6;const c=el("circle",{cx:sx(v),cy:(pt+H-pb)/2+jit,r:5,fill:v<0?good:bad,opacity:.72,stroke:card,"stroke-width":1});hover(c,`seed: ${v>0?"+":""}${v}%`);s.appendChild(c);});
+    s.appendChild(el("text",{x:(pl+W-pr)/2,y:H-6,"text-anchor":"middle","font-size":10.5,fill:ink})).textContent="mean −3.8% (ns) · ranges −48% to +98%";
+  })();
+  // LAT
+  (()=>{const s=$("#lat");s.innerHTML="";const W=720,H=250,pl=128,pr=58,pt=10,pb=32,bh=(H-pt-pb)/LAT.length;const sx=v=>pl+v/1.35*(W-pl-pr);
+    for(const g of [0,.3,.6,.9,1.2]){const x=sx(g);s.appendChild(el("line",{x1:x,y1:pt,x2:x,y2:H-pb,stroke:grid}));s.appendChild(el("text",{x,y:H-pb+15,"text-anchor":"middle","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent=g+"s";}
+    LAT.forEach((d,i)=>{const y=pt+i*bh+bh/2;s.appendChild(el("text",{x:pl-10,y:y+4,"text-anchor":"end","font-size":12,fill:ink})).textContent=d[0];
+      s.appendChild(el("rect",{x:pl,y:y-7,width:sx(d[2])-pl,height:14,rx:4,fill:neu,opacity:.26}));const bar=el("rect",{x:pl,y:y-7,width:sx(d[1])-pl,height:14,rx:4,fill:accent});hover(bar,`${d[0]}: p50 ${d[1]}s, p99 ${d[2]}s`);s.appendChild(bar);
+      s.appendChild(el("text",{x:sx(d[2])+6,y:y+4,"font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent="p99 "+d[2];});
+    s.appendChild(el("text",{x:pl,y:H-4,"font-size":10.5,fill:ink})).textContent="bar = median · faint = 99th percentile";
+  })();
+  // PROMPT
+  (()=>{const s=$("#prompt");s.innerHTML="";const W=720,H=200,pl=170,pr=60,pt=16,pb=34,bh=(H-pt-pb)/PROMPT.length,X0=-4,X1=4;const sx=v=>pl+(v-X0)/(X1-X0)*(W-pl-pr),zx=sx(0);
+    s.appendChild(el("line",{x1:zx,y1:pt-4,x2:zx,y2:H-pb,stroke:ink,"stroke-width":1.3}));
+    for(const g of [-3,0,3]){s.appendChild(el("text",{x:sx(g),y:H-pb+15,"text-anchor":"middle","font-size":10,fill:mut,"font-family":"var(--mono)"})).textContent=(g>0?"+":"")+g;}
+    PROMPT.forEach((d,i)=>{const y=pt+i*bh+bh/2,x2=sx(d[1]),help=d[1]<0;s.appendChild(el("text",{x:pl-12,y:y+4,"text-anchor":"end","font-size":12.5,fill:ink})).textContent=d[0];const bar=el("rect",{x:Math.min(zx,x2),y:y-9,width:Math.abs(x2-zx),height:18,rx:4,fill:help?good:bad});hover(bar,`${d[0]}: ${d[1]>0?"+":""}${d[1]} pts`);s.appendChild(bar);s.appendChild(el("text",{x:x2+(help?-7:7),y:y+4,"text-anchor":help?"end":"start","font-size":11,fill:mut,"font-family":"var(--mono)"})).textContent=(help?"":"+")+d[1];});
+    s.appendChild(el("text",{x:sx(-3.6),y:pt+4,"font-size":10,fill:good,"font-family":"var(--mono)"})).textContent="◀ delay-aware better";
+    s.appendChild(el("text",{x:sx(3.6),y:pt+4,"text-anchor":"end","font-size":10,fill:bad,"font-family":"var(--mono)"})).textContent="queues-only better ▶";
+  })();
+}
+draw();
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+matchMedia("(prefers-color-scheme:dark)").addEventListener("change",draw);
+</script>

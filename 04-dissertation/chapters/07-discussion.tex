@@ -1,0 +1,105 @@
+\chapter{Discussion}\label{ch:discussion}
+% WORD BUDGET: ~1200 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
+
+\section{Answering the research questions}\label{sec:dis-rqs}
+\textbf{RQ1 (edge competence): yes, with honest scope.} Shielded on-device
+SLM control beats the fixed-time floor on every topology tested and beats
+MaxPressure precisely where MaxPressure's assumptions fail --- real
+irregular geometry. But at powered replication ($n{=}30$ disjoint seeds)
+the per-topology delay effects are not individually significant, and the
+corridor null persists across every controller variant. The defensible
+claim is competence within the deployable envelope, not superiority.
+
+\textbf{RQ2 (what distillation buys): authorship, and it saturates at
+0.6B.} Offline, distillation is dramatic (55--69\% $\to$ 97--99\%) and
+scale-flat --- a 3.8B student adds nothing over 0.6B, and no format
+specialist beats the generalist even on its own format. Closed-loop, the
+accuracy does not become delay; it becomes \emph{ownership}: override falls
+four-fold, authored share reaches 0.90, and the one significant stock harm
+(congested grid, $+2.6\%$, $p{=}1.5{\times}10^{-3}$) is repaired to
+neutral. For a shielded, audited controller I argue this is the correct
+success criterion, and \S\ref{sec:dis-decoupling} explains why delay was
+never the sensitive variable.
+
+\textbf{RQ3 (provable audit): yes, as designed.} Seven scenario
+reconstructions prove end-to-end with tampering caught; the system emits
+cited evidence packs, and the legally weak branches (authority fault) are
+weak \emph{in the law}, faithfully represented rather than overstated.
+
+\textbf{RQ4 (trust): partial, honestly.} The mechanism's properties all
+hold, blatant misreporting is contained, but a calibrated stealth attacker
+evades detection and the mechanism is inert where coordination traffic is
+minimal. A trust ledger is a necessary layer, not a sufficient defence.
+
+\section{Why accuracy decouples from delay}\label{sec:dis-decoupling}
+Three mechanisms jointly explain the paradox, and all three are visible in
+the data rather than conjectured. First, \emph{the shield compresses the
+outcome distribution}: masking, substitution, and anti-starvation bound
+the worst case for every arm, so the behavioural difference between a 59\%
+and a 97\% proposer is far smaller served than raw. Second, \emph{the
+headroom was small}: external calibration from a 13$\times$ larger tuned
+model puts the entire LLM-vs-MaxPressure delay gap at 1--2\%
+\cite{dglight2026}, and my own decision battery showed a near-chance
+proposer winning closed-loop cells --- per-decision agreement with a
+delay-optimal heuristic is simply not the trajectory-level objective.
+Third, \emph{where the stock model could do damage, fine-tuning shows up}:
+the single significant closed-loop effect is the repair of stock harm
+under grid congestion, exactly where bad proposals compound fastest. The
+practical reading for deployment: fine-tune to own the decisions and to
+remove harm tails, and do not expect --- or promise --- delay headlines
+inside a safety shield.
+
+\section{Threats to validity}\label{sec:dis-threats}
+I declare four threats with their defences, and none is cosmetic.
+
+\textbf{Label-only distillation (construct).} I distil teacher labels, not
+reasoning traces; Orca-style trace distillation \cite{mukherjee2023orca}
+might transfer more competence. The myopic format makes the cost
+measurable: its $\sim$88\% ceiling is the privileged-teacher gap,
+disclosed as a design property.
+
+\textbf{Retention (internal).} Aggressive SFT can erode general
+capability with scale-dependent forgetting \cite{forgetting2024}. I
+measured it: a seeded 200-item MMLU sample served through the same
+endpoints shows the 3.8B student dropping from 57.5\% (stock) to 53.0\%
+(fine-tuned) --- a decline consistent with mild forgetting but not
+significant at this sample size ($z{=}0.91$, $p{=}.37$) --- while
+retaining its answer-format discipline (94\% strict JSON). At 0.6B the
+probe is uninformative by floor effect: the stock model already scores at
+chance (26.0\%) on this format, so there was no measurable general
+capability to lose. The honest conclusion is that no significant
+retention damage was detected, with the caveat that a 200-item probe
+bounds only large effects.
+
+\textbf{Quantisation scope (construct).} ``Lossless'' int4 is claimed
+strictly as bit-identical holdout accuracy under weight-only RTN --- not
+as a general equivalence claim, which the quantisation literature would
+not support \cite{quantlora2024,frantar2022gptq}.
+
+\textbf{Simulation and demand realism (external).} Everything is SUMO;
+real-map demand magnitudes are measured (DfT hourly profile on Euston) but
+their vehicle-level realisations are synthetic draws, and comparators
+exclude trained deep-RL systems. The MaxPressure reversal is accordingly
+scope-bound to measured London topologies --- six grid studies showing the
+opposite are cited, and my own grids reproduce their direction. Legal
+scope: the audit scenarios use synthetic actors on real topology, so no
+real data subject exists; a real deployment would face the adjudication
+and disclosure exposures analysed in the project's legal grounding, which
+curation itself is an adjudicative act (\emph{Bates v Post Office (No 6)})
+and qualified privilege is defeasible.
+
+\section{Limitations and future work}\label{sec:dis-future}
+Four directions follow directly from the findings. \textbf{Formal shield
+synthesis}: replace the heuristic composite with a synthesized shield from
+a temporal-logic safety specification \cite{alshiekh2018shield} --- the
+per-junction product game is small enough for exact synthesis, and the
+authorship metrics defined here would then carry minimal-interference
+guarantees. \textbf{Closed-loop objectives}: GRPO-style tuning against
+trajectory reward \cite{dglight2026} attacks the decoupling directly;
+label distillation is the wrong objective if delay is the goal.
+\textbf{Stealth-robust trust}: detection calibrated to distributional
+implausibility rather than single-report bounds. \textbf{Hardware-in-the-loop}:
+the serving-reliability findings (service self-restarts, artifact
+corruption) are exactly the failure class a cabinet deployment must
+survive, and they argue for a watchdog-supervised serving architecture
+before any field pilot.

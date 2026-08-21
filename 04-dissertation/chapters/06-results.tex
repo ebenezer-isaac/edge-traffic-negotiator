@@ -1,0 +1,299 @@
+\chapter{Results}\label{ch:results}
+% WORD BUDGET: ~3000 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
+% Every number in this chapter is read from a committed results/*.json artifact.
+
+I present results in the order the evidence was built: the baseline landscape
+that reframed the project (\S\ref{sec:res-maxpressure}), the base-model
+factorial (\S\ref{sec:res-factorial}), the offline distillation tables
+(\S\ref{sec:res-offline}), the closed-loop verdict
+(\S\ref{sec:res-closedloop}), the authorship finding this dissertation
+headlines (\S\ref{sec:res-authorship}), the audit and trust results
+(\S\ref{sec:res-audit}, \S\ref{sec:res-trust}), and the serving-reliability
+evidence (\S\ref{sec:res-reliability}).
+
+\section{Baseline landscape: the MaxPressure reversal}\label{sec:res-maxpressure}
+Adding a naive fixed-time floor to every comparison produced the single most
+consequential rigour result of the project. MaxPressure, throughput-optimal
+in theory \cite{varaiya2013maxpressure} and dominant in the simulation
+literature, is \emph{worse than naive fixed-time on every measured London
+topology in this study} --- Euston $+15\%$, Old Street $+5\%$ (one seed
+$+37\%$), Bloomsbury $+3\%$ --- while dominating exactly where the
+literature tests it, on regular synthetic grids ($-27\%$ on grid4$\times$4,
+$-19\%$ on grid3$\times$3).
+
+I scope this claim deliberately: six independent studies in my corpus report
+MaxPressure winning on grid networks, and nothing here contradicts them. What
+the reversal shows is that its guarantees do not transfer to irregular
+real-world geometry, and the mechanism is visible in the theory itself: the
+throughput-optimality proof assumes infinite queue capacity, and
+finite-capacity extensions prove work-conservation losses
+\cite{gregoire2014backpressure}, while stability results hold under heavy
+load \cite{zaidi2014backpressure} --- London arterials at measured demand sit
+in neither regime. The consequence for evaluation practice is immediate:
+any SLM-vs-MaxPressure win on real topologies is partly MaxPressure's own
+weakness, so every claim in this dissertation is stated against the
+fixed-time floor, with MaxPressure reported alongside.
+
+\section{Base-model factorial}\label{sec:res-factorial}
+The full factorial (seven servable catalogue models --- the 6\,GB card caps
+the ladder at $\sim$4B, with 7B-class OOM failures recorded --- $\times$ four
+prompt formats $\times$ five topologies) established three facts before any
+fine-tuning.
+
+First, shielded stock SLM control beats the fixed-time floor on every
+topology (Euston $-16\%$, Bloomsbury $-2\%$, Old Street $-14\%$
+(seed-noisy), grid3$\times$3 $-21\%$, grid4$\times$4 $-28\%$), and beats
+MaxPressure specifically where MaxPressure breaks down --- the real
+topologies. Second, results must be conditioned on topology: pooling across
+maps is a Simpson's-paradox trap, since corridor wins and early grid
+blow-ups average into a meaningless mean. Third, per-decision reasoning
+quality does not predict closed-loop value: on 80 identical junction states,
+cloud frontier models agree with the delay-optimal heuristic at 92--96\%
+against 51--72\% for local SLMs, yet a near-chance local model still won its
+closed-loop cells. The controller's value is systemic --- the SLM, shield,
+and event gating together --- not raw single-junction reasoning. This
+decision battery is open-loop by construction (the frontier teacher cannot be
+called from inside the simulation loop) and is stated as such.
+
+The explanatory two-way ANOVA over the factorial confirms the structure:
+model and configuration interact strongly (interaction
+$F{=}32$, $p{<}0.001$, $\eta^2{=}0.86$), with the effect driven by outlier
+cells rather than a smooth gradient --- a further argument against pooled
+claims.
+
+The powered stock-model replication ($n{=}30$ per cell, four catalogue
+models $\times$ two formats, both baselines) sharpens the picture per
+topology. On \textbf{Old Street}, stock SLM control achieves the
+campaign's strongest powered wins against the fixed-time floor ---
+Qwen2.5-0.5B sota $-11.8\%$ ($p{<}0.001$), Qwen3-0.6B sota $-9.6\%$
+($p{<}0.001$), Phi-4-mini myopic $-8.6\%$ ($p{<}0.001$) --- with one arm
+also significantly beating MaxPressure (Qwen2.5-0.5B sota, $-4.9\%$,
+$p{=}.014$). On \textbf{Euston peak-hour} under the measured DfT demand
+profile, every arm is statistically indistinguishable from MaxPressure and
+none beats the floor: the corridor null is a powered result, not an
+underpowered one.
+
+The replication also yielded a methodological finding I had not planned
+to measure. On the 26 seeds shared between runs, the \emph{catalogue}
+Qwen3-0.6B artifact and my identically-prompted, identically-shielded
+pipeline compile of the same weights differ by nine points of mean
+relative delay ($+4.1\%$ vs $-5.2\%$ against the floor) on this
+high-variance topology --- quantisation and packaging provenance alone
+shift the headline sign. This is precisely why every fine-tuning
+comparison in this dissertation uses the identical-pipeline compile as
+its control (\S\ref{sec:met-baselines}), and it is a caution for the
+field: ``the same model'' is not the same controller across serving
+artifacts.
+
+\section{Offline distillation: saturation at 0.6B}\label{sec:res-offline}
+Table~\ref{tab:offline-full} gives the complete offline campaign: both
+student scales, stock versus fine-tuned through the identical int4 pipeline,
+plus the LOTO and format-specialist controls, evaluated on the frozen
+5{,}580-state holdout as served (WebGPU, int4).
+
+\begin{table}[t]
+\caption{Holdout accuracy (\%) against frozen frontier-teacher labels,
+int4-as-served. All fine-tuned rows and the stock Phi row emit 100\% strict
+JSON; stock Qwen3-0.6B reaches 93.4\% on sota.}
+\label{tab:offline-full}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+ & myopic & sota & prediction & coordination \\
+\midrule
+Qwen3-0.6B stock & 45.6 & 55.1 & 63.3 & 69.3 \\
+\textbf{Qwen3-0.6B generalist ft} & \textbf{87.9} & \textbf{97.7} & \textbf{97.6} & \textbf{99.0} \\
+Phi-4-mini stock & 87.5 & 59.0 & 86.0 & 87.0 \\
+\textbf{Phi-4-mini generalist ft} & \textbf{88.7} & \textbf{97.1} & \textbf{97.4} & \textbf{99.3} \\
+Phi-4-mini LOTO & 88.3 & 96.8 & 97.4 & 99.1 \\
+Phi-4-mini sota-specialist & 87.9 & 97.8 & 89.5 & 93.3 \\
+Phi-4-mini myopic-specialist & 87.0 & 87.9 & 88.8 & 91.8 \\
+Phi-4-mini prediction-specialist & 87.9 & 91.3 & 97.3 & 98.4 \\
+Phi-4-mini coordination-specialist & 87.4 & 89.1 & 94.7 & 99.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Five findings follow.
+\begin{enumerate}
+\item \finding{Scale saturation.} The 0.6B and 3.8B generalists are
+statistically indistinguishable on every format, both sitting at the
+teacher-agreement ceiling (98--99\% teacher self-consistency). Distillation
+saturates this decision task at 0.6B; six times the parameters buy nothing
+per-decision.
+\item \finding{Where the gain lands depends on the base.} The 0.6B is lifted
+$+32$ to $+42$ points everywhere; Phi-4-mini, already 86--88\% on three
+formats stock, gains materially only on the delay-aware sota format
+($+38.1$ points). For a capable base, fine-tuning buys decision quality, not
+format discipline --- stock Phi is already 100\% format-compliant.
+\item \finding{Generalists only.} No format specialist beats the generalist
+on its own format by more than $0.65$ points; all pay 4--8 points off-format;
+and the myopic specialist loses \emph{even on-format} (87.0 vs 88.7),
+consistent with mixed-format training regularising against the noisy
+privileged-teacher labels that pure-myopic training overfits. The result
+replicates across both model scales.
+\item \finding{No topology memorisation.} The LOTO student, trained with all
+Old Street states removed, matches the generalist on every format.
+\item \finding{Quantised serving is exact for this task.} CPU and WebGPU
+int4 artifacts agree bit-identically (97.42\% both on the sota holdout);
+I scope ``lossless'' strictly as bit-identical holdout accuracy under
+weight-only int4 RTN.
+\end{enumerate}
+The myopic ceiling ($\sim$88\%) is intrinsic: the teacher was privileged
+with waiting-time state the myopic prompt hides, an Orca-style label-only
+distillation cost \cite{mukherjee2023orca} disclosed as a design property,
+not noise.
+
+\section{Closed-loop verdict: delay decouples from accuracy}\label{sec:res-closedloop}
+Table~\ref{tab:closedloop-full} reports the Qwen3-0.6B closed-loop sweep:
+fine-tuned (ft) versus identically-compiled stock, three topologies
+$\times$ 30 training-disjoint seeds, paired per-seed against fixed-time.
+
+\begin{table}[t]
+\caption{Closed-loop mean network delay vs fixed-time ($n{=}30$ disjoint
+seeds per cell; paired $t$). Negative favours the controller.}
+\label{tab:closedloop-full}
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Topology & Arm & $\Delta$delay & $p$ & override & authored \\
+\midrule
+Euston peak-hour & ft & $-3.9\%$ & .16 & 0.12 & 0.70 \\
+ & stock & $-6.2\%$ & .12 & 0.47 & 0.68 \\
+Bloomsbury grid & ft & $+0.7\%$ & .37 & 0.18 & 0.73 \\
+ & stock & $+2.6\%$ & $1.5{\times}10^{-3}$ & 0.46 & 0.65 \\
+Old Street & ft & $-3.1\%$ & .20 & 0.11 & 0.90 \\
+ & stock & $-1.1\%$ & .35 & 0.60 & 0.54 \\
+\midrule
+Pooled ($n{=}90$) & ft & $-2.1\%$ & .14 & & \\
+ & stock & $-1.6\%$ & .39 & & \\
+\midrule
+Euston & phi ft & $-3.8\%$ & .15 & 0.13 & 0.70 \\
+Bloomsbury & phi ft & $+0.6\%$ & .42 & 0.17 & 0.73 \\
+Old Street & phi ft & $-1.0\%$ & .56 & 0.12 & 0.88 \\
+Pooled ($n{=}90$) & phi ft & $-1.4\%$ & .20 & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The honest headline: at $n{=}30$ per topology, neither arm significantly
+beats the fixed-time floor anywhere, and a $+42$-point offline accuracy gain
+produces no significant delay change --- the \finding{delay-decoupling
+paradox} anticipated by the decision battery. The one significant effect of
+fine-tuning is protective: stock control significantly \emph{harms} the
+congested Bloomsbury grid ($+2.6\%$, $p{=}1.5{\times}10^{-3}$), the
+fine-tuned controller is neutral there, and the head-to-head paired
+difference favours fine-tuning by $-1.8\%$ ($p{=}.019$). I return to the
+mechanism --- the shield bounds worst-case behaviour for both arms, and
+external calibration puts the entire LLM-vs-MaxPressure headroom at 1--2\%
+\cite{dglight2026} --- in \S\ref{sec:dis-decoupling}.
+The Phi-4-mini confirmation arm (final rows of
+Table~\ref{tab:closedloop-full}) extends the saturation finding
+end-to-end: the 3.8B fine-tuned student's closed-loop profile is
+arm-for-arm indistinguishable from the 0.6B's --- Euston $-3.8\%$ vs
+$-3.9\%$, Bloomsbury $+0.6\%$ vs $+0.7\%$, the same override band
+(0.12--0.17) and authored share (0.70--0.88) --- at p99 latency still
+$\le$1.1\,s on the 6\,GB device. The dissertation's scale-threshold
+question is thereby answered in both evaluation regimes: 0.6B suffices.
+
+\section{Authorship conversion}\label{sec:res-authorship}
+The structural columns of Table~\ref{tab:closedloop-full} carry the
+dissertation's central finding. Fine-tuning drops the override rate from
+0.46--0.60 to 0.11--0.18 on every topology and raises the authored share of
+served decisions to 0.70--0.90. The stock deployment's delay numbers are
+substantially the \emph{shield's} numbers: most of what the stock model
+proposes diverges from MaxPressure and is not served. The fine-tuned model's
+numbers are its own.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=5.5pt, width=0.95\linewidth, height=52mm,
+  ymin=0, ymax=1.0, ylabel={\sffamily\small rate},
+  symbolic x coords={Euston, Bloomsbury, Old Street},
+  xtick=data, enlarge x limits=0.25,
+  legend style={font=\sffamily\scriptsize, at={(0.5,1.02)}, anchor=south,
+    legend columns=4, draw=none},
+  tick label style={font=\sffamily\small},
+  ymajorgrids, major grid style={nbgrey!25},
+  axis line style={nbgrey}]
+\addplot[fill=nbred!70, draw=nbred] coordinates
+  {(Euston,0.47) (Bloomsbury,0.46) (Old Street,0.60)};
+\addplot[fill=nbred!25, draw=nbred] coordinates
+  {(Euston,0.12) (Bloomsbury,0.18) (Old Street,0.11)};
+\addplot[fill=nbteal!70, draw=nbteal] coordinates
+  {(Euston,0.68) (Bloomsbury,0.65) (Old Street,0.54)};
+\addplot[fill=nbteal!25, draw=nbteal] coordinates
+  {(Euston,0.70) (Bloomsbury,0.73) (Old Street,0.90)};
+\legend{override (stock), override (ft), authored (stock), authored (ft)}
+\end{axis}
+\end{tikzpicture}
+\caption{Authorship conversion ($n{=}30$ seeds per bar). Fine-tuning cuts
+the override rate roughly four-fold on every topology (red) and raises the
+SLM's authored share of served decisions (teal), most sharply on Old
+Street (0.54 $\to$ 0.90).}
+\label{fig:authorship}
+\end{figure}
+
+In the interference vocabulary of the shielding literature
+\cite{alshiekh2018shield,huang2020masking}, fine-tuning internalises the
+shield's envelope: the model learns to propose actions that survive. I argue
+this, not delay, is the deployable product of distillation for an audited
+edge controller. An accident audit over a stock deployment attributes the
+served decisions to the fallback policy; the same audit over the distilled
+deployment attributes them to the certified, versioned model the operator
+can retrain and re-certify. Causal accountability is what moved, and it
+moved by a factor of four.
+
+\section{Audit and crash reconstruction}\label{sec:res-audit}
+The audit layer was evaluated on seven pre-defined collision scenarios
+spanning the legally distinct cases (red-light running, EV exemption,
+maintenance vehicle, amber gambling, conflicting green, dark signal, spoofed
+EV). All seven prove end-to-end: hash-chain verification passes, signature
+verification passes, and an imposter re-signing attack is caught in every
+scenario. The governing UK rule is \emph{inferred deterministically from the
+verified facts} --- e.g.\ the spoofed-EV scenario correctly denies the
+exemption and anchors fault on the driver, while the conflicting-green
+scenario is the sole case attributing (weak, misfeasance-only) authority
+fault --- and the system emits a cited evidence pack for a human
+adjudicator, never a binding verdict, by design
+\cite{dahl2024legal}. \todo{one-paragraph worked example of a single
+evidence pack, from audit record to cited rule, as a figure or listing.}
+
+\section{Trust-coefficient battery}\label{sec:res-trust}
+The trust mechanism passes its full property battery (9/9): a persistently
+honest junction climbs to 0.929 trust; a persistent liar collapses to 0.011
+and loses the power to corroborate; the asymmetry is deliberate (ten
+verified truths to climb from 0.5 to 0.9, one lie from high trust falls
+0.65); and a truthful-but-late report is vindicated retroactively by local
+sensing, so honesty is never permanently penalised for latency. Trust is
+discount-only by construction --- it can strip a liar's corroboration power
+but can never add a preemption on zero evidence, and local sensing is never
+itself doubted.
+
+In closed-loop traffic (honest / blatant / stealth misreporting injected
+into SUMO), the mechanism detects and contains blatant lying on grid
+networks, while a stealth attacker calibrated to stay within plausible
+bounds evades detection, and the mechanism is inert on the corridor (where
+coordination traffic is minimal). I report the stealth evasion as an open
+limitation rather than defending against it post-hoc.
+\todo{exact detection/delay numbers from experiment\_trust\_traffic
+results.}
+
+\section{Serving reliability at the edge}\label{sec:res-reliability}
+Sustained on-device serving produced four documented reliability findings
+across the campaign: (i) the catalogue Qwen3-0.6B GPU artifact emitting
+corrupted tokens after long service uptime; (ii, iii) two unprompted Foundry
+Local service self-restarts mid-evaluation, killing runs at 5{,}500/5{,}580
+and 4{,}300/5{,}580 rows; (iv) registration of builder-compiled models
+requiring undocumented synthesis of the inference manifest. Each was
+mitigated in harness --- endpoint rediscovery, model reload with
+retry-of-failed-rows and statistics intact, fail-loud parse accounting that
+aborts rather than scores error text --- and the mitigations are themselves
+contributions: they are what turned a research prototype into a harness that
+survived a six-week unattended campaign. Decision latency held at
+0.4--1.1\,s p50 GPU-served across all models --- a $9\times$ margin inside
+the 10\,s decision interval --- and p99 stayed under 2\,s in every sweep.

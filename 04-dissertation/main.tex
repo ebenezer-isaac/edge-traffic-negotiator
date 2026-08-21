@@ -1,0 +1,29 @@
+% The Edge Negotiator — MSc dissertation
+% Build: latexmk -pdf main.tex   (MiKTeX; biber backend)
+\documentclass[11pt,a4paper,oneside]{report}
+\input{preamble}
+
+\addbibresource{references.bib}
+
+\begin{document}
+
+\input{frontmatter}
+
+\tableofcontents
+\clearpage
+
+\input{chapters/01-introduction}
+\input{chapters/02-background}
+\input{chapters/03-design}
+\input{chapters/04-implementation}
+\input{chapters/05-methodology}
+\input{chapters/06-results}
+\input{chapters/07-discussion}
+\input{chapters/08-conclusion}
+
+\printbibliography[heading=bibintoc]
+
+\appendix
+\input{chapters/appendix}
+
+\end{document}

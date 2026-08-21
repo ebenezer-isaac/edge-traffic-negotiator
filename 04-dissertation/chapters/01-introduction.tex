@@ -1,0 +1,102 @@
+\chapter{Introduction}\label{ch:intro}
+% WORD BUDGET: ~1200 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
+
+\section{Motivation}\label{sec:intro-motivation}
+Traffic signals are the most consequential actuators most cities own, and
+the research frontier has begun handing them to large language models:
+GPT-4-distilled controllers \cite{lai2023llmlight}, RL-tuned reasoning
+models \cite{wang2025trafficr1}, and cooperative LLM agents
+\cite{collmlight2025} now populate the literature. Yet every one of these
+controllers is evaluated against a cloud endpoint, while the junction
+itself is an edge environment: a signal cabinet has no guaranteed backhaul,
+a hard memory envelope, and --- uniquely among LLM application domains ---
+a statutory duty to account for itself when a collision occurs. Between
+the literature and a deployable junction sit two unanswered questions:
+whether a language model small enough to live in the cabinet can control
+real junctions competently, and whether its decisions can be bound into a
+record an investigator can trust. This dissertation answers both together,
+because they are not separable: an accountability record is only
+meaningful if the component it certifies actually authored the behaviour.
+
+The work is conducted with and for a Microsoft-supervised context, which
+fixes the serving stack as a hard constraint: Microsoft Foundry Local on a
+6\,GB consumer GPU, capping the model ladder at roughly 4B parameters.
+I treat the constraint as the research object rather than an
+inconvenience --- the question is what \emph{this} deployable envelope can
+do, not what a datacentre could.
+
+\section{Research questions}\label{sec:intro-rqs}
+\begin{enumerate}
+\item[\textbf{RQ1}] Can an on-device SLM ($\le$4\,GB, Foundry Local,
+RTX~2060-class), behind a deterministic safety shield, match or beat
+classical baselines (fixed-time, MaxPressure) on measured London
+topologies in SUMO?
+\item[\textbf{RQ2}] What does distilling a frontier teacher into the SLM
+buy, offline and closed-loop --- and at what model scale does the benefit
+saturate?
+\item[\textbf{RQ3}] Can every actuation be bound into a tamper-evident
+audit that, after a simulated collision, yields a UK-law-grounded evidence
+pack rather than an unaccountable log?
+\item[\textbf{RQ4}] Does a trust-coefficient mechanism over neighbour
+reports withstand honest, blatant, and stealth misreporting?
+\end{enumerate}
+
+\section{Contributions}\label{sec:intro-contributions}
+\begin{enumerate}
+\item \textbf{The first documented end-to-end chain} from QLoRA
+fine-tuning through int4 ONNX compilation to Foundry Local serving of a
+custom model, with bit-identical CPU/GPU decision equivalence and four
+documented serving-reliability findings with mitigations
+(\S\ref{sec:imp-compile}, \S\ref{sec:res-reliability}).
+\item \textbf{A scale-saturation result}: frontier distillation lifts a
+0.6B student to the teacher-agreement ceiling (97--99\%), and a 3.8B
+student lands on statistically identical numbers --- capability is not the
+bottleneck at this task, the distillation ceiling is
+(\S\ref{sec:res-offline}).
+\item \textbf{The authorship finding}, the dissertation's headline:
+offline accuracy decouples from closed-loop delay (neither student
+significantly beats the fixed-time floor at $n{=}30$), but fine-tuning
+cuts shield override from 0.46--0.60 to 0.11--0.18 and raises the SLM's
+authored share of served decisions to 0.90 --- converting the system from
+shield-driven to model-authored control, which is the property a
+meaningful audit requires (\S\ref{sec:res-authorship}).
+\item \textbf{A scope-bounded MaxPressure reversal}: on every measured
+London topology in this study, MaxPressure is worse than naive fixed-time
+--- it dominates only the synthetic grids the literature tests on --- with
+a mechanism grounded in the finite-capacity and load assumptions of the
+underlying theorems (\S\ref{sec:res-maxpressure}).
+\item \textbf{A proven audit-to-law pipeline}: seven collision scenarios
+reconstructed from signed, hash-chained records, with tampering caught and
+the governing UK rule inferred deterministically from verified facts,
+emitting cited evidence packs rather than verdicts
+(\S\ref{sec:res-audit}).
+\item \textbf{An honestly-scoped trust mechanism}: asymmetric,
+discount-only trust that contains blatant misreporting but is evaded by a
+calibrated stealth attacker --- reported as a limitation, not defended
+away (\S\ref{sec:res-trust}).
+\end{enumerate}
+
+\section{Scope and thesis statement}\label{sec:intro-scope}
+The locked thesis question of this project is exploratory: \emph{is an
+on-device Foundry-Local SLM traffic controller that matches or beats
+classical control on real London topology, while producing a provable
+accident audit, possible at all --- and at what model scale and
+configuration?} It is a feasibility and scale-threshold study. Everything
+runs in SUMO; three real London topologies plus synthetic grids; demand
+magnitudes are measured, their realisations synthetic; comparators are
+classical (fixed-time, MaxPressure), not trained deep-RL systems, because
+the contribution is on-device feasibility plus auditability, not a new
+state of the art in delay. Limitations are reported as findings throughout
+--- the evaluative stance is that a negative with a mechanism is worth
+more than an unexamined positive.
+
+\section{Dissertation structure}\label{sec:intro-structure}
+Chapter~\ref{ch:background} positions the work against the classical,
+learning-based, and LLM signal-control literatures and the audit and
+shielding theory it builds on. Chapter~\ref{ch:design} presents the
+architecture and defines the authorship metrics. Chapter~\ref{ch:implementation}
+records the engineering, including the serving chain. Chapter~\ref{ch:methodology}
+fixes metrics, statistics, and leakage controls. Chapter~\ref{ch:results}
+reports the evidence in the order it was built. Chapter~\ref{ch:discussion}
+answers the research questions, analyses the delay-decoupling mechanism,
+and states threats to validity. Chapter~\ref{ch:conclusion} concludes.

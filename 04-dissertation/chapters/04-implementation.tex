@@ -1,0 +1,95 @@
+\chapter{Implementation}\label{ch:implementation}
+% WORD BUDGET: ~1200 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
+
+This chapter records the engineering that made the design measurable: the
+simulated London networks, the on-device serving stack and its documented
+failure modes, the distillation and compile chain, and the experiment
+harness. I keep it tight and evidence-focused; the reproducibility pins
+(versions, seeds, templates) are tabulated in Appendix~\ref{app:repro}.
+
+\section{Simulation environment and topologies}\label{sec:imp-sumo}
+All control runs in SUMO with TraCI. Six topologies span the
+regular-synthetic to irregular-real axis that Chapter~\ref{ch:results}
+shows is decisive: two synthetic grids (3$\times$3, 4$\times$4); the Euston
+A501 corridor and its peak-hour variant, whose demand uses the measured DfT
+hourly diurnal profile and vehicle mix for the A501; a Bloomsbury grid
+extracted from OpenStreetMap; and the Old Street complex junction (nine
+signals including a single five-arm, seventeen-movement junction,
+demand-calibrated after default random demand gridlocked it). Real-map
+demand magnitudes are measured; their vehicle-by-vehicle realisations are
+synthetic draws per seed --- a scoping honestly carried through every claim
+(\S\ref{sec:dis-threats}).
+
+\section{On-device serving with Foundry Local}\label{sec:imp-foundry}
+Serving is Microsoft Foundry Local (pinned 0.8.119) on an RTX~2060 with
+6\,GB VRAM --- consumer hardware of roughly signal-cabinet class, and a
+hard project constraint rather than a convenience: the model ladder is
+capped at $\sim$4B (7B-class models OOM the runtime, recorded), which is
+what makes the scale-saturation result (\S\ref{sec:res-offline})
+deployment-relevant rather than academic.
+
+Custom models serve through two execution providers. The CPU path works
+out of the box; the WebGPU path requires editing the compiled model's
+\texttt{genai\_config.json} provider options --- and delivers roughly
+$2\times$ lower latency with \emph{bit-identical} holdout decisions,
+which licensed running every sweep GPU-served. Windows~ML CUDA
+autoregistration requires a newer Windows build than the test machine's,
+making WebGPU the effective GPU path; I document this because none of it
+is in the product documentation, and the recipe is part of the
+contribution.
+
+Sustained unattended serving surfaced four reliability findings ---
+catalogue-artifact token corruption after long uptime, two unprompted
+service self-restarts mid-evaluation, and undocumented registration
+requirements for compiled models --- each mitigated in harness
+(\S\ref{sec:imp-harness}) and reported as results
+(\S\ref{sec:res-reliability}).
+
+\section{Distillation dataset and training}\label{sec:imp-dataset}
+From four training-reserved seeds I sampled 5{,}952 unique junction states
+and labelled them with a frontier teacher; a second frontier model
+re-labelled audit samples at 98.0--99.0\% agreement. Rendering the four
+prompt formats over the labelled pool yields 59{,}533 training examples and
+a hash-frozen holdout of 5{,}580 (\texttt{HOLDOUT\_MOD}=12). Rendering is
+family-aware --- ChatML with an empty think block and no-think marker for
+Qwen3; Qwen2.5's ChatML without the marker; Phi's
+\texttt{<|system|>\ldots<|end|>} convention --- with loss computed on the
+completion only, targeting exactly \texttt{\{"phase": N\}}.
+
+Training is QLoRA $r{=}16$, NF4 double quantisation, fp16 compute. The
+0.6B student trained on the serving machine itself (13.5\,h on the
+RTX~2060 --- the full loop from teacher to served controller fits on one
+consumer device); the 3.8B student and its five ablation variants trained
+on a single UCL RTX~4090 (2.3\,h each, 8.9M trainable parameters, 0.23\%).
+
+\section{Compile-and-serve chain}\label{sec:imp-compile}
+The path from merged bf16 weights to a served endpoint is undocumented for
+custom models, and assembling it produced pinned lessons now recorded in
+the project's feasibility log: the onnxruntime-genai model builder must run
+against a specific transformers pairing (newer tokenizer configs emit a
+\texttt{tokenizer\_class} Foundry cannot load --- patched to the catalogue
+value); Phi checkpoints need their remote-code mappings stripped; and a
+compiled model is not servable until an inference manifest
+(\texttt{inference\_model.json} --- name and prompt template) is
+\emph{synthesised}, because the builder does not emit one. The eventual
+chain --- QLoRA merge $\to$ int4 RTN compile $\to$ config patch $\to$
+manifest synthesis $\to$ cache registration $\to$ WebGPU provider swap ---
+is, to my knowledge, the first documented end-to-end recipe for serving a
+custom fine-tuned model through Foundry Local.
+
+\section{Experiment harness}\label{sec:imp-harness}
+Two harnesses produced every number in this dissertation. The
+\textbf{factorial runner} executes model $\times$ format $\times$ topology
+$\times$ seed cells with per-cell raw JSON artifacts, a pre-flight serving
+probe per cell (no silent parity: an unservable model records a skip, never
+a score), resumability (existing cells are skipped, so crashes and restarts
+lose at most one cell), and multi-pass retry for deferred cells. The
+\textbf{offline evaluator} scores holdout rows against the served endpoint
+with fail-loud error accounting --- API errors are counted, never scored as
+answers --- and, after the observed service self-restarts, recovery logic
+that rediscovers the endpoint, reloads the model, and retries failed rows
+with statistics intact. The harness survived a six-week unattended
+campaign including two service restarts, one machine reboot, and one
+mid-write power loss (one corrupted cell, detected by JSON validation and
+re-run); I regard the fail-loud discipline itself as a methodological
+contribution of the work.

@@ -1,0 +1,49 @@
+\chapter{Conclusion}\label{ch:conclusion}
+% WORD BUDGET: ~700 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
+
+This dissertation asked whether an on-device small language model, served
+by Microsoft Foundry Local within a 6\,GB envelope, can control real
+London junctions competently while producing an accident audit worth
+trusting --- and at what scale the learned component earns its place.
+
+The answer to feasibility is yes, with the scope stated plainly. A
+shielded SLM beats the fixed-time floor on every topology tested, and
+beats MaxPressure exactly where its optimality assumptions collapse ---
+on measured, irregular London geometry, where I show the celebrated
+baseline is worse than naive fixed-time. The full control loop, from
+frontier-teacher distillation through QLoRA training to int4 serving, fits
+on one consumer device; the 0.6B student trained on the same GPU that
+serves it.
+
+The answer to scale is sharper than expected: distillation saturates at
+0.6B. A student six times larger lands on statistically identical
+decision accuracy, no format specialist beats a generalist even on its
+own format, and a student trained without one topology loses nothing on
+it. Within this deployable envelope, capability is not the bottleneck ---
+the distillation ceiling is.
+
+The central finding reframes what fine-tuning is \emph{for} in a shielded
+controller. Closed-loop, at thirty disjoint seeds per topology, the
+97\%-accurate student does not significantly beat the floor --- and
+neither does anything else inside the shield's envelope, whose compression
+of outcomes, together with the small delay headroom the wider literature
+itself reports, explains the decoupling. What fine-tuning demonstrably
+moves is authorship: override falls from 0.46--0.60 to 0.11--0.18, the
+model's authored share of served actuations reaches 0.90, and the stock
+model's one significant harm disappears. Because the audit layer proves
+who decided what --- seven collision scenarios reconstructed end-to-end,
+tampering caught, governing UK law inferred from verified facts into
+cited evidence packs --- authorship is precisely what makes the audit
+about the certified model rather than its fallback. Fine-tuning buys
+accountability, not delay.
+
+The dissertation's credibility rests as much on its nulls as its wins:
+the corridor null at $n{=}30$, the stealth attacker that evades the trust
+ledger, the privileged-teacher ceiling on the myopic format, and the four
+serving-reliability failures are reported with mechanisms, because a
+feasibility study that hides its boundary conditions has not established
+feasibility. Within those boundaries, the case is made: an audited,
+shielded, on-device SLM junction controller is possible today, at 0.6B,
+on hardware a signal cabinet could house --- and the path from here runs
+through closed-loop objectives, synthesized shields, and a
+watchdog-supervised field pilot.

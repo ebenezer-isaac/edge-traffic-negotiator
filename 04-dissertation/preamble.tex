@@ -1,0 +1,61 @@
+% Style adapted from the supervision progress report (05-supervision/report/,
+% git f440aba~1): newtx faces, nbblue/nbteal palette, sans headers, booktabs.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+\usepackage[style=numeric-comp,sorting=nyt,backend=biber,maxbibnames=6]{biblatex}
+
+\definecolor{nbblue}{HTML}{1F4E79}
+\definecolor{nbteal}{HTML}{2E8B8B}
+\definecolor{nbred}{HTML}{B83227}
+\definecolor{nbgrey}{HTML}{555555}
+\definecolor{nbband}{HTML}{EAF0F6}
+
+% Chapter/section typography: sans, nbblue, no fussy ornaments.
+\titleformat{\chapter}[display]
+  {\sffamily\bfseries\color{nbblue}\huge}
+  {\sffamily\normalsize\color{nbgrey}Chapter \thechapter}{6pt}{}
+\titlespacing{\chapter}{0pt}{-20pt}{18pt}
+\titleformat{\section}{\sffamily\bfseries\color{nbblue}\large}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\sffamily\bfseries\color{nbblue}\normalsize}{\thesubsection}{0.6em}{}
+\titlespacing{\section}{0pt}{10pt}{4pt}
+\titlespacing{\subsection}{0pt}{8pt}{3pt}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlist[itemize]{leftmargin=1.4em,itemsep=1pt,topsep=2pt,parsep=0pt}
+\renewcommand{\arraystretch}{1.12}
+\captionsetup{font=small,labelfont={sf,bf,color=nbblue}}
+
+% Inline emphasis helpers carried over from the report style.
+\newcommand{\hd}[1]{{\color{nbblue}\textbf{#1}}}
+\newcommand{\finding}[1]{{\color{nbteal}\textbf{#1}}}
+\newcommand{\risk}[1]{{\color{nbred}\textbf{#1}}}
+
+% Draft scaffolding: visible TODO markers; flip \drafttrue -> \draftfalse to hide.
+\newif\ifdraft\drafttrue
+\newcommand{\todo}[1]{\ifdraft{\color{nbred}\sffamily\small [TODO: #1]}\fi}
+\newcommand{\evidence}[1]{\ifdraft{\color{nbgrey}\sffamily\footnotesize [evidence: \detokenize{#1}]}\fi}
+
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,
+  framerule=0.3pt,rulecolor=\color{nbgrey},backgroundcolor=\color{nbband}}

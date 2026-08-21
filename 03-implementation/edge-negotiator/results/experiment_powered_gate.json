@@ -1,36 +1,51 @@
 {
+ "experiment": "H1_powered_runs_honest_gate",
+ "gate": "D-H1-perf / D8 (\u00a78 demand-honesty startup gate)",
+ "status": "PARTIALLY UNBLOCKED (updated 2026-08-21; supersedes the fully-GATED 2026-07 object, preserved below)",
+ "unblocked": [
+  "n>=30 paired inferential claims on euston_peakhour: demand uses the NAMED, TIME-RESOLVED DfT hourly diurnal profile + direction + vehicle mix for the A501 (commits 96ec35d/2ce3d33) -- a \u00a78-permitted source.",
+  "n>=30 paired inferential claims on oldstreet_junction under its calibrated-synthetic demand, labelled as such.",
+  "Artifacts: experiment_seed30_powered.json (16 stock cells vs BOTH baselines), frontier_raw ft closed-loop (qwen n=30 + phi n=30, disjoint seeds)."
+ ],
+ "still_gated": [
+  "Turning proportions remain ASSUMED (TfL FOI outstanding) -- claims sensitive to junction turning ratios stay conditioned.",
+  "TOST parity conclusions and powered-null claims: NO pre-registered MDE from an external operational-harm threshold and no single named CI method in the seed30 artifact -- report direction/magnitude/p only, never 'proven equivalent'.",
+  "Bloomsbury and euston_corridor demand realisations are synthetic magnitudes on real topology (unchanged)."
+ ],
+ "superseded_2026_07_object": {
   "experiment": "H1_powered_runs_honest_gate",
   "gate": "D-H1-perf / D8 (\u00a78 demand-honesty startup gate)",
   "status": "GATED (pilot-only) -- inferential runs deferred",
   "claimable_now": [
-    "DESCRIPTIVE pilot results, explicitly labelled PILOT / SMOKE / n=1 per cell (the feasibility map + scale threshold + the config-arm smoke).",
-    "An honest NEGATIVE or a conditional POSITIVE is a valid pilot result and PASSES the D-H1-perf reporting gate when labelled (\u00a712)."
+   "DESCRIPTIVE pilot results, explicitly labelled PILOT / SMOKE / n=1 per cell (the feasibility map + scale threshold + the config-arm smoke).",
+   "An honest NEGATIVE or a conditional POSITIVE is a valid pilot result and PASSES the D-H1-perf reporting gate when labelled (\u00a712)."
   ],
   "blocked_until_time_resolved_demand": [
-    "Any significance / p-value / confidence-interval claim.",
-    "A TOST parity conclusion or a powered null (null only when CI half-width < a pre-registered numeric MDE from an external operational-harm threshold).",
-    "n>=30 paired deltas vs MaxPressure with ONE CI method across the study."
+   "Any significance / p-value / confidence-interval claim.",
+   "A TOST parity conclusion or a powered null (null only when CI half-width < a pre-registered numeric MDE from an external operational-harm threshold).",
+   "n>=30 paired deltas vs MaxPressure with ONE CI method across the study."
   ],
   "what_would_unblock": [
-    "A NAMED, TIME-RESOLVED demand source: TfL hourly counts + turning counts + vehicle mix for the Euston A501 corridor (\u00a78/\u00a79).",
-    "Then: re-run the sweep at n>=30 seeds/cell under the pinned protocol (paired deltas, BCa/permutation + Holm, pre-registered MDE, TOST)."
+   "A NAMED, TIME-RESOLVED demand source: TfL hourly counts + turning counts + vehicle mix for the Euston A501 corridor (\u00a78/\u00a79).",
+   "Then: re-run the sweep at n>=30 seeds/cell under the pinned protocol (paired deltas, BCa/permutation + Holm, pre-registered MDE, TOST)."
   ],
   "demand_honesty": "Euston demand is DfT DAILY-AADF calibrated: magnitude + mix are REAL (cp 18077/56815, 2025), the hourly profile + directional split + turning proportions are ASSUMED. So every H1 traffic result here is a PILOT.",
   "pilot_evidence": [
-    {
-      "artifact": "experiment_sweep.json",
-      "kind": "model x config feasibility map (PILOT, n=1/cell)",
-      "baseline_delay_s": 314.54647435897436,
-      "scale_threshold_reached": true,
-      "smallest_parity_model": "qwen2.5-0.5b",
-      "simplest_parity_config": "myopic",
-      "label": "PILOT / SMOKE"
-    },
-    {
-      "artifact": "experiment_traffic_arms.json",
-      "kind": "config-arm smoke (PILOT, n=1/arm)",
-      "label": "PILOT / SMOKE"
-    }
+   {
+    "artifact": "experiment_sweep.json",
+    "kind": "model x config feasibility map (PILOT, n=1/cell)",
+    "baseline_delay_s": 314.54647435897436,
+    "scale_threshold_reached": true,
+    "smallest_parity_model": "qwen2.5-0.5b",
+    "simplest_parity_config": "myopic",
+    "label": "PILOT / SMOKE"
+   },
+   {
+    "artifact": "experiment_traffic_arms.json",
+    "kind": "config-arm smoke (PILOT, n=1/arm)",
+    "label": "PILOT / SMOKE"
+   }
   ],
   "honest": "This is an HONEST GATE, not a skipped obligation: the powered inferential runs are well-defined and would run unchanged once the time-resolved source lands; withholding the inferential claim until then is the correct scientific posture, not a gap."
+ }
 }

@@ -49,7 +49,8 @@ class SamplingAgent:
                    "current": bool(p.get("current", False))} for p in phase_context]
         self.samples.append({"junction": junction_id, "num_phases": int(num_phases),
                              "halting_per_phase": [int(x) for x in halting_per_phase],
-                             "phase_context": pc})
+                             "phase_context": pc,
+                             "neighbor_note": neighbor_note or ""})
         return None
 
 
@@ -89,26 +90,21 @@ def sample_states(per_map=20, end=1200, gate=2, seed=42):
     return out
 
 
-SYSTEM = (
-    "You control ONE traffic-signal junction (this junction only; no neighbour information). "
-    "For each green phase you are given: queued vehicles, their TOTAL accumulated waiting time "
-    "(s), and whether it is currently green. Choose the phase to serve next to MINIMISE total "
-    "waiting time and unnecessary stops -- not simply the longest queue. Prefer a phase with both "
-    "many waiting vehicles AND high accumulated waiting; avoid starving a long-waiting phase; keep "
-    "the current phase unless another is clearly worse-off (switching makes a queue stop/restart). "
-    'Reply with ONLY JSON {"phase": <index>}.'
-)
+# CANONICALISED (MASTER-SPEC §14.3 step 2, 2026-08-06): the battery now labels/trains on the
+# byte-identical LIVE controller prompt from slm_agent (its module-level builders), replacing a
+# paraphrased format (queue=/waiting_s=/", CURRENT" + a different system text) that the controller
+# never sends. The historical n=80 results (results/decision_battery_full.json et al.) were scored
+# under the OLD format and remain valid as their own recorded experiment; every new labeling round
+# uses the live format below.
+from slm_agent import (SYSTEM_DELAY_AWARE as SYSTEM,  # noqa: E402
+                       build_delay_aware_user, build_myopic_user)
 
 
 def build_prompt(state):
     pc = state.get("phase_context")
     if pc:
-        rows = "; ".join(
-            f"phase {i}: queue={p['queue']}, waiting_s={p['waiting']:.0f}"
-            f"{', CURRENT' if p['current'] else ''}" for i, p in enumerate(pc))
-    else:
-        rows = "; ".join(f"phase {i}: queue={n}" for i, n in enumerate(state["halting_per_phase"]))
-    return f"Junction {state['junction']} ({state['num_phases']} phases). {rows}. Which phase?"
+        return build_delay_aware_user(state["junction"], pc)
+    return build_myopic_user(state["junction"], state["halting_per_phase"])
 
 
 def greedy_ref(state):

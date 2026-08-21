@@ -53,6 +53,31 @@ SYSTEM_DELAY_AWARE = (
     'Reply with ONLY JSON {"phase": <index>} and nothing else.'
 )
 
+def build_myopic_user(junction_id, halting_per_phase, neighbor_note: str = "") -> str:
+    """The LIVE myopic user prompt, verbatim what choose_phase sends. Module-level so
+    the fine-tuning dataset builder and the decision battery train/label on the exact
+    prompt the controller emits (MASTER-SPEC §14.3 step 2 canonicalisation)."""
+    per_phase = ", ".join(f"phase {i} = {n}" for i, n in enumerate(halting_per_phase))
+    user = (f"Junction {junction_id}. Waiting vehicles per phase: {per_phase}. "
+            'Which phase should get green now? Reply ONLY {"phase": <index>}.')
+    if neighbor_note:
+        user = f"{user} {neighbor_note}"
+    return user
+
+
+def build_delay_aware_user(junction_id, phase_context) -> str:
+    """The LIVE delay-aware (sota) user prompt, verbatim what _choose_phase_delay_aware
+    sends. Single source of prompt truth for training/labeling (§14.3 step 2)."""
+    parts = []
+    for i, ctx in enumerate(phase_context):
+        q = int(ctx.get("queue", 0))
+        w = float(ctx.get("waiting", 0.0))
+        cur = " (CURRENT)" if ctx.get("current") else ""
+        parts.append(f"phase {i}: queued={q}, wait={w:.0f}s{cur}")
+    return (f"Junction {junction_id}. " + "; ".join(parts)
+            + '. Which phase should get green now? Reply ONLY {"phase": <index>}.')
+
+
 # Prompt for the ambiguous-case disambiguation job (Experiment 1). The model
 # judges a flagged event as real or fake/faulty from partial evidence, the one
 # decision a fixed per-junction rule cannot cleanly settle. We give qualitative
@@ -241,11 +266,7 @@ class SLMAgent:
         if phase_context is not None:
             return self._choose_phase_delay_aware(junction_id, num_phases,
                                                   phase_context)
-        per_phase = ", ".join(f"phase {i} = {n}" for i, n in enumerate(halting_per_phase))
-        user = (f"Junction {junction_id}. Waiting vehicles per phase: {per_phase}. "
-                'Which phase should get green now? Reply ONLY {"phase": <index>}.')
-        if neighbor_note:
-            user = f"{user} {neighbor_note}"
+        user = build_myopic_user(junction_id, halting_per_phase, neighbor_note)
         try:
             resp = self.client.chat.completions.create(
                 model=self.model, temperature=0, max_tokens=self.max_tokens,
@@ -261,14 +282,7 @@ class SLMAgent:
         """Delay-aware myopic decision (SYSTEM_DELAY_AWARE). Builds a per-phase state
         line with queue + accumulated waiting time (s) + current-phase marker. None
         on failure."""
-        parts = []
-        for i, ctx in enumerate(phase_context):
-            q = int(ctx.get("queue", 0))
-            w = float(ctx.get("waiting", 0.0))
-            cur = " (CURRENT)" if ctx.get("current") else ""
-            parts.append(f"phase {i}: queued={q}, wait={w:.0f}s{cur}")
-        user = (f"Junction {junction_id}. " + "; ".join(parts)
-                + '. Which phase should get green now? Reply ONLY {"phase": <index>}.')
+        user = build_delay_aware_user(junction_id, phase_context)
         try:
             resp = self.client.chat.completions.create(
                 model=self.model, temperature=0, max_tokens=self.max_tokens,

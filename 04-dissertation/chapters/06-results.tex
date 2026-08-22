@@ -312,13 +312,41 @@ but can never add a preemption on zero evidence, and local sensing is never
 itself doubted.
 
 In closed-loop traffic (honest / blatant / stealth misreporting injected
-into SUMO), the mechanism detects and contains blatant lying on grid
-networks, while a stealth attacker calibrated to stay within plausible
-bounds evades detection, and the mechanism is inert on the corridor (where
-coordination traffic is minimal). I report the stealth evasion as an open
-limitation rather than defending against it post-hoc.
-\todo{exact detection/delay numbers from experiment\_trust\_traffic
-results.}
+into SUMO), I ran the battery against \emph{both} stock and fine-tuned
+controllers at both scales --- the fine-tuned deployment is the one that
+matters, precisely because of \S\ref{sec:res-authorship}: a controller that
+actually acts on its coordination inputs is the one poisoned inputs can
+move. Three findings (three seeds per cell, descriptive).
+
+First, \finding{detection is controller-independent by design and in
+measurement}: the ledger scores claims against local sensing, and under
+every controller a blatant liar is caught and collapsed (Bloomsbury: 62--70
+catches, final trust 0.21--0.27; grid4$\times$4: 146--151 catches, trust
+$\le$0.03, corroboration power stripped), while a calibrated stealth
+attacker evades essentially everywhere ($\le$2 catches, trust $\ge$0.92) ---
+the stealth evasion stands as an open limitation. On the corridor and Old
+Street the liar junction is never consulted, so the mechanism is inert
+there (zero lies injectable) --- reported, not hidden.
+
+Second, \finding{the delay cost of blatant lying survives detection}:
+on the synthetic grids blatant misreporting adds roughly $+3$ to $+11$
+points of delay relative to the same controller's honest run even though
+the liar's trust collapses --- trust bounds the liar's future influence
+but does not undo congestion already caused. On Bloomsbury, the real
+grid, local-sensing override holds the damage to within $\sim$3 points
+(fine-tuned qwen: $-1.3\%$ under blatant attack vs $-1.1\%$ honest).
+
+Third, \finding{stealth's harm is positional, not congestive}: the
+stealth attacker's small, intermittent inflations cost approximately
+nothing in delay ($-2$ to $+3$ points vs honest) --- what stealth buys is
+retained corroboration power at high trust, a position it could later
+abuse. The threat model that matters for a fine-tuned deployment is
+therefore asymmetric: blatant attacks are caught but briefly expensive on
+congested grids; stealth attacks are cheap, patient, and undetected. Both
+conclusions argue that the trust ledger is a necessary companion to
+fine-tuning rather than an optional extra, and that detection calibrated
+to distributional implausibility (\S\ref{sec:dis-future}) is the right
+next defence.
 
 \section{Serving reliability at the edge}\label{sec:res-reliability}
 Sustained on-device serving produced four documented reliability findings

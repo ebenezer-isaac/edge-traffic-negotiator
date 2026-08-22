@@ -72,7 +72,9 @@ def run(model="qwen2.5-0.5b", seeds=(42, 7, 123), end=1200, gate=2):
         print(f"  {label}: liar junction = {liar}", flush=True)
         for scenario in SCENARIOS:
             for s in seeds:
-                rawp = os.path.join(RAW, f"{label}__{scenario}__s{s}.json")
+                # model-qualified since 2026-08-21 (the unqualified path let one
+                # model's cells shadow every other model's -- ft cells skipped).
+                rawp = os.path.join(RAW, f"{model}__{label}__{scenario}__s{s}.json")
                 if os.path.exists(rawp):
                     print(f"    {scenario:8s} s{s} SKIP", flush=True)
                     continue
@@ -99,16 +101,24 @@ def run(model="qwen2.5-0.5b", seeds=(42, 7, 123), end=1200, gate=2):
                 print(f"    {scenario:8s} s{s} delay_rel={rec['delay_rel_pct']}% "
                       f"lies={rec['n_lies_injected']} liar_trust={rec['liar_trust']} "
                       f"caught={rec['liar_lies_caught']} corrob={rec['liar_can_corroborate']}", flush=True)
-    aggregate()
+    aggregate(model)
     return {"cells": cells}
 
 
-def aggregate():
+def aggregate(model="qwen2.5-0.5b"):
+    """Aggregate ONE model's cells (model-qualified files; the historical
+    unqualified files are the original qwen2.5-0.5b run and match only it)."""
     if not os.path.isdir(RAW):
         return
     rows = []
     for fn in sorted(os.listdir(RAW)):
-        if fn.endswith(".json"):
+        if not fn.endswith(".json"):
+            continue
+        qualified = fn.startswith(f"{model}__")
+        legacy = model == "qwen2.5-0.5b" and "__" in fn and not any(
+            fn.startswith(f"{m}__") for m in
+            ("qwen3-0.6b-ft1", "qwen3-0.6b-ft0", "phi4mini-gen-gpu", "qwen2.5-0.5b"))
+        if qualified or legacy:
             with open(os.path.join(RAW, fn), encoding="utf-8") as fh:
                 rows.append(json.load(fh))
     # group by (topology, scenario): mean delay_rel + mean liar trust
@@ -131,7 +141,7 @@ def aggregate():
             "mean_delay_rel_pct": mean(a["rel"]), "n": len(a["rel"]),
             "mean_liar_final_trust": mean(a["trust"]), "mean_lies_caught": mean(a["caught"]),
             "mean_lies_injected": mean(a["lies"])}
-    jp = os.path.join(RESULTS, "experiment_trust_traffic.json")
+    jp = os.path.join(RESULTS, f"experiment_trust_traffic_{model}.json")
     with open(jp, "w", encoding="utf-8") as fh:
         json.dump(out, fh, indent=2)
     print(f"aggregated -> {jp}", flush=True)
@@ -149,6 +159,6 @@ if __name__ == "__main__":
     ap.add_argument("--aggregate", action="store_true")
     ns = ap.parse_args()
     if ns.aggregate:
-        aggregate()
+        aggregate(ns.model)
     else:
         run(model=ns.model, seeds=tuple(ns.seeds), end=ns.end)

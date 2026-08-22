@@ -1,0 +1,447 @@
+{
+  "experiment": "lee_fair_retest_slm_auth",
+  "gold": "deterministic KB gate (experiment_vehicle_auth)",
+  "model": "phi4mini-gen-gpu",
+  "dataset_size": 26,
+  "arms": {
+    "scaffold": {
+      "n": 26,
+      "class_accuracy": 0.1923,
+      "grant_accuracy": 0.3462,
+      "parse_fail": 15,
+      "precision": 0.5,
+      "recall": 1.0,
+      "false_positive_rate": 0.5294,
+      "false_negative_rate": 0.0,
+      "dangerous_false_grants": 9,
+      "latency_p50": 5.866,
+      "latency_p95": 18.2,
+      "latency_p99": 18.228,
+      "misses": [
+        {
+          "category": "valid_ambulance",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "valid_ambulance",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "valid_ambulance",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "valid_police",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "valid_police",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "valid_police",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "valid_fire",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "valid_fire",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "valid_fire_lanehold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "valid_maintenance_hold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_maintenance_hold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_civilian",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "unknown_vehicle",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "unknown_vehicle",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "invalid_id",
+          "expected": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "signal_tampering",
+          "expected": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "signal_tampering",
+          "expected": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            null,
+            null
+          ]
+        },
+        {
+          "category": "contradictory",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "contradictory",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        }
+      ]
+    },
+    "bare": {
+      "n": 26,
+      "class_accuracy": 0.5385,
+      "grant_accuracy": 0.4615,
+      "parse_fail": 0,
+      "precision": 0.2222,
+      "recall": 1.0,
+      "false_positive_rate": 0.6364,
+      "false_negative_rate": 0.0,
+      "dangerous_false_grants": 14,
+      "latency_p50": 0.782,
+      "latency_p95": 0.927,
+      "latency_p99": 0.945,
+      "misses": [
+        {
+          "category": "valid_fire_lanehold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "valid_maintenance_hold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "valid_maintenance_hold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "valid_civilian",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "unknown_vehicle",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "unknown_vehicle",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "unknown_vehicle",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "signal_tampering",
+          "expected": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "signal_tampering",
+          "expected": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "signal_tampering",
+          "expected": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "contradictory",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "contradictory",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        }
+      ]
+    }
+  }
+}

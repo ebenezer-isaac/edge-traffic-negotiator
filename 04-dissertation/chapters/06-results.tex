@@ -348,6 +348,37 @@ fine-tuning rather than an optional extra, and that detection calibrated
 to distributional implausibility (\S\ref{sec:dis-future}) is the right
 next defence.
 
+\section{The fair re-test of the SLM authorisation negative}\label{sec:res-lee}
+An early measured negative --- the raw SLM losing to a deterministic
+template on its legal-note job --- carried a supervisor-posed objection
+(Stott): the model was guessing because the policy was never in front of
+it, so the negative cannot stand until the SLM is re-tested with explicit
+in-prompt rules and a reason-then-classify structure. I ran that re-test
+on the balanced 26-claim authorisation dataset of \S\ref{sec:res-audit}'s
+suite, four models $\times$ two arms (policy-scaffolded vs bare), scored
+against the deterministic knowledge-base gate.
+
+The objection is partially vindicated: for a capable stock model the
+scaffold works. Stock Phi-4-mini rises from 42.3\% to 69.2\% class
+accuracy, its false-negative rate falls to zero, and it stops denying any
+genuine emergency. But the negative itself is robust: even the best cell
+--- stock Phi, scaffolded --- still makes \risk{four dangerous false
+grants} (granting preemption to claims that must be denied, FPR 0.33)
+where the deterministic gate makes none in 26/26. Policy grounding
+rescues recall, not safety.
+
+The re-test also produced this dissertation's clearest evidence of
+specialisation cost: the \emph{fine-tuned} students are far worse here
+than their own stock bases --- ft-Phi falls to 19.2\% scaffolded with 15
+of 26 responses unparseable, and ft-Qwen cannot emit the required
+\texttt{\{"class", "grant"\}} schema at all bare (26/26 parse failures),
+because distillation captured its output format onto
+\texttt{\{"phase": N\}}. The retention probe's mild MMLU decline
+(\S\ref{sec:dis-threats}) understates the cost on near-neighbour
+structured tasks. Both conclusions reinforce the architecture: the
+deterministic gate owns authorisation, the fine-tuned model owns phase
+selection, and neither should borrow the other's job.
+
 \section{Serving reliability at the edge}\label{sec:res-reliability}
 Sustained on-device serving produced four documented reliability findings
 across the campaign: (i) the catalogue Qwen3-0.6B GPU artifact emitting

@@ -2,14 +2,18 @@
 % WORD BUDGET: ~3000 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
 % Every number in this chapter is read from a committed results/*.json artifact.
 
-I present results in the order the evidence was built: the baseline landscape
-that reframed the project (\S\ref{sec:res-maxpressure}), the base-model
-factorial (\S\ref{sec:res-factorial}), the offline distillation tables
-(\S\ref{sec:res-offline}), the closed-loop outcome
-(\S\ref{sec:res-closedloop}), the authorship finding this dissertation
-headlines (\S\ref{sec:res-authorship}), the audit and trust results
-(\S\ref{sec:res-audit}, \S\ref{sec:res-trust}), and the serving-reliability
-evidence (\S\ref{sec:res-reliability}).
+I present results in the order the evidence was built: the baseline
+landscape that reframed the project (\S\ref{sec:res-maxpressure}), the
+base-model factorial (\S\ref{sec:res-factorial}), the offline distillation
+tables (\S\ref{sec:res-offline}), the closed-loop outcome and its
+robustness checks (\S\ref{sec:res-closedloop}), the throughput guards that
+determine which of those numbers are comparable (\S\ref{sec:res-guards}),
+the authorship finding this dissertation headlines
+(\S\ref{sec:res-authorship}), the failure forensics the audit layer makes
+possible (\S\ref{sec:res-forensics}), the audit, trust and
+authorisation-re-test results (\S\ref{sec:res-audit}, \S\ref{sec:res-trust},
+\S\ref{sec:res-lee}), and the serving-reliability evidence
+(\S\ref{sec:res-reliability}).
 
 \section{Baseline landscape: what the fixed-time floor revealed}\label{sec:res-maxpressure}
 Adding a naive fixed-time floor to every comparison was the single most
@@ -155,8 +159,9 @@ plus the LOTO and format-specialist controls, evaluated on the frozen
 
 \begin{table}[t]
 \caption{Holdout accuracy (\%) against frozen frontier-teacher labels,
-int4-as-served. All fine-tuned rows and the stock Phi row emit 100\% strict
-JSON; stock Qwen3-0.6B reaches 93.4\% on sota.}
+int4-as-served, every cell backed by a committed evaluation artifact. All
+fine-tuned rows and the stock Phi row emit 100\% strict JSON; stock
+Qwen3-0.6B reaches 93.4\% on sota.}
 \label{tab:offline-full}
 \centering
 \small
@@ -264,6 +269,61 @@ difference favours fine-tuning by $-1.8\%$ ($p{=}.019$). I return to the
 mechanism --- the shield bounds worst-case behaviour for both arms, and
 external calibration puts the entire LLM-vs-MaxPressure headroom at 1--2\%
 \cite{dglight2026} --- in \S\ref{sec:dis-decoupling}.
+Reporting only paired $t$-tests on means, as the table above does, hides
+structure that matters. The per-seed distributions are heavily skewed by
+the catastrophic tail quantified in \S\ref{sec:res-forensics}, and a mean
+is the wrong summary for a skewed distribution. Table~\ref{tab:robust}
+therefore reports 95\% confidence intervals alongside a Wilcoxon
+signed-rank test, which asks whether the controller helps on a
+\emph{typical} seed rather than on average.
+
+\begin{table}[h]
+\caption{Closed-loop effects with 95\% CI on the mean relative change and a
+Wilcoxon signed-rank test on the paired per-seed delays ($n{=}30$).
+Bold marks $p<.05$.}
+\label{tab:robust}
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+Arm & Topology & rel.\ (95\% CI) & $p_t$ & $p_{\text{Wilcoxon}}$ \\
+\midrule
+Qwen ft & Euston & $-3.9$ $[-12.1, +4.4]$ & .155 & .544 \\
+ & Bloomsbury & $+0.7$ $[-0.7, +2.0]$ & .371 & .360 \\
+ & Old Street & $-3.1$ $[-9.0, +2.8]$ & .202 & \textbf{.011} \\
+Qwen stock & Euston & $-6.2$ $[-17.6, +5.3]$ & .117 & \textbf{.018} \\
+ & Bloomsbury & $+2.6$ $[+1.2, +4.1]$ & \textbf{.002} & \textbf{.003} \\
+ & Old Street & $-1.1$ $[-4.4, +2.1]$ & .351 & .318 \\
+Phi ft & Euston & $-3.8$ $[-11.7, +4.1]$ & .151 & .309 \\
+ & Bloomsbury & $+0.6$ $[-0.7, +2.0]$ & .418 & .318 \\
+ & Old Street & $-1.0$ $[-7.0, +5.1]$ & .560 & .178 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two cells change interpretation. On Old Street the fine-tuned Qwen
+controller \finding{significantly beats the fixed-time floor on the
+typical seed} ($p{=}.011$) while its mean effect is not significant
+($p{=}.202$); the stock controller shows the same pattern on Euston
+($p{=}.018$ against $p{=}.117$). The confidence intervals explain why ---
+they are wide and straddle zero precisely on the topologies with the
+heaviest failure tails. The honest characterisation of this controller is
+therefore not ``no effect'' but \emph{typical-case improvement with a
+catastrophic tail}: it helps on most seeds and fails badly on a few, and
+those few are enough to erase the mean. That is a materially different
+engineering problem from a controller that is simply mediocre, and it
+points at tail control --- a hard per-decision timeout, or an outlier
+detector that reverts to the classical policy --- rather than at better
+average decisions.
+
+I refrain from claiming these rank-test results as confirmatory findings.
+Across the dissertation roughly forty paired comparisons are reported;
+the two that reach $p<.05$ only under the rank test would not survive a
+Holm correction applied across that family, and I did not pre-register
+either. They are reported as exploratory evidence about distributional
+shape, and the pre-registered comparison --- the head-to-head between
+fine-tuned and stock arms --- remains the confirmatory one.
+
 The Phi-4-mini confirmation arm (final rows of
 Table~\ref{tab:closedloop-full}) extends the saturation finding
 end-to-end: the 3.8B fine-tuned student's closed-loop profile is
@@ -272,6 +332,65 @@ $-3.9\%$, Bloomsbury $+0.6\%$ vs $+0.7\%$, the same divergence band
 (0.11--0.18) and authorship profile --- and at the lowest served latency of
 any arm (median p50 0.94\,s, worst cell p99 1.46\,s). The dissertation's scale-threshold
 question is thereby answered in both evaluation regimes: 0.6B suffices.
+
+\section{Throughput guards: which delay numbers are comparable}\label{sec:res-guards}
+Mean delay can be improved by stranding vehicles, so \S\ref{sec:met-metrics}
+commits to reporting throughput, teleports and undeparted backlog alongside
+it. Table~\ref{tab:guards} does so, and it changes how two of the three
+topologies should be read.
+
+\begin{table}[h]
+\caption{Guard metrics, means over $n{=}30$ seeds. ``Compl.'' is completed
+vehicles as a share of those loaded within the 1{,}200-step horizon;
+teleports are SUMO's gridlock-escape removals.}
+\label{tab:guards}
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Topology & Arm & Loaded & Compl. & Teleports & Undep. \\
+\midrule
+Euston peak-hour & baseline & 780 & 44.3\% & 33.8 & 225 \\
+ & qwen ft & 780 & 48.7\% & 28.1 & 200 \\
+ & qwen stock & 780 & 50.3\% & 23.3 & 199 \\
+Bloomsbury grid & baseline & 1715 & 14.6\% & 118.5 & 335 \\
+ & qwen ft & 1715 & 14.2\% & 120.0 & 341 \\
+ & qwen stock & 1715 & 13.5\% & 135.6 & 348 \\
+Old Street & baseline & 480 & 85.5\% & 1.5 & 0 \\
+ & qwen ft & 480 & 86.7\% & 0.5 & 0 \\
+ & qwen stock & 480 & 84.4\% & 1.0 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\finding{Only Old Street is measured in a free-flowing regime.} There 85\%
+of vehicles complete and teleports are effectively absent, so mean delay is
+a well-posed comparison --- and it is also the topology where the
+fine-tuned controller significantly beats the floor on the typical seed
+(Table~\ref{tab:robust}). The cleanest regime yields the clearest result,
+which is reassuring rather than coincidental.
+
+\risk{Bloomsbury is a gridlock-regime measurement and must be scoped as
+one.} Under 15\% of vehicles complete within the horizon and over a
+hundred are teleported out of deadlock, so ``mean network delay'' there is
+computed over a network that never clears, with an unknown fraction of the
+worst journeys removed by the simulator. I therefore treat the one
+statistically significant closed-loop result in this dissertation --- the
+stock controller's $+2.6\%$ harm --- as regime-scoped. It does survive the
+guard test in direction: the stock arm completes fewer vehicles than the
+baseline (231 vs 251) and triggers more teleports (135.6 vs 118.5), so the
+delay harm is corroborated rather than contradicted by throughput, and the
+fine-tuned arm sits between them on both. But the underlying comparison is
+between two congested-failure modes, not between two free-flowing
+policies, and a reader should weight it accordingly. Extending the horizon
+or lowering demand on this map is the obvious remedy and is the first item
+of unfinished work I would prioritise.
+
+Euston sits in between at 44--50\% completion. There the SLM arms
+\emph{complete more vehicles than the baseline} (380 and 392 against 345)
+while showing no significant delay advantage --- a genuine
+throughput-alongside-delay improvement that a delay-only report would have
+missed entirely, and the reason both metrics are mandated in the protocol.
 
 \section{Authorship: what fine-tuning actually moves}\label{sec:res-authorship}
 The structural columns of Table~\ref{tab:closedloop-full} carry the

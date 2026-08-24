@@ -126,6 +126,15 @@ def main(model, formats, limit=None):
             "latency_p99": round(lat[min(len(lat) - 1, int(len(lat) * 0.99))], 3),
         }
     p = os.path.join(FTDIR, f"eval_{model.replace(':', '_')}.json")
+    # MERGE, never clobber: a partial re-run (e.g. --formats sota) must not
+    # destroy formats measured by an earlier run of the same model.
+    if os.path.exists(p):
+        try:
+            with open(p, encoding="utf-8") as fh:
+                prev = json.load(fh)
+            out["formats"] = {**prev.get("formats", {}), **out["formats"]}
+        except Exception:
+            pass
     with open(p, "w", encoding="utf-8") as fh:
         json.dump(out, fh, indent=2)
     print(json.dumps(out, indent=2), flush=True)

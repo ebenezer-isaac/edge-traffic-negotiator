@@ -1,13 +1,182 @@
 \chapter{Reproducibility artifacts}\label{app:repro}
-\todo{Pins table (Foundry 0.8.119, ort-genai builder, MiKTeX); seed lists;
-prompt templates verbatim; example audit record + verification transcript;
-compile-chain pitfall table; hardware inventory (RTX 2060 6GB serving,
-RTX 4090 training, RTX 4060 reserve).}
 
-\chapter{Extended results tables}\label{app:tables}
-\todo{Full factorial cell tables; per-seed closed-loop tables; complete
-7-row offline table with latency percentiles.}
+\section{Environment and version pins}
+Every measurement in this dissertation was produced under the pins in
+Table~\ref{tab:pins}. The Foundry Local version is pinned deliberately:
+custom-model serving behaviour (registration format, execution-provider
+options) is version-sensitive, and an upgrade mid-campaign would have
+invalidated cross-run comparability. One consequence is recorded honestly
+in \S\ref{sec:res-reliability}: a newer model generation
+(Qwen3.5) ships a configuration schema this runtime cannot parse, so it is
+reported as blocked-by-runtime with the exact error rather than as a
+capability result.
+
+\begin{table}[h]
+\caption{Version and hardware pins.}
+\label{tab:pins}
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Component & Pin \\
+\midrule
+Serving runtime & Microsoft Foundry Local 0.8.119 \\
+Compile path & onnxruntime-genai model builder, int4 RTN, weight-only \\
+Execution providers & CPU and WebGPU (decision-equivalent, \S\ref{sec:imp-foundry}) \\
+Simulator & SUMO with TraCI, 1{,}200-step horizon, $\approx$10\,s decision interval \\
+Serving/measurement GPU & NVIDIA RTX 2060, 6\,GB (the deployment envelope) \\
+Training GPU (3.8B) & UCL departmental NVIDIA RTX 4090, 24\,GB \\
+Training GPU (0.6B) & the RTX 2060 itself (13.5\,h) \\
+Host OS & Windows 10 (build 19045) --- predates Windows ML EP autoregistration \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Seeds and dataset splits}
+\textbf{Training-state seeds:} $\{3, 7, 11, 29\}$. Junction states for
+distillation were sampled only from these.
+\textbf{Closed-loop evaluation seeds:}
+$\{1..30\}\setminus\{3,7,11,29\}\cup\{31,32,33,34\}$ --- thirty seeds,
+disjoint from training (\S\ref{sec:met-disjoint}).
+\textbf{Offline holdout:} split by deterministic content hash
+(\texttt{HOLDOUT\_MOD}=12) and frozen before the first training run;
+5{,}580 held-out examples against 59{,}533 training examples, from 65{,}113
+accepted renderings (6 rejected by the sanity verifier for serving an
+empty phase without a justifying note). Per format: sota 16{,}982, myopic
+16{,}982, prediction 18{,}596, coordination 12{,}553.
+
+\section{Prompt contract}
+All four formats share one output contract --- exactly
+\texttt{\{"phase": N\}} --- and the \emph{same rendering code serves
+training, offline evaluation, and closed-loop control}, so no format skew
+can flatter the offline numbers. The delay-aware (sota) system prompt is
+reproduced verbatim:
+
+\begin{quote}\small\ttfamily
+You control ONE traffic-signal junction (this junction only; no neighbour
+information). For each green phase you are given: the number of waiting
+(queued) vehicles, the TOTAL accumulated waiting time of those vehicles in
+seconds, and whether it is the phase currently green. Choose the phase to
+serve next to MINIMISE total vehicle waiting time and unnecessary stops ---
+not simply the longest queue.
+\end{quote}
+
+The myopic format withholds accumulated waiting; prediction adds
+short-horizon arrival counts; coordination adds neighbour release notes.
+Parsing falls through four tiers (strict JSON, braced, keyed, bare
+integer) with the tier recorded per decision.
+
+\section{The compile-and-serve chain}
+Reproducing a served custom model requires the following steps in order;
+each was established by failure during this project and none is documented
+by the vendor toolchain.
+
+\begin{enumerate}
+\item Train QLoRA adapters ($r{=}16$, NF4 double quantisation, fp16
+compute, completion-only loss, family-correct chat template).
+\item Merge adapters to a bf16 checkpoint.
+\item Compile with the onnxruntime-genai model builder
+(\texttt{-p int4 -e cpu}) using the pinned transformers pairing --- newer
+environments fail on attention-module or loss-utility imports.
+\item Patch \texttt{tokenizer\_config.json}: \texttt{tokenizer\_class}
+must be a value the runtime accepts (\texttt{GPT2Tokenizer}); transformers-5
+era configs emit a backend name that fails to load.
+\item For Phi checkpoints, strip remote-code \texttt{auto\_map} entries.
+\item \textbf{Synthesise} \texttt{inference\_model.json} (model name plus
+prompt template) --- the builder emits none, and without it the model
+registers but returns HTTP 400 on every request.
+\item Copy into the Foundry Local cache directory and, for GPU serving,
+set \texttt{provider\_options} to WebGPU in \texttt{genai\_config.json}.
+\end{enumerate}
+
+\section{Harness invariants}
+Three properties of the experiment harness underwrite the results.
+\emph{Fail-loud:} API errors are counted and abort a run rather than being
+scored as answers; an unservable model records a skip, never a score.
+\emph{Resumable:} cells are keyed by (model, config, topology, seed) and
+skipped if already measured, so a crash loses at most one cell --- one
+zero-byte cell caused by a mid-write power loss was detected by JSON
+validation and re-run.
+\emph{Recoverable:} after two observed mid-run service self-restarts, the
+offline evaluator rediscovers the endpoint, reloads the model, and retries
+failed rows with statistics intact.
+
+\chapter{Extended results}\label{app:tables}
+
+\section{Per-topology closed-loop detail}
+Chapter~\ref{ch:results} reports means and paired tests; the per-seed
+cells behind them are retained as JSON in
+\texttt{results/frontier\_raw/}, one file per (model, config, topology,
+seed) containing the baseline delay, controller delay, relative change,
+decision composition (SLM / shield / anti-starvation), override rate,
+authored share, latency distribution, and audit-chain verification result.
+Every figure in this dissertation is recomputable from those files with
+the aggregation scripts in \texttt{src/}.
+
+\section{Failure forensics tables}
+The catastrophic-cell analysis of \S\ref{sec:res-forensics} --- 14 of 270
+cells at $\ge{+}20\%$ delay, their seed-matched comparators, and the
+shared-versus-arm-specific decomposition --- is tabulated in
+\texttt{results/failure\_forensics.md} with the underlying data in
+\texttt{results/failure\_forensics.json}.
+
+\section{Adversarial trust battery}
+Per-topology, per-scenario cells for all three controllers (stock and
+fine-tuned, both scales) are in
+\texttt{results/experiment\_trust\_traffic\_<model>.json}, with raw cells
+under \texttt{results/trust\_traffic\_raw/} keyed by model, topology,
+scenario, and seed.
+
+\section{Authorisation re-test}
+The four-model, two-arm fair re-test of \S\ref{sec:res-lee} is recorded in
+\texttt{results/slm\_auth\_lee\_<model>.json}, each containing class
+accuracy, grant accuracy, precision, recall, false-positive and
+false-negative rates, dangerous false grants, parse failures, and
+P50/P95/P99 latency per arm.
 
 \chapter{UK-law fault-grounding knowledge base}\label{app:uklaw}
-\todo{Port 01-research/uk-traffic-law.md structure: statutes, cases,
-the conditional EV exemption, the conflicting-green misfeasance carve-out.}
+
+The reconstruction layer matches verified collision facts against a
+curated knowledge base of UK traffic law. The base is deliberately small,
+explicit, and citable: each rule carries a statute or case reference, a
+binding strength (\texttt{MUST} for statutory prohibitions,
+\texttt{common\_law} for judicial doctrine), a fault weight, and the
+verified fact that triggers it. Table~\ref{tab:uklaw} lists the rules
+exercised by the seven evaluated scenarios.
+
+\begin{table}[h]
+\caption{Fault-grounding rules exercised by the evaluated scenarios.}
+\label{tab:uklaw}
+\centering
+\small
+\begin{tabular}{p{0.28\linewidth}p{0.26\linewidth}p{0.36\linewidth}}
+\toprule
+Rule & Authority & Effect \\
+\midrule
+Driver crossed red & RTA 1988 s36 & Criminal offence; driver fault high \\
+Red prohibition & TSRGD 2016 Sch14 & Must not proceed beyond stop line \\
+Amber & TSRGD 2016 5(9) & Driver fault high where a safe stop was possible \\
+EV exemption & TSRGD / conditional & Conditional on authorisation \emph{and}
+corroboration; endangerment test still applies \\
+Maintenance vehicle & no exemption & Works vehicle treated as an ordinary driver \\
+Dark signal & Highway Code r.176 & Duty to obey falls away; ordinary care governs \\
+Authority misfeasance & \emph{Bird v Pearce} & Positively-wrong indication:
+authority fault non-zero but low \\
+Authority nonfeasance & \emph{Gorringe v Calderdale} & Mere omission: authority
+fault defaults to zero \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two properties of this design matter for the accountability claim. First,
+the doctrine is \emph{unfavourable to the deployer of this system}: fault
+attaches to the authority only through the misfeasance branch, which is
+exactly the branch the audit chain can prove or disprove from its own
+records, and the system reports it against itself when the facts support it
+(\S\ref{sec:res-audit-worked}). Second, a spoofed emergency-vehicle claim
+receives no exemption --- the conditional exemption requires a valid
+authorising key and corroboration, so a forged claim leaves the driver
+squarely within the red-light prohibition. Legal causation is never
+assessed by the system; it is marked \texttt{NOT\_ASSESSED} and left to a
+human adjudicator, in line with the treatment of legal hallucination risk
+in \S\ref{sec:bg-audit}.

@@ -297,8 +297,58 @@ exemption and anchors fault on the driver, while the conflicting-green
 scenario is the sole case attributing (weak, misfeasance-only) authority
 fault --- and the system emits a cited evidence pack for a human
 adjudicator, never a binding verdict, by design
-\cite{dahl2024legal}. \todo{one-paragraph worked example of a single
-evidence pack, from audit record to cited rule, as a figure or listing.}
+\cite{dahl2024legal}.
+
+\subsection{A worked evidence pack}\label{sec:res-audit-worked}
+Figure~\ref{fig:evpack} traces the hardest of the seven scenarios end to
+end, because it is the one where the \emph{system itself} may be at
+fault: a collision at a junction that emitted a conflicting green.
+
+Three properties are worth drawing out. First, the pack is built only
+from facts the chain verifies --- \texttt{signal\_state}, the
+\texttt{conflicting\_green} flag, the crossing class --- and each cited
+rule carries the specific fact that triggered it, so an investigator can
+audit the inference, not merely read a conclusion. Second, the legal
+reasoning is faithful to a doctrine that is unfavourable to the deployer:
+under \emph{Gorringe v Calderdale} a highway authority's mere omission
+attracts no duty, so authority fault defaults to zero, and it becomes
+non-zero here only because \emph{Bird v Pearce} treats a positively-wrong
+indication as misfeasance --- fault weight \texttt{low}, flagged
+\texttt{common\_law} rather than \texttt{MUST}, with legal causation
+explicitly \texttt{NOT\_ASSESSED}. The system does not overstate a case
+against a driver when its own record shows the signal misled them, and it
+does not overstate the case against itself either. Third, the tamper
+probe passes: an imposter re-signing the incident record is rejected on
+signature verification even though the chain hashes are recomputed
+consistently --- the property that makes the pack evidence rather than
+assertion.
+
+\begin{figure}[t]
+\small
+\begin{lstlisting}
+VERIFIED RECORD (seq 0, junction J, hash a0bb851c..., t=100.0)
+  chain verified: True   signatures verified: True
+  imposter re-sign attempt: CAUGHT
+VERIFIED FACTS
+  signal_state = green      conflicting_green = True
+  crossing_class = civilian second_party_on_green = False
+  key_present = False       corroborated = False
+GOVERNING RULES (inferred from the facts above)
+  LR-authority-misfeasance [Bird v Pearce]  fault: low  (common law)
+    "the audit shows the system emitted a conflicting green
+     (a positively-wrong indication) -- misfeasance, not omission"
+  LR-authority-nonfeasance [Gorringe v Calderdale] fault: low (common law)
+    "authority fault otherwise defaults to zero; it turns non-zero only
+     on this misfeasance/conflicting-green branch (low confidence;
+     legal_causation NOT_ASSESSED)"
+OUTPUT: cited evidence pack for a human adjudicator -- not an adjudication
+\end{lstlisting}
+\caption{The conflicting-green evidence pack, verbatim from
+\texttt{results/experiment\_crash\_law.json}: the only one of the seven
+scenarios in which authority fault is non-zero, and the case where the
+system's own record is used against its operator.}
+\label{fig:evpack}
+\end{figure}
 
 \section{Trust-coefficient battery}\label{sec:res-trust}
 The trust mechanism passes its full property battery (9/9): a persistently

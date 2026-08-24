@@ -283,6 +283,18 @@ A Phi-4-mini confirmation arm (same 90 cells) lands arm-for-arm on the
 $+0.6\%$ vs $+0.7\%$, override 0.12--0.17, authored share to 0.88 --- so
 the saturation finding holds end-to-end, offline and closed-loop.
 
+Forensics on the failure tail sharpens this into a stronger claim. Of 270
+closed-loop cells, 14 are catastrophic ($\ge{+}20\%$ delay); all their
+audit chains verify, and the catastrophic seeds are baseline-easy or
+median realisations, so the failures are a controller property rather than
+seed hardness. Critically, the two fine-tuned students share every one of
+their catastrophic (topology, seed) pairs, with per-seed relative delay
+matching to $\pm$0.2 points and near-identical decision compositions. Two
+students of different architecture and $6\times$ different scale, trained
+separately, fail identically --- evidence that distillation converges them
+onto effectively the same policy. Saturation is not merely a shared
+accuracy ceiling; it is a shared \emph{policy attractor}.
+
 \subsection{Authorship: what fine-tuning actually moves}
 The structural effect is unambiguous and consistent across every topology:
 fine-tuning drops override from 0.46--0.60 to 0.11--0.18 and raises authored
@@ -299,6 +311,35 @@ model that the operator certified, versioned, and can retrain. Causal
 accountability --- the property regulators and investigators need --- is
 exactly what moved, and it moved by $4\times$.
 
+\subsection{Authorship cuts both ways}
+If fine-tuning makes the model author the decisions, it also makes the
+model's inputs worth attacking. We ran an adversarial trust battery
+(honest / blatant / stealth neighbour misreporting) against stock and
+fine-tuned controllers at both scales. Detection is controller-independent
+by design and in measurement --- the ledger scores neighbour claims against
+local sensing, and a blatant liar is caught and collapsed under every
+controller (trust $\le$0.27, corroboration power stripped) while a
+calibrated stealth attacker evades everywhere (trust $\ge$0.92). But the
+delay cost of a blatant attack, relative to each controller's own honest
+run, is \emph{larger} for the fine-tuned arms on synthetic grids ($+9$ to
+$+11$ points) than for stock ($+3$ to $+7$): a controller that genuinely
+acts on its coordination inputs is moved further by poisoned ones. The
+trust ledger is therefore a necessary companion to distillation, not an
+optional extra --- and stealth misreporting, cheap and undetected, is the
+open problem.
+
+We also measured a specialisation cost. On an adjacent structured task
+(vehicle-authorisation classification against a curated rule base), the
+fine-tuned students perform far \emph{worse} than their own stock bases:
+the 0.6B student cannot emit the task's \texttt{\{"class","grant"\}}
+schema at all without in-prompt scaffolding (26/26 parse failures),
+having been captured onto \texttt{\{"phase": N\}}. A 200-item MMLU probe
+shows only mild general-capability decline (57.5\% $\to$ 53.0\%,
+$p{=}.37$), so near-neighbour structured tasks are where the cost
+concentrates. This is an argument for architectural separation, not
+against distillation: the deterministic gate should keep authorisation,
+and the distilled model should keep phase selection.
+
 \subsection{Serving reliability at the edge}
 Sustained serving on consumer hardware is itself a finding: across the
 campaign we recorded four Foundry Local reliability events (garbage-token
@@ -310,8 +351,9 @@ accounting), and p50 decision latency held at 0.4--1.1\,s GPU-served ---
 comfortably inside the 10\,s decision interval with a $9\times$ margin.
 
 \section{Limitations}\label{sec:limits}
-Simulation-only, three topologies, one city. We distil labels, not reasoning
-traces --- Orca-style trace distillation \cite{mukherjee2023orca} might
+Simulation-only, three topologies, one city. Neither student
+significantly beats the fixed-time floor, and the trust mechanism does not
+stop a stealth attacker. We distil labels, not reasoning traces --- Orca-style trace distillation \cite{mukherjee2023orca} might
 transfer more; our myopic format shows the cost of privileged teachers
 directly. The shield is a heuristic composite, not a synthesized shield with
 correctness guarantees \cite{alshiekh2018shield}. ``Lossless'' int4 is scoped

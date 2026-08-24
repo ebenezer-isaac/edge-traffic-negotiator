@@ -25,16 +25,56 @@ result of my own work except where explicitly indicated in the text.
 % ==================== ABSTRACT ====================
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-\todo{Write last. Structure: (1) problem — can a 4\,GB-class on-device SLM served by
-Microsoft Foundry Local control real London junctions safely while producing a
-legally grounded accident audit; (2) method — MaxPressure-shielded SLM control in
-SUMO on measured London topologies, frontier-distilled QLoRA fine-tuning,
-Ed25519 hash-chained audit with UK-law fault grounding; (3) headline results —
-offline distillation ceiling 97--99\% at 0.6B (scale saturation), closed-loop
-delay decoupling, authorship conversion 0.46$\to$0.12 override, MaxPressure
-reversal on real topologies, trust-coefficient battery; (4) contribution claims.}
+When a signalised junction is involved in a collision, someone must be able
+to prove what the controller knew and what it decided. Language-model
+traffic controllers are now competitive in simulation, but every published
+system is served from the cloud and none can answer that question. This
+dissertation asks whether a language model small enough to live in the
+signal cabinet can control real London junctions competently \emph{and}
+bind every actuation into a record an investigator can trust --- and what,
+if anything, fine-tuning contributes to that goal.
+
+I build the full stack on one consumer device: a small language model
+served by Microsoft Foundry Local within a 6\,GB envelope, proposing signal
+phases behind a MaxPressure shield and anti-starvation floor, with every
+decision Ed25519-signed into a per-junction hash chain and reconstructable
+after a collision into a cited UK-law evidence pack. I distil a frontier
+teacher into 0.6B and 3.8B students with QLoRA, compile to int4 ONNX, and
+evaluate offline against a hash-frozen holdout and closed-loop in SUMO on
+measured London topologies over thirty training-disjoint seeds per cell.
+
+Three results stand out. Distillation \emph{saturates at 0.6B}: the
+3.8B student is statistically indistinguishable from the 0.6B one offline
+and closed-loop, and both fail on the same seeds with matched magnitudes,
+indicating a shared policy attractor rather than merely equal accuracy.
+Closed-loop delay \emph{decouples} from decision accuracy --- a 42-point
+accuracy gain yields no significant delay improvement inside the shield's
+envelope, and MaxPressure itself proves worse than a naive fixed-time
+floor on every measured London topology, a reversal I ground in the
+finite-capacity and load assumptions of its optimality theorems. What
+fine-tuning demonstrably buys instead is \emph{authorship}: shield
+override falls from 0.46--0.60 to 0.11--0.18 and the model's authored
+share of served decisions reaches 0.90, converting a shield-driven system
+into a model-authored one. That conversion is the point. An accident
+audit over a controller whose decisions are mostly fallback substitutions
+attributes nothing to the learned component; distillation is what makes
+the audit about the model. Seven collision scenarios reconstruct
+end-to-end with tampering caught, an adversarial trust battery shows
+blatant misreporting contained but stealth misreporting unresolved, and
+the nulls, latency exclusions, and specialisation costs are reported with
+their mechanisms rather than omitted.
 
 % ==================== ACKNOWLEDGEMENTS ====================
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
-\todo{supervisors, UCL CS cluster (hotrod RTX 4090), Microsoft Foundry Local team guidance.}
+I thank Dr~Akin~Delibasi for supervision that consistently pushed this work
+towards harder evidence --- the throughput-alongside-delay test, the
+multi-seed robustness requirement, and the scope expansion into fine-tuning
+all originate with him. I thank Lee~Stott (Microsoft) for the
+policy-driven architecture guidance that shaped the authorisation layer,
+and specifically for the objection that became \S\ref{sec:res-lee}: that a
+model cannot be judged on a task whose rules were never put in front of it.
+Testing that objection properly changed what this dissertation is able to
+claim. I am grateful to UCL Computer Science for access to the departmental
+GPU cluster, on which the 3.8B student and its five ablation variants were
+trained.

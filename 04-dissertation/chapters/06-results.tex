@@ -85,10 +85,16 @@ controller claim here is stated against the fixed-time floor, with
 MaxPressure reported alongside.
 
 \section{Base-model factorial}\label{sec:res-factorial}
-The full factorial (seven servable catalogue models --- the 6\,GB card caps
-the ladder at $\sim$4B, with 7B-class OOM failures recorded --- $\times$ four
-prompt formats $\times$ five topologies) established three facts before any
-fine-tuning.
+The base-model sweep (eight servable catalogue models --- the 6\,GB card
+caps the ladder at $\sim$4B, with 7B-class OOM failures and a newer
+generation blocked by a runtime schema change both recorded --- $\times$
+four prompt formats $\times$ six topologies) established three facts
+before any fine-tuning. The design is deliberately unbalanced: three
+models were swept only on the original topologies and never on the later
+measured-demand corridor, and phi-4-mini-reasoning is latency-excluded
+(\S\ref{sec:met-baselines}) after a single probe cell. I therefore
+describe it as a sweep rather than a full factorial, and the
+accompanying ANOVA is fitted on the balanced subset.
 
 First, in the exploratory sweep (three seeds per cell, daily-resolution
 demand) shielded stock SLM control beat the fixed-time floor on every

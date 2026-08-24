@@ -53,13 +53,16 @@ from 55--69\% to 97--99\% and \emph{saturates by 0.6B parameters}: a 3.8B
 student is statistically indistinguishable from a 0.6B one. Closed-loop, on
 30 training-disjoint seeds per topology, this accuracy does \emph{not}
 translate into significant delay improvement over a fixed-time baseline ---
-but fine-tuning cuts the shield override rate from 0.46--0.60 to 0.11--0.18,
-raising the SLM's authored share of served decisions to as much as 0.90, and
-repairs the one significant harm the stock model causes (grid congestion,
-$+2.6\%$ delay, $p{=}1.5{\times}10^{-3}$, to neutral). We argue authorship is
-the property that matters: an accident audit of a controller whose decisions
-are mostly shield substitutions attributes nothing to the learned component.
-Distillation makes the audit \emph{about the model}.
+but fine-tuning raises the SLM's share of all served actuations from
+0.39--0.62 to 0.56--0.70 --- the distilled policy trips the anti-starvation
+floor far less often --- while its divergence from MaxPressure among the
+decisions it authors falls from 0.46--0.60 to 0.11--0.18, and it repairs the
+stock model's measured harms. We argue authorship is the property that
+matters: an audit of the stock deployment could attribute two decisions in
+five to the learned component, against four in seven after distillation,
+with a deterministic timer authoring the rest. We also state the
+deflationary reading --- that distillation partly taught the student to
+imitate the classical reference --- and bound it with the evidence.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -196,7 +199,7 @@ GPU itself in 13.5\,h; the 3.8B on a single RTX~4090 in 2.3\,h. The stock
 control for every comparison is the \emph{same} base model compiled through
 the \emph{identical} int4 pipeline. CPU and WebGPU execution providers agree
 bit-identically on holdout decisions (97.42\% both), so all sweeps run
-GPU-served at sub-second p50.
+GPU-served.
 
 \subsection{Closed-loop protocol}
 Closed-loop cells pair the controller against a fixed-time baseline on the
@@ -358,8 +361,12 @@ emission after long uptime; two unprompted service self-restarts mid-run;
 registration requiring undocumented synthesis of the inference manifest for
 builder-compiled models). All were mitigated in harness (endpoint
 rediscovery, reload-and-retry with intact statistics, fail-loud parse
-accounting), and p50 decision latency held at 0.4--1.1\,s GPU-served ---
-comfortably inside the 10\,s decision interval with a $9\times$ margin.
+accounting). Median decision latency is 0.94\,s for the 3.8B student and
+1.74--1.75\,s for the 0.6B students --- the larger model is the faster arm
+to serve, a property of the compiled artifacts rather than parameter
+count --- comfortably inside the 10\,s interval at the median, though two
+individual calls in the 0.6B arms exceeded it, so a deployment needs a hard
+timeout with deterministic fallback.
 
 \section{Limitations}\label{sec:limits}
 Simulation-only, three topologies, one city. Neither student
@@ -379,11 +386,12 @@ A 0.6B SLM, distilled from a frontier teacher for 13 GPU-hours on the same
 6\,GB device that serves it, reaches the teacher-agreement ceiling; six times
 the parameters add nothing. Closed-loop it does not beat a fixed-time floor
 --- and neither does anything else within the shield's envelope --- but it
-stops needing the shield: override falls $4\times$, authored share reaches
-0.90, and the stock model's one significant harm disappears. For edge traffic
-control, where every actuation must survive an audit, that conversion ---
-from shield-driven to model-authored control --- is the contribution
-fine-tuning makes. Future work: GRPO-style closed-loop tuning
+authors more of what the junction does: its share of served actuations
+rises by up to 17 points as the fairness floor is needed less, its
+divergence from the classical reference falls four-fold, and the stock
+model's measured harms disappear. For edge traffic control, where every
+actuation must survive an audit, that shift in attributable authorship ---
+not delay --- is the contribution fine-tuning makes. Future work: GRPO-style closed-loop tuning
 \cite{dglight2026}, formal shield synthesis, and a hardware-in-the-loop
 pilot.
 

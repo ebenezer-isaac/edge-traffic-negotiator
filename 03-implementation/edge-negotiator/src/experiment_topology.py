@@ -56,6 +56,17 @@ def _topologies() -> list:
         {"label": "bloomsbury_grid", "structure": "REAL London grid (Bloomsbury WC1, 9 signals)",
          "net": os.path.join(_SUMO, "bloomsbury", "bloomsbury.net.xml"),
          "routes": os.path.join(_SUMO, "bloomsbury", "bloomsbury.rou.xml")},
+        {"label": "bloomsbury_calibrated",
+         "structure": "REAL London grid (Bloomsbury WC1, 9 signals), DEMAND-CALIBRATED",
+         # bloomsbury_light.rou.xml = 40% of the default randomTrips demand (686 veh).
+         # The uncalibrated bloomsbury_grid is OVERSATURATED: ~14% of vehicles complete
+         # within the 1200-step horizon and ~120 are teleported out of deadlock, so its
+         # mean delay compares two congested-failure modes rather than two policies.
+         # At 40% the net clears (87.6% completion, 0 teleports); 55% breaks down again
+         # (57.5%, 9 teleports), so 40% is the heaviest load that stays well-posed.
+         # Same treatment previously applied to oldstreet (see below).
+         "net": os.path.join(_SUMO, "bloomsbury", "bloomsbury.net.xml"),
+         "routes": os.path.join(_SUMO, "bloomsbury", "bloomsbury_light.rou.xml")},
         {"label": "oldstreet_junction",
          "structure": "REAL complex London junction (Old St EC1, 9 signals incl. a 5-arm/17-movement junction)",
          "net": os.path.join(_SUMO, "oldstreet", "oldstreet.net.xml"),

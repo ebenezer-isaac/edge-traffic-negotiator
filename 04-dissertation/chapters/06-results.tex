@@ -40,11 +40,15 @@ the ladder at $\sim$4B, with 7B-class OOM failures recorded --- $\times$ four
 prompt formats $\times$ five topologies) established three facts before any
 fine-tuning.
 
-First, shielded stock SLM control beats the fixed-time floor on every
-topology (Euston $-16\%$, Bloomsbury $-2\%$, Old Street $-14\%$
-(seed-noisy), grid3$\times$3 $-21\%$, grid4$\times$4 $-28\%$), and beats
-MaxPressure specifically where MaxPressure breaks down --- the real
-topologies. Second, results must be conditioned on topology: pooling across
+First, in the exploratory sweep (three seeds per cell, daily-resolution
+demand) shielded stock SLM control beat the fixed-time floor on every
+topology tested --- Euston corridor $-16\%$, Bloomsbury $-2\%$, Old Street
+$-14\%$ (seed-noisy), grid3$\times$3 $-21\%$, grid4$\times$4 $-28\%$. I
+flag immediately that this result does \emph{not} survive replication on
+the measured-demand corridor, and the powered numbers below supersede it;
+the exploratory sweep is reported because it is what motivated the powered
+design, not as evidence for the claim. Second, results must be conditioned
+on topology: pooling across
 maps is a Simpson's-paradox trap, since corridor wins and early grid
 blow-ups average into a meaningless mean. Third, per-decision reasoning
 quality does not predict closed-loop value: on 80 identical junction states,
@@ -68,10 +72,22 @@ campaign's strongest powered wins against the fixed-time floor ---
 Qwen2.5-0.5B sota $-11.8\%$ ($p{<}0.001$), Qwen3-0.6B sota $-9.6\%$
 ($p{<}0.001$), Phi-4-mini myopic $-8.6\%$ ($p{<}0.001$) --- with one arm
 also significantly beating MaxPressure (Qwen2.5-0.5B sota, $-4.9\%$,
-$p{=}.014$). On \textbf{Euston peak-hour} under the measured DfT demand
-profile, every arm is statistically indistinguishable from MaxPressure and
-none beats the floor: the corridor null is a powered result, not an
-underpowered one.
+$p{=}.014$).
+
+On \textbf{Euston peak-hour} under the measured DfT demand profile the
+result reverses, and I report it as measured: every stock arm is
+\risk{7--20\% worse than the fixed-time floor} ($+7.4\%$ to $+19.7\%$),
+significantly so on four of the eight arms (two-sided $p$ between .017
+and .053), while remaining statistically indistinguishable from
+MaxPressure. This is not a null; it is a measured harm, and it refutes
+the exploratory sweep's corridor win above. Two differences explain the
+reversal --- the powered run uses the measured hourly demand profile
+rather than a daily-average magnitude, and the peak-hour topology loads
+the corridor far harder --- and the direction of the correction is the
+uncomfortable one: under realistic peak demand, a shielded stock SLM
+makes the A501 corridor worse, not better. The fine-tuned arms
+(\S\ref{sec:res-closedloop}) do not share this deficit, which is the
+strongest practical argument in this dissertation for distillation.
 
 The replication also yielded a methodological finding I had not planned
 to measure. On the 26 seeds shared between runs, the \emph{catalogue}
@@ -118,21 +134,29 @@ Phi-4-mini coordination-specialist & 87.4 & 89.1 & 94.7 & 99.3 \\
 Five findings follow.
 \begin{enumerate}
 \item \finding{Scale saturation.} The 0.6B and 3.8B generalists are
-statistically indistinguishable on every format, both sitting at the
-teacher-agreement ceiling (98--99\% teacher self-consistency). Distillation
-saturates this decision task at 0.6B; six times the parameters buy nothing
+statistically indistinguishable on every format: the largest gap is
+0.8 points (myopic), against a standard error of about 1.2 points on
+$n{=}1{,}510$, so no two-proportion test approaches significance. Both sit
+at the teacher-agreement ceiling on three of four formats (97--99\%
+against 98--99\% teacher self-consistency); the myopic format is the
+exception at 88\%, for the reason given below. Distillation saturates
+this decision task at 0.6B; six times the parameters buy nothing
 per-decision.
 \item \finding{Where the gain lands depends on the base.} The 0.6B is lifted
-$+32$ to $+42$ points everywhere; Phi-4-mini, already 86--88\% on three
-formats stock, gains materially only on the delay-aware sota format
-($+38.1$ points). For a capable base, fine-tuning buys decision quality, not
+between $+29.7$ (coordination) and $+42.3$ (sota) points across the four
+formats. Phi-4-mini, already 86--88\% on three formats stock, gains most
+on the delay-aware sota format ($+38.1$ points), materially on prediction
+($+11.4$) and coordination ($+12.3$), and negligibly on myopic ($+1.2$).
+For a capable base, fine-tuning buys decision quality, not
 format discipline --- stock Phi is already 100\% format-compliant.
 \item \finding{Generalists only.} No format specialist beats the generalist
-on its own format by more than $0.65$ points; all pay 4--8 points off-format;
+on its own format by more than $0.7$ points, while off-format costs run
+from $0.8$ to $9.2$ points;
 and the myopic specialist loses \emph{even on-format} (87.0 vs 88.7),
 consistent with mixed-format training regularising against the noisy
-privileged-teacher labels that pure-myopic training overfits. The result
-replicates across both model scales.
+privileged-teacher labels that pure-myopic training overfits. This comparison was run at
+3.8B only --- no Qwen format specialists were trained --- so it is a
+single-scale result, unlike the generalist comparison above.
 \item \finding{No topology memorisation.} The LOTO student, trained with all
 Old Street states removed, matches the generalist on every format.
 \item \finding{Quantised serving is exact for this task.} CPU and WebGPU
@@ -151,29 +175,34 @@ fine-tuned (ft) versus identically-compiled stock, three topologies
 $\times$ 30 training-disjoint seeds, paired per-seed against fixed-time.
 
 \begin{table}[t]
-\caption{Closed-loop mean network delay vs fixed-time ($n{=}30$ disjoint
-seeds per cell; paired $t$). Negative favours the controller.}
+\caption{Closed-loop delay vs fixed-time and decision composition
+($n{=}30$ disjoint seeds per cell; paired $t$). Negative $\Delta$ favours
+the controller. \emph{auth} = share of all actuations authored by the SLM;
+\emph{a-s} = share forced by the anti-starvation floor; \emph{acc} =
+proposal acceptance; \emph{div} = divergence from MaxPressure among
+SLM-authored decisions. The substitution path accounts for
+$\le$0.5\% everywhere and is omitted.}
 \label{tab:closedloop-full}
 \centering
 \small
-\begin{tabular}{llrrrr}
+\begin{tabular}{llrrrrrr}
 \toprule
-Topology & Arm & $\Delta$delay & $p$ & override & authored \\
+Topology & Arm & $\Delta$delay & $p$ & auth & a-s & acc & div \\
 \midrule
-Euston peak-hour & ft & $-3.9\%$ & .16 & 0.12 & 0.70 \\
- & stock & $-6.2\%$ & .12 & 0.47 & 0.68 \\
-Bloomsbury grid & ft & $+0.7\%$ & .37 & 0.18 & 0.73 \\
- & stock & $+2.6\%$ & $1.5{\times}10^{-3}$ & 0.46 & 0.65 \\
-Old Street & ft & $-3.1\%$ & .20 & 0.11 & 0.90 \\
- & stock & $-1.1\%$ & .35 & 0.60 & 0.54 \\
+Euston peak-hour & ft & $-3.9\%$ & .16 & 0.64 & 0.36 & 0.70 & 0.12 \\
+ & stock & $-6.2\%$ & .12 & 0.62 & 0.38 & 0.68 & 0.47 \\
+Bloomsbury grid & ft & $+0.7\%$ & .37 & 0.70 & 0.30 & 0.73 & 0.18 \\
+ & stock & $+2.6\%$ & $1.5{\times}10^{-3}$ & 0.62 & 0.38 & 0.65 & 0.46 \\
+Old Street & ft & $-3.1\%$ & .20 & 0.56 & 0.44 & 0.90 & 0.11 \\
+ & stock & $-1.1\%$ & .35 & 0.39 & 0.61 & 0.54 & 0.60 \\
 \midrule
-Pooled ($n{=}90$) & ft & $-2.1\%$ & .14 & & \\
- & stock & $-1.6\%$ & .39 & & \\
+Pooled ($n{=}90$) & ft & $-2.1\%$ & .14 & & & & \\
+ & stock & $-1.6\%$ & .39 & & & & \\
 \midrule
-Euston & phi ft & $-3.8\%$ & .15 & 0.13 & 0.70 \\
-Bloomsbury & phi ft & $+0.6\%$ & .42 & 0.17 & 0.73 \\
-Old Street & phi ft & $-1.0\%$ & .56 & 0.12 & 0.88 \\
-Pooled ($n{=}90$) & phi ft & $-1.4\%$ & .20 & & \\
+Euston & phi ft & $-3.8\%$ & .15 & 0.64 & 0.36 & 0.70 & 0.13 \\
+Bloomsbury & phi ft & $+0.6\%$ & .42 & 0.70 & 0.30 & 0.73 & 0.17 \\
+Old Street & phi ft & $-1.0\%$ & .56 & 0.57 & 0.43 & 0.88 & 0.12 \\
+Pooled ($n{=}90$) & phi ft & $-1.4\%$ & .20 & & & & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -193,19 +222,37 @@ The Phi-4-mini confirmation arm (final rows of
 Table~\ref{tab:closedloop-full}) extends the saturation finding
 end-to-end: the 3.8B fine-tuned student's closed-loop profile is
 arm-for-arm indistinguishable from the 0.6B's --- Euston $-3.8\%$ vs
-$-3.9\%$, Bloomsbury $+0.6\%$ vs $+0.7\%$, the same override band
-(0.12--0.17) and authored share (0.70--0.88) --- at p99 latency still
-$\le$1.1\,s on the 6\,GB device. The dissertation's scale-threshold
+$-3.9\%$, Bloomsbury $+0.6\%$ vs $+0.7\%$, the same divergence band
+(0.11--0.18) and authorship profile --- and at the lowest served latency of
+any arm (median p50 0.94\,s, worst cell p99 1.46\,s). The dissertation's scale-threshold
 question is thereby answered in both evaluation regimes: 0.6B suffices.
 
-\section{Authorship conversion}\label{sec:res-authorship}
+\section{Authorship: what fine-tuning actually moves}\label{sec:res-authorship}
 The structural columns of Table~\ref{tab:closedloop-full} carry the
-dissertation's central finding. Fine-tuning drops the override rate from
-0.46--0.60 to 0.11--0.18 on every topology and raises the authored share of
-served decisions to 0.70--0.90. The stock deployment's delay numbers are
-substantially the \emph{shield's} numbers: most of what the stock model
-proposes diverges from MaxPressure and is not served. The fine-tuned model's
-numbers are its own.
+dissertation's central finding, and reading them correctly requires
+keeping the three denominators of \S\ref{sec:des-shield} apart --- an
+error I made in an earlier draft and correct here explicitly, because the
+distinction changes the interpretation.
+
+First, the fact that frames everything else: \finding{the shield's
+substitution path almost never fires}. Across every arm and topology it
+accounts for $\le$0.5\% of decisions, because both stock and fine-tuned
+models emit a well-formed, in-menu proposal on essentially every tick.
+Whatever the safety scaffold contributes here, it is not the correction of
+malformed output. The real competition for authorship is between the SLM
+and the anti-starvation floor.
+
+Second, \finding{fine-tuning does raise the SLM's true authorship of
+actuations}, and most where the stock model was weakest: on Old Street from
+0.39 to 0.56, on Bloomsbury from 0.62 to 0.70, on Euston from 0.62 to 0.64.
+The mechanism is visible in the adjacent column: the anti-starvation floor
+is forced to intervene far less often (Old Street 0.61 $\to$ 0.44), because
+the distilled model serves neglected approaches before the fairness timer
+must. Proposal acceptance rises correspondingly (0.54 $\to$ 0.90). But the
+honest headline number is the authored share, not the acceptance rate:
+even the best fine-tuned arm leaves \emph{30--44\% of actuations authored
+by a hard-coded timer}, which any audit of this deployment must attribute
+to the scaffold rather than to the model.
 
 \begin{figure}[t]
 \centering
@@ -216,37 +263,58 @@ numbers are its own.
   symbolic x coords={Euston, Bloomsbury, Old Street},
   xtick=data, enlarge x limits=0.25,
   legend style={font=\sffamily\scriptsize, at={(0.5,1.02)}, anchor=south,
-    legend columns=4, draw=none},
+    legend columns=2, draw=none},
   tick label style={font=\sffamily\small},
   ymajorgrids, major grid style={nbgrey!25},
   axis line style={nbgrey}]
+\addplot[fill=nbteal!70, draw=nbteal] coordinates
+  {(Euston,0.62) (Bloomsbury,0.62) (Old Street,0.39)};
+\addplot[fill=nbteal!25, draw=nbteal] coordinates
+  {(Euston,0.64) (Bloomsbury,0.70) (Old Street,0.56)};
 \addplot[fill=nbred!70, draw=nbred] coordinates
   {(Euston,0.47) (Bloomsbury,0.46) (Old Street,0.60)};
 \addplot[fill=nbred!25, draw=nbred] coordinates
   {(Euston,0.12) (Bloomsbury,0.18) (Old Street,0.11)};
-\addplot[fill=nbteal!70, draw=nbteal] coordinates
-  {(Euston,0.68) (Bloomsbury,0.65) (Old Street,0.54)};
-\addplot[fill=nbteal!25, draw=nbteal] coordinates
-  {(Euston,0.70) (Bloomsbury,0.73) (Old Street,0.90)};
-\legend{override (stock), override (ft), authored (stock), authored (ft)}
+\legend{authored (stock), authored (ft), divergence (stock), divergence (ft)}
 \end{axis}
 \end{tikzpicture}
-\caption{Authorship conversion ($n{=}30$ seeds per bar). Fine-tuning cuts
-the override rate roughly four-fold on every topology (red) and raises the
-SLM's authored share of served decisions (teal), most sharply on Old
-Street (0.54 $\to$ 0.90).}
+\caption{What fine-tuning moves ($n{=}30$ seeds per bar). Teal: the SLM's
+share of \emph{all} served actuations rises, most sharply on Old Street
+(0.39 $\to$ 0.56); the remainder is authored by the anti-starvation floor.
+Red: divergence from MaxPressure among SLM-authored decisions falls
+roughly four-fold --- the distilled policy coincides with the classical
+reference far more often.}
 \label{fig:authorship}
 \end{figure}
 
-In the interference vocabulary of the shielding literature
-\cite{alshiekh2018shield,huang2020masking}, fine-tuning internalises the
-shield's envelope: the model learns to propose actions that survive. I argue
-this, not delay, is the deployable product of distillation for an audited
-edge controller. An accident audit over a stock deployment attributes the
-served decisions to the fallback policy; the same audit over the distilled
-deployment attributes them to the certified, versioned model the operator
-can retrain and re-certify. Causal accountability is what moved, and it
-moved by a factor of four.
+Third, and cutting against the simple reading, \finding{the distilled
+policy is markedly more MaxPressure-like}: divergence among SLM-authored
+decisions falls from 0.46--0.60 to 0.11--0.18, so the fine-tuned model
+chooses what MaxPressure would have chosen on roughly nine decisions in
+ten. This admits a deflationary rival explanation --- that distillation
+largely taught the student to imitate the classical reference --- and the
+evidence neither establishes nor excludes it. Three observations bound it.
+The teacher was a frontier model reasoning over accumulated waiting, not
+MaxPressure, and the students agree with the teacher's held-out labels at
+97--99\% (\S\ref{sec:res-offline}), so the convergence is at most
+indirect. The fine-tuned arms do not reproduce MaxPressure's closed-loop
+behaviour --- MaxPressure is significantly worse than fixed-time on these
+topologies (\S\ref{sec:res-maxpressure}) while the fine-tuned arms are
+not. And the remaining one-in-ten divergences are where the arms differ
+from both baselines. Distinguishing imitation from independent
+rediscovery of a similar policy would require a decision-level
+counterfactual study I did not run, and I flag it as the most substantive
+open question about this result.
+
+What survives all three qualifications is the audit-relevant claim, stated
+at its true magnitude. An accident audit over the stock Old Street
+deployment could attribute only 39\% of actuations to the learned
+component; over the fine-tuned deployment it attributes 56\%, with the
+balance falling to a deterministic timer whose behaviour is trivially
+explicable. Fine-tuning buys a controller whose served decisions are
+substantially its own and which needs the fairness scaffold less --- a
+smaller claim than \emph{the model is the controller}, and one the data
+supports.
 
 \section{Failure forensics: the audit layer explains the tail}\label{sec:res-forensics}
 The audit architecture's value shows most clearly when control fails. Across
@@ -268,16 +336,28 @@ shield fallbacks, and anti-starvation at its normal rate --- the scaffold
 did not cause the collapse, the model's policy did, and the chain proves it.
 The same-seed fine-tuned arms sit at $+1.1\%$ and $+5.5\%$.
 
-Third, \finding{the two fine-tuned students fail as near-clones}: qwen-ft
-and phi-ft share all four of their catastrophic (topology, seed) pairs with
-per-seed relative delay matching to $\pm$0.2 points and near-identical
-decision compositions. Two independently trained students --- different
-architectures, $6\times$ apart in scale --- converged onto effectively the
-same policy, which is the behavioural face of the saturation finding: the
-distillation ceiling is not just an accuracy ceiling but a policy
-attractor. Their remaining failures are policy$\times$realisation
-mismatches invisible in aggregate statistics, exposed only by the
-seed-matched baseline pairing.
+Third, \finding{the two fine-tuned students converge at the trajectory
+level on a substantial minority of cells}. Comparing the 0.6B and 3.8B
+students seed-for-seed across the 90 shared cells: on nine they produce
+\emph{bit-identical} mean delay, on a further 25 they agree within 0.5
+points, and on the remaining 56 they differ. The identical cells are not
+duplicated records --- wall-clock times differ by up to a factor of two
+and median latencies by 2.1$\times$ --- but genuinely separate runs that
+served the same phase sequence; in one such cell both arms took 307
+decisions and their SLM/floor attribution differs by exactly one tick,
+where the floor and the model happened to select the same phase. The
+catastrophic cells fall inside this converged subset, which is why the two
+students fail together.
+
+Two independently trained students, different in architecture and
+$6\times$ apart in scale, therefore reproduce each other's control
+trajectory on roughly a third of cells and diverge on the rest. I read
+this as the behavioural counterpart of the offline saturation result ---
+the distillation target appears to constrain not only what the students
+score but what they \emph{do} --- while stating the limit of the evidence:
+partial trajectory convergence is equally consistent with both students
+defaulting to similar behaviour on the easier cells, and I have not
+separated those explanations.
 
 One honest gap: this campaign persisted aggregate decision statistics per
 cell, not per-step audit records, so \emph{when} within a run the
@@ -440,6 +520,37 @@ mitigated in harness --- endpoint rediscovery, model reload with
 retry-of-failed-rows and statistics intact, fail-loud parse accounting that
 aborts rather than scores error text --- and the mitigations are themselves
 contributions: they are what turned a research prototype into a harness that
-survived a six-week unattended campaign. Decision latency held at
-0.4--1.1\,s p50 GPU-served across all models --- a $9\times$ margin inside
-the 10\,s decision interval --- and p99 stayed under 2\,s in every sweep.
+survived a six-week unattended campaign.
+
+Decision latency, measured per cell across the closed-loop sweeps, is
+summarised in Table~\ref{tab:latency}. The 3.8B student is the fastest arm
+served (median p50 0.94\,s) and the 0.6B students the slowest
+(1.74--1.75\,s) --- a counter-intuitive ordering that is a property of the
+compiled artifacts and their execution paths rather than of parameter
+count, and one I report because it cuts against the assumption that the
+smaller model is always the cheaper one to serve. Two individual calls in
+the 0.6B arms exceeded the 10\,s decision interval (worst 13.8\,s), so the
+real-time margin is comfortable at the median and not guaranteed in the
+tail: on those ticks the junction acted on stale state. This is the same
+criterion that excludes phi-4-mini-reasoning
+(\S\ref{sec:met-baselines}); the difference is frequency --- isolated
+outliers here against a p99 above the interval there --- and a deployment
+would need a hard timeout with deterministic fallback, which the
+architecture already supports.
+
+\begin{table}[h]
+\caption{Decision latency across closed-loop cells (per-cell summaries,
+GPU-served, sota arms). The decision interval is 10\,s.}
+\label{tab:latency}
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Arm & p50 (median) & p50 range & p99 (worst cell) & worst call \\
+\midrule
+Qwen3-0.6B ft & 1.75\,s & 1.39--2.57\,s & 7.58\,s & 13.79\,s \\
+Qwen3-0.6B stock & 1.74\,s & 1.46--2.51\,s & 2.97\,s & 9.88\,s \\
+Phi-4-mini ft & 0.94\,s & 0.92--1.20\,s & 1.46\,s & 1.49\,s \\
+\bottomrule
+\end{tabular}
+\end{table}

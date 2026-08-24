@@ -6,8 +6,9 @@ be \emph{optional for safety and mandatory for accountability}: the
 deterministic control path must be complete without the model, while every
 actuation --- whoever authored it --- must be provable afterwards. This
 chapter presents the architecture that realises the premise, and defines the
-two structural quantities (override rate, authored share) whose measurement
-becomes the dissertation's central finding.
+three structural quantities (authored share, proposal acceptance,
+divergence rate) whose measurement becomes the dissertation's central
+finding.
 
 \section{Architecture overview}\label{sec:des-overview}
 Each junction runs an identical control loop on a fixed decision interval
@@ -118,16 +119,36 @@ proof. I state this as a limitation with an upgrade path
 properties the evaluation depends on --- no conflicting greens, no starved
 approach --- for every arm including the baselines.
 
-Two measured quantities are defined on this structure, and the precision
-matters because Chapter~\ref{ch:results} turns on them.
-\textbf{Override rate} is the fraction of decision ticks where the SLM's
-valid proposal diverged from the MaxPressure reference and the reference was
-served instead. \textbf{Authored share} is the fraction of all served
-actuations whose phase originated with the SLM (whether or not it agreed
-with MaxPressure). Neither is a veto count of unsafe actions --- masking
-makes unsafe proposals impossible --- they are \emph{interference} measures:
-how much of the deployed behaviour is attributable to the learned component
-rather than its classical scaffold.
+Three measured quantities are defined on this structure, and their
+denominators matter because Chapter~\ref{ch:results} turns on them. Every
+decision tick is labelled by \emph{who authored the phase actually
+served} --- the SLM, the MaxPressure substitution, or the anti-starvation
+floor --- and the three metrics are taken over different subsets of those
+ticks.
+
+\textbf{Authored share} is $\text{slm}/\text{decisions}$: the fraction of
+\emph{all served actuations} whose phase originated with the SLM. This is
+the quantity the audit argument needs, because it is the share of deployed
+behaviour attributable to the learned component.
+
+\textbf{Proposal acceptance} is
+$\text{slm\_served}/\text{slm\_valid\_proposals}$: of the ticks where the
+SLM returned a well-formed proposal, the fraction where that proposal was
+the phase served rather than being displaced --- in practice, displaced by
+the anti-starvation floor, since substitution is rare.
+
+\textbf{Divergence rate} is
+$\text{diverged\_and\_served}/\text{slm\_served}$: of the decisions the SLM
+authored, the fraction whose phase differed from what MaxPressure would
+have chosen. It measures how far the served policy departs from the
+classical reference --- \emph{not} how often the shield vetoed the model,
+which masking and the rarity of substitution together make close to never.
+
+None of the three is a count of unsafe actions blocked: masking makes
+unsafe proposals unrepresentable, so the shield's substitution path only
+catches malformed or absent output. Reporting all three separately is what
+prevents the interpretive error of reading a high acceptance rate as a high
+share of authorship (\S\ref{sec:res-authorship}).
 
 \section{Audit trail and crash reconstruction}\label{sec:des-audit}
 The audit layer is designed backwards from the question an investigator

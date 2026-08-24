@@ -2,22 +2,30 @@
 % WORD BUDGET: ~1200 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
 
 \section{Answering the research questions}\label{sec:dis-rqs}
-\textbf{RQ1 (edge competence): yes, with honest scope.} Shielded on-device
-SLM control beats the fixed-time floor on every topology tested and beats
-MaxPressure precisely where MaxPressure's assumptions fail --- real
-irregular geometry. But at powered replication ($n{=}30$ disjoint seeds)
-the per-topology delay effects are not individually significant, and the
-corridor null persists across every controller variant. The defensible
-claim is competence within the deployable envelope, not superiority.
+\textbf{RQ1 (edge competence): qualified, and the qualification is
+topology-dependent.} At powered replication ($n{=}30$ disjoint seeds) the
+picture splits. On Old Street, stock SLM control significantly beats the
+fixed-time floor (up to $-11.8\%$, $p{<}0.001$) and one arm also beats
+MaxPressure. On the measured-demand Euston corridor the same controllers
+are 7--20\% \emph{worse} than the floor, significantly so on half the
+arms --- a cell my exploratory three-seed sweep had reported as a win, and
+the clearest evidence in this work for why powered replication on measured
+demand was necessary. Fine-tuned control removes that corridor deficit
+without becoming significantly better than the floor anywhere. The
+defensible claim is therefore narrow: on-device SLM control is competent
+within the deployable envelope on complex junction geometry, harmful on a
+saturated arterial before distillation, and never demonstrably superior to
+a naive fixed-time plan at $n{=}30$.
 
 \textbf{RQ2 (what distillation buys): authorship, and it saturates at
 0.6B.} Offline, distillation is dramatic (55--69\% $\to$ 97--99\%) and
 scale-flat --- a 3.8B student adds nothing over 0.6B, and no format
 specialist beats the generalist even on its own format. Closed-loop, the
-accuracy does not become delay; it becomes \emph{ownership}: override falls
-four-fold, authored share reaches 0.90, and the one significant stock harm
-(congested grid, $+2.6\%$, $p{=}1.5{\times}10^{-3}$) is repaired to
-neutral. For a shielded, audited controller I argue this is the correct
+accuracy does not become delay; it becomes \emph{ownership}: the SLM's
+share of served actuations rises from 0.39--0.62 to 0.56--0.70, divergence
+from MaxPressure among its own decisions falls four-fold, and the stock
+harms (congested grid $+2.6\%$, $p{=}1.5{\times}10^{-3}$; measured-demand
+corridor $+7$ to $+20\%$) are repaired to neutral. For a shielded, audited controller I argue this is the correct
 success criterion, and \S\ref{sec:dis-decoupling} explains why delay was
 never the sensitive variable.
 

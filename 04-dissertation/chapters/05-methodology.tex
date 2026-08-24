@@ -25,13 +25,16 @@ served. I also report strict-JSON rate (the fraction of responses matching
 because a controller that cannot keep its output contract imposes a different
 kind of cost than one that chooses a wrong phase.
 
-\textbf{Structural authorship.} Two quantities defined in
-\S\ref{sec:des-shield}: override rate --- the fraction of served SLM
-decisions where the proposal diverged from MaxPressure and the shield's
-choice was served instead --- and authored share, the fraction of all
-actuations whose served phase originated with the SLM. I treat these as
-first-class results rather than diagnostics, because the audit argument of
-this dissertation (\S\ref{sec:des-audit}) turns on them.
+\textbf{Structural authorship.} The three quantities defined in
+\S\ref{sec:des-shield} --- authored share (SLM-served ticks over all
+decisions), proposal acceptance (SLM-served over SLM valid proposals), and
+divergence rate (served decisions differing from MaxPressure, over
+SLM-served) --- reported alongside the decision composition itself (SLM /
+substitution / anti-starvation). I treat these as first-class results
+rather than diagnostics, because the audit argument of this dissertation
+(\S\ref{sec:des-audit}) turns on the first of them, and because reporting
+acceptance without authorship invites exactly the misreading that a high
+acceptance rate implies the model runs the junction.
 
 \textbf{Serving viability.} Decision latency (p50/p99) against the 10\,s
 decision interval, and a log of serving-reliability events with their

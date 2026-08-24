@@ -284,36 +284,47 @@ $+0.6\%$ vs $+0.7\%$, override 0.12--0.17, authored share to 0.88 --- so
 the saturation finding holds end-to-end, offline and closed-loop.
 
 Forensics on the failure tail sharpens this into a stronger claim. Of 270
-closed-loop cells, 14 are catastrophic ($\ge{+}20\%$ delay); all their
-audit chains verify, and the catastrophic seeds are baseline-easy or
-median realisations, so the failures are a controller property rather than
-seed hardness. Critically, the two fine-tuned students share every one of
-their catastrophic (topology, seed) pairs, with per-seed relative delay
-matching to $\pm$0.2 points and near-identical decision compositions. Two
-students of different architecture and $6\times$ different scale, trained
-separately, fail identically --- evidence that distillation converges them
-onto effectively the same policy. Saturation is not merely a shared
-accuracy ceiling; it is a shared \emph{policy attractor}.
+Forensics on the failure tail qualifies this. Of 270 closed-loop cells, 14
+are catastrophic ($\ge{+}20\%$ delay); all their audit chains verify, and
+the catastrophic seeds are baseline-easy or median realisations, so the
+failures are a controller property rather than seed hardness. The two
+fine-tuned students converge at the trajectory level on a substantial
+minority of cells: across 90 shared cells they produce bit-identical mean
+delay on nine and agree within 0.5 points on 25 more, differing on the
+remaining 56. The identical cells are separate runs --- wall-clock and
+median latency differ substantially --- that happen to serve the same
+phase sequence, and the catastrophic cells fall inside this converged
+subset, which is why the two students fail together. Two students of
+different architecture and $6\times$ different scale reproducing each
+other's control trajectory on roughly a third of cells is a behavioural
+counterpart to the offline saturation, though partial convergence is also
+consistent with both defaulting alike on easier cells; we did not separate
+those explanations.
 
 \subsection{Authorship: what fine-tuning actually moves}
-The structural effect is unambiguous and consistent across every topology:
-fine-tuning drops override from 0.46--0.60 to 0.11--0.18 and raises authored
-share to 0.70--0.90 (stock: 0.54--0.68). The stock controller's delay numbers
-are substantially the shield's delay numbers --- most of what it proposes is
-replaced. The fine-tuned controller \emph{is} the controller
-(Fig.~\ref{fig:auth}).
-
+Three quantities must be kept apart, and conflating them is easy: the SLM's
+share of \emph{all} served actuations (authorship), the fraction of its
+valid proposals that survive to actuation (acceptance), and the fraction of
+its own decisions differing from MaxPressure (divergence). Fine-tuning moves
+all three by different amounts (Fig.~\ref{fig:auth}): authorship rises from
+0.39--0.62 to 0.56--0.70, acceptance from 0.54--0.68 to 0.70--0.90, and
+divergence falls from 0.46--0.60 to 0.11--0.18. Notably the shield's
+substitution path is near-inert throughout ($\le$0.5\% of decisions) --- both
+stock and fine-tuned models emit well-formed proposals essentially always ---
+so the real competition for authorship is with the anti-starvation floor,
+which still forces 30--44\% of actuations even under the best fine-tuned
+arm.
 This is the paper's claim: for a shielded, audited edge controller, the
 deployable product of distillation is \textbf{authorship}. An accident audit
-over a stock-model deployment attributes the served decisions to the
-fallback; the same audit over the distilled deployment attributes them to the
-model that the operator certified, versioned, and can retrain. Causal
+over the stock Old Street deployment could attribute only 39\% of actuations
+to the learned component; over the distilled deployment it attributes 56\%,
+with a deterministic timer authoring most of the balance. Causal
 accountability --- the property regulators and investigators need --- is
 exactly what moved, and it moved by $4\times$.
 
 \subsection{Authorship cuts both ways}
-If fine-tuning makes the model author the decisions, it also makes the
-model's inputs worth attacking. We ran an adversarial trust battery
+If fine-tuning makes the model author more of the decisions, it also makes
+the model's inputs worth attacking. We ran an adversarial trust battery
 (honest / blatant / stealth neighbour misreporting) against stock and
 fine-tuned controllers at both scales. Detection is controller-independent
 by design and in measurement --- the ledger scores neighbour claims against

@@ -45,20 +45,23 @@ measured London topologies over thirty training-disjoint seeds per cell.
 
 Three results stand out. Distillation \emph{saturates at 0.6B}: the
 3.8B student is statistically indistinguishable from the 0.6B one offline
-and closed-loop, and both fail on the same seeds with matched magnitudes,
-indicating a shared policy attractor rather than merely equal accuracy.
+and closed-loop, and the two students' catastrophic failures coincide on the
+same seeds.
 Closed-loop delay \emph{decouples} from decision accuracy --- a 42-point
 accuracy gain yields no significant delay improvement inside the shield's
 envelope, and MaxPressure itself proves worse than a naive fixed-time
 floor on every measured London topology, a reversal I ground in the
 finite-capacity and load assumptions of its optimality theorems. What
-fine-tuning demonstrably buys instead is \emph{authorship}: shield
-override falls from 0.46--0.60 to 0.11--0.18 and the model's authored
-share of served decisions reaches 0.90, converting a shield-driven system
-into a model-authored one. That conversion is the point. An accident
-audit over a controller whose decisions are mostly fallback substitutions
-attributes nothing to the learned component; distillation is what makes
-the audit about the model. Seven collision scenarios reconstruct
+fine-tuning buys instead is \emph{authorship}: the model's share of all
+served actuations rises from 0.39--0.62 to 0.56--0.70, because the
+distilled policy trips the anti-starvation floor far less often, while its
+divergence from MaxPressure among the decisions it authors falls from
+0.46--0.60 to 0.11--0.18. That matters for accountability: an audit of the
+stock deployment could attribute two decisions in five to the learned
+component, against four in seven after distillation, a deterministic timer
+authoring the rest. I also state the deflationary reading this invites ---
+that distillation partly taught the student to imitate the classical
+reference --- and bound it with the available evidence. Seven collision scenarios reconstruct
 end-to-end with tampering caught, an adversarial trust battery shows
 blatant misreporting contained but stealth misreporting unresolved, and
 the nulls, latency exclusions, and specialisation costs are reported with

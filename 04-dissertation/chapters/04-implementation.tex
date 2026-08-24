@@ -32,7 +32,12 @@ Custom models serve through two execution providers. The CPU path works
 out of the box; the WebGPU path requires editing the compiled model's
 \texttt{genai\_config.json} provider options --- and delivers roughly
 $2\times$ lower latency with \emph{bit-identical} holdout decisions,
-which licensed running every sweep GPU-served. Windows~ML CUDA
+which licensed running every sweep GPU-served. That speedup is measured
+against the same artifact on CPU and is not a claim of absolute speed:
+\S\ref{sec:res-reliability} reports my pipeline-compiled 0.6B artifacts
+serving at roughly twice the median latency of the vendor catalogue build
+of the same weights --- a real cost of controlling the compile chain, and
+the reason the 3.8B student is the fastest arm I serve. Windows~ML CUDA
 autoregistration requires a newer Windows build than the test machine's,
 making WebGPU the effective GPU path; I document this because none of it
 is in the product documentation, and the recipe is part of the

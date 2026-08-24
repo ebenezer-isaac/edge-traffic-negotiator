@@ -21,15 +21,43 @@ neutral. For a shielded, audited controller I argue this is the correct
 success criterion, and \S\ref{sec:dis-decoupling} explains why delay was
 never the sensitive variable.
 
+Two further results qualify the answer in opposite directions. The
+saturation is deeper than the accuracy tables alone show: the two
+students fail on identical seeds with matched magnitudes
+(\S\ref{sec:res-forensics}), so distillation converges different
+architectures onto one effective policy --- which also means a second,
+larger student buys no diversity, and an ensemble of the two would be
+close to worthless. Against that, distillation is not free: on an
+adjacent structured task the fine-tuned students are worse than their own
+stock bases, one of them unable to emit the required output schema at all
+(\S\ref{sec:res-lee}). The capability is not so much lost as
+\emph{narrowed onto the deployed contract}, which is acceptable --- even
+desirable --- for a component whose job is one decision type behind a
+deterministic gate, and unacceptable if the same weights were expected to
+serve the authorisation or legal-note roles as well.
+
 \textbf{RQ3 (provable audit): yes, as designed.} Seven scenario
 reconstructions prove end-to-end with tampering caught; the system emits
 cited evidence packs, and the legally weak branches (authority fault) are
 weak \emph{in the law}, faithfully represented rather than overstated.
 
-\textbf{RQ4 (trust): partial, honestly.} The mechanism's properties all
-hold, blatant misreporting is contained, but a calibrated stealth attacker
-evades detection and the mechanism is inert where coordination traffic is
-minimal. A trust ledger is a necessary layer, not a sufficient defence.
+\textbf{RQ4 (trust): partial, honestly --- and the partiality is
+structured.} The mechanism's properties all hold; blatant misreporting is
+detected and the liar's corroboration power stripped under every
+controller tested, stock and fine-tuned alike, because the ledger scores
+claims against local sensing rather than against model behaviour. Three
+limits qualify that. Detection does not undo damage already done (a
+caught blatant attack still costs up to eleven delay points on congested
+grids); a calibrated stealth attacker is not detected at all, and its
+payoff is positional --- retained trust it could later spend --- rather
+than congestive; and the mechanism is inert where coordination traffic is
+minimal, as on the corridor. The finding that most changes the design
+picture is that the delay cost of a blatant attack is \emph{larger}
+against fine-tuned controllers than stock ones: authorship cuts both
+ways, because a model that genuinely acts on its inputs is moved further
+by poisoned inputs. A trust ledger is therefore a necessary companion to
+distillation rather than an optional layer, and it is not a sufficient
+defence.
 
 \section{Why accuracy decouples from delay}\label{sec:dis-decoupling}
 Three mechanisms jointly explain the paradox, and all three are visible in
@@ -68,8 +96,16 @@ retaining its answer-format discipline (94\% strict JSON). At 0.6B the
 probe is uninformative by floor effect: the stock model already scores at
 chance (26.0\%) on this format, so there was no measurable general
 capability to lose. The honest conclusion is that no significant
-retention damage was detected, with the caveat that a 200-item probe
-bounds only large effects.
+retention damage was detected on general knowledge, with the caveat that
+a 200-item probe bounds only large effects. That conclusion should not be
+read as reassurance, because a nearer-neighbour probe tells a harsher
+story: on the authorisation task (\S\ref{sec:res-lee}) both fine-tuned
+students fall well below their own stock bases, one failing to produce
+the required output schema at all. The damage is not diffuse forgetting
+of world knowledge but narrowing onto the trained contract --- which
+general-knowledge benchmarks are poorly placed to detect, and which
+matters more for a deployment that might later ask the same weights to
+do a second job.
 
 \textbf{Quantisation scope (construct).} ``Lossless'' int4 is claimed
 strictly as bit-identical holdout accuracy under weight-only RTN --- not

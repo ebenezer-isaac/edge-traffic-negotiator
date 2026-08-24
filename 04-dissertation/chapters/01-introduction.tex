@@ -48,11 +48,14 @@ fine-tuning through int4 ONNX compilation to Foundry Local serving of a
 custom model, with bit-identical CPU/GPU decision equivalence and four
 documented serving-reliability findings with mitigations
 (\S\ref{sec:imp-compile}, \S\ref{sec:res-reliability}).
-\item \textbf{A scale-saturation result}: frontier distillation lifts a
-0.6B student to the teacher-agreement ceiling (97--99\%), and a 3.8B
-student lands on statistically identical numbers --- capability is not the
-bottleneck at this task, the distillation ceiling is
-(\S\ref{sec:res-offline}).
+\item \textbf{A scale-saturation result, at two levels}: frontier
+distillation lifts a 0.6B student to the teacher-agreement ceiling
+(97--99\%) and a 3.8B student lands on statistically identical numbers,
+offline and closed-loop (\S\ref{sec:res-offline}); moreover the two
+students fail on the \emph{same} seeds with matched magnitudes, so what
+they share is not merely an accuracy ceiling but a policy attractor
+(\S\ref{sec:res-forensics}). Capability is not the bottleneck at this
+task --- the distillation ceiling is.
 \item \textbf{The authorship finding}, the dissertation's headline:
 offline accuracy decouples from closed-loop delay (neither student
 significantly beats the fixed-time floor at $n{=}30$), but fine-tuning
@@ -70,10 +73,20 @@ reconstructed from signed, hash-chained records, with tampering caught and
 the governing UK rule inferred deterministically from verified facts,
 emitting cited evidence packs rather than verdicts
 (\S\ref{sec:res-audit}).
-\item \textbf{An honestly-scoped trust mechanism}: asymmetric,
-discount-only trust that contains blatant misreporting but is evaded by a
-calibrated stealth attacker --- reported as a limitation, not defended
-away (\S\ref{sec:res-trust}).
+\item \textbf{An honestly-scoped trust mechanism, tested against the
+controller that matters}: asymmetric, discount-only trust that contains
+blatant misreporting but is evaded by a calibrated stealth attacker, and
+--- run against fine-tuned as well as stock controllers --- the finding
+that authorship cuts both ways: a model that genuinely acts on its
+coordination inputs is moved further by poisoned ones
+(\S\ref{sec:res-trust}).
+\item \textbf{Two negative results established under fair protocols}: an
+authorisation re-test in which explicit in-prompt policy rescues a stock
+model's recall but not its safety, while the fine-tuned students prove
+format-captured on the adjacent task (\S\ref{sec:res-lee}); and the
+measurement that serving-artifact provenance alone shifts a headline delay
+result by nine points, which is why every comparison here uses an
+identical-pipeline control (\S\ref{sec:res-factorial}).
 \end{enumerate}
 
 \section{Scope and thesis statement}\label{sec:intro-scope}

@@ -11,28 +11,74 @@ headlines (\S\ref{sec:res-authorship}), the audit and trust results
 (\S\ref{sec:res-audit}, \S\ref{sec:res-trust}), and the serving-reliability
 evidence (\S\ref{sec:res-reliability}).
 
-\section{Baseline landscape: the MaxPressure reversal}\label{sec:res-maxpressure}
-Adding a naive fixed-time floor to every comparison produced the single most
-consequential rigour result of the project. MaxPressure, throughput-optimal
-in theory \cite{varaiya2013maxpressure} and dominant in the simulation
-literature, is \emph{worse than naive fixed-time on every measured London
-topology in this study} --- Euston $+15\%$, Old Street $+5\%$ (one seed
-$+37\%$), Bloomsbury $+3\%$ --- while dominating exactly where the
-literature tests it, on regular synthetic grids ($-27\%$ on grid4$\times$4,
-$-19\%$ on grid3$\times$3).
+\section{Baseline landscape: what the fixed-time floor revealed}\label{sec:res-maxpressure}
+Adding a naive fixed-time floor to every comparison was the single most
+consequential rigour decision of the project, and it produced a result I
+have had to correct twice.
 
-I scope this claim deliberately: six independent studies in my corpus report
-MaxPressure winning on grid networks, and nothing here contradicts them. What
-the reversal shows is that its guarantees do not transfer to irregular
-real-world geometry, and the mechanism is visible in the theory itself: the
-throughput-optimality proof assumes infinite queue capacity, and
-finite-capacity extensions prove work-conservation losses
-\cite{gregoire2014backpressure}, while stability results hold under heavy
-load \cite{zaidi2014backpressure} --- London arterials at measured demand sit
-in neither regime. The consequence for evaluation practice is immediate:
-any SLM-vs-MaxPressure win on real topologies is partly MaxPressure's own
-weakness, so every claim in this dissertation is stated against the
-fixed-time floor, with MaxPressure reported alongside.
+In the exploratory sweep (three seeds per cell, daily-resolution demand)
+MaxPressure --- throughput-optimal in theory \cite{varaiya2013maxpressure}
+and dominant in the simulation literature --- appeared \emph{worse than
+naive fixed-time on every real London topology tested} (Euston $+15\%$,
+Old Street $+5\%$, Bloomsbury $+3\%$) while dominating the synthetic grids
+($-27\%$ on grid4$\times$4, $-19\%$ on grid3$\times$3). That contrast was
+striking enough to become a headline claim of an earlier draft.
+
+It does not survive replication. Table~\ref{tab:mpfloor} recomputes the
+comparison paired per seed over the thirty disjoint evaluation seeds, on
+the same measured-demand topologies used everywhere else in this
+dissertation.
+
+\begin{table}[h]
+\caption{MaxPressure vs fixed-time, paired per seed ($n{=}30$).
+Positive = MaxPressure worse. CI is 95\% on the mean relative change.}
+\label{tab:mpfloor}
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Topology & MaxPressure & fixed-time & rel. & 95\% CI \quad ($p$) \\
+\midrule
+Euston peak-hour & 259.6\,s & 235.6\,s & $+19.8\%$ & $[+3.3, +36.2]$ \quad (.21) \\
+Bloomsbury grid & 527.9\,s & 527.3\,s & $+0.2\%$ & $[-1.5, +2.0]$ \quad (.90) \\
+Old Street & 148.5\,s & 159.4\,s & $-6.1\%$ & $[-10.8, -1.3]$ \quad (\textbf{.016}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At $n{=}30$ the picture is not a reversal but a \finding{topology-dependent
+draw}. On Old Street --- the most complex geometry in the study, a five-arm
+junction with seventeen movements --- MaxPressure is \emph{significantly
+better} than fixed-time, contradicting the exploratory result outright. On
+Bloomsbury the two are indistinguishable. Only on the saturated Euston
+corridor does MaxPressure remain worse in the mean, and there the paired
+test does not reach significance ($p{=}.21$) because the per-seed spread is
+large; note also that the confidence interval on the mean relative change
+excludes zero while the paired test on absolute delay does not --- a
+divergence caused by skew, and a reminder that on this topology a mean is a
+fragile summary.
+
+I therefore retract the general claim. What the evidence supports is
+narrower and still worth stating: MaxPressure's advantage over a naive
+fixed-time plan is \emph{not} reliable on irregular real geometry under
+measured demand --- it is real on one topology, absent on another, and
+negative-but-uncertain on a third --- whereas on the regular synthetic
+grids the literature favours it is uniformly and substantially better.
+The backpressure theory offers a mechanism for why the arterial is its
+weakest case: the throughput-optimality proof assumes unbounded queue
+storage, and finite-capacity treatments prove work-conservation losses
+\cite{gregoire2014backpressure}, while the only stability results for a
+deployable variant hold under heavy load \cite{zaidi2014backpressure} ---
+conditions a saturated short-link corridor violates in both directions. I
+offer that as a hypothesis consistent with the Euston direction, not as a
+demonstrated explanation, since the effect it would explain is itself not
+significant.
+
+The practical consequence for this dissertation is unchanged and is the
+reason the floor was added: any SLM-vs-MaxPressure comparison on real
+topologies is confounded by MaxPressure's own variable strength, so every
+controller claim here is stated against the fixed-time floor, with
+MaxPressure reported alongside.
 
 \section{Base-model factorial}\label{sec:res-factorial}
 The full factorial (seven servable catalogue models --- the 6\,GB card caps

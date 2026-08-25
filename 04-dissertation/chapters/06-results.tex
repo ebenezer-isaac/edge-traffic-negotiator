@@ -339,6 +339,93 @@ $-3.9\%$, Bloomsbury $+0.6\%$ vs $+0.7\%$, the same divergence band
 any arm (median p50 0.94\,s, worst cell p99 1.46\,s). The dissertation's scale-threshold
 question is thereby answered in both evaluation regimes: 0.6B suffices.
 
+\section{Demand calibration: the result the gridlock was hiding}\label{sec:res-calib}
+The guard metrics of \S\ref{sec:res-guards} showed that the Bloomsbury map
+was oversaturated --- under 15\% of vehicles completed and roughly 120 per
+run were teleported out of deadlock. Because that map carried the only
+significant closed-loop result in the study, I re-examined it rather than
+merely caveating it, and the re-examination changed the dissertation's
+central empirical claim.
+
+Two diagnostics established the cause. Tripling the horizon to 3{,}600
+steps raised completion only to 35\% while multiplying teleports roughly
+sevenfold (121 to 830): the network was not under-simulated, it was over
+capacity. Subsampling demand located the boundary sharply --- at 40\% of
+the original demand the network clears (87.6\% completion, zero
+teleports), while at 55\% it collapses again (57.5\%, teleports return).
+I therefore added a demand-calibrated variant at 40\% (686 vehicles),
+applying the same treatment Old Street had received earlier in the project
+for the same reason, and re-ran all three closed-loop arms over the
+identical thirty disjoint seeds. The oversaturated cells are retained, so
+the comparison is a controlled manipulation of demand rather than a
+replacement of inconvenient data.
+
+\begin{table}[t]
+\caption{The same controllers under two demand regimes on the same
+Bloomsbury network ($n{=}30$ paired seeds each). Positive $\Delta$ is
+worse than the fixed-time floor.}
+\label{tab:calib}
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Regime & Arm & $\Delta$delay (95\% CI) & $p$ & Compl. & Auth. \\
+\midrule
+Oversaturated & qwen ft & $+0.7$ $[-0.7, +2.0]$ & .371 & 14.2\% & 0.70 \\
+(14\% clears) & qwen stock & $+2.6$ $[+1.2, +4.1]$ & .002 & 13.5\% & 0.62 \\
+\midrule
+Calibrated & qwen ft & $+0.00$ $[-0.54, +0.54]$ & .987 & 87.4\% & 0.77 \\
+(87\% clears) & phi ft & $+0.03$ $[-0.41, +0.46]$ & .933 & 87.5\% & 0.77 \\
+ & qwen stock & $\mathbf{+22.7}$ $[+20.7, +24.6]$ & $\mathbf{6{\times}10^{-20}}$ & 76.4\% & 0.59 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\finding{The gridlock was masking the effect, not creating it.} On the
+calibrated network the stock controller degrades mean delay by
+\risk{22.7\%} against the fixed-time floor --- an order of magnitude
+larger than the $+2.6\%$ measured on the same map when it was
+oversaturated --- while both fine-tuned students are statistically
+indistinguishable from the floor. The head-to-head is the largest and most
+certain effect in this dissertation: fine-tuning reduces delay by
+\finding{$18.3\%$} relative to the identically-compiled stock model
+($[-19.7, -16.9]$, $p{=}8.5{\times}10^{-19}$), and it \finding{wins on
+30 of 30 seeds}. The Phi student reproduces this exactly ($-18.3\%$,
+30/30, $p{=}4.5{\times}10^{-19}$).
+
+The mechanism is straightforward once stated. A deadlocked network is
+already at its worst: there is a ceiling on how much further a poor
+controller can degrade it, and the teleport mechanism truncates precisely
+the worst journeys, so bad control and good control are compressed toward
+the same terrible mean. A free-flowing network has room for a poor
+controller to do real damage --- and room for a good one to avoid it. The
+stock arm's throughput corroborates this reading: it completes 76.4\% of
+vehicles against 87.4\% for the fine-tuned arm, so it is stranding traffic
+as well as delaying it, and its decision profile is unchanged (484 valid
+proposals of 546 decisions, no fallbacks, normal latency), which rules out
+a degraded-serving explanation.
+
+\finding{This also converts the scale-saturation result from a
+non-rejection into a demonstrated equivalence.} On the calibrated map the
+3.8B and 0.6B students differ by $+0.03\%$ with a 95\% confidence interval
+of $[-0.30, +0.36]$ --- an interval narrow enough to exclude any
+practically meaningful difference, rather than merely failing to detect
+one. Six times the parameters buy nothing, and now the claim is bounded
+rather than assumed.
+
+I draw a methodological conclusion beyond this project. \finding{Evaluating
+signal controllers on oversaturated networks systematically understates
+effect sizes.} Had I reported only the original Bloomsbury cells, this
+dissertation would have concluded that fine-tuning yields a marginal
+$1.8\%$ improvement of doubtful significance; the same experiment on a
+network that clears yields $18.3\%$ on every seed. Since the surrounding
+literature evaluates predominantly on synthetic grids under demand that is
+rarely reported in clearance terms (\S\ref{sec:bg-rl}), and since the
+field's own calibration figure for the whole LLM-versus-MaxPressure gap is
+1--2\% \cite{dglight2026}, the possibility that published effect sizes are
+compressed by saturation deserves attention. Reporting completion and
+teleport counts alongside delay costs nothing and would settle it.
+
 \section{Throughput guards: which delay numbers are comparable}\label{sec:res-guards}
 Mean delay can be improved by stranding vehicles, so \S\ref{sec:met-metrics}
 commits to reporting throughput, teleports and undeparted backlog alongside

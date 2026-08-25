@@ -52,12 +52,20 @@ accuracy gain yields no significant delay improvement inside the shield's
 envelope. A three-seed finding that MaxPressure is worse than a naive
 fixed-time floor on real London topologies fails to replicate at thirty
 paired seeds, and I report that retraction rather than the headline it
-would have made. What
-fine-tuning buys instead is \emph{authorship}: the model's share of all
-served actuations rises from 0.39--0.62 to 0.56--0.70, because the
+would have made. Fine-tuning's value emerges
+only when the test network is capable of flowing. On a Bloomsbury grid
+left at its default demand --- where under 15\% of vehicles clear --- the
+distilled and stock controllers differ by less than two points; on the
+same network calibrated so that 87\% clear, the stock controller degrades
+delay by 22.7\% while the distilled one matches the fixed-time floor
+exactly, a \emph{18.3\% improvement that holds on 30 of 30 seeds}
+($p{\approx}10^{-19}$). Saturation had been masking the effect, which
+suggests published effect sizes in this field may be compressed by the
+same cause. Fine-tuning also buys \emph{authorship}: the model's share of
+all served actuations rises from 0.39--0.62 to 0.56--0.77, because the
 distilled policy trips the anti-starvation floor far less often, while its
 divergence from MaxPressure among the decisions it authors falls from
-0.46--0.60 to 0.11--0.18. That matters for accountability: an audit of the
+0.46--0.60 to 0.04--0.18. That matters for accountability: an audit of the
 stock deployment could attribute two decisions in five to the learned
 component, against four in seven after distillation, a deterministic timer
 authoring the rest. I also state the deflationary reading this invites ---

@@ -17,25 +17,35 @@ within the deployable envelope on complex junction geometry, harmful on a
 saturated arterial before distillation, and never demonstrably superior to
 a naive fixed-time plan at $n{=}30$.
 
-\textbf{RQ2 (what distillation buys): authorship, and it saturates at
-0.6B.} Offline, distillation is dramatic (55--69\% $\to$ 97--99\%) and
-scale-flat --- a 3.8B student adds nothing over 0.6B, and no format
-specialist beats the generalist even on its own format. Closed-loop, the
-accuracy does not become delay; it becomes \emph{ownership}: the SLM's
+\textbf{RQ2 (what distillation buys): delay where the network can flow,
+authorship everywhere, and it saturates at 0.6B.} Offline, distillation is
+dramatic (55--69\% $\to$ 97--99\%) and scale-flat --- a 3.8B student adds
+nothing over 0.6B, and no format specialist beats the generalist even on
+its own format. Closed-loop the answer depends on whether the test network
+is capable of clearing. On a demand-calibrated grid distillation is worth
+$18.3\%$ delay against the identically-compiled stock model, on 30 of 30
+seeds, and the two student scales sit within $\pm0.36\%$ of each other ---
+so saturation is a bounded equivalence, not an absence of evidence. On
+oversaturated or corridor maps the same manipulation yields little,
+because the shield's envelope and the network's own saturation compress
+every controller toward the same outcome. Independently of delay,
+distillation buys \emph{ownership}: the SLM's
 share of served actuations rises from 0.39--0.62 to 0.56--0.70, divergence
 from MaxPressure among its own decisions falls four-fold, and the stock
 harms (congested grid $+2.6\%$, $p{=}1.5{\times}10^{-3}$; measured-demand
-corridor $+7$ to $+20\%$) are repaired to neutral. For a shielded, audited controller I argue this is the correct
-success criterion, and \S\ref{sec:dis-decoupling} explains why delay was
-never the sensitive variable.
+corridor $+7$ to $+20\%$) are repaired to neutral. For a shielded, audited
+controller I argue ownership is the criterion that generalises across
+topologies, since it holds even where delay effects are compressed;
+\S\ref{sec:dis-decoupling} explains when delay is and is not a sensitive
+variable.
 
 Two further results qualify the answer in opposite directions. The
-saturation is deeper than the accuracy tables alone show: the two
-students fail on identical seeds with matched magnitudes
-(\S\ref{sec:res-forensics}), so distillation converges different
-architectures onto one effective policy --- which also means a second,
-larger student buys no diversity, and an ensemble of the two would be
-close to worthless. Against that, distillation is not free: on an
+saturation runs deeper than the accuracy tables alone show: on the
+calibrated grid the two students sit within $\pm0.36\%$ of one another,
+and across the wider sweep they reproduce each other's control trajectory
+exactly on nine of ninety cells (\S\ref{sec:res-forensics}). A second,
+larger student therefore buys little diversity, and an ensemble of the two
+would be worth less than its cost. Against that, distillation is not free: on an
 adjacent structured task the fine-tuned students are worse than their own
 stock bases, one of them unable to emit the required output schema at all
 (\S\ref{sec:res-lee}). The capability is not so much lost as
@@ -78,12 +88,15 @@ model puts the entire LLM-vs-MaxPressure delay gap at 1--2\%
 \cite{dglight2026}, and my own decision battery showed a near-chance
 proposer winning closed-loop cells --- per-decision agreement with a
 delay-optimal heuristic is simply not the trajectory-level objective.
-Third, \emph{where the stock model could do damage, fine-tuning shows up}:
-the single significant closed-loop effect is the repair of stock harm
-under grid congestion, exactly where bad proposals compound fastest. The
-practical reading for deployment: fine-tune to own the decisions and to
-remove harm tails, and do not expect --- or promise --- delay headlines
-inside a safety shield.
+Third, and decisively, \emph{the test network must be able to express the
+difference}: on an oversaturated map every controller is compressed toward
+the same terrible mean, and the same experiment on a network that clears
+recovers an $18.3\%$ effect on every seed (\S\ref{sec:res-calib}). Two of
+my three mechanisms are therefore properties of the measurement rather
+than of the controller. The practical reading for deployment: fine-tune to
+own the decisions and to remove harm tails, expect delay gains only where
+the network is not already saturated, and never evaluate a controller on a
+network that cannot clear.
 
 \section{Threats to validity}\label{sec:dis-threats}
 I declare four threats with their defences, and none is cosmetic.

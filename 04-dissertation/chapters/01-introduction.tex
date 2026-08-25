@@ -51,11 +51,12 @@ documented serving-reliability findings with mitigations
 \item \textbf{A scale-saturation result, at two levels}: frontier
 distillation lifts a 0.6B student to the teacher-agreement ceiling
 (97--99\%) and a 3.8B student lands on statistically identical numbers,
-offline and closed-loop (\S\ref{sec:res-offline}); moreover the two
-students fail on the \emph{same} seeds with matched magnitudes, so what
-they share is not merely an accuracy ceiling but a policy attractor
-(\S\ref{sec:res-forensics}). Capability is not the bottleneck at this
-task --- the distillation ceiling is.
+offline and closed-loop (\S\ref{sec:res-offline}). On the calibrated grid
+the two scales sit within $\pm0.36\%$ of each other, making this a bounded
+equivalence rather than a failure to detect a difference, and across the
+wider sweep they reproduce each other's control trajectory exactly on nine
+of ninety cells (\S\ref{sec:res-forensics}). Capability is not the
+bottleneck at this task --- the distillation ceiling is.
 \item \textbf{A large, seed-unanimous fine-tuning effect --- and the
 measurement condition needed to see it}: on a Bloomsbury grid left at its
 default demand, where under 15\% of vehicles clear, distillation is worth
@@ -65,15 +66,15 @@ controller degrades delay by 22.7\%, an $18.3\%$ improvement holding on
 30 of 30 seeds ($p{\approx}10^{-19}$). Oversaturated test networks
 compress controller differences, which has implications beyond this study
 (\S\ref{sec:res-calib}).
-\item \textbf{The authorship finding}:
-offline accuracy decouples from closed-loop delay (neither student
-significantly beats the fixed-time floor at $n{=}30$), but fine-tuning
+\item \textbf{The authorship finding}: where delay effects are
+compressed --- on saturated maps and behind the shield's envelope ---
+offline accuracy still decouples from closed-loop delay, but fine-tuning
 raises the SLM's share of all served actuations from 0.39--0.62 to
-0.56--0.70 by tripping the anti-starvation floor far less often, while
-cutting its divergence from MaxPressure from 0.46--0.60 to 0.11--0.18.
-Authorship, not delay, is what distillation moves --- reported at its
-true magnitude, with the rival imitation reading stated
-(\S\ref{sec:res-authorship}).
+0.56--0.77 by tripping the anti-starvation floor far less often, while
+cutting its divergence from MaxPressure from 0.46--0.60 to 0.04--0.18.
+Authorship moves even where delay does not, which is what an accountable
+deployment needs --- reported at its true magnitude, with the rival
+imitation reading stated (\S\ref{sec:res-authorship}).
 \item \textbf{A replication failure reported against my own claim}: an
 exploratory three-seed sweep showed MaxPressure worse than naive
 fixed-time on every real London topology; at thirty paired seeds the

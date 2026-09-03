@@ -50,19 +50,24 @@ Local on a 6\,GB consumer GPU, controlling measured London topologies in SUMO
 behind a MaxPressure safety shield with a tamper-evident, Ed25519 hash-chained
 decision audit. Distilling a frontier teacher lifts held-out decision accuracy
 from 55--69\% to 97--99\% and \emph{saturates by 0.6B parameters}: a 3.8B
-student is statistically indistinguishable from a 0.6B one. Closed-loop, on
-30 training-disjoint seeds per topology, this accuracy does \emph{not}
-translate into significant delay improvement over a fixed-time baseline ---
-but fine-tuning raises the SLM's share of all served actuations from
-0.39--0.62 to 0.56--0.70 --- the distilled policy trips the anti-starvation
-floor far less often --- while its divergence from MaxPressure among the
-decisions it authors falls from 0.46--0.60 to 0.11--0.18, and it repairs the
-stock model's measured harms. We argue authorship is the property that
-matters: an audit of the stock deployment could attribute two decisions in
-five to the learned component, against four in seven after distillation,
-with a deterministic timer authoring the rest. We also state the
-deflationary reading --- that distillation partly taught the student to
-imitate the classical reference --- and bound it with the evidence.
+student is statistically indistinguishable from a 0.6B one, within
+$\pm0.36\%$ of closed-loop delay. Whether accuracy becomes delay depends on
+whether the test network can express it: on saturated maps, over 30
+training-disjoint seeds, no arm significantly beats a fixed-time baseline
+--- but on the same grid demand-calibrated so that traffic actually flows,
+the stock model degrades delay by 22.7\% while the distilled one matches
+the baseline exactly, an \emph{18.3\% improvement on 30 of 30 seeds}
+($p{\approx}10^{-19}$) that gridlock had been masking. Everywhere,
+fine-tuning raises the SLM's share of all served actuations from
+0.39--0.62 to 0.56--0.77, because the distilled policy trips the
+anti-starvation floor far less often, while its divergence from
+MaxPressure falls from 0.46--0.60 to 0.04--0.18. We argue authorship is
+the property an audit needs --- an audit of the stock deployment could
+attribute two decisions in five to the learned component, against up to
+three in four after distillation, a deterministic timer authoring the
+rest --- and we state the deflationary reading, that distillation partly
+taught imitation of the classical reference, and bound it with the
+evidence.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -97,14 +102,20 @@ equivalence between CPU and WebGPU serving.
 0.6B student to 97--99\% holdout agreement with the teacher; a 3.8B student
 lands on the same numbers. For this task class, capability is not the
 bottleneck --- the distillation ceiling is.
-\item \textbf{The authorship finding.} Offline accuracy decouples from
-closed-loop delay (neither student significantly beats a fixed-time floor at
-$n{=}30$), yet fine-tuning quadruples the fraction of decisions that survive
-the shield. We introduce authored share as the metric a decision audit
-needs, and show fine-tuning is what moves it.
-\item \textbf{Honest nulls with mechanism.} We report the closed-loop nulls,
-the one significant effect (repair of stock-model harm under congestion), and
-a calibration argument for why the delay headroom was always small.
+\item \textbf{A large, seed-unanimous effect and the measurement condition
+needed to see it.} On an oversaturated grid, distillation is worth under
+two points; on the same grid calibrated to flow, 18.3\% on 30 of 30 seeds.
+Oversaturated test networks compress controller effect sizes, which has
+implications beyond this study.
+\item \textbf{The authorship finding.} Where delay effects are compressed,
+accuracy still decouples from delay --- yet fine-tuning raises the model's
+share of served actuations by up to 17 points and cuts its divergence from
+the classical reference four-fold. We define authored share on the
+actuation denominator, the quantity a decision audit needs, and separate
+it from proposal acceptance.
+\item \textbf{Honest nulls with mechanism.} We report the closed-loop
+nulls where they occur, the guard metrics that decide which delay numbers
+are comparable, and the failure tail with its audit-chain forensics.
 \end{itemize}
 
 \section{Related work}\label{sec:related}

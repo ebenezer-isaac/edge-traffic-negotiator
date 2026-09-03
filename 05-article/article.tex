@@ -271,22 +271,38 @@ Pooled ($n{=}90$) & ft & $-2.1\%$ & .14 & --- \\
 \end{tabular}
 \end{table}
 
-Neither arm significantly beats fixed-time on any topology; a $+42$-point
-offline accuracy gain buys no significant delay change. The one significant
-closed-loop effect of fine-tuning is protective: stock control significantly
-\emph{harms} the congested grid ($+2.6\%$, $p{=}1.5\times10^{-3}$), the
-fine-tuned model is neutral there, and the head-to-head paired difference is
-$-1.8\%$ ($p{=}.019$). This decoupling has a calibration explanation: with
-the shield bounding worst-case behaviour for both arms, and the total
-LLM-vs-MaxPressure headroom reported at 1--2\% by work tuning models
-$13\times$ larger \cite{dglight2026}, there was never much delay for
-per-decision accuracy to win.
+On these maps neither arm significantly beats fixed-time; a $+42$-point
+offline accuracy gain buys no significant delay change, and the only
+significant effect is protective (stock harms the congested grid,
+$+2.6\%$, $p{=}1.5\times10^{-3}$; head-to-head $-1.8\%$, $p{=}.019$).
 A Phi-4-mini confirmation arm (same 90 cells) lands arm-for-arm on the
-0.6B student's numbers --- Euston $-3.8\%$ vs $-3.9\%$, Bloomsbury
-$+0.6\%$ vs $+0.7\%$, override 0.12--0.17, authored share to 0.88 --- so
-the saturation finding holds end-to-end, offline and closed-loop.
+0.6B student's numbers, so saturation holds closed-loop as well.
 
-Forensics on the failure tail sharpens this into a stronger claim. Of 270
+The decisive evidence came from asking why the effects were so small.
+Throughput guards showed the Bloomsbury map never cleared: under 15\% of
+vehicles completed and $\sim$120 per run were teleported out of deadlock,
+and tripling the horizon made it worse (830 teleports), proving demand
+above capacity. We therefore demand-calibrated the map to 40\% (87.6\%
+completion, zero teleports, matching an earlier calibration of Old
+Street), kept the oversaturated cells, and re-ran all three arms on the
+identical 30 seeds. \textbf{On the network that flows, the stock model
+degrades delay by 22.7\%} [+20.7, +24.6] against the fixed-time floor
+while both fine-tuned students match the floor exactly (0.6B: $+0.00\%$
+[$-0.54, +0.54$]; 3.8B: $+0.03\%$ [$-0.41, +0.46$]). Head-to-head,
+\textbf{fine-tuning is worth $-18.3\%$} [$-19.7, -16.9$],
+$p{=}8.5\times10^{-19}$, \textbf{winning 30 of 30 seeds}, reproduced
+identically by the 3.8B student. The gridlock had been masking the
+effect: a deadlocked network has a ceiling on further degradation, and
+teleports truncate exactly the worst journeys, compressing good and bad
+control toward the same mean. The methodological corollary generalises:
+oversaturated test networks systematically understate controller effect
+sizes, and since the field evaluates mostly on synthetic grids under
+demand rarely reported in clearance terms, with its own calibration for
+the whole LLM-vs-MaxPressure gap at 1--2\% \cite{dglight2026}, published
+effect sizes may be compressed by the same cause. The title claim is
+therefore scoped, not withdrawn: where the network is saturated,
+authorship is what fine-tuning moves; where it can flow, delay follows.
+
 Forensics on the failure tail qualifies this. Of 270 closed-loop cells, 14
 are catastrophic ($\ge{+}20\%$ delay); all their audit chains verify, and
 the catastrophic seeds are baseline-easy or median realisations, so the

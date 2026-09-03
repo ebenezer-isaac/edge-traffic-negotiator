@@ -3,16 +3,18 @@
 % Every number in this chapter is read from a committed results/*.json artifact.
 
 I present results in the order the evidence was built: the baseline
-landscape that reframed the project (\S\ref{sec:res-maxpressure}), the
-base-model factorial (\S\ref{sec:res-factorial}), the offline distillation
-tables (\S\ref{sec:res-offline}), the closed-loop outcome and its
-robustness checks (\S\ref{sec:res-closedloop}), the throughput guards that
-determine which of those numbers are comparable (\S\ref{sec:res-guards}),
-the authorship finding this dissertation headlines
-(\S\ref{sec:res-authorship}), the failure forensics the audit layer makes
-possible (\S\ref{sec:res-forensics}), the audit, trust and
-authorisation-re-test results (\S\ref{sec:res-audit}, \S\ref{sec:res-trust},
-\S\ref{sec:res-lee}), and the serving-reliability evidence
+landscape that reframed the project (\S\ref{sec:res-maxpressure}); the
+base-model factorial (\S\ref{sec:res-factorial}); the offline distillation
+tables (\S\ref{sec:res-offline}); the closed-loop outcome and its
+robustness checks (\S\ref{sec:res-closedloop}); the throughput guards that
+determine which delay numbers are comparable (\S\ref{sec:res-guards}) and
+the demand calibration they forced, which yields the headline result
+(\S\ref{sec:res-calib}); the authorship finding
+(\S\ref{sec:res-authorship}); the failure forensics the audit layer makes
+possible (\S\ref{sec:res-forensics}); the audit, trust,
+emergency-preemption and authorisation-re-test results
+(\S\ref{sec:res-audit}, \S\ref{sec:res-trust}, \S\ref{sec:res-ev},
+\S\ref{sec:res-lee}); and the serving-reliability evidence
 (\S\ref{sec:res-reliability}).
 
 \section{Baseline landscape: what the fixed-time floor revealed}\label{sec:res-maxpressure}
@@ -106,11 +108,14 @@ closed-loop cells. The controller's value is systemic --- SLM, shield and
 gating together --- and this battery is open-loop by construction, stated
 as such.
 
-The explanatory two-way ANOVA over the factorial confirms the structure:
-model and configuration interact strongly (interaction
-$F{=}32$, $p{<}0.001$, $\eta^2{=}0.86$), with the effect driven by outlier
-cells rather than a smooth gradient --- a further argument against pooled
-claims.
+An explanatory two-way ANOVA (model $\times$ topology, two models over
+four topologies, three seeds per cell) confirms the structure: topology
+dominates (partial $\eta^2{=}0.97$), the model matters
+($\eta^2{=}0.83$), and the two interact strongly (interaction
+$F{=}32.2$, $p{<}0.001$, partial $\eta^2{=}0.86$) --- which SLM helps or
+hurts is decided topology-by-topology, a further argument against pooled
+claims. At three seeds per cell this is exploratory replication, not the
+powered design.
 
 The powered stock-model replication ($n{=}30$ per cell, four catalogue
 models $\times$ two formats, both baselines) sharpens the picture per
@@ -124,9 +129,9 @@ $p{=}.014$).
 On \textbf{Euston peak-hour} under the measured DfT demand profile the
 result reverses, and I report it as measured: every stock arm is
 \risk{7--20\% worse than the fixed-time floor} ($+7.4\%$ to $+19.7\%$),
-significantly so on four of the eight arms (two-sided $p$ between .017
-and .053), while remaining statistically indistinguishable from
-MaxPressure. This is not a null; it is a measured harm, and it refutes
+significantly so on three of the eight arms (two-sided $p$ .017--.026,
+with a fourth at $p{=}.053$), while remaining statistically
+indistinguishable from MaxPressure. This is not a null; it is a measured harm, and it refutes
 the exploratory sweep's corridor win above. Two differences explain the
 reversal --- the powered run uses the measured hourly demand profile
 rather than a daily-average magnitude, and the peak-hour topology loads
@@ -325,6 +330,59 @@ $-3.9\%$, Bloomsbury $+0.6\%$ vs $+0.7\%$, the same divergence band
 any arm (median p50 0.94\,s, worst cell p99 1.46\,s). The dissertation's scale-threshold
 question is thereby answered in both evaluation regimes: 0.6B suffices.
 
+\section{Throughput guards: which delay numbers are comparable}\label{sec:res-guards}
+Mean delay can be improved by stranding vehicles, so \S\ref{sec:met-metrics}
+commits to reporting throughput, teleports and undeparted backlog alongside
+it. Table~\ref{tab:guards} does so, and it changes how two of the three
+topologies should be read.
+
+\begin{table}[h]
+\caption{Guard metrics, means over $n{=}30$ seeds. ``Compl.'' is completed
+vehicles as a share of those loaded within the 1{,}200-step horizon;
+teleports are SUMO's gridlock-escape removals.}
+\label{tab:guards}
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Topology & Arm & Loaded & Compl. & Teleports & Undep. \\
+\midrule
+Euston peak-hour & baseline & 780 & 44.3\% & 33.8 & 225 \\
+ & qwen ft & 780 & 48.7\% & 28.1 & 200 \\
+ & qwen stock & 780 & 50.3\% & 23.3 & 199 \\
+Bloomsbury grid & baseline & 1715 & 14.6\% & 118.5 & 335 \\
+ & qwen ft & 1715 & 14.2\% & 120.0 & 341 \\
+ & qwen stock & 1715 & 13.5\% & 135.6 & 348 \\
+Old Street & baseline & 480 & 85.5\% & 1.5 & 0 \\
+ & qwen ft & 480 & 86.7\% & 0.5 & 0 \\
+ & qwen stock & 480 & 84.4\% & 1.0 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\finding{Only Old Street is measured in a free-flowing regime}: 85\% of
+vehicles complete and teleports are effectively absent, so mean delay is
+well-posed --- and it is also where the fine-tuned controller
+significantly beats the floor on the typical seed
+(Table~\ref{tab:robust}). The cleanest regime yields the clearest
+result.
+
+\risk{Uncalibrated Bloomsbury is a gridlock-regime measurement.} Under
+15\% of vehicles complete and over a hundred are teleported out of
+deadlock, so its ``mean network delay'' is computed over a network that
+never clears, with the worst journeys removed by the simulator. The
+original $+2.6\%$ stock harm is therefore regime-scoped. It survives the
+guard test in direction --- the stock arm completes fewer vehicles than
+baseline (231 vs 251) with more teleports (135.6 vs 118.5), so throughput
+corroborates the harm --- but the comparison is between two
+congested-failure modes, and \S\ref{sec:res-calib} supplies the remedy.
+
+Euston sits between, at 44--50\% completion, and there the SLM arms
+\emph{complete more vehicles than the baseline} (380 and 392 against 345)
+with no significant delay advantage --- a throughput improvement a
+delay-only report would have missed, and the reason both metrics are
+mandated.
+
 \section{Demand calibration: the result the gridlock was hiding}\label{sec:res-calib}
 The guard metrics of \S\ref{sec:res-guards} showed that the Bloomsbury map
 was oversaturated --- under 15\% of vehicles completed and roughly 120 per
@@ -400,13 +458,15 @@ of vehicles against the fine-tuned 87.4\% --- and the stock arm's decision
 profile is unchanged (484 valid proposals of 546 decisions, no fallbacks,
 normal latency), ruling out degraded serving.
 
-\finding{This also converts the scale-saturation result from a
-non-rejection into a demonstrated equivalence.} On the calibrated map the
-3.8B and 0.6B students differ by $+0.03\%$ with a 95\% confidence interval
-of $[-0.30, +0.36]$ --- an interval narrow enough to exclude any
-practically meaningful difference, rather than merely failing to detect
-one. Six times the parameters buy nothing, and now the claim is bounded
-rather than assumed.
+\finding{This also bounds the scale-saturation result instead of leaving
+it a non-rejection.} On the calibrated map the 3.8B and 0.6B students
+differ by $+0.03\%$ with a 95\% confidence interval of $[-0.30, +0.36]$:
+any difference between the scales is smaller than a third of a percent of
+delay. I stop short of calling this a demonstrated equivalence, which
+would require an equivalence margin pre-registered against an operational
+threshold (a TOST procedure) that this study did not define; what the
+interval supports is that six times the parameters buys, at most, a
+practically negligible difference.
 
 A methodological conclusion follows. \finding{Evaluating signal
 controllers on oversaturated networks systematically understates effect
@@ -418,59 +478,6 @@ its own calibration for the whole LLM-versus-MaxPressure gap is 1--2\%
 \cite{dglight2026}, so compression of published effect sizes by
 saturation deserves attention. Reporting completion and teleport counts
 alongside delay costs nothing and would settle it.
-
-\section{Throughput guards: which delay numbers are comparable}\label{sec:res-guards}
-Mean delay can be improved by stranding vehicles, so \S\ref{sec:met-metrics}
-commits to reporting throughput, teleports and undeparted backlog alongside
-it. Table~\ref{tab:guards} does so, and it changes how two of the three
-topologies should be read.
-
-\begin{table}[h]
-\caption{Guard metrics, means over $n{=}30$ seeds. ``Compl.'' is completed
-vehicles as a share of those loaded within the 1{,}200-step horizon;
-teleports are SUMO's gridlock-escape removals.}
-\label{tab:guards}
-\centering
-\small
-\begin{tabular}{llrrrr}
-\toprule
-Topology & Arm & Loaded & Compl. & Teleports & Undep. \\
-\midrule
-Euston peak-hour & baseline & 780 & 44.3\% & 33.8 & 225 \\
- & qwen ft & 780 & 48.7\% & 28.1 & 200 \\
- & qwen stock & 780 & 50.3\% & 23.3 & 199 \\
-Bloomsbury grid & baseline & 1715 & 14.6\% & 118.5 & 335 \\
- & qwen ft & 1715 & 14.2\% & 120.0 & 341 \\
- & qwen stock & 1715 & 13.5\% & 135.6 & 348 \\
-Old Street & baseline & 480 & 85.5\% & 1.5 & 0 \\
- & qwen ft & 480 & 86.7\% & 0.5 & 0 \\
- & qwen stock & 480 & 84.4\% & 1.0 & 1 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\finding{Only Old Street is measured in a free-flowing regime}: 85\% of
-vehicles complete and teleports are effectively absent, so mean delay is
-well-posed --- and it is also where the fine-tuned controller
-significantly beats the floor on the typical seed
-(Table~\ref{tab:robust}). The cleanest regime yields the clearest
-result.
-
-\risk{Uncalibrated Bloomsbury is a gridlock-regime measurement.} Under
-15\% of vehicles complete and over a hundred are teleported out of
-deadlock, so its ``mean network delay'' is computed over a network that
-never clears, with the worst journeys removed by the simulator. The
-original $+2.6\%$ stock harm is therefore regime-scoped. It survives the
-guard test in direction --- the stock arm completes fewer vehicles than
-baseline (231 vs 251) with more teleports (135.6 vs 118.5), so throughput
-corroborates the harm --- but the comparison is between two
-congested-failure modes, and \S\ref{sec:res-calib} supplies the remedy.
-
-Euston sits between, at 44--50\% completion, and there the SLM arms
-\emph{complete more vehicles than the baseline} (380 and 392 against 345)
-with no significant delay advantage --- a throughput improvement a
-delay-only report would have missed, and the reason both metrics are
-mandated.
 
 \section{Authorship: what fine-tuning actually moves}\label{sec:res-authorship}
 The structural columns of Table~\ref{tab:closedloop-full} carry the
@@ -543,10 +550,10 @@ The teacher was a frontier model reasoning over accumulated waiting, not
 MaxPressure, and the students agree with the teacher's held-out labels at
 97--99\% (\S\ref{sec:res-offline}), so the convergence is at most
 indirect. The fine-tuned arms do not reproduce MaxPressure's closed-loop
-behaviour --- MaxPressure is significantly worse than fixed-time on these
-topologies (\S\ref{sec:res-maxpressure}) while the fine-tuned arms are
-not. And the remaining one-in-ten divergences are where the arms differ
-from both baselines. Distinguishing imitation from independent
+profile: on Euston peak-hour MaxPressure is $+19.8\%$ against the floor
+in the mean (\S\ref{sec:res-maxpressure}) while the fine-tuned arms sit
+at $-3.9\%$. And the remaining one-in-ten divergences are where the arms
+differ from both baselines. Distinguishing imitation from independent
 rediscovery of a similar policy would require a decision-level
 counterfactual study I did not run, and I flag it as the most substantive
 open question about this result.

@@ -63,16 +63,15 @@ decision --- whoever authored it --- lands in the signed audit chain
 \label{fig:architecture}
 \end{figure}
 
-Three design consequences follow. First, graceful degradation is the
-default: if the model times out, emits garbage, or the serving runtime dies
-(all observed in practice, \S\ref{sec:res-reliability}), the junction
-continues under MaxPressure with the failure recorded. Second, the
-architecture inverts iLLM-TSC's topology \cite{pang2024illmtsc} ---
-there, an RL agent proposes and a cloud LLM vetoes; here, the LLM proposes
-and a local $O(\text{phases})$ verifier vetoes --- which is the only
-orientation deployable at the edge, since the veto path must be cheap,
-local, and always available. Third, because the deterministic path is
-complete, every claim about the SLM's value can be measured as a
+Three consequences follow. First, graceful degradation is the default:
+a model timeout, garbage output, or a dead runtime (all observed,
+\S\ref{sec:res-reliability}) leaves the junction running MaxPressure with
+the failure recorded. Second, the architecture inverts iLLM-TSC
+\cite{pang2024illmtsc} --- there an RL agent proposes and a cloud LLM
+vetoes; here the LLM proposes and a local $O(\text{phases})$ verifier
+vetoes --- the only orientation deployable at the edge, where the veto
+path must be cheap, local and always available. Third, with the
+deterministic path complete, the SLM's value is measurable as a
 \emph{difference} against the same loop with the proposer disabled.
 
 \section{The SLM decision agent}\label{sec:des-agent}

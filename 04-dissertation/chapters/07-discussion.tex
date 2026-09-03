@@ -2,20 +2,18 @@
 % WORD BUDGET: ~1200 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
 
 \section{Answering the research questions}\label{sec:dis-rqs}
-\textbf{RQ1 (edge competence): qualified, and the qualification is
-topology-dependent.} At powered replication ($n{=}30$ disjoint seeds) the
-picture splits. On Old Street, stock SLM control significantly beats the
-fixed-time floor (up to $-11.8\%$, $p{<}0.001$) and one arm also beats
-MaxPressure. On the measured-demand Euston corridor the same controllers
-are 7--20\% \emph{worse} than the floor, significantly so on half the
-arms --- a cell my exploratory three-seed sweep had reported as a win, and
-the clearest evidence in this work for why powered replication on measured
-demand was necessary. Fine-tuned control removes that corridor deficit
-without becoming significantly better than the floor anywhere. The
-defensible claim is therefore narrow: on-device SLM control is competent
-within the deployable envelope on complex junction geometry, harmful on a
-saturated arterial before distillation, and never demonstrably superior to
-a naive fixed-time plan at $n{=}30$.
+\textbf{RQ1 (edge competence): qualified, and topology-dependent.} At
+powered replication ($n{=}30$ disjoint seeds) the picture splits. On Old
+Street, stock SLM control significantly beats the floor (up to $-11.8\%$,
+$p{<}0.001$) and one arm beats MaxPressure. On the measured-demand Euston
+corridor the same controllers are 7--20\% \emph{worse}, significantly so
+on half the arms --- a cell the exploratory sweep had reported as a win,
+and the clearest evidence for why powered replication on measured demand
+was necessary. Fine-tuning removes that corridor deficit without becoming
+significantly better than the floor anywhere. The defensible claim is
+narrow: competent on complex junction geometry, harmful on a saturated
+arterial before distillation, never demonstrably superior to a naive
+fixed-time plan at $n{=}30$.
 
 \textbf{RQ2 (what distillation buys): delay where the network can flow,
 authorship everywhere, and it saturates at 0.6B.} Offline, distillation is
@@ -40,42 +38,38 @@ topologies, since it holds even where delay effects are compressed;
 variable.
 
 Two further results qualify the answer in opposite directions. The
-saturation runs deeper than the accuracy tables alone show: on the
-calibrated grid the two students sit within $\pm0.36\%$ of one another,
-and across the wider sweep they reproduce each other's control trajectory
-exactly on nine of ninety cells (\S\ref{sec:res-forensics}). A second,
-larger student therefore buys little diversity, and an ensemble of the two
-would be worth less than its cost. Against that, distillation is not free: on an
-adjacent structured task the fine-tuned students are worse than their own
-stock bases, one of them unable to emit the required output schema at all
-(\S\ref{sec:res-lee}). The capability is not so much lost as
-\emph{narrowed onto the deployed contract}, which is acceptable --- even
-desirable --- for a component whose job is one decision type behind a
-deterministic gate, and unacceptable if the same weights were expected to
-serve the authorisation or legal-note roles as well.
+saturation runs deeper than the accuracy tables show: the two students
+sit within $\pm0.36\%$ on the calibrated grid and reproduce each other's
+control trajectory exactly on nine of ninety cells
+(\S\ref{sec:res-forensics}), so a larger second student buys little
+diversity and an ensemble would be worth less than its cost. Against
+that, distillation is not free: on an adjacent structured task the
+fine-tuned students are worse than their own stock bases, one unable to
+emit the required output schema at all (\S\ref{sec:res-lee}). The
+capability is \emph{narrowed onto the deployed contract} rather than
+lost --- acceptable, even desirable, for a component doing one decision
+type behind a deterministic gate; unacceptable if the same weights were
+expected to serve the authorisation or legal-note roles.
 
 \textbf{RQ3 (provable audit): yes, as designed.} Seven scenario
 reconstructions prove end-to-end with tampering caught; the system emits
 cited evidence packs, and the legally weak branches (authority fault) are
 weak \emph{in the law}, faithfully represented rather than overstated.
 
-\textbf{RQ4 (trust): partial, honestly --- and the partiality is
-structured.} The mechanism's properties all hold; blatant misreporting is
-detected and the liar's corroboration power stripped under every
-controller tested, stock and fine-tuned alike, because the ledger scores
-claims against local sensing rather than against model behaviour. Three
-limits qualify that. Detection does not undo damage already done (a
-caught blatant attack still costs up to eleven delay points on congested
-grids); a calibrated stealth attacker is not detected at all, and its
-payoff is positional --- retained trust it could later spend --- rather
-than congestive; and the mechanism is inert where coordination traffic is
-minimal, as on the corridor. The finding that most changes the design
-picture is that the delay cost of a blatant attack is \emph{larger}
-against fine-tuned controllers than stock ones: authorship cuts both
-ways, because a model that genuinely acts on its inputs is moved further
-by poisoned inputs. A trust ledger is therefore a necessary companion to
-distillation rather than an optional layer, and it is not a sufficient
-defence.
+\textbf{RQ4 (trust): partial, and the partiality is structured.} The
+mechanism's properties hold: blatant misreporting is detected and the
+liar's corroboration power stripped under every controller, because the
+ledger scores claims against local sensing rather than model behaviour.
+Three limits: detection does not undo damage already done (a caught
+blatant attack still costs up to eleven delay points on congested grids);
+a calibrated stealth attacker is never detected, and its payoff is
+positional --- retained trust to spend later --- rather than congestive;
+and the mechanism is inert where coordination traffic is minimal. The
+design-relevant finding is that a blatant attack costs \emph{more}
+against fine-tuned controllers than stock: authorship cuts both ways,
+since a model that genuinely acts on its inputs is moved further by
+poisoned ones. A trust ledger is a necessary companion to distillation,
+and not a sufficient defence.
 
 \section{Why accuracy decouples from delay}\label{sec:dis-decoupling}
 Three mechanisms jointly explain the paradox, and all three are visible in

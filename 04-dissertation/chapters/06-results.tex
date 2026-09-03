@@ -16,22 +16,16 @@ authorisation-re-test results (\S\ref{sec:res-audit}, \S\ref{sec:res-trust},
 (\S\ref{sec:res-reliability}).
 
 \section{Baseline landscape: what the fixed-time floor revealed}\label{sec:res-maxpressure}
-Adding a naive fixed-time floor to every comparison was the single most
-consequential rigour decision of the project, and it produced a result I
-have had to correct twice.
-
-In the exploratory sweep (three seeds per cell, daily-resolution demand)
-MaxPressure --- throughput-optimal in theory \cite{varaiya2013maxpressure}
-and dominant in the simulation literature --- appeared \emph{worse than
-naive fixed-time on every real London topology tested} (Euston $+15\%$,
-Old Street $+5\%$, Bloomsbury $+3\%$) while dominating the synthetic grids
-($-27\%$ on grid4$\times$4, $-19\%$ on grid3$\times$3). That contrast was
-striking enough to become a headline claim of an earlier draft.
-
-It does not survive replication. Table~\ref{tab:mpfloor} recomputes the
-comparison paired per seed over the thirty disjoint evaluation seeds, on
-the same measured-demand topologies used everywhere else in this
-dissertation.
+Adding a naive fixed-time floor to every comparison was the most
+consequential rigour decision of the project. In the exploratory sweep
+(three seeds per cell, daily-resolution demand) MaxPressure ---
+throughput-optimal in theory \cite{varaiya2013maxpressure} --- appeared
+\emph{worse than naive fixed-time on every real London topology} (Euston
+$+15\%$, Old Street $+5\%$, Bloomsbury $+3\%$) while dominating the
+synthetic grids ($-27\%$ on grid4$\times$4, $-19\%$ on grid3$\times$3),
+and an earlier draft made that a headline claim. It does not survive
+replication: Table~\ref{tab:mpfloor} recomputes the comparison paired per
+seed over the thirty disjoint evaluation seeds.
 
 \begin{table}[h]
 \caption{MaxPressure vs fixed-time, paired per seed ($n{=}30$).
@@ -51,23 +45,21 @@ Old Street & 148.5\,s & 159.4\,s & $-6.1\%$ & $[-10.8, -1.3]$ \quad (\textbf{.01
 \end{table}
 
 At $n{=}30$ the picture is not a reversal but a \finding{topology-dependent
-draw}. On Old Street --- the most complex geometry in the study, a five-arm
-junction with seventeen movements --- MaxPressure is \emph{significantly
-better} than fixed-time, contradicting the exploratory result outright. On
-Bloomsbury the two are indistinguishable. Only on the saturated Euston
-corridor does MaxPressure remain worse in the mean, and there the paired
-test does not reach significance ($p{=}.21$) because the per-seed spread is
-large; note also that the confidence interval on the mean relative change
-excludes zero while the paired test on absolute delay does not --- a
-divergence caused by skew, and a reminder that on this topology a mean is a
-fragile summary.
+draw}. On Old Street --- the study's most complex geometry, five arms and
+seventeen movements --- MaxPressure is \emph{significantly better} than
+fixed-time, contradicting the exploratory result outright. On Bloomsbury
+the two are indistinguishable. Only on the saturated Euston corridor does
+MaxPressure remain worse in the mean, without reaching significance
+($p{=}.21$) given the per-seed spread; the CI on the mean relative change
+excludes zero while the paired test on absolute delay does not, a
+divergence caused by skew and a reminder that a mean is a fragile summary
+on this topology.
 
 I therefore retract the general claim. What the evidence supports is
-narrower and still worth stating: MaxPressure's advantage over a naive
-fixed-time plan is \emph{not} reliable on irregular real geometry under
-measured demand --- it is real on one topology, absent on another, and
-negative-but-uncertain on a third --- whereas on the regular synthetic
-grids the literature favours it is uniformly and substantially better.
+narrower: MaxPressure's advantage over a naive plan is \emph{unreliable}
+on irregular real geometry under measured demand --- real on one topology,
+absent on another, negative-but-uncertain on a third --- while uniform and
+substantial on the regular synthetic grids the literature favours.
 The backpressure theory offers a mechanism for why the arterial is its
 weakest case: the throughput-optimality proof assumes unbounded queue
 storage, and finite-capacity treatments prove work-conservation losses
@@ -109,11 +101,10 @@ maps is a Simpson's-paradox trap, since corridor wins and early grid
 blow-ups average into a meaningless mean. Third, per-decision reasoning
 quality does not predict closed-loop value: on 80 identical junction states,
 cloud frontier models agree with the delay-optimal heuristic at 92--96\%
-against 51--72\% for local SLMs, yet a near-chance local model still won its
-closed-loop cells. The controller's value is systemic --- the SLM, shield,
-and event gating together --- not raw single-junction reasoning. This
-decision battery is open-loop by construction (the frontier teacher cannot be
-called from inside the simulation loop) and is stated as such.
+against 51--72\% for local SLMs, yet a near-chance local model still won
+closed-loop cells. The controller's value is systemic --- SLM, shield and
+gating together --- and this battery is open-loop by construction, stated
+as such.
 
 The explanatory two-way ANOVA over the factorial confirms the structure:
 model and configuration interact strongly (interaction
@@ -275,12 +266,10 @@ difference favours fine-tuning by $-1.8\%$ ($p{=}.019$). I return to the
 mechanism --- the shield bounds worst-case behaviour for both arms, and
 external calibration puts the entire LLM-vs-MaxPressure headroom at 1--2\%
 \cite{dglight2026} --- in \S\ref{sec:dis-decoupling}.
-Reporting only paired $t$-tests on means, as the table above does, hides
-structure that matters. The per-seed distributions are heavily skewed by
-the catastrophic tail quantified in \S\ref{sec:res-forensics}, and a mean
-is the wrong summary for a skewed distribution. Table~\ref{tab:robust}
-therefore reports 95\% confidence intervals alongside a Wilcoxon
-signed-rank test, which asks whether the controller helps on a
+Paired $t$-tests on means hide structure: the per-seed distributions are
+heavily skewed by the catastrophic tail of \S\ref{sec:res-forensics}.
+Table~\ref{tab:robust} therefore adds 95\% confidence intervals and a
+Wilcoxon signed-rank test, which asks whether the controller helps on a
 \emph{typical} seed rather than on average.
 
 \begin{table}[h]
@@ -308,18 +297,15 @@ Phi ft & Euston & $-3.8$ $[-11.7, +4.1]$ & .151 & .309 \\
 \end{table}
 
 Two cells change interpretation. On Old Street the fine-tuned Qwen
-controller \finding{significantly beats the fixed-time floor on the
-typical seed} ($p{=}.011$) while its mean effect is not significant
-($p{=}.202$); the stock controller shows the same pattern on Euston
-($p{=}.018$ against $p{=}.117$). The confidence intervals explain why ---
-they are wide and straddle zero precisely on the topologies with the
-heaviest failure tails. The honest characterisation of this controller is
-therefore not ``no effect'' but \emph{typical-case improvement with a
-catastrophic tail}: it helps on most seeds and fails badly on a few, and
-those few are enough to erase the mean. That is a materially different
-engineering problem from a controller that is simply mediocre, and it
-points at tail control --- a hard per-decision timeout, or an outlier
-detector that reverts to the classical policy --- rather than at better
+controller \finding{significantly beats the floor on the typical seed}
+($p{=}.011$) while its mean effect is not significant ($p{=}.202$); stock
+shows the same pattern on Euston ($p{=}.018$ against $p{=}.117$). The
+wide, zero-straddling intervals sit precisely on the topologies with the
+heaviest failure tails, so the honest characterisation is not ``no
+effect'' but \emph{typical-case improvement with a catastrophic tail}:
+help on most seeds, bad failures on a few, and the few erase the mean.
+That points at tail control --- a hard per-decision timeout or an outlier
+detector reverting to the classical policy --- rather than at better
 average decisions.
 
 I refrain from claiming these rank-test results as confirmatory findings.
@@ -358,27 +344,21 @@ applying the same treatment Old Street had received earlier in the project
 for the same reason, and re-ran all three closed-loop arms over the
 identical thirty disjoint seeds, retaining the oversaturated cells.
 
-The reader is entitled to ask whether this is a principled correction or a
-search for a more favourable test bed, and the honest answer has parts on
-both sides. In favour: the guard metrics that condemned the map were
-committed in \S\ref{sec:met-metrics} before this analysis; the diagnosis
-is independent of the outcome, since a longer horizon degraded clearance
-further, which indicates demand above capacity rather than insufficient
-time; the 40\% target was set to match the completion rate of the
-already-calibrated Old Street map rather than chosen for its effect size;
-and the same treatment had been applied to Old Street earlier in the
-project for the same reason. Against: the decision to examine the map at
-all followed the observation that its result was weak, which makes it a
-data-dependent analysis choice, and retaining the superseded cells does
-not by itself make the choice of which to headline principled.
-
-What settles it is whether the threshold is applied uniformly. Euston
-peak-hour also fails the completion guard (44--50\%), and it is the
-topology on which SLM control looks \emph{worst}
-(\S\ref{sec:res-factorial}), so calibrating it risks the conclusion
-rather than protecting it. \todo{report the Euston calibration outcome
-here whichever way it falls; until then the 18.3\% result is conditional
-on a single recalibrated map rather than a general effect size.}
+The reader is entitled to ask whether this is a principled correction or
+a search for a more favourable test bed. In favour of the former: the
+guard metrics that condemned the map were committed in
+\S\ref{sec:met-metrics} beforehand; the diagnosis is outcome-independent,
+since a longer horizon degraded clearance further; the 40\% target
+matched the already-calibrated Old Street's completion rate rather than
+any effect size; and Old Street had received the same treatment earlier.
+Against: the decision to look followed a weak result, a data-dependent
+choice that retaining the superseded cells does not by itself redeem.
+What settles it is uniform application of the threshold: Euston peak-hour
+also fails the completion guard (44--50\%), and it is the topology where
+SLM control looks \emph{worst} (\S\ref{sec:res-factorial}), so
+calibrating it risks the conclusion rather than protecting it.
+\todo{report the Euston calibration outcome here whichever way it
+falls.}
 
 \begin{table}[t]
 \caption{The same controllers under two demand regimes on the same
@@ -403,27 +383,22 @@ Calibrated & qwen ft & $+0.00$ $[-0.54, +0.54]$ & .987 & 87.4\% & 0.77 \\
 
 \finding{The gridlock was masking the effect, not creating it.} On the
 calibrated network the stock controller degrades mean delay by
-\risk{22.7\%} against the fixed-time floor --- an order of magnitude
-larger than the $+2.6\%$ measured on the same map when it was
-oversaturated --- while both fine-tuned students are statistically
-indistinguishable from the floor. The head-to-head is the largest and most
-certain effect in this dissertation: fine-tuning reduces delay by
-\finding{$18.3\%$} relative to the identically-compiled stock model
-($[-19.7, -16.9]$, $p{=}8.5{\times}10^{-19}$), and it \finding{wins on
-30 of 30 seeds}. The Phi student reproduces this exactly ($-18.3\%$,
-30/30, $p{=}4.5{\times}10^{-19}$).
-
-The mechanism is straightforward once stated. A deadlocked network is
-already at its worst: there is a ceiling on how much further a poor
-controller can degrade it, and the teleport mechanism truncates precisely
-the worst journeys, so bad control and good control are compressed toward
-the same terrible mean. A free-flowing network has room for a poor
-controller to do real damage --- and room for a good one to avoid it. The
-stock arm's throughput corroborates this reading: it completes 76.4\% of
-vehicles against 87.4\% for the fine-tuned arm, so it is stranding traffic
-as well as delaying it, and its decision profile is unchanged (484 valid
-proposals of 546 decisions, no fallbacks, normal latency), which rules out
-a degraded-serving explanation.
+\risk{22.7\%} against the floor --- an order of magnitude beyond the
+$+2.6\%$ measured on the same map oversaturated --- while both fine-tuned
+students are statistically indistinguishable from the floor. The
+head-to-head is the largest, most certain effect in this dissertation:
+fine-tuning reduces delay by \finding{$18.3\%$} against the
+identically-compiled stock model ($[-19.7, -16.9]$,
+$p{=}8.5{\times}10^{-19}$), \finding{winning 30 of 30 seeds}; the Phi
+student reproduces it exactly ($-18.3\%$, 30/30,
+$p{=}4.5{\times}10^{-19}$). The mechanism: a deadlocked network is already
+at its worst, with a ceiling on further degradation and teleports
+truncating exactly the worst journeys, so good and bad control compress
+toward the same mean; a flowing network gives a poor controller room to
+do damage. Throughput corroborates the reading --- stock completes 76.4\%
+of vehicles against the fine-tuned 87.4\% --- and the stock arm's decision
+profile is unchanged (484 valid proposals of 546 decisions, no fallbacks,
+normal latency), ruling out degraded serving.
 
 \finding{This also converts the scale-saturation result from a
 non-rejection into a demonstrated equivalence.} On the calibrated map the
@@ -433,18 +408,16 @@ practically meaningful difference, rather than merely failing to detect
 one. Six times the parameters buy nothing, and now the claim is bounded
 rather than assumed.
 
-I draw a methodological conclusion beyond this project. \finding{Evaluating
-signal controllers on oversaturated networks systematically understates
-effect sizes.} Had I reported only the original Bloomsbury cells, this
-dissertation would have concluded that fine-tuning yields a marginal
-$1.8\%$ improvement of doubtful significance; the same experiment on a
-network that clears yields $18.3\%$ on every seed. Since the surrounding
-literature evaluates predominantly on synthetic grids under demand that is
-rarely reported in clearance terms (\S\ref{sec:bg-rl}), and since the
-field's own calibration figure for the whole LLM-versus-MaxPressure gap is
-1--2\% \cite{dglight2026}, the possibility that published effect sizes are
-compressed by saturation deserves attention. Reporting completion and
-teleport counts alongside delay costs nothing and would settle it.
+A methodological conclusion follows. \finding{Evaluating signal
+controllers on oversaturated networks systematically understates effect
+sizes}: the original cells alone would have concluded a marginal $1.8\%$
+of doubtful significance where the clearing network yields $18.3\%$ on
+every seed. The literature evaluates predominantly on synthetic grids
+under demand rarely reported in clearance terms (\S\ref{sec:bg-rl}), and
+its own calibration for the whole LLM-versus-MaxPressure gap is 1--2\%
+\cite{dglight2026}, so compression of published effect sizes by
+saturation deserves attention. Reporting completion and teleport counts
+alongside delay costs nothing and would settle it.
 
 \section{Throughput guards: which delay numbers are comparable}\label{sec:res-guards}
 Mean delay can be improved by stranding vehicles, so \S\ref{sec:met-metrics}
@@ -476,41 +449,35 @@ Old Street & baseline & 480 & 85.5\% & 1.5 & 0 \\
 \end{tabular}
 \end{table}
 
-\finding{Only Old Street is measured in a free-flowing regime.} There 85\%
-of vehicles complete and teleports are effectively absent, so mean delay is
-a well-posed comparison --- and it is also the topology where the
-fine-tuned controller significantly beats the floor on the typical seed
-(Table~\ref{tab:robust}). The cleanest regime yields the clearest result,
-which is reassuring rather than coincidental.
+\finding{Only Old Street is measured in a free-flowing regime}: 85\% of
+vehicles complete and teleports are effectively absent, so mean delay is
+well-posed --- and it is also where the fine-tuned controller
+significantly beats the floor on the typical seed
+(Table~\ref{tab:robust}). The cleanest regime yields the clearest
+result.
 
-\risk{Bloomsbury is a gridlock-regime measurement and must be scoped as
-one.} Under 15\% of vehicles complete within the horizon and over a
-hundred are teleported out of deadlock, so ``mean network delay'' there is
-computed over a network that never clears, with an unknown fraction of the
-worst journeys removed by the simulator. I therefore treat the one
-statistically significant closed-loop result in this dissertation --- the
-stock controller's $+2.6\%$ harm --- as regime-scoped. It does survive the
-guard test in direction: the stock arm completes fewer vehicles than the
-baseline (231 vs 251) and triggers more teleports (135.6 vs 118.5), so the
-delay harm is corroborated rather than contradicted by throughput, and the
-fine-tuned arm sits between them on both. But the underlying comparison is
-between two congested-failure modes, not between two free-flowing
-policies, and a reader should weight it accordingly. Extending the horizon
-or lowering demand on this map is the obvious remedy and is the first item
-of unfinished work I would prioritise.
+\risk{Uncalibrated Bloomsbury is a gridlock-regime measurement.} Under
+15\% of vehicles complete and over a hundred are teleported out of
+deadlock, so its ``mean network delay'' is computed over a network that
+never clears, with the worst journeys removed by the simulator. The
+original $+2.6\%$ stock harm is therefore regime-scoped. It survives the
+guard test in direction --- the stock arm completes fewer vehicles than
+baseline (231 vs 251) with more teleports (135.6 vs 118.5), so throughput
+corroborates the harm --- but the comparison is between two
+congested-failure modes, and \S\ref{sec:res-calib} supplies the remedy.
 
-Euston sits in between at 44--50\% completion. There the SLM arms
+Euston sits between, at 44--50\% completion, and there the SLM arms
 \emph{complete more vehicles than the baseline} (380 and 392 against 345)
-while showing no significant delay advantage --- a genuine
-throughput-alongside-delay improvement that a delay-only report would have
-missed entirely, and the reason both metrics are mandated in the protocol.
+with no significant delay advantage --- a throughput improvement a
+delay-only report would have missed, and the reason both metrics are
+mandated.
 
 \section{Authorship: what fine-tuning actually moves}\label{sec:res-authorship}
 The structural columns of Table~\ref{tab:closedloop-full} carry the
 dissertation's central finding, and reading them correctly requires
 keeping the three denominators of \S\ref{sec:des-shield} apart --- an
-error I made in an earlier draft and correct here explicitly, because the
-distinction changes the interpretation.
+earlier draft conflated them, and the distinction changes the
+interpretation.
 
 First, the fact that frames everything else: \finding{the shield's
 substitution path almost never fires}. Across every arm and topology it

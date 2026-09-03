@@ -356,9 +356,29 @@ teleports), while at 55\% it collapses again (57.5\%, teleports return).
 I therefore added a demand-calibrated variant at 40\% (686 vehicles),
 applying the same treatment Old Street had received earlier in the project
 for the same reason, and re-ran all three closed-loop arms over the
-identical thirty disjoint seeds. The oversaturated cells are retained, so
-the comparison is a controlled manipulation of demand rather than a
-replacement of inconvenient data.
+identical thirty disjoint seeds, retaining the oversaturated cells.
+
+The reader is entitled to ask whether this is a principled correction or a
+search for a more favourable test bed, and the honest answer has parts on
+both sides. In favour: the guard metrics that condemned the map were
+committed in \S\ref{sec:met-metrics} before this analysis; the diagnosis
+is independent of the outcome, since a longer horizon degraded clearance
+further, which indicates demand above capacity rather than insufficient
+time; the 40\% target was set to match the completion rate of the
+already-calibrated Old Street map rather than chosen for its effect size;
+and the same treatment had been applied to Old Street earlier in the
+project for the same reason. Against: the decision to examine the map at
+all followed the observation that its result was weak, which makes it a
+data-dependent analysis choice, and retaining the superseded cells does
+not by itself make the choice of which to headline principled.
+
+What settles it is whether the threshold is applied uniformly. Euston
+peak-hour also fails the completion guard (44--50\%), and it is the
+topology on which SLM control looks \emph{worst}
+(\S\ref{sec:res-factorial}), so calibrating it risks the conclusion
+rather than protecting it. \todo{report the Euston calibration outcome
+here whichever way it falls; until then the 18.3\% result is conditional
+on a single recalibrated map rather than a general effect size.}
 
 \begin{table}[t]
 \caption{The same controllers under two demand regimes on the same
@@ -735,6 +755,56 @@ conclusions argue that the trust ledger is a necessary companion to
 fine-tuning rather than an optional extra, and that detection calibrated
 to distributional implausibility (\S\ref{sec:dis-future}) is the right
 next defence.
+
+\section{Emergency preemption: what the priority path is worth}\label{sec:res-ev}
+The audit and authorisation machinery exists to serve a concrete function,
+and this section measures it. Three modes are compared on the corridor over
+thirty seeds, with a scripted ambulance and a scripted spoofing attack:
+\emph{nopreempt}, which grants emergency vehicles no signal priority at all
+and is what a conventional fixed-time installation does; \emph{naive},
+which preempts on any claim of emergency status; and \emph{defended}, which
+preempts only on a claim carrying a valid authorising key and corroboration
+(\S\ref{sec:des-trust}).
+
+\begin{table}[h]
+\caption{Emergency-vehicle priority, $n{=}30$ seeds, 95\% CIs. Positive
+values are seconds saved.}
+\label{tab:ev}
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+Quantity & Mean & 95\% CI \\
+\midrule
+Ambulance time saved by priority (nopreempt $-$ defended) & 31.1\,s & $[25.4, 36.5]$ \\
+Cost to the ambulance of the authorisation gate (defended $-$ naive) & 8.0\,s & $[3.7, 12.5]$ \\
+Cross-traffic harm avoided under attack, mean & 4.6\,s & $[3.3, 6.0]$ \\
+Cross-traffic harm avoided under attack, worst case & 16.1\,s & $[11.5, 20.4]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three functional readings follow, and all four intervals exclude zero.
+\finding{Signal priority is worth about half a minute to an emergency
+vehicle} on this corridor: 31.1\,s against a controller that offers no
+priority. \finding{Security is not free, and its price is measurable}: the
+authorisation gate costs the ambulance 8.0\,s relative to a naive
+controller that preempts on any claim, because a claim must be
+authenticated and corroborated before it is honoured.
+\finding{That price buys something quantified}: when a spoofed emergency
+claim is injected, the gate spares cross-traffic 4.6\,s of mean delay and
+16.1\,s in the worst case, harm the naive controller absorbs in full.
+Whether 8\,s of ambulance time is worth 4.6\,s of mean cross-traffic
+protection is a policy judgement rather than an engineering one, and the
+contribution here is that the exchange rate is measured rather than
+asserted.
+
+Two scope limits. The scenario is scripted, with one ambulance and one
+attack window per run, so these are per-event magnitudes and not an
+expected benefit under a naturalistic emergency-call arrival rate. And the
+comparison is against a no-priority baseline, which characterises a
+conventional installation without emergency-vehicle detection rather than
+any specific deployed system.
 
 \section{The fair re-test of the SLM authorisation negative}\label{sec:res-lee}
 An early measured negative --- the raw SLM losing to a deterministic

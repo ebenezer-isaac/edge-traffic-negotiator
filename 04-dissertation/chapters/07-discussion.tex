@@ -162,3 +162,59 @@ the serving-reliability findings (service self-restarts, artifact
 corruption) are exactly the failure class a cabinet deployment must
 survive, and they argue for a watchdog-supervised serving architecture
 before any field pilot.
+
+\subsection{Deployment vectors this architecture is suited to}
+The evaluation above measures a permanent-junction scenario, which is the
+hardest case for this controller: a permanent junction already has a
+fixed-time plan engineered offline from historical counts, so matching it
+buys little. Three deployment settings invert that arithmetic, and I set
+them out with the evidence that supports each and the work each would
+still require.
+
+\textbf{Temporary and roadworks signals.} Portable signals at a lane
+closure have no engineered plan; they run a guessed cycle or simple
+vehicle-actuation. Against that baseline, a controller that needs
+\emph{no site configuration} is worth more than one that matches a tuned
+plan. Three properties measured here transfer: the controller derives its
+entire phase model from the live network at start-up
+(\S\ref{sec:des-overview}), so it is not configured per site; the
+leave-one-topology-out student matched the generalist on the topology
+withheld from its training (\S\ref{sec:res-offline}), which is the closest
+evidence I have for a layout the model has never seen; and the
+anti-starvation floor guarantees alternation deterministically, which is
+the core safety requirement of single-lane shuttle working. Three gaps are
+equally clear: I tested no lane-closure or shuttle-working layout at all;
+the phase model is read once at start-up, so a mid-deployment
+reconfiguration would require re-initialisation rather than being handled
+live; and shuttle working imposes a clearance-time constraint, that a
+vehicle must exit the single-lane section before the opposing green, which
+belongs in the deterministic shield and is not implemented. The
+architecture is suited to this case; the evidence is suggestive rather
+than demonstrative, and I claim no more.
+
+\textbf{Emergency-vehicle priority across a corridor.} Conventional
+installations without emergency-vehicle detection give an approaching
+emergency vehicle no priority, and \S\ref{sec:res-ev} measures that
+omission as worth 31.1\,s per event on this corridor. The coordination
+substrate for doing better already exists in the implementation: junctions
+exchange Ed25519-signed state reports, and the transport has an MQTT
+adapter that puts a real broker between publisher and subscriber while
+reusing the same signing, adjacency, registry and replay checks as the
+in-process bus. What is missing before this is a deployment claim rather
+than a capability claim: the signed bus has been exercised in simulation
+and over a local broker, not over a field radio or cellular backhaul under
+loss and latency; the emergency scenario is scripted, so the per-event
+benefit is not an expected value under naturalistic call arrival rates;
+and corridor-scale progressive preemption, clearing a path several
+junctions ahead of the vehicle, is designed for but unmeasured.
+
+\textbf{Deployment economics.} Nothing in this dissertation costs the
+system. A serious feasibility case would need a bill of materials for an
+edge node at each junction, a comparison against the installed cost of
+conventional adaptive control, the backhaul and broker infrastructure the
+signed bus requires, and the power envelope, which my 6\,GB desktop GPU
+does not represent. That analysis needs current market data rather than
+inference from this study, so I flag it as required future work rather
+than estimate it here. It is the analysis that would decide whether the
+temporary-signal case above is commercially as well as technically
+attractive.

@@ -204,13 +204,36 @@ benefit is not an expected value under naturalistic call arrival rates;
 and corridor-scale progressive preemption, clearing a path several
 junctions ahead of the vehicle, is designed for but unmeasured.
 
-\textbf{Deployment economics.} Nothing in this dissertation costs the
-system. A serious feasibility case would need a bill of materials for an
-edge node at each junction, a comparison against the installed cost of
-conventional adaptive control, the backhaul and broker infrastructure the
-signed bus requires, and the power envelope, which my 6\,GB desktop GPU
-does not represent. That analysis needs current market data rather than
-inference from this study, so I flag it as required future work rather
-than estimate it here. It is the analysis that would decide whether the
-temporary-signal case above is commercially as well as technically
-attractive.
+\textbf{Deployment economics.} A market survey of published prices
+(September 2026)\footnote{Figures are vendor list prices, council
+committee papers, tender-portal records and published trade estimates
+compiled in September 2026; none originates from this study's
+measurements, and the older traffic-engineering figures (2014--2015)
+require inflation adjustment. Sources: NVIDIA developer price list (July
+2026); Raspberry Pi product briefs; a Greater London Authority published
+estimate for signalised crossings; Lancashire County Council press-reported
+junction budgets (2023); a JCT Consultancy symposium estimate for MOVA
+retrofits (2015); TRL's published SCOOT rollout evaluation; 1NCE and UK
+MVNO published tariffs; HSS and Balloo hire list rates; VivaCity's
+published Salford trial data.} places the compute node at well under 1\%
+of site cost: an edge module that runs this study's 0.6B student at
+community-measured $\sim$50 tokens/s within a 7--25\,W envelope lists at
+roughly \pounds315--400 (a Jetson-class board, whose price rose sharply in
+July 2026), against \pounds80,000--130,000 to install a signalised
+crossing, \pounds210,000--300,000 for recent full junction refurbishments,
+and a $\sim$\pounds25,000-per-site adaptive-control retrofit estimate from
+2015. The 7--25\,W figure matters more than the price: it retires the
+objection that my 6\,GB desktop GPU misrepresents a cabinet power budget,
+though the specific board and its published throughput remain unverified
+by this study. Connectivity for the signed bus is negligible at this data
+volume (published IoT tariffs of \pounds1--3.50 per node-month, or a
+one-off $\sim$\euro10 ten-year SIM), and a single small broker VM serves a
+corridor. For the temporary-signal vector the incumbent to beat is a
+2-way portable hire at a published \pounds170--230 per week, and the
+benefit side is calibrated by published deployments: TRL's SCOOT rollout
+averaged a 12.8\% delay reduction, and an RL-based commercial system
+reports a measured 23\% journey-time reduction at one Salford junction.
+What remains genuinely open is the whole-life case --- enclosure,
+certification, maintenance and integration dominate hardware at these
+ratios --- and that requires a costing study, not this dissertation's
+data.

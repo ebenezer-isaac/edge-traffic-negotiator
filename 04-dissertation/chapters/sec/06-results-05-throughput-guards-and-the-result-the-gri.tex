@@ -1,0 +1,176 @@
+\section{Throughput guards, and the result the gridlock was hiding}\label{sec:res-guards}
+\label{sec:res-calib}
+Mean delay can be improved by stranding vehicles, so \S\ref{sec:met-metrics}
+commits to guard metrics alongside it. Table~\ref{tab:guards} changes how
+two of the three topologies read.
+
+\begin{table}[h]
+\caption{Guard metrics, means over the same $n{=}30$ training-disjoint
+seeds as every delay comparison. ``Compl.'' is completed vehicles as a share of those loaded
+within the 1{,}200-step horizon; teleports are SUMO's gridlock-escape
+removals.}
+\label{tab:guards}
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Topology & Arm & Loaded & Compl. & Teleports & Undep. \\
+\midrule
+Euston peak-hour & fixed-time & 780 & 51.1\% & 22.2 & 184 \\
+ & MaxPressure & 780 & 45.3\% & 31.1 & 218 \\
+ & qwen ft & 780 & 48.7\% & 28.1 & 200 \\
+ & qwen stock & 780 & 50.3\% & 23.3 & 199 \\
+Bloomsbury grid & fixed-time & 1715 & 15.1\% & 115.0 & 328 \\
+ & MaxPressure & 1715 & 14.6\% & 119.3 & 336 \\
+ & qwen ft & 1715 & 14.2\% & 120.0 & 341 \\
+ & qwen stock & 1715 & 13.5\% & 135.6 & 348 \\
+Old Street & fixed-time & 480 & 83.3\% & 0.7 & 1 \\
+ & MaxPressure & 480 & 85.8\% & 1.3 & 0 \\
+ & qwen ft & 480 & 86.7\% & 0.5 & 0 \\
+ & qwen stock & 480 & 84.4\% & 1.0 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\finding{Of the three original cells, only Old Street is measured in a
+free-flowing regime}: it clears, teleports are effectively absent, mean
+delay is well-posed, and every arm significantly beats the
+fixed-time floor there (Table~\ref{tab:robust}). Euston sits between at 45--51\% completion,
+where the SLM arms \emph{complete more vehicles than MaxPressure} (380 and
+392 against 353) without a significant delay advantage, though not more than the
+fixed-time floor's 399; no significance test was run on
+completion.
+\risk{Uncalibrated
+Bloomsbury is a gridlock-regime measurement}: under 15\% complete, over a
+hundred teleported out of deadlock, so its mean delay compares two
+congested-failure modes. The stock arm completes fewer vehicles and
+teleports more than MaxPressure, so the stock harm survives the guard test
+in direction, but is regime-scoped.
+
+Completion also reproduces \S\ref{sec:res-maxpressure}'s ordering (MaxPressure
+better on Old Street, tied on Bloomsbury, worse on Euston) without using
+delay at all, so without the skew I caveated there, the tie
+appearing here as MaxPressure marginally worse (14.6\% against 15.1\%). \finding{The sign flip is therefore not an artefact of a
+fragile mean}, though it does not identify the network property
+responsible: completion is as consistent with saturation or link storage
+as with geometry.
+
+Bloomsbury carried the study's only significant closed-loop
+result against MaxPressure, so I re-examined it. Two diagnostics
+identified the regime. Tripling the horizon to 3{,}600 steps raised completion only to
+35\% while multiplying teleports roughly sevenfold (121 to 830), so the
+network was over capacity, not under-simulated. Subsampled demand
+located the boundary sharply, clearing at 40\% (87.6\% completion, zero
+teleports) and collapsing again at 55\% (57.5\%). I therefore added a
+demand-calibrated variant at 40\% (686 vehicles) and re-ran all three
+arms over the identical thirty seeds, retaining the oversaturated
+cells.
+
+Is this a principled correction or a search for a more favourable test
+bed? In favour: the guard metrics were recorded in every cell
+from the campaign's first run, so their values were not produced by
+looking; the diagnosis is outcome-independent; and the 40\% target matched
+Old Street's completion rate, not any effect size. Against: the decision to look followed a weak result, a
+data-dependent choice that retaining the superseded cells does not by
+itself redeem. Uniform application is the check I can offer: Euston peak-hour also
+fails the guard and is where SLM control looks \emph{worst}
+(\S\ref{sec:res-factorial}), so calibrating the corridor risks the
+conclusion rather than protecting it. I calibrated it, though the probed
+fractions bracketed failure only on the grid.
+
+\finding{Calibrating Euston does not rescue the corridor, and the
+distillation effect does not survive there at full size.} The treatment
+worked partly: completion rises from 45--51\% to 68--74\%, but in the
+MaxPressure arm 7.7 vehicles per run still teleport and 56.9 never depart,
+against 0.0 and 0.0 for both classical comparators on the calibrated grid,
+where only the stock arm departs from that (1.70 teleports, 5.7
+undeparted). On the partly cleared corridor the fine-tuned arm is
+still $+8.5\%$ against the fixed-time floor ($[-2.4, +19.5]$, $p{=}.12$)
+and the stock arm \risk{$+34.8\%$} ($[+5.3, +64.4]$, $p{=}.023$). The
+mean spares the fine-tuned arm only because the tail is enormous: it beats
+the floor on six of thirty seeds, its median seed is $+11.7\%$, and the
+rank test rejects ($p{=}.016$). Neither arm differs significantly from
+MaxPressure ($-0.3\%$ at $p{=}.93$, $+21.9\%$ at $p{=}.062$). The
+head-to-head favours fine-tuning in direction and on the typical seed:
+median $-7.4\%$, 23 of 30 seeds, Wilcoxon $p{=}.045$. Its mean, though,
+is $-3.7\%$ and not significant ($[-19.1, +11.7]$, $p{=}.63$), across
+per-seed outcomes from $-71.6\%$ to $+104.5\%$.
+
+Two conclusions follow. First, and against me: \finding{Saturation
+explains the Bloomsbury result; on Euston it is reduced, not tested}.
+The same correction that transformed the grid's marginal result yields, on
+the corridor, a fifth of the magnitude it produced there and no
+significant mean, though in absolute delay ($-27.4$\,s against
+$-35.9$\,s) the two are comparable.
+I cannot attribute the surviving deficit to topology: nothing here varies
+geometry while holding demand and storage fixed. Topology and residual saturation both stay live, and the
+grid effect did not replicate on the second network I
+calibrated. Second, the threshold was applied where it could damage the
+conclusion, and did: the rule, take the largest demand fraction
+that still clears, produced an unfavourable result, reported as such. The
+rule is stated here, not encoded in the calibration script, which prints
+completion at each probed fraction and leaves the choice to the analyst.
+
+\begin{table}[t]
+\caption{The same controllers under two demand regimes on the same
+Bloomsbury network ($n{=}30$ paired seeds each). Positive $\Delta$ is
+worse than the fixed-time floor.}
+\label{tab:calib}
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Regime & Arm & $\Delta$ vs fixed-time & $\Delta$ vs MaxPressure & Compl. & Auth. \\
+\midrule
+Oversaturated & qwen ft & $+0.8$ $[-1.0, +2.6]$ & $+0.7$ $[-0.7, +2.1]$ & 14.2\% & 0.70 \\
+(14\% clears) & qwen stock & $\mathbf{+2.8}$ $[+0.9, +4.6]$ & $\mathbf{+2.6}$ $[+1.1, +4.2]$ & 13.5\% & 0.62 \\
+\midrule
+Calibrated & qwen ft & $\mathbf{-8.8}$ $[-9.4, -8.2]$ & $+0.00$ $[-0.56, +0.56]$ & 87.4\% & 0.76 \\
+(87\% clears) & phi ft & $\mathbf{-8.8}$ $[-9.3, -8.3]$ & $+0.03$ $[-0.43, +0.48]$ & 87.5\% & 0.77 \\
+ & qwen stock & $\mathbf{+11.9}$ $[+10.0, +13.8]$ & $\mathbf{+22.7}$ $[+20.6, +24.7]$ & 76.4\% & 0.59 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{chapters/sec/fig-headline}
+
+\finding{The gridlock was masking the effect, not creating it.} On the
+calibrated network the stock controller degrades mean delay by
+\risk{11.9\% against the fixed-time floor} and \risk{22.7\% against
+MaxPressure}, an order of magnitude beyond the $+2.8\%$ it costs
+oversaturated, while both fine-tuned students \finding{beat the fixed-time
+floor by 8.8\%}, within $0.03\%$ of MaxPressure. The head-to-head is the largest, most
+certain effect in this dissertation: \finding{$18.3\%$} less delay than
+the identically-compiled stock model ($[-19.8, -16.8]$,
+$p{=}2.0{\times}10^{-21}$), \finding{winning 30 of 30 seeds}, the Phi
+student reproducing it ($-18.3\%$, 30/30, $p{=}8.2{\times}10^{-22}$). The
+thirty seeds vary SUMO's microscopic noise over one fixed 40\% demand
+draw, so they replicate within a scenario rather than across demand. The
+mechanism is the one \S\ref{sec:dis-decoupling} develops.
+Throughput corroborates it (stock 76.4\% against the fine-tuned 87.4\%),
+and the stock arm shows no serving pathology (484 valid proposals of
+546 decisions, no fallbacks, normal latency), so the degradation is in the
+decisions, not the endpoint.
+
+\finding{This also bounds the scale-saturation result instead of leaving
+it a non-rejection}: the 3.8B and 0.6B students differ by $+0.03\%$ with
+a 95\% CI of $[-0.32, +0.38]$, so any difference between the scales is
+within $\pm0.38\%$ of delay. That stops short of demonstrated
+equivalence, which would need a margin pre-registered
+against an operational threshold (a TOST procedure) this study did not
+define.
+
+\finding{An oversaturated test network can hide a large effect}: the original Bloomsbury cells alone
+would have concluded a marginal $1.8\%$
+at $p{=}.022$. On Euston the
+same correction did not reveal a comparable effect, so this is a
+demonstrated failure mode on one network of two, not a systematic bias
+whose size I can quantify. The literature
+evaluates predominantly on synthetic grids under demand rarely reported in
+clearance terms (\S\ref{sec:bg-rl}), so
+saturation-driven compression of published effect sizes deserves
+attention. Reporting completion and teleport counts alongside delay costs
+nothing and would expose the regime, though not the compression:
+grid3$\times$3 is oversaturated at 37.8\% completion and still shows
+$-19.1\%$.
+

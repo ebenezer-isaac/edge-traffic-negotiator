@@ -53,6 +53,16 @@ def _topologies() -> list:
          "structure": "real A501 arterial, MEASURED 2024 peak-hour DfT magnitude (base_hourly)",
          "net": os.path.join(_SUMO, "euston", "euston_spine.net.xml"),
          "routes": os.path.join(_SUMO, "euston", "base_hourly.rou.xml")},
+        {"label": "euston_peakhour_calibrated",
+         "structure": "real A501 arterial, measured DfT peak-hour profile, DEMAND-CALIBRATED",
+         # base_hourly_light.rou.xml = 80% of the measured peak-hour demand.
+         # The uncalibrated euston_peakhour clears only 44-50% of loaded vehicles with
+         # ~30 teleports, so it fails the same completion guard that condemned
+         # bloomsbury_grid. At 80% the net clears (84.3% completion, 0 teleports).
+         # Calibrated for symmetry with bloomsbury_calibrated: the guard is applied to
+         # EVERY map that fails it, not only where recalibration helps the result.
+         "net": os.path.join(_SUMO, "euston", "euston_spine.net.xml"),
+         "routes": os.path.join(_SUMO, "euston", "base_hourly_light.rou.xml")},
         {"label": "bloomsbury_grid", "structure": "REAL London grid (Bloomsbury WC1, 9 signals)",
          "net": os.path.join(_SUMO, "bloomsbury", "bloomsbury.net.xml"),
          "routes": os.path.join(_SUMO, "bloomsbury", "bloomsbury.rou.xml")},

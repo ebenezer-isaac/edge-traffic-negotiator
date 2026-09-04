@@ -1,0 +1,1600 @@
+AttendLight: Universal Attention-Based Reinforcement Learning Model for Traffic Signal
+Control
+
+arXiv:2010.05772v1 [cs.LG] 12 Oct 2020
+
+Afshin Oroojlooy SAS Institute Inc. Cary, NC 27513 afshin.oroojlooy@sas.com
+Davood Hajinezhad SAS Institute Inc. Cary, NC 27513
+davood.hajinezhad@sas.com
+
+Mohammadreza Nazari SAS Institute Inc. Cary, NC 27513
+reza.nazari@sas.com
+Jorge Silva SAS Institute Inc. Cary, NC 27513 jorge.silva@sas.com
+
+Abstract
+We propose AttendLight, an end-to-end Reinforcement Learning (RL) algorithm for the problem of traffic signal control. Previous approaches for this problem have the shortcoming that they require training for each new intersection with a different structure or traffic flow distribution. AttendLight solves this issue by training a single, universal model for intersections with any number of roads, lanes, phases (possible signals), and traffic flow. To this end, we propose a deep RL model which incorporates two attention models. The first attention model is introduced to handle different numbers of roads-lanes; and the second attention model is intended for enabling decision-making with any number of phases in an intersection. As a result, our proposed model works for any intersection configuration, as long as a similar configuration is represented in the training set. Experiments were conducted with both synthetic and real-world standard benchmark data-sets. The results we show cover intersections with three or four approaching roads; onedirectional/bi-directional roads with one, two, and three lanes; different number of phases; and different traffic flows. We consider two regimes: (i) single-environment training, single-deployment, and (ii) multi-environment training, multi-deployment. AttendLight outperforms both classical and other RL-based approaches on all cases in both regimes.
+1 Introduction
+With the emergence of urbanization and the increase in household car ownership, traffic congestion has been one of the major challenges in many highly-populated cities. Traffic congestion can be mitigated by road expansion/correction, sophisticated road allowance rules, or improved traffic signal controlling. Although either of these solutions could decrease the travel times and fuel costs, optimizing the traffic signals is more convenient due to the limited funding resources and opportunity of finding more effective strategies. This paper introduces a framework for learning a general traffic control policy that can be deployed in an intersection of interest and ease the traffic flow.
+Approaches for controlling signalized intersections could be categorized into two main classes, namely conventional methods and adaptive methods. In the former, customarily rule-based fixed cycles and phase times are determined a priori and offline based on historical measurements as well
+34th Conference on Neural Information Processing Systems (NeurIPS 2020), Vancouver, Canada.
+
+as some assumptions about the underlying problem structure. However, since traffic behavior is dynamically changing, that makes most conventional methods highly inefficient. In adaptive methods, decisions are made based on the current state of the intersection. Self-organizing Traffic Light Control (SOTL) [12] and Max-pressure [28] are among the most popular adaptive methods that consider the number of approaching vehicles to the intersection in their traffic control algorithm (See, e.g., [14] for more details). These methods bring considerable improvements in traffic signal control; nonetheless, they are short-sighted and do not consider the long-term effects of the decisions on the traffic. Besides, these methods do not use the feedback from previous actions toward making more efficient decisions. In response, more sophisticated algorithms have been proposed. Using artificial intelligence (AI) for controlling traffic signals has recently attracted a lot of attention, due to the major potential benefits that it can bring toward having less-congested cities. Reinforcement Learning (RL) [26], which has been flourished in recent years in the AI community, has shown superior performance for a wide range of problems such as games [25], robotics [13], finance [11], and operations research [7], only to name a few. This coincides with growing applications of RL in traffic signal control problem (TSCP) [15, 16, 22, 29, 37].
+In spite of immense improvements achieved by RL methods for a broad domain of intersections, the main limitation for the majority of the methods is that the proposed model needs to be re-designed and re-trained from scratch whenever it faces a different intersection either with different topology or traffic distribution. Learning specialized policies for each individual intersection can be problematic, as not only do RL agents have to store a distinct policy for each intersection but in practice data collection resources and preparation impose costs. These costs include the burden on human-experts' time to setup a new model, and computational resources to train and tune a new model. Thus, it is not clear whether such a cumbersome procedure is feasible for a city with thousands of distinct intersections. There exists some prior work on partially alleviating such issues [30, 37] using transfer learning; however, the trained models still need to be manipulated for different intersection structures and require retraining to achieve reasonable performance.
+To address these issues, we bring ideas from attentional models [5] into TSCP. Rather than specializing on a single intersection, our goal is to design a mechanism with satisfactory performance across a group of intersections. Attentional mechanisms are a natural choice, since they allow unified system representations by handling variable-length inputs. We propose the AttendLight framework, a reinforcement learning algorithm, to train a "universal" model which can be used for any intersection, with any number of roads, lanes, phase, traffic distribution, and type of sensory data to measure the traffic. In other words, once the model is trained under a comprehensive set of phases, roads, lanes, and traffic distribution, our trained model can be used for new unseen intersection, and it provides reasonable performance as long as the intersection configuration follows a pattern present in the training set. We find that AttendLight architecture can extract an abstract representation of the intersection status, without any extra grounding or redefinition, and reuse this information for fast deployment. We show that our approach substantially outperforms purely conventional controls and FRAP [37], one of the state-of-the-art RL-based methods.
+2 Related Work
+The selection of RL components in traffic light control is quite challenging. The most common action set for the traffic problem is the set of all possible phases. In [22] an image-like representation is used as the state and a combination of vehicle delay and waiting time is considered as the reward. A deep Q-Network algorithm was proposed in [15], where the queue length of the last four samples is defined as the state, and reward is defined as the absolute value of the difference between queue length of approaching lanes. In [16] the intersection was divided into multiple chunks building a matrix such that each chunk contains a binary indicator for existence of a car and its speed. Using this matrix as the state and defining reward as the difference of the cumulative waiting time for two cycles, they proposed to learn the duration of each phase in a fixed cycle by a Double Dueling DQN algorithm with a prioritized experience replay. Likewise, [24] defined a similar state by dividing each lane into a few chucks and the reward is the reduction of cumulative delay in the intersection. A DQN approach was proposed to train a policy to choose the next phase. Ault et al. [4] proposed three DQN-based algorithms to obtain an interpretable policy. A simple function approximator with 256 variables was used and is showed that it obtains slightly worse result compared to the DQN algorithm with an uninterpretable approximator. The IntelliLight algorithm was proposed in [34]. The state
+2
+
+and reward are a combination of several components. A multi-intersection problem was considered in [31], where an RL agent was trained for every individual intersection. The main idea is to use the pressure as the reward function, thus the algorithm is called PressLight. To efficiently model the influence of the neighbor intersections, a graph attentional network [29] is utilized in CoLight [32]. See [33] for a detailed review of conventional and RL-based methods for TSCP.
+There have been attempts to transfer the learned experiences between different intersections. For example, in FRAP algorithm [37] a trained model for a 4-way intersection needs to be changed through reducing the neurons as well as zero-padding modifications to make it compatible for a 3-way intersection. A modification of FRAP was proposed on [35]. This new algorithm is called MetaLight, where the key idea is to use meta-learning strategy proposed in [10] to make a more universal model. However, MetaLight still needs to re-train its model parameter for any new intersection. In [30], a multi-agent RL algorithm is proposed to control the traffic signals for multiple intersections with arterial streets. The key idea is to train a single agent for an individual intersection and then apply Transfer Learning to obtain another model for a 2-intersection structure. Similarly, a model for a 3-intersection structure can be obtained from 2-intersection and etc. Besides the natural drawbacks of Transfer Learning, such as the assumption on the data distribution, the proposed model in this work is not robust in terms of the number of approaching roads, lanes, and phases. For example, a trained model for a single 4-way intersection cannot be transferred to a 3-way one.
+3 Traffic Signal Control Problem
+We consider a single-intersection traffic signal control problem (TSCP). An intersection is defined as a junction of a few roads, where it can be in the form of 3-way, 4-way or it can have a more complex structure with five or more approaching roads. Each road might have one or two direction(s) and each direction includes one lane or more. Let M be a set of intersections, where each intersection m  M is associated with a known intersection topology and traffic-data. Throughout this paper, we simplify notations by omitting their dependency on m.
+Let us define stl as the traffic characteristics of lane l  L at time t , where we use L to denote the set of all approaching (i.e., either entering or leaving) lanes to the intersection. We denote by Lin and Lout the set of entering and leaving lanes, respectively. Clearly, Lin  Lout = L holds. In TSCP, different traffic characteristics for each lane are proposed in the literature, e.g., queue length, waiting time, delay, the number of moving vehicles, etc. See [33] for more details. The model we propose in this work is not restricted to any of the mentioned characteristics and assigning stl to any of these is completely up to the practitioner. There is a finite number of ways that the cars can transition from the entering lanes to leaving lanes. We define a traffic movement l as a set that maps the entering traffic of lane l  Lin to possible leaving lanes l  Lout.
+The set of the traffic movements which are valid during a green light is called a phase, and it represented by p and we denote by P the set of all phases. An intersection has at least two phases, and they may have some shared traffic movement(s). We define the participating lanes Lp as the set of lanes that have appeared in at least one traffic movement of phase p. Each phase runs for a given minimum amount of time and after that, a decision about the next phase should be taken.
+To further clarify our problem definition and the terminologies, we use a 3-way intersection example, depicted in Figure 1. There are six lanes entering the intersection and six leaving lanes. We have labeled these lanes with lkin and lkout, k  {1, · · · , 6} in Figure 1a. Accordingly, there are six traffic movements denoted by 1, · · · , 6 as illustrated in Figure 1b. Also, three possible phases for this intersection along with the valid traffic movements of each phase are listed in Figure 1. For example, phase-1 involves two traffic movements 6 = l6in  l1out, l6in  l2out and 5 =
+l5in  l3out, l5in  l4out , hence the set of participating lanes associated with this phase is L1 = {l5in, l6in, l1out, l2out, l3out, l4out}. As one may notice, the number of traffic movements as well as the number of participating lanes are not necessarily the same for different phases. For example, in Figure 1 phase-1 and phase-3 involve two traffic movements, while there are three traffic movements in phase-2. Further, phase-1 and phase-3 involve six participating lanes while phase-2 includes nine lanes. This results in different size of the input/output of the model among different intersection instances. Therefore, building a universal model which handles such complexity is not straightforward using conventional deep RL algorithms. To address this issue, we design AttendLight which uses a special attention mechanism as described in the next section.
+3
+
+W
+
+Phase-1
+
+N
+
+v6 = {l6in  l1out, l6in  l2out}
+
+l5out l6out l5in l6in
+E
+
+v5 = {l5in  l3out, l5in  l4out}
+
+S
+
+Phase-2
+
+v4 = {l4in  l5out, l4in  l6out}
+
+l1out l2out
+
+l4in l3in
+
+v3 = {l3in  l1out, l3in  l2out} v2 = {l2in  l3out, l2in  l4out}
+
+l1in l2in
+
+l4out l3out
+
+Phase-3
+
+v1 = {l1in  l5out, l1in  l6out} v2 = {l2in  l3out, l2in  l4out}
+
+(a) 3-way structure
+
+(b) All three possible phases with the corresponding traffic movements
+
+Figure 1: A 3-way intersection topology with its available phases and traffic movements
+
+The main goal of TSCP is to minimize the average travel time of all vehicles within a finite time frame. However, the travel time is not a direct function of state and action so in practice it is not possible to optimize it directly. Zheng et al. [31] use an alternative reward measure, namely pressure, which is defined as the absolute value of the total number of waiting vehicles in entering lanes minus the total number of leaving vehicles. They show that minimizing pressure is equivalent to minimizing the average travel time. Similarly, in this work we also choose to minimize the pressure of the intersection, though we report the average travel times in the numerical experiments.
+
+4 Reinforcement Learning Design
+In this section we present our end-to-end RL framework for solving the TSCP. To formulate this problem into an RL context, we first require to identify state, action, and reward. State. The state at time t is the traffic characteristics slt for all lanes l  L, i.e., st = {slt, l  L}. Action. At each time step t, we define the action as the active phase at time t + 1. Reward. Following the discussion in [31], the reward in each time step is set to be the negative of intersection pressure.
+In TSCP, we are interested in learning a policy , which for a given state st of an intersection suggests the phase for the next time-step in order to optimize the long-term cumulative rewards. We design a unified model for approximating  that fits to every intersection configuration. The AttendLight model that we present in Section 4.2 instantiates such a policy  that achieves this universality by appropriate use of two attention mechanisms.
+
+4.1 Attention Mechanism
+
+Attention mechanism introduced for natural language processing [5, 17], but it has been proved to be effective in other domains such as healthcare [8], combinatorial optimization [6, 19], and recommender systems [23]. By providing a mechanism to learn the importance of each element in a problem with variable number of inputs, attention allows having a fixed length encoding of inputs. The attention mechanism that we use in this work is the key for achieving the universal capability of the AttendLight. We adjust the attention mechanism of [5] for solving TSCP. In this setting, we have two types of inputs to attention(·, ·), namely a set of references {ri} and a query q. The attention computes an alignment a := {ai}, where
+
+ai = uatanh(Urr¯i + Uqq¯),
+
+(1)
+
+in which q¯ and r¯i are trainable linear mappings of q and ri, respectively; Uq, Ur, ua are trainable variables. Note that a has the same size as the input reference set {ri}. Finally, the attention returns
+w, which is a probability distribution computed as softmax(a).
+
+4
+
+...
+
+s1t st2 st3
+sLt -2 stL-1 stL
+
+... ...
+
+Embedding
+
+State Attention
+
+g(s2t ) g(s3t )
+mean
+g(sLt -2) g(sLt -1)
+
++ +
++ +
+
+softmax
+
+wt
+
+z1t
+zpt
+l wltg(slt)
+zPt
+
+...
+
+...
+
+Action Attention
+
+1t
++
+RNN ht-1
+
+ht
+
+ot
+
+pt
+
+softmax
+
++
+Pt
++
+
+Figure 2: AttendLight model
+
+...
+
+4.2 AttendLight Algorithm
+
+AttendLight is our proposed algorithm and has two major responsibilities: i) extracting meaningful phase representations zpt for every phase p, and ii) deciding on the next active phase. To add universality to these responsibilities, the input and output dimension of the model needs to be
+independent of intersection configuration. To this order, we propose two attention mechanisms--as
+introduced in Section 4.1--called state-attention and action-attention for handling the
+phase representation from the raw-state and for choosing the next phase, respectively. The policy
+model that we used in AttendLight is visualized in Figure 2. Next, we explain how AttendLight
+achieves these goals.
+
+A key part of AttendLight is to construct meaningful phase representations. Although identifying
+the phase representations for TSCP is not a trivial process, we expect that it could be extracted from the traffic characteristic of the participating lanes {stl , l  Lp}. For example, the number of cars in participating lanes can be utilized to infer how congested the traffic movements are, how close the
+cars are with respect to the intersection, and whether or not activating a phase will ease the traffic.
+AttendLight uses an embedding followed by an attention mechanism to learn the phase representation.
+
+In order to allow more capacity in feature extraction, we embed stl into a higher dimensional space. In this work, we use a single Conv1D transformation as our embedding function g, but one may use
+
+more intricate embedding functions as well. The state-attention uses these embeddings and
+
+returns the importance weights wpt := {wlt, l  Lp} for attending on g(slt) of each participating lane
+
+in phase p, i.e.,
+
+wpt = state-attention rpt , qpt , p  P,
+
+(2)
+
+where the references rpt are the embedded participating lane characteristics and the query qpt is their
+
+average, i.e.,
+
+rpt := g(slt), l  Lp
+
+qpt
+
+:=
+
+lLp
+
+g(stl ) |Lp|
+
+.
+
+Then, the phase representation zpt is computed as zpt = lLp wlt × g(stl ). From this formulation, we can see that the phase representation is independent of the number of participating lanes in each phase since Lp can have any arbitrary cardinality. It worth mentioning that using the average of g(slt) as the query qpt in the state-attention, allows the model to learn the importance of each lane-traffic compared to the average traffic. For example, whenever all lanes are either full or mostly empty, the
+query detects the situation and in turn, the attention model assigns appropriate weights to each lane.
+
+To capture the sequential information of active phases, we incorporate an LSTM cell. At every time step, the phase representation zpt of the active phases, i.e., the phase associated with the current green
+light is fed into the cell. LSTM uses a hidden memory ht to store encoded sequence of active phase in previous times and produces an output ot. Then, the action-attention model provides the probability t := {pt , p  P} of switching to any of the phases in the next time step using
+
+t = action-attention {zpt , p  P}, ot ,
+
+(3)
+
+Hence, AttendLight provides an appropriate mapping of the states to probability of taking actions for any intersection configuration, regardless of the number of roads, lanes, traffic movements, and
+
+5
+
+number of phases. We would like to emphasize that AttendLight is invariant to the order of lanes or phases, so how to enumerate these components will result in the same control decisions.
+4.3 RL Training
+We train the AttendLight with a variance-reduce variant of REINFORCE [27]. This training algorithm is quite standard, so we leave its detailed description to Appendix A.3. To train the AttendLight, we follow two regimes for the intersection sampling process: (i) train for a single environment and deploy on the same environment, which we refer to it as "single-env" regime, and (ii) train on multiple environments and deploy on multiple environments, which we call is as "multi-env" regime. In the first regime, we use a particular environment instance m to train a policy and deploy the model on the same environment instance m. This is the common practice in all of the current RL algorithms for TSCP [31, 35, 37], in which the trained model only works on the intended problem. While in the second regime, in each episode we sample n environments from M and run the train-step based on all those environments. In experiments of this paper, we let n = |M|. However, in Appendix B, we present alternative multi-env regimes to deal with a large number of intersections.
+
+5 Numerical Experiments
+
+Many variants of the intersections have been studied in the literature and we claim that a single model can provide reasonable phase decisions for all of them. We consider 11 intersection topologies, where they vary in terms of the number of approaching roads (i.e., 3-way or 4-way), and the number of lanes in each road. Further, each of these 11 intersections may have a different number of phases and traffic-data. Table 1 summarizes the properties of all intersections.
+
+To train and test AttendLight, a combination of real-world and synthetic traffic-data is utilized. For
+4-way intersections with two lanes, we use the real-world traffic-data of intersections in Hangzhou and Atlanta [33, 37]. For notation simplicity, we denote these data by H1, · · · , H5 and A1, · · · , A5 for Hangzhou and Atlanta, respectively. For the rest of the intersections with two lanes (e.g., 3-way intersections), slightly adapted version of these data-sets are used. Due to lack of real-world data for the intersection with three lanes, we created synthetic traffic-data denoted by S1, · · · , S6. The combination of intersection topologies, their available phases, and traffic-data allows us to construct the set M with 112 unique intersection instances. We label each intersection instance by INT#-dataID-#phase. For example, the problem which runs intersection INT5 with the H1 traffic-data through 8-phase is denoted by INT5-H1-8. Table 1 summarizes the properties of all 11 intersections used in this study.
+
+Table 1: All intersection configurations
+
+intersection ID #road #lanes per road #phase (minp |Lp|, maxp |Lp|)
+
+INT1 3 2 3
+(1,2)
+
+INT2 3 2 3
+(1,2)
+
+INT3 3 1,2 2
+(1,2)
+
+INT4 3 1,3 3
+(2,4)
+
+INT5 3 1,3 3
+(2,4)
+
+INT6 3 1,3 3
+(2,4)
+
+INT7 4 2 4,8
+(2,2)
+
+INT8 4 2 3
+(2,2)
+
+INT9 4 3 4,8
+(6,6)
+
+INT10 4 2,3 4,8
+(6,6)
+
+INT11 4 2,3 3,5
+(6,6)
+
+In all experiments, we choose the number of moving and waiting vehicles to represent traffic characteristic stl. To this order, first, for lane l we consider a segment of 300 meters from the intersection and split it into three chunks of 100 meters. Then, lt,c for c = 1, 2, 3 is the number of moving vehicles in chunk c of the lane l at time t. Also, we define lt as the number of waiting vehicles at lane l at time t. Now, we represent the traffic characteristic of lane l by stl := [lt,1, lt,2, lt,3, lt].
+It is assumed that the traffic always can turn to the right unless there is conflicting traffic or there is a "no turn on red" signal. To clear the intersection, the green light is followed by 5 seconds of yellow light. For each intersection, we run the planning for the next 600 seconds with a minimum active time of 10 seconds for each phase. To simulate the environment, we used CityFlow [36]. For more details on data construction, simulator, and intersections configurations, see Appendix.
+5.1 Results of the Single-Environment Regime
+In this experiment, we train the AttendLight for a particular intersection instance and then test it for the same intersection configuration. We compare AttendLight with SOTL [12], Max-pressure [28],
+
+6
+
+Average Travel Time (ATT)
+
+AttendLight
+
+DQTSC-M
+
+FRAP
+
+175 150 125 100 75 50 25 IN0T1-A1-I3NT1-A2-I3NT1-A3-I3NT1-A4-I3NT1-A5I-N3 T1-H1-3
+
+160 140 120 100 80 60 40 20 INT07I-AN1T-74I-AN2T-74I-AN3T-74I-AN4T-74I-NA5T-74I-HN1T-74I-HN2T-74I-HN3T-74I-HN4T-74-H5-4
+
+FixedTime
+
+MaxPressure
+
+SOTL
+
+100 80 60 40 20 IN0T8-A1-I3NT8-A2-I3NT8-A3-I3NT8-A4-I3NT8-A5I-N3 T8-H1-3
+
+175 150 125 100 75 50 25 INT011-S1IN-5T11-S2IN-5T11-S3IN-5T11-S4IN-5T11-S5IN-5T11-S6-5
+
+(a) INT1, 3-phase
+
+(b) INT7, 4-phase
+
+(c) INT8, 3-phase
+
+(d) INT11, 5-phase
+
+Figure 3: The comparison of AttendLight in single-env regime with baseline algorithms. The corresponding intersection configuration is depicted below the ATT results.
+
+Fixed-time policies, DQTSC-M [24], and FRAP [37]. The FRAP by design does not handle all the intersections that we consider in this work, so we compare against it when possible. For the purpose of comparison, we measure the Average Travel Time (ATT) for all algorithms. We consider a variety of common real-world intersections configurations with {2,3,4,5,8} phases, {1,2,3} lanes, {3,4} ways, and one- and bi-directional intersections. For example, Figure 3 presents the results for four different cases. As it is shown, in most cases AttendLight outperforms benchmarks algorithms in terms of ATT, and FRAP is the second-best working algorithm. In Figure 3d, FRAP is not applicable. When considering all 112 cases, AttendLight yields 46%, 39%, 34%, 16%, and 9% improvement over FixedTime, MaxPressure, SOTL, DQTSC-M, and FRAP, respectively. Thus, when AttendLight is used solely to train a single environment, it works well for all the available number of roads, lanes, phases, and all traffic-data. Further results for other intersections are available in Appendix A.5.
+5.2 Results of Multi-Environment Regime
+We evaluate the key feature of AttendLight that enables it to be utilized for multiple TSCPs. We divide the set of intersection instances into two segments: training and testing sets, each with 42 and 70 instances, respectively. We train AttendLight by running all 42 training intersection instances in parallel to obtain data for the training and use the REINFORCE algorithm to optimize the trainable parameters. Once the trained model is available, we test the performance on training and testing instances. The testing set includes new intersection topologies as well as new traffic-data that has not been observed during training. Appendix C.2 summarizes the details of both sets.
+To the best of our knowledge, there is no RL-based algorithm in the literature that works on more than one intersection instance without any transfer learning or retraining. Hence, to evaluate the performance of AttendLight in the multi-env regime, we have no choice other than comparing it against the single-env regime and the previously explained baselines, e.g., SOTL, MaxPressure, FixedTime, DQTSC-M, and FRAP. Recall that for the AttendLight in single-env regime, DQTSCM, and FRAP, a separate model is trained for every instance. In contrast, the multi-env regime trains a single model to make the traffic decisions of multiple intersections. Clearly, having such a "general" model will lead to an inevitable performance loss, which makes the comparison unfair. Nevertheless, we embrace such unfairness in our experiments. Comparing AttendLight in multi-env versus single-env also allows measuring the performance degradation as a result of training a general model. Finally, to make sure that the results are robust against the randomness, we trained five models with different random seeds and always report the average statistics.
+Now, we would like to evaluate the performance of the multi-env regime versus single-env. Our goal in this analysis is twofold: In case (I) we evaluate how introducing a universal model trained in multi-env regime exacerbates the ATT in the training set, and case (II) demonstrates how the
+7
+
+ATT ratio ATT ratio
+
+1.50 1.25 1.00 0.75 0.50 0.25 0.00 INT1, 3IpNhTa3s,e2sIpNhTa7s,e4sIpNhTa7s,e8sIpNhTa8s,e3sIpNhTa9s,e4sIpNhTa9s,e8s phases
+
+1.50 1.25 1.00 0.75 0.50 0.25 0.00 INT2, 3IpNhTa4s,e3sIpNhTa5s,e3sIpNhTa6s,e3sIpNhTa7s,e4sIpNhTa7s,e8sINpTh1a0s,e4sINpTh1a0s,e8sINpTh1a1s,e3sINpTh1a1s,e5s phases
+
+(a) Training intersections instances
+
+(b) Testing intersections instances
+
+Figure 4: The ATT of multi-env policy divided by ATT of single-env policy. The error bars represent 95% confidence interval for ATT ratio. The closer ATT ratio is to one (red dashed line), the less degradation is caused as a result of using a multi-env model.
+
+Density Density Density Density Density
+
+3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(a) FixedTime
+
+3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 1.0 m
+(b) MaxPressure
+
+2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(c) SOTL
+
+3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(d) DQTSC-M
+
+4.0 3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(e) FRAP
+
+Figure 5: These plots illustrate the density of m over all intersections. Here m < 0 means that the multi-env outperforms the baseline algorithm.
+
+multi-env model generalizes to testing instances which are not visited during training. To measure this, we calculate ATT ratio, which is ATT in multi-env divided by ATT of the single-env regime. The closer ATT ratio is to one, the less degradation is caused as a result of using a multi-env model. Figure 4 summarizes the ATT ratio for all 112 intersection instances. Each bar in this plot illustrates the average ATT ratio for a number of traffic-data associated with an intersection configuration and the error bars represent the 95% confidence interval. To analyze case (I), we use Figure 4a. We observe that in most cases the results of the multi-env regime are close to that of the single-env regime. In particular, we have an average 15% ATT degradation with a standard deviation of 0.15. Case (II) analysis is demonstrated in Figure 4b. We observe that the trained policy works well in the majority of intersection/traffic-data such that on average it has 13% ATT gap with a standard deviation of 0.19. Furthermore, from this figure, one may notice that there are several intersection instances that the model-trained in the multi-env regime has lower ATT. We conjecture that such behavior is due to knowledge sharing between intersections, meaning that environments are sharing successful phase controls that are not necessarily explored in single-env training cases.
+
+Next, we compare the multi-env regime with all the benchmark algorithms. To this end, we define
+
+m
+
+=
+
+um -bm max(um ,bm )
+
+
+
+[-1, 1], m
+
+
+
+M, in which um is the ATT of intersection m when the
+
+trained model of multi-env is scored greedily (i.e., we let the phase with the highest probability
+
+to be the next active phase), and bm is the ATT of the corresponding intersection of a certain benchmark algorithm. Having m < 0 means that the multi-env model outperforms the baseline algorithm. The density plots of Figure 5 show the distribution of m for all m  M and for different
+baseline algorithms. Figures 5a-5c indicate that multi-env obtains smaller ATT when compared
+
+to MaxPressure, FixedTime, and SOTL. Noting that the fitted Normal distribution is centered at
+
+a negative value and only a small tail of the distribution lies on the positive side suggests that the
+
+multi-env model almost always has a smaller ATT. As Figure 5d suggests, there are few cases where
+
+DQTSC-M obtains smaller ATT; however, in average AttendLight multi-env regime achieves smaller
+
+ATT than DQTSC-M. Figure 5e shows that multi-env AttendLight provides competitive performance
+
+with respect to FRAP, which is trained on single-env setting.
+
+8
+
+In summary, we can conclude that the multi-env algorithm works well in the training set and also obtains quite a small gap in unseen environment instances. So, the model can be used without any retraining on new intersection instances similar to those observed during training. 5.3 Few-Shot Training for Calibration Although the multi-env regime works well in practice, one might want to get a specialized policy for an important intersection. For this purpose, we start with the universal policy and after a few training steps, we obtain an improved policy for that intersection. Recall that AttendLight is designed to handle any intersection, so we do not need to modify the structure of the policy network (the number of inputs and outputs). Following this strategy, the maximum and average of the multi-env gap compared to single-env decreases significantly after 200 training episodes (instead of 100,000 episodes when trained from scratch) such that we got to 5% gap on average with respect to the single-env regime. After 1000 training steps this gap decreases to 3%. See Appendix A.7 for more details.
+6 Conclusion and Discussion
+In this paper, we consider the traffic signal control problem, and for the first time, we propose a universal RL model, called AttendLight, which is capable of providing efficient control for any type of intersections. To provide such capability to the model, we propose a framework including two attention mechanisms to make the input and output of the model, independent of the intersection structure. The experimental results on a variety of scenarios verify the effectiveness of the AttendLight. First, we consider the single-environment regime. In this case, AttendLight outperforms existing methods in the literature. Next, we consider AttendLight in the multi-environment regime in which we train it over a set of distinct intersections. The trained model is tested in new intersections verifying the generalizability of AttendLight. A future line of research could be extending AttendLight to control multiple intersections in a connected network of intersections. Another research direction would be applying different RL algorithms such as Actor-Critic, A2C, and A3C to improve the numerical results. In a similar approach, considering other embedding functions and attention mechanisms would be of interest. In addition, the AttendLight framework is of independent interest and can be applied to a wide range of applications such as Assemble-to-Order Systems, Dynamic Matching Problem, and Wireless Resource Allocation problems. Similar to TSCP, each of these problems has to deal with the varying number of inputs and outputs, and AttendLight can be applied with slight modifications.
+9
+
+Broader Impact
+In this paper, the authors propose AttendLight, a Deep Reinforcement Learning algorithm to control the traffic signals efficiently and autonomously. Utilizing AttendLight for controlling traffic signals brings several benefits to society. First, this algorithm is responsive to the dynamic behavior of traffic movement and provides a control policy to an intersection to minimize the travel time. This has several societal implications:
+· Less traffic: according to information gathered in [9] in 2015, drivers in the United States wasted 6.9 billion hours annually in traffic. With AttendLight people will spend less time in traffic jams.
+· Lower fuel consumption: it has been shown that about 3 billion gallons of gas wasted in 2014 due to traffic congestion [9]. AttendLight will help to reduce fuel consumption by easing traffic flows.
+· Cleaner environment: it is predicted that air pollution will cause around 2.5 million cases of non-communicable disease by 2035, should the air quality stay the same as in 2018 [21]. People will breathe higher quality air if we have smarter traffic signal controllers.
+Second, in contrast to previous RL models, AttendLight does not need to be trained for every new intersection. Thanks to the attention mechanism, indeed AttendLight is a universal model that can be simply deployed for any type of intersection after it is trained over a collection of distinct intersections. As long as the structure for the new intersection follows a similar distribution as the training set, AttendLight provides accurate results. This capability is the key advantage of this model because, designing a new model imposes several costs such as (i) human expertise, (ii) the required computational power, and (iii) data collection resources. Therefore, sparing experts from repetitive work as well as saving computational resources are other societal impacts of AttendLight. One limitation of AttendLight is that it may fail to come up with an efficient policy whenever the intersection topology is very complex and unusual, such that the training set does not involve a similar structure. We hope that such a limitation can be addressed by increasing the training set diversity and incorporating more complex policy models. Future researchers are encouraged to consider extending AttendLight to control multiple intersections in a coordinated manner. Given a network of intersections, traffic signals have significant impacts on each other. Thus, controlling every individual signal without considering this incorporation may exacerbate the whole traffic. Reaching the point that AttendLight could control a network of intersections while it respects the association effects, we expect to achieve too many other valuable societal impacts. However, the extension of AttendLight to the multi-intersection scenario is not quite straightforward. Specifically, one needs to consider several challenges such as scalability of the proposed model, and how to involve the coordination in decision-making procedure. See more details in [20]. Further motivation to pursue this research would be improving the RL algorithm used to train the AttendLight model. In the current research, we utilized a policy-gradient RL algorithm called REINFORCE. Despite the superior numerical results of AttendLight, there is definitely room for improvement. As a low-hanging fruit, other state-of-the-art policy-based RL algorithms such as Actor-Critic, A2C, and A3C can substitute REINFORCE in AttendLight.
+10
+
+References
+[1] Atlanta traffic data. https://github.com/gjzheng93/frap-pub/tree/master/data/ template_ls. Accessed: 2020-05-14
+[2] Hangzhou traffic data. https://github.com/traffic-signal-control/sample-code/ tree/master/data. Accessed: 2020-05-14
+[3] Implementation of FRAP algorithm. https://github.com/gjzheng93/frap-pub. Accessed: 2020-05-14
+[4] Ault, J., Hanna, J., Sharon, G.: Learning an interpretable traffic signal control policy. arXiv preprint arXiv:1912.11023 (2019)
+[5] Bahdanau, D., Cho, K., Bengio, Y.: Neural machine translation by jointly learning to align and translate. arXiv preprint arXiv:1409.0473 (2014)
+[6] Bello, I., Pham, H., Le, Q.V., Norouzi, M., Bengio, S.: Neural combinatorial optimization with reinforcement learning. arXiv preprint arXiv:1611.09940 (2016)
+[7] Bengio, Y., Lodi, A., Prouvost, A.: Machine learning for combinatorial optimization: a methodological tour d'horizon. arXiv preprint arXiv:1811.06128 (2018)
+[8] Choi, E., Bahadori, M.T., Sun, J., Kulas, J., Schuetz, A., Stewart, W.: Retain: An interpretable predictive model for healthcare using reverse time attention mechanism. In: Advances in Neural Information Processing Systems, pp. 3504­3512 (2016)
+[9] Dooley, E.: Here's how much time americans waste in traffic (2015). URL https://abcnews. go.com/US/time-americans-waste-traffic/story?id=33313765
+[10] Finn, C., Abbeel, P., Levine, S.: Model-agnostic meta-learning for fast adaptation of deep networks. In: Proceedings of the 34th International Conference on Machine Learning-Volume 70, pp. 1126­1135. JMLR. org (2017)
+[11] Fischer, T.G.: Reinforcement learning in financial markets-a survey. Tech. rep., FAU Discussion Papers in Economics (2018)
+[12] Gershenson, C.: Self-organizing traffic lights. arXiv preprint nlin/0411066 (2004)
+[13] Gu, S., Holly, E., Lillicrap, T., Levine, S.: Deep reinforcement learning for robotic manipulation with asynchronous off-policy updates. In: 2017 IEEE international conference on robotics and automation (ICRA), pp. 3389­3396. IEEE (2017)
+[14] Koonce, P., Rodegerdts, L.: Traffic signal timing manual. Tech. rep., United States. Federal Highway Administration (2008)
+[15] Li, L., Lv, Y., Wang, F.Y.: Traffic signal timing via deep reinforcement learning. IEEE/CAA Journal of Automatica Sinica 3(3), 247­254 (2016)
+[16] Liang, X., Du, X., Wang, G., Han, Z.: Deep reinforcement learning for traffic light control in vehicular networks. arXiv preprint arXiv:1803.11115 (2018)
+[17] Luong, M.T., Pham, H., Manning, C.D.: Effective approaches to attention-based neural machine translation. arXiv preprint arXiv:1508.04025 (2015)
+[18] Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A.A., Veness, J., Bellemare, M.G., Graves, A., Riedmiller, M., Fidjeland, A.K., Ostrovski, G., et al.: Human-level control through deep reinforcement learning. nature 518(7540), 529­533 (2015)
+[19] Nazari, M., Oroojlooy, A., Snyder, L., Takác, M.: Reinforcement learning for solving the vehicle routing problem. In: Advances in Neural Information Processing Systems, pp. 9839­9849 (2018)
+[20] OroojlooyJadid, A., Hajinezhad, D.: A review of cooperative multi-agent deep reinforcement learning. arXiv preprint arXiv:1908.03963 (2019)
+[21] Pimpin, L., Retat, L., Fecht, D., de Preux, L., Sassi, F., Gulliver, J., Belloni, A., Ferguson, B., Corbould, E., Jaccard, A., et al.: Estimating the costs of air pollution to the national health service and social care: An assessment and forecast up to 2035. PLoS medicine 15(7) (2018)
+[22] Van der Pol, E., Oliehoek, F.A.: Coordinated deep reinforcement learners for traffic light control. Proceedings of Learning, Inference and Control of Multi-Agent Systems (at NIPS 2016) (2016)
+11
+
+[23] Seo, S., Huang, J., Yang, H., Liu, Y.: Interpretable convolutional neural networks with dual local and global attention for review rating prediction. In: Proceedings of the eleventh ACM conference on recommender systems, pp. 297­305 (2017)
+[24] Shabestary, S.M.A., Abdulhai, B.: Deep learning vs. discrete reinforcement learning for adaptive traffic signal control. In: 2018 21st International Conference on Intelligent Transportation Systems (ITSC), pp. 286­293. IEEE (2018)
+[25] Silver, D., Huang, A., Maddison, C.J., Guez, A., Sifre, L., Van Den Driessche, G., Schrittwieser, J., Antonoglou, I., Panneershelvam, V., Lanctot, M., et al.: Mastering the game of go with deep neural networks and tree search. nature 529(7587), 484 (2016)
+[26] Sutton, R.S., Barto, A.G.: Reinforcement learning: An introduction. MIT press (2018) [27] Sutton, R.S., McAllester, D.A., Singh, S.P., Mansour, Y.: Policy gradient methods for reinforce-
+ment learning with function approximation. In: Advances in neural information processing systems, pp. 1057­1063 (2000) [28] Varaiya, P.: The max-pressure controller for arbitrary networks of signalized intersections. In: Advances in Dynamic Network Modeling in Complex Transportation Systems, pp. 27­66. Springer (2013) [29] Velickovic´, P., Cucurull, G., Casanova, A., Romero, A., Lio, P., Bengio, Y.: Graph attention networks. arXiv preprint arXiv:1710.10903 (2017) [30] Wei, H., Chen, C., Wu, K., Zheng, G., Yu, Z., Gayah, V., Li, Z.: Deep reinforcement learning for traffic signal control along arterials (2019) [31] Wei, H., Chen, C., Zheng, G., Wu, K., Gayah, V., Xu, K., Li, Z.: Presslight: Learning max pressure control to coordinate traffic signals in arterial network. In: Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining, pp. 1290­ 1298 (2019) [32] Wei, H., Xu, N., Zhang, H., Zheng, G., Zang, X., Chen, C., Zhang, W., Zhu, Y., Xu, K., Li, Z.: Colight: Learning network-level cooperation for traffic signal control. In: Proceedings of the 28th ACM International Conference on Information and Knowledge Management, pp. 1913­1922 (2019) [33] Wei, H., Zheng, G., Gayah, V., Li, Z.: A survey on traffic signal control methods. arXiv preprint arXiv:1904.08117 (2019) [34] Wei, H., Zheng, G., Yao, H., Li, Z.: Intellilight: A reinforcement learning approach for intelligent traffic light control. In: Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining, pp. 2496­2505 (2018) [35] Zang, X., Yao, H., Zheng, G., Xu, N., Xu, K., Li, Z.: Metalight: Value-based meta-reinforcement learning for traffic signal control (2020) [36] Zhang, H., Feng, S., Liu, C., Ding, Y., Zhu, Y., Zhou, Z., Zhang, W., Yu, Y., Jin, H., Li, Z.: Cityflow: A multi-agent reinforcement learning environment for large scale city traffic scenario. In: The World Wide Web Conference, pp. 3620­3624 (2019) [37] Zheng, G., Xiong, Y., Zang, X., Feng, J., Wei, H., Zhang, H., Li, Y., Xu, K., Li, Z.: Learning phase competition for traffic signal control. In: Proceedings of the 28th ACM International Conference on Information and Knowledge Management, pp. 1963­1972 (2019)
+12
+
+A Numerical Experiments Details
+Appendix A includes the details of all numerical experiments. In Appendix A.1, we describe our traffic data and how we generate the synthetic data. Appendices A.2 and A.3 explains the AttendLight model as well as the RL training that we consider throughout the paper. Appendix A.4 gives a brief explanation on our baseline algorithms. Finally, in Appendix A.5, we provide extensive results of AttendLight for single-env and multi-env regimes.
+A.1 Details of Real-World Data and the Synthetic Data Generation
+In each intersection, we consider three traffic movement sets, namely straight, turn-left, and turnright.These sets are used in defining the traffic data of an intersection in both real-world and synthetic cases. Let us reconsider intersection of Figure 1 and the corresponding traffic movements in Figure 1a. For this intersection, the straight, turn-right, and turn-left sets are {2, 3}, {4, 6}, and {1, 5}, respectively. Next, we elaborate two sources of traffic that we use in our experiments.
+Real-world traffic data For the real-world data, we use the public data of intersections in Hangzhou and Atlanta [33, 37], which are available to download in [2] and [1], respectively. These data-sets include the traffic on 4-way intersections with straight and turn-left traffic movements. For 3-way intersections, we slightly modify the data of 4-way intersections from Hangzhou and Atlanta to adapt them for 3-way structures. In particular, for each vehicle arrival, we keep the vehicle properties and the arrival time, but we change the entering and leaving lanes if they are not available in the new intersection. To do this, we allocate the traffic of unavailable movement to an available one from the same set (e.g., straight or turn-left) uniformly at random. For example, consider intersection of Figure 1. Compared to a 4-way intersection, this intersection does not have north-to-south and south-to-north traffic movements. So, to use traffic data A1-A5 and H1-H5, we substitute the traffic movements north-to-south and south-to-north with the traffic movements east-to-west and west-to-east. We follow the same process for the left-turn traffic movements.
+Synthetic traffic data For the intersections where there exist an entering/leaving roads with three-lanes, we could not find any real-world data of a single intersection with the right-turn data. So, we generate traffic-data with a different rate of incoming vehicles. For this purpose, we consider two Poisson arrival processes with a rate  from {3, 4} (seconds). Incoming traffic with the probability of 70%, 20%, and 10% is selected to go straight, turn-left, or turn-right, respectively. Inside each of three sets (i.e., straight, turn-left, and turn-right sets), the traffic movements are selected uniformly. For example, consider the intersection of Figure 1, and assume a vehicle is chosen to move straight. Then, with the probability of 50% either 2 or 3 will be selected. In addition, to analyze the performance of each algorithm under the different volumes of traffic, we increase the number of arriving vehicles in three settings: at each arrival time, an additional vehicle is added with a probability p from {0.05, 0.1, 0.3}. Overall, there are six cases of synthetic traffic data, which are summarized in Table 2.
+
+Table 2: Parameters of the synthetic data. Each parenthesis shows  of the Poisson distribution and the probability of having two vehicle arrival at each time.
+
+traffic-data S1
+
+S2
+
+S3
+
+S4
+
+S5
+
+S6
+
+(, p)
+
+(4, 0.3) (4, 0.1) (3, 0.1) (3, 0.05) (3, 0.3) (4, 0.05)
+
+A.2 Details of AttendLight Policy Model
+The AttendLight policy model--visualized in Figure 2--contains five trainable components: embedding layer, state-attention, Recurrent Neural Network (RNN), fully-connected layer, and action-attention. In this work, we use a 1-dimensional convolution layer with the input-channel of size four, kernel-size and stride of size one, and the out-channel of size d. This embedding is an affine transformation that maps all lane characteristics to a d-dimensional space for allowing more effective feature representations. The state-attention uses linear transformations of query and references with output size of d. For the RNN, we use a single layer of LSTM cell with a hidden dimension d. The output of the LSTM is passed into a linear layer with output size d followed by a
+13
+
+ReLU activation function. The action-attention model also uses the same linear transformations for the query and references with d output dimension and returns the probability of selecting each action. To train the single-env models, we set d = 128 and the multi-env model use d = 256. We would like to emphasize that we have not done any structured hyper-parameter tuning of AttendLight. For training the AttendLight policy model, we use a policy-gradient based method as explained next.
+
+A.3 Details of the RL Training
+We use a variance-reduced variant of the REINFORCE algorithm [27] to train the AttendLight. The details of this algorithm are presented in Algorithm 1. In REINFORCE, there are two neural networks, called the actor (with parameters ) and critic (with parameter ). The actor network is responsible for learning the optimal action, while the critic is used for variance reduction. The critic uses the output of the state-attention which is followed by two fully-connected layers with ReLU activation function and returns the value of being in a state.
+We train the single-env models for 100000 episodes and the multi-env models for 30000 episodes. To train these models, we employ the Monte-Carlo simulation using the current policy  to produce a valid sequence of state, action, and rewards. Given the sequence of observations, we run a single train-step of the REINFORCE algorithm and update the weights of the networks. We use Adam optimizer with the learning rate of 0.005 for the single-env regime and 0.0005 for the multi-env regime. To stabilize the training of the single-env regime, we consider n = 3 instances of the intersection in parallel. For this problem, every 1100 episodes take approximately one hour on a single V100 GPU. On the multi-env regime, we choose n = 42 environment instances (without replacement) and run them simultaneously. Not surprisingly, the multi-env regime takes a longer time such that it accomplishes 85 episodes in one hour on the same GPU.
+
+Algorithm 1: REINFORCE Algorithm
+
+1: initialize the actor and critic networks with random weights  and , respectively
+
+2: for iteration = 1, 2, · · · do
+
+3: reset gradients: d  0, d  0
+
+4: if single-env regime, get n copy of the same environment instances; in multi-env regime
+
+choose randomly n environment instances
+
+5: for i = 1, · · · , n do
+
+6:
+
+initialize step counter t  0
+
+7: repeat
+
+8:
+
+choose next-action ait according to the distribution (·|sti; )
+
+9:
+
+observe new state sit+1 and reward rit which is the negative of intersection pressure
+
+10:
+
+tt+1
+
+11:
+
+until termination condition t  T is not satisfied
+
+12: end for
+
+13:
+
+compute the cumulative reward Rit =
+
+T t
+
+=t
+
+rit
+
+for all i = 1, · · · , n and t = 1, · · · , T
+
+14:
+
+d
+
+
+
+1 nT
+
+n i=1
+
+T t=1
+
+(Rit
+
+-
+
+V
+
+(sti ;
+
+))
+
+
+
+log
+
+(ait|sit;
+
+)
+
+15:
+
+d
+
+
+
+1 nT
+
+n i=1
+
+T t=1
+
+
+
+(Rit
+
+-
+
+V
+
+(sit;
+
+))2
+
+16: update  using d and  using d.
+
+17: end for
+
+A.4 Details of Baseline Algorithms
+A.4.1 SOTL
+Let's define counters  and  to count the number of cars behind the phases with the red signal and the number of cars behind the phase with the green signal, respectively. In SOTL algorithm [12], if the active time of the current phase is more than a threshold , and if  > max-red-count the  < min-green-count, then the active phase switches in a cyclic manner. To obtain the best values for the parameters of the SOTL, we try a grid-search over set {2, 7, . . . , 62} for max-red-count and min-green-count, {2, 7, . . . , 33} for . This results in 13×13×7=1183 cases, in which we report the minimum ATT obtained among these cases.
+14
+
+A.4.2 Fixed-Time
+In the Fixed-Time algorithm, the phases change in a cyclic order. For each phase, an active time is determined in advance, and once the active phase meets that active time, the phase switches to the next one. This is the most common approach in real-world intersections. We set the active time of each phase to 15 seconds.
+
+A.4.3 Max-Pressure
+The Max-Pressure algorithm [28] considers the pressure of participating lanes for each phase, and it activates the phase with the highest pressure for the next time-step.
+
+A.4.4 FRAP
+
+The get the result of the FRAP algorithm [37], we run the publicly available code of the algorithm for
+
+our intersection instances. FRAP has two main limitations which make it inapplicable to some of the
+
+intersections that we consider: (i) it assumes that each phase involves exactly two traffic movements;
+
+and (ii) it is designed based on the assumption that the number of traffic movements in all phases
+
+are the same. The first limitation is due to the implementation of algorithm [3]. We adjusted the
+
+implementation by generating dummy traffic movements to handle intersections such as INT1 and
+
+INT2. However, the second limitation is due to the design of FRAP. This is because, FRAP obtains an embedding of the traffic characteristic (fp) and the phase-id (fps) for phase p by:
+
+hp = RELU(W  fp + b ), hsp = RELU(W sfps + bs),
+
+(4)
+
+in which W , W s, b, and bs and trainable variables, hp and hps are the embedded traffic characteristic and the phase. Then, these are combined with adding another layer of affine transformation to obtain
+
+the state definition for each phase:
+
+hp = RELU(W h[hp, hsp] + bh).
+
+(5)
+
+Since W  is shared among all phases, it is not applicable when phases have a different number of
+
+lanes. So, it is not possible to adjust the algorithm to work for some of the intersections such as INT3
+
+and INT11.
+
+A.4.5 DQTSC-M
+Since there was not any publicly available code of DQTSC-M [24], we implemented the algorithm with some slight modifications. We used CityFlow [36] to get the state and reward of each time-step. We implemented the DQN [18] algorithm as is described in the paper. Three convolutional layers with filter sizes 2×4, 2×4, and 2×2, with stride of 1×2, 1×2, and 1×3 are used in the layer one, two, and three, respectively. The output of the convolution layers is passed into a fully connected layer with 128 nodes, followed by another fully connected layer of 64 nodes and the last layer provides the Q-value of each possible action.
+
+A.5 Extended Comparison Results
+Tables 3, 4, and 5 show the average travel time (ATT) for all environment instances for FixedTime, MaxPressure, SOTL, FRAP, and AttendLight in single-env and multi-env regimes. When FRAP is not applicable, we report "NA" in these tables. As it is shown, AttendLight in single-env regime outperforms other algorithms in 107 cases out of 112 cases and it obtains 46%, 39%, 34%, 16%, and 9% average ATT improvement over FixedTime, MaxPressure, SOTL, DQTSC-M, and FRAP, respectively. In addition, Figure 6 illustrates the ATT comparisons results for all intersections. Furthermore, the result of the multi-env regime is also reported under which AttendLight outperforms other benchmarks in 57 cases and it achieves 39%, 32%, 26%, and 5% improvement over FixedTime, MaxPressure, SOTL, and DQTSC-M, respectively. In comparison to FRAP, AttendLight in multi-env obtains 3% larger ATT in average.
+
+A.6 Mean State Results
+The proposed AttendLight framework uses the state-attention to produce a unified state representation from a varying number of lane-traffic information. The state attention learns the importance of each
+
+15
+
+AttendLight
+
+DQTSC-M
+
+FRAP
+
+FixedTime
+
+175 150 125 100 75 50 25 IN0T1-A1-I3NT1-A2-I3NT1-A3-I3NT1-A4-I3NT1-A5I-N3 T1-H1-3
+(a) INT1, 3-phase
+
+100 80 60 40 20 IN0T2-A1I-N3T2-A3I-N3T2-A4I-N3T2-A5I-N3T2-H1-3
+(b) INT2, 3-phase
+
+100 80 60 40 20 INT04I-NAT14-3I-NAT34-3I-NAT44-I3N-AT54-3I-NHT1-43I-NST1-43I-NST2-43I-NST3-43I-NST4-43I-NST5-43-S6-3
+(d) INT4, 3-phase
+
+100 80 60 40 20 INT05I-NAT25-3I-NAT35-3I-NAT45-I3N-AT55-3I-NHT1-53I-NST1-53I-NST2-53I-NST3-53I-NST4-53I-NST5-53-S6-3
+(e) INT5, 3-phase
+
+MaxPressure
+
+SOTL
+
+120
+
+100
+
+80
+
+60
+
+40
+
+20
+
+IN0T3-A1-I2NT3-A2-I2NT3-A3-I2NT3-A4-I2NT3-A5I-N2 T3-H1-2
+(c) INT3, 2-phase
+120
+
+100
+
+80
+
+60
+
+40
+
+20
+
+INT06I-NAT26-3I-NAT36-3I-NAT46-I3N-AT56-3I-NHT1-63I-NST1-63I-NST2-63I-NST3-63I-NST4-63I-NST5-63-S6-3
+(f) INT6, 3-phase
+
+160 140 120 100 80 60 40 20 INT07I-AN1T-74I-AN2T-74I-AN3T-74I-AN4T-74I-NA5T-74I-HN1T-74I-HN2T-74I-HN3T-74I-HN4T-74-H5-4
+(g) INT7, 4-phase
+70
+60
+50
+40
+30
+20
+10
+IN0T9-S1-I4NT9-S2-I4NT9-S3-I4NT9-S4-I4NT9-S5-I4NT9-S6-4
+(j) INT9, 4-phase
+175 150 125 100 75 50 25 INT010-S1IN-8T10-S2IN-8T10-S3IN-8T10-S4IN-8T10-S5IN-8T10-S6-8
+(m) INT10, 8-phase
+
+160 140 120 100 80 60 40 20 INT07I-AN1T-78I-AN2T-78I-AN3T-78I-AN4T-78I-NA5T-78I-HN1T-78I-HN2T-78I-HN3T-78I-HN4T-78-H5-8
+(h) INT7, 8-phase
+70
+60
+50
+40
+30
+20
+10
+IN0T9-S1-I8NT9-S2-I8NT9-S3-I8NT9-S4-I8NT9-S5-I8NT9-S6-8
+(k) INT9, 8-phase
+175 150 125 100 75 50 25 INT011-S1IN-3T11-S2IN-3T11-S3IN-3T11-S4IN-3T11-S5IN-3T11-S6-3
+(n) INT11, 3-phase
+
+100
+80
+60
+40
+20
+IN0T8-A1-I3NT8-A2-I3NT8-A3-I3NT8-A4-I3NT8-A5I-N3 T8-H1-3
+(i) INT8, 3-phase
+175 150 125 100 75 50 25 INT010-S1IN-4T10-S2IN-4T10-S3IN-4T10-S4IN-4T10-S5IN-4T10-S6-4
+(l) INT10, 4-phase
+175 150 125 100 75 50 25 INT011-S1IN-5T11-S2IN-5T11-S3IN-5T11-S4IN-5T11-S5IN-5T11-S6-5
+(o) INT11, 5-phase
+
+Figure 6: The ATT comparison result of all baseline algorithms with AttendLight in single-env regime. Note that FRAP is not applicable to some of the intersections.
+
+16
+
+Table 3: Results of all algorithms for INT1-INT5
+
+case
+
+FixedTime MaxPressure
+
+SOTL
+
+FRAP
+
+DQTSC-M
+
+AttendLight single-env
+
+INT1, 3 phases
+
+INT1-A1-3 INT1-A2-3 INT1-A3-3 INT1-A4-3 INT1-A5-3 INT1-H1-3
+
+141.44 140.96 146.65 110.4 157.02 141.44
+
+157.59 84.86 173.89 76.51 183.15 76.51
+
+125.93 82.65 127.2 77.18 132.98 132.88
+
+126.73 56.12 129.66 62.28 130.41 77.04
+
+124.34 76.74 129.00 75.52 139.23 77.04
+
+108.47 53.27 112.23 61.53 121.94 68.92
+
+INT2, 3 phases
+
+INT2-A1-3 INT2-A3-3 INT2-A4-3 INT2-A5-3 INT2-H1-3
+
+99.64 100.44 76.86 95.14 76.86
+
+68.3 71.16 47.36 86.26 63.67
+
+76.66 70.27 31.44 42.29 46.63
+
+42.48 50.27 39.49 48.32 42.24
+
+54.40 57.78 45.08 60.58 45.23
+
+43.35 46.67 35.87 52.29 39.04
+
+INT3, 3 phases
+
+INT3-A1-2 INT3-A2-2 INT3-A3-2 INT3-A4-2 INT3-A5-2 INT3-H1-2
+
+102.39 71.76 109.97 68.78 109.14 102.41
+
+99.34 65.47 115.05 58.44 107.65 58.44
+
+80.49 NA 51.46 NA 82.97 NA 43.09 NA 80.06 NA 80.41 NA
+
+89.49 60.20 86.78 48.06 85.10 62.35
+
+63.75 45.37 71.99 39.45 66.83 53.81
+
+INT4, 3 phases
+
+INT4-A1-3 INT4-A3-3 INT4-A4-3 INT4-A5-3 INT4-H1-3 INT4-S1-3 INT4-S2-3 INT4-S3-3 INT4-S4-3 INT4-S5-3 INT4-S6-3
+
+111.27 99.64 95.14 70.38 72.24 56.96 82.61 52.13 85.47 70.09 87.47
+
+72.33 77.47 54.76 73.99 56.4 44.88 45.69 52.06 55.4 64.61 47.19
+
+73.04 NA 76.35 NA 30.19 NA 46.47 NA 47.23 NA 61.32 NA 59.91 NA 46.37 NA 49.2 NA 52.64 NA 72.3 NA
+
+49.75 57.56 45.14 59.17 46.12 35.67 32.74 34.53 34.48 38.18 33.06
+
+41.81 46.46 33.47 43.75 36.06 32.42 30.9 32.68 31.8 34.96 31.07
+
+INT5, 3 phases
+
+INT5-A2-3 INT5-A3-3 INT5-A4-3 INT5-A5-3 INT5-H1-3 INT5-S1-3 INT5-S2-3 INT5-S3-3 INT5-S4-3 INT5-S5-3 INT5-S6-3
+
+70.38 99.64 111.27 100.44 72.24 40.42 43.83 50.79 53.71 62.29 45.18
+
+46.88 64.57 71.13 63.28 48.04 37.84 37.23 37.57 39.12 43.00 37.69
+
+45.88 NA 68.75 NA 71.87 NA 67.94 NA 43.63 NA 32.31 NA 33.07 NA 33.68 NA 33.34 NA 34.43 NA 33.75 NA
+
+46.25 56.21 62.26 49.26 46.61 29.11 29.46 30.60 30.52 31.43 29.14
+
+35.76 48.11 51.46 47.38 38.2 28.74 28.41 28.82 28.21 30.27 28.37
+
+AttendLight multi-env
+122.61 62.25 124.87 67.69 129.79 122.61
+68.32 66.46 30.32 43.19 44.07
+81.39 51.21 81.81 43.42 83.42 81.24
+59.36 53.64 30.58 41.34 47.17 36.23 33.93 35.78 37.04 40.1 33.68
+29.35 63.64 39.67 70.52 40.75 29.62 29.96 29.75 29.46 31.52 29.3
+
+lane-traffic g(slt) and the weighted sum of them creates the phase-state zlt. Instead, one could simply
+
+use
+
+the
+
+average
+
+operator
+
+instead
+
+of
+
+the
+
+state-attention.
+
+In
+
+other
+
+words,
+
+just
+
+use
+
+equal
+
+weight
+
+1 |Lp |
+
+for
+
+all participating lane-traffic g(stl ) in phase p.
+
+To analyze the performance of this approach, we modified the AttendLight framework accordingly, i.e., used the average operator instead of the state-attention and re-trained the single-env model for all 112 environment instances. Figure 7 shows the distribution of  for the ATT ratio of mean-state over the attention-state. We can observe that the average is on the positive side, meaning that the ATT of mean-state are bigger than those in with the state-attention. Therefore, utilizing the state-attention model helps to achieve smaller ATT.
+
+A.7 Few-Shot Training for Multi-Env Regime
+In the multi-env regime, we can run a few-shot training to obtain a specialized policy for a certain intersection. To this end, we start with the trained multi-env policy and calibrate the policy for a specific intersection through a few training steps.
+
+17
+
+Table 4: Results of all algorithms for INT6-INT9
+
+case
+
+FixedTime
+
+MaxPressure
+
+SOTL
+
+FRAP
+
+DQTSC-M
+
+AttendLight single-env
+
+INT6, 3 phases
+
+INT6-A2-3 INT6-A3-3 INT6-A4-3 INT6-A5-3 INT6-H1-3 INT6-S1-3 INT6-S2-3 INT6-S3-3 INT6-S4-3 INT6-S5-3 INT6-S6-3
+
+70.38 105.64 117.38 105.27 72.18 40.36 43.82 50.78 53.71 62.27 45.14
+
+49.33 67.97 76.04 65.66 54.11 37.06 37.22 37.54 39.11 42.95 37.64
+
+46.2 NA 81.53 NA 83.04 NA 72.73 NA 43.43 NA 32.27 NA 33.02 NA 33.64 NA 33.32 NA 33.46 NA 33.71 NA
+
+42.97 60.91 68.77 59.08 41.70 29.21 29.60 31.25 30.42 32.78 29.18
+
+35.29 58.94 55.07 51.92 39.77 28.85 28.51 28.88 28.39 30.26 28.47
+
+INT7, 4 phases
+
+INT7-A1-4 INT7-A2-4 INT7-A3-4 INT7-H4-4 INT7-A4-4 INT7-A5-4 INT7-H5-4 INT7-H1-4 INT7-H3-4 INT7-H2-4
+
+159.82 124.78 164.97 142.46 68.97 161.59 70.59 108.17 151.16 54.43
+
+58.76 84.57 66.26 77.39 62.86 73.72 52.78 81.77 88.88 45.01
+
+76.05 96.34 79.49 80.00 65.41 83.49 53.95 72.9 82.58 50.13
+
+50.6 74.24 57.49 67.28 51.61 63.72 38.81 66.32 76.9 33.81
+
+65.62 98.75 80.13 85.26 72.32 83.87 48.40 77.21 88.10 36.99
+
+48.56 65.01 53.91 60.47 45.18 57.53 34.38 57.57 69.01 32.26
+
+INT7, 8 phases
+
+INT7-A1-8 INT7-A2-8 INT7-A3-8 INT7-A4-8 INT7-A5-8 INT7-H1-8 INT7-H2-8 INT7-H3-8 INT7-H4-8 INT7-H5-8
+
+159.82 124.78 164.97 68.97 161.59 108.17 54.43 151.16 142.46 70.59
+
+68.47 50.72 81.06 54.46 82.23 93.37 42.37 90.83 75.08 42.66
+
+84.35 61.74 86.75 66.25 88.12 80.83 53.09 98.84 84.15 56.4
+
+49.82 40.14 57.11 50.94 62.96 73.14 32.56 72.18 61.59 34.77
+
+94.24 73.17 78.46 76.97 65.63 80.04 35.42 103.61 91.98 45.43
+
+49.11 35.81 53.03 42.4 55.31 52.25 31.03 66.59 55.8 32.19
+
+INT8, 3 phases
+
+INT8-A1-3 INT8-A2-3 INT8-A3-3 INT8-A4-3 INT8-A5-3 INT8-H1-3
+
+101.44 66.1
+106.93 66.48 101.92 101.92
+
+73.55 45.87 75.53 48.77 68.15 48.77
+
+70.00 46.53 75.26 49.7 74.68 74.68
+
+53.34 42.00 51.00 45.34 58.13 76.33
+
+66.48 45.53 68.91 50.20 57.01 79.21
+
+51.09 37.19 46.99 39.2 48.97 57.54
+
+INT9, 4 phases
+
+INT9-S1-4 INT9-S2-4 INT9-S3-4 INT9-S4-4 INT9-S5-4 INT9-S6-4
+
+66.56 57.51 61.41 56.24 56.09 56.09
+
+55.42 51.45 52.08 53.4 48.21 53.4
+
+52.69 NA 52.94 NA 51.28 NA 55.16 NA 55.37 NA 55.37 NA
+
+41.69 36.73 39.84 39.26 35.66 35.17
+
+36.4 33.49 32.72 34.56 32.24 31.77
+
+INT9, 8 phases
+
+INT9-S1-8 INT9-S2-8 INT9-S3-8 INT9-S4-8 INT9-S5-8 INT9-S6-8
+
+66.56 57.51 61.41 56.24 56.09 56.09
+
+54.54 47.71 50.32 46.21 44.01 46.21
+
+59.87 NA 59.15 NA 57.63 NA 61.97 NA 59.55 NA 59.55 NA
+
+52.70 34.26 37.42 38.44 34.60 33.69
+
+35.95 32.08 32.07 33.05 31.21 30.63
+
+AttendLight multi-env
+29.01 70.13 38.69 76.29 39.57 29.66 29.58 29.44 29.27 31.5 29.07
+51.98 69.12 59.11 70.55 50.07 62.32 37.43 61.82 77.5 35.04
+59.55 40.57 58.12 50.22 62.23 62.41 34.03 77.7 62.2 35.7
+53.09 40.84 49.37 41.57 52.7 53.09
+40.72 35.34 35.38 36.42 34.16 40.72
+39.87 33.55 34.43 35.3 32.75 39.87
+
+18
+
+Table 5: Results of all algorithms for INT10-INT11
+
+case
+
+FixedTime
+
+MaxPressure
+
+SOTL
+
+FRAP
+
+DQTSC-M
+
+AttendLight single-env
+
+INT10, 4 phases
+
+INT10-S1-4 INT10-S2-4 INT10-S3-4 INT10-S4-4 INT10-S5-4 INT10-S6-4
+
+79.09 61.47 74.28 65.56 64.5 60.75
+
+160.14 162.98 162.46 156.16 150.15 176.95
+
+80.04 NA 89.5 NA 97.49 NA 97.07 NA 102 NA 90.06 NA
+
+44.30 38.49 40.64 42.81 36.99 37.37
+
+41.21 34.91 35.37 37.46 33.44 34.03
+
+INT10, 8 phases
+
+INT10-S1-8 INT10-S2-8 INT10-S3-8 INT10-S4-8 INT10-S5-8 INT10-S6-8
+
+47.54 61.47 65.56 74.28 64.5 67.43
+
+158.52 161.62
+162 154.2 149.01 176.89
+
+66.52 NA 89.5 NA 97.07 NA 97.49 NA 102 NA 95.14 NA
+
+53.07 36.78 38.91 41.14 38.63 36.56
+
+39.59 33.79 35.78 36.14 32.73 32.52
+
+INT11, 3 phases
+
+INT11-S1-3 INT11-S2-3 INT11-S3-3 INT11-S4-3 INT11-S5-3 INT11-S6-3
+
+47.54 45.04 49.24 47.2 47.76 45.03
+
+153.77 159.59 157.1 151.54 146.58 175.13
+
+66.52 NA 70.25 NA 87.33 NA 81.91 NA 88.9 NA 85.71 NA
+
+40.18 34.98 35.51 37.67 36.01 35.48
+
+37.86 32.97 33.69 36.31 34.04 34.3
+
+INT11, 5 phases
+
+INT11-S1-5 INT11-S2-5 INT11-S3-5 INT11-S4-5 INT11-S5-5 INT11-S6-5
+
+56.44 49.27 51.81 50.84 54.01 48.35
+
+153.77 159.59 157.1 151.54 146.58 175.13
+
+63.93 NA 66.66 NA 67.46 NA 69.12 NA 72.69 NA 78.44 NA
+
+39.47 32.79 35.51 38.51 35.60 35.02
+
+36.98 32.72 33.43 35.88 32.89 33.18
+
+AttendLight multi-env
+37.46 44.76 38.04 38.22 38.48 43.85
+36.74 35.89 38.49 37.1 37.03 35.41
+41.82 58.37 46.7 39.18 43.07 51.09
+44.02 42.14 43.7 44.25 40.29 39.24
+
+Density
+
+8 7 6 5 4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+Figure 7: The comparison of state-attention with mean-state. The  distribution shows the ATT of mean-state over state-attention.
+19
+
+Density Density Density
+
+4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+
+14 12 10 8 6 4 2 0
+-0.2 -0.1 0.0 0.1 0.2 m
+
+14 12 10 8 6 4 2 0
+-0.2 -0.1 0.0 0.1 0.2 m
+
+(a) Before fine-tuning
+
+(b) 200-episode fine-tuning
+
+(c) 1000-episode fine-tuning
+
+Figure 8: These plots show the effect of fine-tuning for 200 and 1000 episodes, vs the multi-env without any fine-tuning.
+
+We implemented this approach and fine-tuned a policy for each of the 112 environment instances. Compared to the result of the single-env regime, the maximum and the average of multi-env gap decrease significantly after 200 training episodes (instead of 100,000 episodes when trained from scratch in single-env regime) such that the ATT-gap decreased to 5% gap in average (without finetuning it was 13%). After 1000 training steps, this gap decreased to 3%. Figure 8 shows the distribution of m which defines m by the single-env after fine-tuned and the single-env before the find tuning. As it is shown, after 200-episode of fine-tuning the distribution of  is concentrated close to zero with a small standard deviation, leaning a bit toward the positive values. With 1000-episode, the distribution is leaned more toward zero with a smaller standard deviation. Need to mention that the fine-tuning is quite fast such that it takes 10 and 43 minutes to fine-tune the policy with 200 and 1000 episodes, respectively.
+A.8 Separated Train/Test ATT ratio distribution
+In page 8, Figure 5 shows the distribution of m for multi-env regime and all the baselines, for all 112 cases. To analyze the performance on test instances, we also depicted the plots for separated test and train environment instances. As it is shown in Figure 9, compared to the distribution of the train-instances, the distribution of the test-instances is leaned a bit toward the right side, which complies the same observation in Figure 4. Also, Figure 10 shows the distribution of m when all baselines are compared with the multi-env policy which is improved by the few-shot training. As it is shown, in all the baselines the results improved such that the distribution is moved to the left and the variance of the distributions are smaller that those in Figure 9.
+B Stochastic Training Regime
+In this section, we propose an alternative multi-env regime, which we refer to it as stochastic multi-env regime, that accelerates the training when we have a large number of intersections. Since running Monte-Carlo simulation for the TSCP is quite costly, it might not feasible to incorporate all training intersection instances at each training step. Unlike the multi-env regime that we considered in this paper, the stochastic multi-env regime chooses a small mini-batch of the environment instances n |M| to reduce the per iteration cost. The rest of the AttendLight algorithm is the same as the multi-env regime.
+To test this approach, we randomly choose n = 5 environment instances from Table 6, and trained the AttendLight with a single layer LSTM of hidden dimension 256, using the learning rate 0.005 in Adam optimizer. Not surprisingly, this approach runs faster than multi-env regime such that it runs 385 episodes at each hour, 4.5 times faster than multi-env regime.
+Figures 11a and 11b show the ATT on stochastic multi-env divided by the ATT on multi-env regime, and the 95% confidence interval among all traffic data of an intersection. We observe that most of the results (except two cases) are statistically equal. To do statistical analysis, the paired T-test on the hypothesis of equality of two regimes indicates that the average of means are statistically different at
+20
+
+Density Density Density Density Density
+
+2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(a) Fixed-time
+
+5 4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+(b) MaxPressure
+
+3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(c) SOTL
+
+4.0 3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(d) DQTSC-M
+
+6 5 4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+(e) FRAP
+
+Density Density Density Density Density
+
+3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(f) Fixed-time
+
+3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 1.0 m
+(g) MaxPressure
+
+2.00 1.75 1.50 1.25 1.00 0.75 0.50 0.25 0.00
+-1.0 -0.5 0.0 0.5 m
+(h) SOTL
+
+2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(i) DQTSC-M
+
+6 5 4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+(j) FRAP
+
+Figure 9: These plots illustrate the density of m over train and test instances. The first row shows the distribution of the training intersection instances and the second row shows the testing intersection instances.
+
+Density Density Density Density Density
+
+4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+(a) Fixed-time
+4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+(f) Fixed-time
+
+4.0 3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(b) MaxPressure
+
+3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(c) SOTL
+
+3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 1.0 m
+(g) MaxPressure
+
+2.00 1.75 1.50 1.25 1.00 0.75 0.50 0.25 0.00
+-1.0 -0.5 0.0 0.5 m
+(h) SOTL
+
+4.0 3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(d) DQTSC-M
+6
+5
+4
+3
+2
+1
+0 -1.0 -0.5 0.0 0.5 m
+(i) DQTSC-M
+
+6 5 4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+(e) FRAP
+6 5 4 3 2 1 0
+-1.0 -0.5 0.0 0.5 m
+(j) FRAP
+
+Density Density Density
+Density Density
+
+Figure 10: These plots illustrate the density of m over train and test instances. The first row shows the distribution of the train-env instances and the second row shows the test-env instances.
+
+confidence level of 95% for INT3 and INT8. In addition, at 90% confidence level, the mean of two algorithms are statistically different for INT4 and INT11-3-phase.
+In addition, Figures 11c and 11d show the ATT ratio for stochastic multi-env regime over the ATT of single-env regime. Considering the environment instances in the training set (Figure 11c), there is an average of 16% ATT degradation with the standard deviation of 0.15 (it was average of 15% and standard deviation of 15% in the multi-env regime). Similarly, on the test set (Figure 11d) stochastic multi-env regime has 15% ATT gap with the standard deviation of 0.22 (on multi-env regime it was 13% and standard deviation of 19%).
+Compared to the benchmark algorithms, in average it achieves 36%, 32%, 27%, and 2% improvement over FixedTime, MaxPressure, SOTL, and DQTSC-M algorithms, respectively. Similar to the multienv regime, FRAP gets smaller ATT, which here is 7%. In addition, Figure 12 shows the distribution of m for all environment instances, suggesting that in most cases stochastic multi-env regime obtains smaller ATT compared to FixedTime, MaxPressure, and SOTL algorithms.
+21
+
+ATT ratio
+
+1.0 0.8 0.6 0.4 0.2 0.0 INT1, 3IpNhTa3s,e2sIpNhTa7s,e4sIpNhTa7s,e8sIpNhTa8s,e3sIpNhTa9s,e4sIpNhTa9s,e8s phases
+
+ATT ratio
+
+1.0 0.8 0.6 0.4 0.2 0.0 INT2, 3IpNhTa4s,e3sIpNhTa5s,e3sIpNhTa6s,e3sIpNhTa7s,e4sIpNhTa7s,e8sINpTh1a0s,e4sINpTh1a0s,e8sINpTh1a1s,e3sINpTh1a1s,e5s phases
+
+(a) Stochastic multi-env vs multi-env (b) Stochastic multi-env vs multi-env regime on testing regime on training intersections instances intersections instances
+
+ATT ratio
+
+1.25 1.00 0.75 0.50 0.25 0.00 INT1, 3IpNhTa3s,e2sIpNhTa7s,e4sIpNhTa7s,e8sIpNhTa8s,e3sIpNhTa9s,e4sIpNhTa9s,e8s phases
+
+ATT ratio
+
+1.50 1.25 1.00 0.75 0.50 0.25 0.00 INT2, 3IpNhTa4s,e3sIpNhTa5s,e3sIpNhTa6s,e3sIpNhTa7s,e4sIpNhTa7s,e8sINpTh1a0s,e4sINpTh1a0s,e8sINpTh1a1s,e3sINpTh1a1s,e5s phases
+
+(c) Stochastic multi-env vs single-env (d) Stochastic multi-env vs single-env regime on testregime on training intersections instances ing intersections instances
+
+Figure 11: The ATT of stochastic multi-env policy divided by ATT of multi-env in sub-Figures a and b, and divided by ATT of single-env policy in sub-Figures c and d. The error bars represent 95% confidence interval for ATT ratio. The closer ATT ratio is to one (red dashed line), the less degradation is caused as a result of using a stochastic multi-env model.
+
+Density Density Density Density Density
+
+3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(a) FixedTime
+
+3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 1.0 m
+(b) MaxPressure
+
+2.00 1.75 1.50 1.25 1.00 0.75 0.50 0.25 0.00
+-1.0 -0.5 0.0 0.5 m
+(c) SOTL
+
+3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(d) DQTSC-M
+
+4.0 3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0
+-1.0 -0.5 0.0 0.5 m
+(e) FRAP
+
+Figure 12: These plots illustrate the density of m over all intersections. Here m < 0 means that the stochastic multi-env outperforms the baseline algorithm.
+
+In summary, stochastic multi-env works well and in most cases obtains statistically equal results with multi-env regime. So, if the number of cases in the training set goes beyond the power available computation resources, the stochastic multi-env regime is a reliable substitute.
+C Environment Details
+In these section, we provide the visualization of 11 intersections and details of the 112 environment instances.
+C.1 Intersection and Phase Visualizations
+Figure 13 and 14 show the visualization of all 11 intersections. The intersections in Figure 13 used to train the multi-env regime and the intersections in Figure 14 are used in the testing of the multi-env regime.
+22
+
+In order to analyze the performance of the trained model on the same intersection with different set of phases, we consider intersection of Figure 13a in the set of training environments and the intersection of Figure 14a in the test set.
+C.2 Description of Each Environment Instance
+Tables 6 and 7 provides the details of all training and testing problems.
+
+case
+Intersection #phase traffic #roads #lane
+case
+Intersection #phase traffic #roads #lane
+case
+Intersection #phase traffic #roads #lane
+case
+Intersection #phase traffic #roads #lane
+case
+Intersection #phase traffic #roads #lane
+
+Table 6: Intersections used for the training of the multi-env regime
+
+INT7-H1-4 INT7-H1-8 INT1-H1-3 INT3-H1-2 INT7-A1-8 INT7-A2-8 INT7-A3-8 INT7-A4-8
+
+INT7 4 H1 4 2
+
+INT7 8 H1 4 2
+
+INT1 3 H1 3 2
+
+INT3 2 H1 3 2
+
+INT7 8 A1 4 2
+
+INT7 8 A2 4 2
+
+INT7 8 A3 4 2
+
+INT7 8 A4 4 2
+
+INT7-A1-4 INT7-A2-4 INT7-A3-4 INT7-A4-4 INT7-A5-4 INT8-H1-3 INT9-S6-4 INT9-S6-8
+
+INT7 4 A1 4 2
+
+INT7 4 A2 4 2
+
+INT7 4 A3 4 2
+
+INT7 4 A4 4 2
+
+INT7 4 A5 4 2
+
+INT8 3 H1 4 2
+
+INT9 4 S6 4 3
+
+INT9 8 S6 4 3
+
+INT1-A2-3 INT1-A3-3 INT1-A4-3 INT1-A5-3 INT3-A1-2 INT3-A2-2 INT3-A3-2 INT3-A4-2
+
+INT1 3 A2 3 2
+
+INT1 3 A3 3 2
+
+INT1 3 A4 3 2
+
+INT1 3 A5 3 2
+
+INT3 2 A1 3 2
+
+INT3 2 A2 3 2
+
+INT3 2 A3 3 2
+
+INT3 2 A4 3 2
+
+INT8-A1-3 INT8-A2-3 INT8-A3-3 INT8-A4-3 INT8-A5-3 INT9-S1-4 INT9-S2-4 INT9-S3-4
+
+INT8 3 A1 4 2
+
+INT8 3 A2 4 2
+
+INT8 3 A3 4 2
+
+INT8 3 A4 4 2
+
+INT8 3 A5 4 2
+
+INT9 4 S1 4 3
+
+INT9 4 S2 4 3
+
+INT9 4 S3 4 3
+
+INT9-S5-4 INT9-S4-8 INT9-S5-8 INT9-S1-8 INT9-S2-8 INT9-S3-8
+
+INT9 4 S5 4 3
+
+INT9 8 S4 4 3
+
+INT9 8 S5 4 3
+
+INT9 8 S1 4 3
+
+INT9 8 S2 4 3
+
+INT9 8 S3 4 3
+
+INT7-A5-8
+INT7 8 A5 4 2
+INT1-A1-3
+INT1 3 A1 3 2
+INT3-A5-2
+INT3 2 A5 3 2
+INT9-S4-4
+INT9 4 S4 4 3
+
+D Other Application Area for Future Research
+D.1 Assemble-to-Order Systems
+This problem refers to the situation where parts of different types need to be assembled into a few known finished products, and the goal is to find the sequence of the products to assemble. Since the number and type of input parts may vary among different products, the problem does not have a fixed-sized input. Moreover, the number of orders at each time changes due to the stochasticity of the customer's demand. So, the number of output products does not have a fixed-size.
+AttendLight can be utilized to solve this problem. The state-attention extracts the state of each product, reflecting the availability of required parts, numbers of possible finished products, etc. The action-attention is responsible for deciding what to produce at each time with the goal of minimizing objectives total make-span, tardiness, and delay time.
+D.2 Dynamic Matching Problem
+In this problem, entities of different types arrive at the system and wait in the queue until they are matched together. Once a matching happens, the entities immediately leave the system and some feedback is observed in terms of a reward signal. The objective is to maximize the longterm cumulative reward while keeping the system stable. This problem is a generalization of the assemble-to-order systems, where the entities can be humans, advertisements, commodities, etc. The AttendLight model can be used in this problem to first, extract the state of each matching option from the system state, and then the action attention chooses the matchings with the highest value.
+23
+
+(a) INT1 (c) INT7, 4-phases (e) INT9, 4-phases
+
+Phase-1 Phase-2 Phase-3
+Phase-1 Phase-2 Phase-3 Phase-4
+Phase-1 Phase-2 Phase-3 Phase-4
+
+(b) INT3 (d) INT7, 8-phases (f) INT9, 8-phases
+
+Phase-1 Phase-2
+Phase-1 Phase-5 Phase-2 Phase-6 Phase-3 Phase-7 Phase-4 Phase-8
+Phase-1 Phase-5 Phase-2 Phase-6 Phase-3 Phase-7 Phase-4 Phase-8
+
+Phase-1 Phase-2 Phase-3
+(g) INT8 Figure 13: All intersection topologies with their available phases which used for the training of the multi-env regime
+24
+
+(a) INT2 (c) INT5 (e) INT10, 4-phases
+
+Phase-1 Phase-2 Phase-3
+Phase-1 Phase-2 Phase-3
+Phase-1 Phase-2 Phase-3 Phase-4
+
+(b) INT4 (d) INT6 (f) INT10, 8-phases
+
+Phase-1 Phase-2 Phase-3
+Phase-1 Phase-2 Phase-3
+Phase-1 Phase-5 Phase-2 Phase-6 Phase-3 Phase-7 Phase-4 Phase-8
+
+Phase-1
+
+Phase-1 Phase-4
+
+Phase-2
+
+Phase-2 Phase-5
+
+Phase-3
+
+Phase-3
+
+(g) INT11, 4-phases
+
+(h) INT11, 8-phases
+
+Figure 14: All intersection topologies with their available phases which used for testing the multi-env regime
+
+25
+
+Table 7: Intersections used for the testing of the multi-env regime
+
+case
+
+INT7-H2-4 INT7-H3-4 INT7-H4-4 INT7-H5-4 INT7-H2-8 INT7-H3-8 INT7-H4-8 INT7-H5-8 INT2-A4-3
+
+Intersection #phase traffic #roads #lane
+
+INT7 4 H2 4 2
+
+INT7 4 H3 4 2
+
+INT7 4 H4 4 2
+
+INT7 4 H5 4 2
+
+INT7 8 H2 4 2
+
+INT7 8 H3 4 2
+
+INT7 8 H4 4 2
+
+INT7 8 H5 4 2
+
+INT2 3 A4 3 2
+
+case
+
+INT2-A3-3 INT2-A5-3 INT2-A1-3 INT2-H1-3 INT4-A4-3 INT4-A3-3 INT4-A5-3 INT4-A1-3 INT4-H1-3
+
+Intersection #phase traffic #roads #lane
+
+INT2 3 A3 3 2
+
+INT2 3 A5 3 2
+
+INT2 3 A1 3 2
+
+INT2 3 H1 3 2
+
+INT4 3 A4 3 3
+
+INT4 3 A3 3 3
+
+INT4 3 A5 3 3
+
+INT4 3 A1 3 3
+
+INT4 3 H1 3 3
+
+case
+
+INT11-S2-3 INT11-S4-3 INT11-S3-3 INT11-S5-3 INT11-S1-3 INT11-S6-3 INT11-S2-5 INT11-S4-5 INT11-S3-5
+
+Intersection #phase traffic #roads #lane
+
+INT11 3 S2 4 3
+
+INT11 3 S4 4 3
+
+INT11 3 S3 4 3
+
+INT11 3 S5 4 3
+
+INT11 3 S1 4 3
+
+INT11 3 S6 4 3
+
+INT11 5 S2 4 3
+
+INT11 5 S4 4 3
+
+INT11 5 S3 4 3
+
+case
+
+INT11-S5-5 INT11-S1-5 INT11-S6-5 INT10-S2-4 INT10-S4-4 INT10-S3-4 INT10-S5-4 INT10-S1-4 INT10-S6-4
+
+Intersection #phase traffic #roads #lane
+
+INT11 5 S5 4 3
+
+INT11 5 S1 4 3
+
+INT11 5 S6 4 3
+
+INT10 4 S2 4 3
+
+INT10 4 S4 4 3
+
+INT10 4 S3 4 3
+
+INT10 4 S5 4 3
+
+INT10 4 S1 4 3
+
+INT10 4 S6 4 3
+
+case
+
+INT10-S2-8 INT10-S4-8 INT10-S3-8 INT10-S5-8 INT10-S1-8 INT10-S6-8 INT4-S1-3 INT4-S2-3 INT4-S3-3
+
+Intersection #phase traffic #roads #lane
+
+INT10 8 S2 4 3
+
+INT10 8 S4 4 3
+
+INT10 8 S3 4 3
+
+INT10 8 S5 4 3
+
+INT10 8 S1 4 3
+
+INT10 8 S6 4 3
+
+INT4 3 S1 4 3
+
+INT4 3 S2 4 3
+
+INT4 3 S3 4 3
+
+case
+
+INT4-S4-3 INT4-S5-3 INT4-S6-3 INT5-A1-3 INT5-A3-3 INT5-A4-3 INT5-A5-3 INT5-H1-3 INT5-S1-3
+
+Intersection #phase traffic #roads #lane
+
+INT4 3 S4 4 3
+
+INT4 3 S5 4 3
+
+INT4 3 S6 4 3
+
+INT5 3 A1 4 3
+
+INT5 3 A3 4 3
+
+INT5 3 A4 4 3
+
+INT5 3 A5 4 3
+
+INT5 3 H1 4 3
+
+INT5 3 S1 4 3
+
+case
+
+INT5-S2-3 INT5-S3-3 INT5-S4-3 INT5-S5-3 INT5-S6-3 INT6-A1-3 INT6-A3-3 INT6-A4-3 INT6-A5-3
+
+Intersection #phase traffic #roads #lane
+
+INT5 3 S2 4 3
+
+INT5 3 S3 4 3
+
+INT5 3 S4 4 3
+
+INT5 3 S5 4 3
+
+INT5 3 S6 4 3
+
+INT6 3 A1 4 3
+
+INT6 3 A3 4 3
+
+INT6 3 A4 4 3
+
+INT6 3 A5 4 3
+
+case
+
+INT6-H1-3 INT6-S1-3 INT6-S2-3 INT6-S3-3 INT6-S4-3 INT6-S5-3 INT6-S6-3
+
+Intersection #phase traffic #roads #lane
+
+INT6 3 H1 4 3
+
+INT6 3 S1 4 3
+
+INT6 3 S2 4 3
+
+INT6 3 S3 4 3
+
+INT6 3 S4 4 3
+
+INT6 3 S5 4 3
+
+INT6 3 S6 4 3
+
+D.3 Wireless Resource Allocation
+In this problem, the goal is to efficiently allocate the spectrum and power of the wireless router to its users. Each user may send or receive packets of different sizes. Users and as well as packets may have different priorities. Therefore, the main task is to send the packets considering their priority, size, arrival time, etc. to minimize a relevant cost function such as the queue length or the total response time of each request. AttendLight can solve this problem: first, state-attention learns to extract the state of each packet with considering the arrival time, priority, size of the packet, type of the data, and other information that may not be available for all packets. Then, the action-attention decides to send which packet next.
+
+26
+
+

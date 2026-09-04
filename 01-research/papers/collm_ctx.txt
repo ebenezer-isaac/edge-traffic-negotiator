@@ -1,0 +1,104 @@
+soning process mimicking human-like intuition to optimize
+traffic management.
+A.4 Performance Comparison with DeepSeek
+R1-671B and O1-mini
+We present the performance comparison results of CoLLMLight
+against the SOTA LLMs, DeepSeek R1-671B, and O1-mini, in Tables
+5 and 4, respectively.
+For DeepSeek R1-671B, we conducted an experiment using the
+New York 1 dataset, selecting the 10% most congested intersections
+to be controlled by the LLM agent, and tested its performance over
+a simulation time span of 1200 seconds. For O1-mini, we evaluated
+its performance in a complete setting, controlling all 196 intersec-
+tions in the New York 1 dataset and simulating traffic for 3600
+seconds. The results further demonstrate the superior performance
+of CoLLMLight.
+Table 4: Performance Comparison between R1 and CoLLM-
+Light, in a setting of 10% controlled by LLM Agents and 1200
+seconds simulation.
+Model A WT ATT
+Deepseek R1-671B 97.148 846.587
+CoLLMLight-8B 70.144 834.433
+Table 5: Performance Comparison between O1mini and
+CoLLMLight, in a setting of 100% controlled by LLM Agents
+and 3600 seconds simulation.
+Model A WT ATT
+====
+4.1.3 Compared Methods. We compare our proposed method with
+two conventional transportation methods: FixedTime [ 10] and
+MaxPressure [23]; six RL-based approaches: MPLight [2], Attend-
+Light [17], PressLight [ 25], CoLight [ 26], Efficient-CoLight [32],
+and Advanced-CoLight [37]; and a SOTA LLM-based method: LLM-
+Light [11]. Additionally, we assess the performance of general LLMs
+integrated within our CoLLMLight framework, including Llama 3.1
+(8B and 70B), Qwen 2.5 (70B), and the Deepseek-R1 distilled models
+(R1-8B and R1-32B).
+4.1.4 Evaluation Metrics. We adopt A verage Travel Time(ATT) and
+A verage Waiting Time(AWT) [11, 28, 37] as evaluation metrics to
+evaluate the performance of various traffic signal control methods.
+Specifically, ATT quantifies the average duration required for ve-
+hicles to travel from their origins to their respective destinations.
+AWT quantifies the average queuing time experienced by vehicles
+at each intersection within the road network.
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Trovato et al.
+Table 2: Zero-Shot Performance Comparison across Different Datasets (Lower Values Indicate Better Performance). Performance
+Rankings: best results in boldface, second-best results with double underline, and third-best results with single underline. The
+lower part of the table shows the performance of various LLMs using the CoLLMLight agent framework.
+Models New York 1 New York 2 Jinan 1 Jinan 2 Jinan 3 Hangzhou 1 Hangzhou 2
+ATT AWT ATT AWT ATT AWT ATT AWT ATT AWT ATT AWT ATT AWT
+FixedTime 1535.65 290.12 1771.74 428.71 481.79 70.98 441.19 66.71 450.11 69.19 616.01 73.98 486.76 72.79
+MaxPressure 1223.26 153.27 1566.77 255.46 282.57 44.53 273.19 38.24 265.75 40.19 325.32 49.60 347.74 70.57
+MPLight 1492.15 262.23 1711.04 364.61 461.76 73.35 482.21 84.57 429.01 67.60 496.15 64.67 440.63 71.47
+AttendLight 1267.74 292.75 1755.28 496.78 392.68 69.05 310.22 63.38 337.39 67.33 327.17 72.85 348.06 68.60
+PressLight 1687.16 508.38 1894.04 489.66 376.88 87.34 410.09 139.17 367.82 93.93 599.95 259.18 539.62 317.85
+CoLight 1443.28 280.61 1704.67 392.05 516.87 93.93 474.35 79.98 491.63 86.16 526.63 74.61 479.84 88.78
+Efficient - CoLight 1266.04 281.32 1645.69 437.33 765.04 532.01 844.80 489.91 846.29 558.33 874.53 466.77 672.38 408.90
+Advanced - CoLight 1037.87 185.49 1428.90 359.79 414.25 138.18 392.89 144.74 441.79 176.21 427.99 235.86 410.79 154.06
+LLMLight - 8B 1187.35 143.06 1599.44 388.74 274.97 43.98 268.57 40.45 259.49 40.12 311.99 39.54 332.46 61.16
+Llama3.1 - 8B 1153.74 148.92 1446.12 224.50 331.32 85.21 310.81 75.21 305.55 79.31 343.20 82.00 353.80 88.27
+Deepseek R1 - 8B 1096.70 120.51 1454.74 325.28 285.94 40.85 272.83 39.51 266.74 38.92 314.19 44.75 336.20 55.06
+Deepseek R1 - 32B 1011.01 114.80 1256.11 202.76 277.36 35.13 266.98 33.78 260.46 34.53 305.81 34.18 323.71 39.01
+Llama3.1 - 70B 1023.15 143.44 1400.00 284.74 293.09 45.56 274.78 39.09 270.74 40.21 314.08 41.98 332.06 53.65
+Qwen2.5 - 72B 1128.54 177.94 1392.48 244.49 279.10 35.66 267.34 33.81 261.30 34.34 304.57 34.28 332.43 46.82
+CoLLMLight - 8B 920.98 85.90 1218.94 170.13 276.41 35.25 266.89 34.50 258.89 34.47 303.77 34.72 326.02 44.12
+4.2 Implementation Details
+We conducted our experiments on Linux servers that were equipped
+with two A800 GPUs. All RL methods are trained with consistent
+hyperparameters: a learning rate of 1 × 10−3, a replay buffer size of
+12,000, a sample size of 3,000, and a hidden size of 20. For LLMs, the
+temperature parameter is set to 0.1. We perform LoRA fine-tuning
+on Llama 3.1 (8B) to obtain LLMLight and CoLLMLight, maintain-
+ing LoRA settings with a rank of 8 and a scaling factor 𝛼 of 16,
+====
+3.1.3, which include congestion risk 𝑛𝑐, traffic analysis Yana, future
+traffic states {O𝑎
+𝑡 +1 | 𝑎 ∈ A} , and the optimal signal configuration
+𝑎∗ for activation.
+To derive congestion risk and traffic analysis, we utilize GPT-4o
+to generate a structured summary of traffic conditions at both the
+assigned intersection and its neighboring intersections:
+𝑛𝑐, Yana = 𝑓GPT-4o(O𝑡 ). (9)
+To estimate future traffic states, we roll out the simulation under
+different signal configurations and collect the corresponding next-
+step traffic states:
+{O𝑎
+𝑡 +1 | 𝑎 ∈ A} = {𝑓sim (O𝑡 , 𝑎) | 𝑎 ∈ A} , (10)
+where 𝑓sim denotes the simulator’s state transition function. To
+determine the pseudo-golden signal 𝑎∗, we simulate various signal
+actions and evaluate their impact on traffic flow. Specifically, we
+select the signal configuration that minimizes the total number of
+queued vehicles over a five-timestep horizon in the neighboring
+intersections:
+𝑎∗ = argmin
+𝑎∈ A
+𝑓queue (O𝑡 , 𝑎), (11)
+where 𝑓queue represents the simulator’s queue length measurement
+function. This pseudo-golden signal serves as an optimal supervi-
+sory signal for training.
+Given the required LLM outputs for each reasoning strategy
+employed, we synthesize the corresponding reasoning chain by a
+structured summarization of GPT-4o. To optimize the LLM, we ap-
+ply supervised fine-tuning, minimizing the negative log-likelihood
+of generating the target reasoning chain:
+loss = −
+|𝑌 |∑︁

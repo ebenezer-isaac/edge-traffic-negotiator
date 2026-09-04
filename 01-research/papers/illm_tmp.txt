@@ -1,0 +1,1148 @@
+ILLM-TSC: INTEGRATION REINFORCEMENT LEARNING AND
+LARGE LANGUAGE MODEL FOR TRAFFIC SIGNAL CONTROL
+POLICY IMPROVEMENT
+A PREPRINT
+Aoyu Pang
+The Chinese University of Hong Kong, Shenzhen, China
+aoyupang@link.cuhk.edu.cn
+Maonan Wang
+The Chinese University of Hong Kong, Shenzhen, China
+Shanghai AI Laboratory, Shanghai, China
+maonanwang@link.cuhk.edu.cn
+Man-On Pun
+The Chinese University of Hong Kong, Shenzhen, China
+simonpun@cuhk.edu.cn
+Chung Shue Chen
+Nokia Bell Labs, Paris, France
+chung shue.chen@nokia-bell-labs.com
+Xi Xiong
+Tongji University, Shanghai, China
+xi xiong@tongji.edu.cn
+July 9, 2024
+ABSTRACT
+Urban congestion remains a critical challenge, with traffic signal control (TSC) emerging as a po-
+tent solution. TSC is often modeled as a Markov Decision Process problem and then solved using
+reinforcement learning (RL), which has proven effective. However, the existing RL-based TSC
+system often overlooks imperfect observations caused by degraded communication, such as packet
+loss, delays, and noise, as well as rare real-life events not included in the reward function, such as
+unconsidered emergency vehicles. To address these limitations, we introduce a novel integration
+framework that combines a large language model (LLM) with RL. This framework is designed to
+manage overlooked elements in the reward function and gaps in state information, thereby enhanc-
+ing the policies of RL agents. In our approach, RL initially makes decisions based on observed
+data. Subsequently, LLMs evaluate these decisions to verify their reasonableness. If a decision is
+found to be unreasonable, it is adjusted accordingly. Additionally, this integration approach can be
+seamlessly integrated with existing RL-based TSC systems without necessitating modifications. Ex-
+tensive testing confirms that our approach reduces the average waiting time by 17.5% in degraded
+communication conditions as compared to traditional RL methods, underscoring its potential to ad-
+vance practical RL applications in intelligent transportation systems. The related code can be found
+at https://github.com/Traffic-Alpha/iLLM-TSC.
+Keywords Traffic Signal Control, Policy Improvement, Large Language Model, Reinforcement Learning, Prompt
+Engineering,
+arXiv:2407.06025v1  [cs.AI]  8 Jul 2024
+iLLM-TSC
+A PREPRINT
+Degraded
+Communication 
+ƽǘ
+ƫǘ+Ǡ
+RSU
+TSC 
+Agent
+Observation
+Emergency  vehicle
+Long-tail Events
+Packet delay, Missing ....
+Figure 1: Challenges in real-world TSC systems: Degraded communication and long-tail scenarios impacting RL
+decision-making.
+1
+Introduction
+Traffic congestion has become a critical issue in urban governance. The increasing number of vehicles in urban areas
+significantly impacts travel efficiency, increases traffic accidents, and exacerbates environmental pollution. Advances
+in electronics and computer technology have paved the way for intelligent transportation systems, which aim to en-
+hance transportation efficiency through optimized control and scheduling decisions. Intelligent traffic signal control
+(TSC) systems, in particular, offer a viable solution to address these efficiency and safety-related challenges [1]. Tra-
+ditional TSC schemes, such as the Webster method [2] and SCATS [3], provide foundational approaches to TSC
+system design. However, these methods are heavily reliant on predetermined parameter settings and struggle to adapt
+dynamically to fluctuations in traffic flow [4].
+To address the limitations of traditional TSC methods, recent research has employed reinforcement learning (RL) to
+utilize real-time sensor data at intersections for decision-making [5]. RL is capable of learning from data and dy-
+namically adjusting control strategies to accommodate real-time variations in traffic, showing impressive performance
+in both single-intersection and multi-intersection scenarios. The effectiveness of RL has been confirmed in large-
+scale implementations. However, most existing studies that apply RL in TSC operate under the assumption of perfect
+observation conditions and absence of communication issues, which are not reflective of real-world scenarios. For
+instance, as shown in Fig. 1, the communication process among vehicles, roadside units (RSUs), and base stations
+can face problems such as packet delays, losses, and noise. These issues can significantly degrade the performance
+of RL models [6]. When dealing with degraded communication scenarios, RL-based methods may make erroneous
+decisions, potentially jeopardizing traffic safety [7,8]. Moreover, very few works consider long-tail scenarios, such as
+those involving emergency vehicles [9]. These challenges undermine the reliability of RL-based methods in practical
+applications, presenting substantial obstacles to the real-world deployment of RL-based TSC.
+Recognizing the limitations of both traditional methods and RL alone, researchers have begun to explore alternative
+solutions that leverage new technological paradigms. Large Language Models (LLMs) are considered prototypes
+of General Artificial Intelligence (GAI) and are seen as potential solutions for addressing the adaptability issues of
+TSC algorithms to dynamic environments [10]. Some efforts have begun exploring the application of LLMs in TSC.
+For example, [11] proposed a framework that utilizes LLMs to optimize urban TSC, overcoming the limitations of
+traditional methods in coping with rapidly changing traffic environments. Similarly, [12] developed a model called
+LA-Light, providing agents with various tools to address complex TSC challenges in the real world. However, despite
+LLMs’ excellent performance in solving decision problems by enhancing the model’s generalization ability, their
+performance remains suboptimal for specific problems, as they do not learn environment-specific policies [13]. In
+contrast, RL models can effectively learn policies directly from environment-specific traffic data. Thus motivated, this
+work aims to leverage the synergy of RL and LLM to achieve better performance.
+2
+iLLM-TSC
+A PREPRINT
+To enhance the generalization ability of TSC systems to environmental changes while effectively handling various
+emergencies such as packet loss or the presence of emergency vehicles, this paper introduces a novel method of
+integration RL and an LLM named iLLM-TSC. Specifically, the iLLM-TSC framework employs RL agents to make
+initial decisions based on observed data, leveraging their ability to learn from specific environments. Subsequently,
+the LLM model refines these decisions by incorporating additional real-time information not initially used by the RL
+agents, such as the presence of emergency vehicles in the environment. This integration of LLM with RL enhances
+the system’s responsiveness and adaptability, allowing the TSC system to maintain high efficiency under standard
+conditions and demonstrating increased robustness in long-tailed or degraded communication scenarios. The main
+contributions of this study are summarized as follows:
+• We model the TSC problem in the real world as an MDP that includes unconsidered elements in the reward function
+and missing state information. This design considers real-world issues such as communication degradation (e.g.,
+packet loss) and emergency vehicles. We provide a hybrid framework that can be seamlessly integrated with existing
+RL-based TSC systems without requiring modifications.
+• We introduce a novel hybrid framework, iLLM-TSC, which integrates RL with LLMs to enhance TSC. This frame-
+work employs a dual-step decision-making process where RL agents initially make decisions based on direct obser-
+vations, and then LLM agents evaluate these decisions considering the broader environmental context.
+• Extensive experiments and tests validate the effectiveness of the proposed iLLM-TSC framework. In scenarios
+with degraded communication, iLLM-TSC reduces the average waiting time by 17.5% compared to traditional
+RL methods. This significant improvement underscores the enhanced scene comprehension capabilities of LLMs,
+tailored specifically for TSC applications.
+The rest of the paper is organized as follows. Section 2 provides a review of the relevant literature. Next, we will
+define transportation terms relevant to the discussion and the problem to be addressed in Section 3. The core of our
+proposed methodology, including the RL module and the LLM module, is detailed in Section 4. Section 5 describes the
+experimental framework, outlines the benchmark methods, and evaluates the performance of our proposed framework
+against these benchmarks. Finally, Section 6 concludes our findings and offers insights into potential avenues for
+future research in this domain.
+2
+Related Works
+2.1
+Traffic Signal Control Methods
+Efficient TSC strategies are crucial for reducing urban congestion. Most of the traditional TSC methods optimize
+traffic signals based on simplistic assumptions or fixed rules. For instance, the Webster method [2] calculates the
+ideal cycle length and allocation of traffic signal phases at intersections based on traffic volume and the assumption of
+traffic flow stability over specific periods. In addition, Self-Organizing Traffic Light Control (SOTL) [14] uses a set of
+predetermined rules to decide whether to continue with the current traffic signal phase or initiate a phase change.
+While traditional TSC systems have achieved some success in mitigating traffic congestion, their effectiveness is
+constrained by their dependence on real-time traffic data and their limited adaptability to quickly changing traffic
+conditions in complex environments. RL-based TSC methods are receiving increasing attention for their dynamic
+management of traffic signals [15]. These RL systems typically use factors such as queue length [8, 16, 17], vehicle
+waiting time [18,19], or intersection pressure [20] as key indicators in their reward functions to reduce traffic conges-
+tion. Additionally, the frequency of signal switching has been considered [21, 22] to prevent the negative impacts of
+rapid signal changes, such as increased stop-and-go driving and the risk of accidents. While RL-based TSC systems
+provide flexibility in optimizing traffic flow through adjustments to reward functions, finding the right balance among
+these factors is still a challenging task. Furthermore, a reward function that fails to account for infrequent yet crucial
+events may not provide agents with the necessary guidance to manage unforeseen circumstances adeptly [23].
+2.2
+Large Language Model Applications
+As LLMs gain recognition across multiple domains [24], there have been several successful applications in the field
+of intelligent transportation recently [11,12,25–27]. [12] proposed a TSC method based on the LLM-Assisted frame-
+work, integrating LLMs into TSC by placing them at the center of the decision-making process and combining them
+with perception and decision-making tools to control traffic signals. Furthermore, [25] introduced LLMLight, a novel
+framework that uses LLMs as decision-making agents for TSC. By leveraging the advanced generalization capabilities
+of LLMs, this framework facilitates a reasoning and decision-making process similar to human intuition, thus improv-
+ing traffic control effectiveness. However, LLMs have not been trained specifically for these corresponding tasks,
+3
+iLLM-TSC
+A PREPRINT
+leading to shortcomings in decision-making for complex traffic issues [28]. This results in a performance disparity
+between TSC models managed by LLMs and those managed by RL. While RL agents are effective, they often fail to
+adapt to new and unseen environments, which restricts their applications in dynamic real-world conditions [29]. Com-
+bining RL with LLMs is expected to potentially compensate for their respective shortcomings and improve overall
+performance.
+Therefore, the integration of LLMs with RL to enhance the model’s capabilities is increasingly attracting attention [30–
+32]. [33] uses LLMs to assist in designing reward functions for RL, helping RL agents better adapt to real-world
+environments. Additionally, LLMs have significant potential in assisting RL agents in decision-making, leveraging
+their abundance of pre-trained global knowledge and powerful modeling capabilities [29, 34]. Although there have
+been many studies combining RL and LLM, they have not yet been applied to TSC. Therefore, we hope to integrate
+LLM and RL for TSC, ensuring efficiency in normal scenarios while enabling the proposed framework to adapt to
+complex real-world situations.
+2.3
+Prompt Engineering
+Currently, LLMs often rely on superficial statistical patterns rather than systematic reasoning, which can degrade their
+performance when faced with simple prompts [35]. To address this limitation, prompt engineering has emerged as
+a crucial technique for enhancing the functionality of LLMs. It helps these models organize their responses more
+logically, resulting in improved answer quality [36, 37]. This approach involves using task-specific prompts to boost
+model effectiveness without modifying the core model parameters [38].
+Prompt engineering utilizes carefully crafted instructions, enabling LLMs to perform effectively across a variety of
+tasks and domains [39]. This adaptability is a significant departure from traditional methods, which typically re-
+quire model retraining or substantial fine-tuning to tailor performance to specific tasks. The importance of prompt
+engineering is underscored by its ability to direct model responses, thereby enhancing the adaptability and practical
+applicability of LLMs.
+Recent studies have been continuously exploring innovative approaches and applications of prompt engineering within
+LLMs [37,40–42]. [42] introduce the Tree of Thoughts (ToT), which uses chain prompts to encourage the exploration
+of ideas as an intermediate step in using LLMs to solve general problems. Furthermore, [40] proposes a prompt
+refinement grading framework that enhances LLM capabilities through more detailed instructions and objectives.
+In addition, [43] presents a Retrieval Augmented Generation (RAG) architecture, combining information retrieval
+components with seq2seq generators, which can better handle knowledge-intensive tasks. Faced with scenarios like
+TSC with strong rule constraints, we combine these works to design a set of prompts to exploit LLM performance
+better, prevent LLM hallucinations, and improve overall framework performance.
+3
+Preliminaries and Problem Formulation
+3.1
+Traffic Movements and Phases
+Movement: A standard four-legged road intersection comprises four entrances: East (E), West (W), North (N), and
+South (S). Traffic movement refers to vehicles transitioning from an incoming approach to an outgoing one. As
+depicted in Fig. 2, this intersection has four entrances, labeled E0, E1, E2, and E3. Each entrance facilitates two
+movements: turning left (l) and proceeding straight (s). For instance, E0 l denotes a vehicle originating from E0
+and intending to turn left. This study omits right turns, premised on the assumption that right turns are perpetually
+permissible in jurisdictions adhering to left-hand traffic regulations. As a result, there are eight possible movements at
+the intersection, referred to as m1, m2, m3, m4, m5, m6, m7, and m8 in the subsequent sections, and mi ∈M.
+Phase: A phase represents a set of movements that can be executed concurrently without causing conflicts. Given the
+consideration of only green and red signals, a phase can be conceptualized as a collection of permitted movements,
+with all others being prohibited. Fig. 2 illustrates the four phases of a standard four-way intersection, denoted as
+P = {0, 1, 2, 3}. For example, Phase-1 allows movements E0 s and E1 s to occur simultaneously.
+Time and Time Slot: An RL agent takes an action to choose the next phase every time slot of τ seconds. Unless
+specified otherwise, we set τ = 5 in the sequel.
+3.2
+TSC as an MDP Problem
+An RL agent learns to make decisions through interactions with an environment modeled as a Markov Decision
+Process (MDP) [44], defined by the tuple (S, A, P, R, γ). In the context of TSC, S represents the set of states, which
+4
+iLLM-TSC
+A PREPRINT
+E0
+E1
+E2
+E3
+(a) Phase-0
+E0
+E1
+E2
+E3
+(b) Phase-1
+E0
+E1
+E2
+E3
+(c) Phase-2
+E0
+E1
+E2
+E3
+(d) Phase-3
+Figure 2: Illustration of the four phases of traffic signals in a standard 4-way intersection considered in this work.
+encapsulates both static and dynamic aspects of the intersection. A denotes the set of possible actions that adjust the
+traffic signals. P defines the transition probabilities between states, R is the reward function, typically the negative
+average waiting time of vehicles, and γ ∈(0, 1) is the discount factor. At time t, the agent’s strategy, given state
+st ∈S and action a ∈A, is defined by the policy π : S →A such that π(st) = at. The objective is to develop
+an agent for TSC with an optimal policy π∗that determines the best action a based on dynamic traffic conditions to
+maximize the cumulative reward:
+π∗(s) = arg max
+a
+E
+" ∞
+X
+t=0
+γtrt | s0 = s, a0 = a
+#
+,
+(1)
+where rt represents the reward given the current state st and the action taken at. Details of the RL model are discussed
+in Section 4. This study focuses on the MDP model under two practical scenarios: (1) Imperfect state acquisition,
+referred to as the degraded communication scenario, and (2) Situations unaccounted for by R, such as emergency
+vehicles or accidents, referred to as the long-tail events.
+In real-world applications, an agent interacts with the environment through some communication channel. Since
+the communication channel is often imperfect, observations can be affected by noise and may even be lost during
+transmission [7]. The mathematical model for the data transmitted under degraded communication conditions is
+expressed as:
+fdegraded(x) =
+x + β · η
+with probability (1 −p)
+0
+with probability p
+,
+(2)
+where x represents the original data being transmitted. Here, p denotes the packet loss rate, which reflects the proba-
+bility that a data packet is completely lost during transmission due to factors such as limited bandwidth or interference
+among vehicles [45]. The variable η ∼N(0, 1) represents the noise, introducing random errors that can lead to incor-
+rect interpretations of traffic conditions [46]. The parameter β is a scaling factor for the noise. Observations during the
+training process of the agent are generally perfect, thus π(fdegraded(st)) may have difficulty providing an appropriate
+at, and it may even harm normal TSC.
+5
+iLLM-TSC
+A PREPRINT
+Another issue is that real-world scenarios are complex, and many situations are often neglected in designing R for
+TSC systems. An example is the arrival of an emergency vehicle such as an ambulance at an intersection, as illus-
+trated in Fig. 1. In this situation, the primary objective shifts from maximizing intersection efficiency to enabling the
+emergency vehicle to pass through as swiftly as possible. These rare but critical scenarios are difficult to account for
+comprehensively in the design of R.
+Therefore, this study aims to leverage the generalization and logical reasoning capabilities of LLMs to develop more
+resilient TSC systems. We propose a policy improvement method designed to handle both unconsidered elements
+in the reward function and missing state information. This approach enhances our method’s suitability for scenarios
+characterized by degraded communication and long-tail events, ensuring that the system can maintain both efficiency
+and safety under a broader range of real-world conditions.
+Final Action 
+& Explanation
+Observation
+Environment
+Initial 
+Action
+Action Generation
+RL Agent
+Observation
+Action
+Refinement
+TSC Assessment
+Policy 
+Network
+. . .
+Value 
+Network
+Action
+ Essential hints + 
+Data + Logical Chain 
+Extract action
+Encoder traffic 
+observation into 
+natural languag
+Data
+Answer
+Figure 3: The detailed structure of the proposed iLLM-TSC system.
+4
+Methodology
+As illustrated in Fig. 3, we introduce a framework called iLLM-TSC that combines LLM and an RL agent for TSC.
+This framework initially employs an RL agent to make decisions based on environmental observations and policies
+learned from the environment, thereby providing preliminary actions. Subsequently, an LLM agent refines these
+actions by considering real-world situations and leveraging its understanding of complex environments. This approach
+enhances the TSC system’s adaptability to real-world conditions and improves the overall stability of the framework.
+Details regarding the RL agent and LLM agent components are provided in the following sections.
+4.1
+RL Agent Design
+In the proposed method, the RL agent plays a pivotal role in making informed TSC decisions. This section outlines
+the three essential components that constitute the RL agent: state, action, and reward. Each component is critical
+for the agent’s operation within the TSC environment, influencing its decision-making process in real-time traffic
+management.
+State: The following five state variables (SVs) are defined to characterize each movement mi for i = 1, 2, · · · , 8.
+1. Flow Speed (SV1): The average speed of vehicles in the movement, or -1 if there are no vehicles in the movement;
+2. Mean Occupancy (SV2): This is the ratio between the total length of roads occupied by vehicles and the total length
+of lanes, averaged over one-time slot;
+3. Jam length meters (SV3): This variable captures the total length of traffic jams in meters for each movement;
+4. Jam length vehicles (SV4): This variable captures the total length of traffic jams in terms of the number of vehicles;
+5. Current Phase (SV5): A binary variable, indicating whether the movement is passable at the time of current
+observation or not.
+6
+iLLM-TSC
+A PREPRINT
+In our study,
+the state of each movement mi
+at time t is then represented by the vector Si
+t
+=
+
+SV i
+1 (t), SV i
+2 (t), . . . , SV i
+5 (t)
+
+for i = 1, 2, . . . , 8. Each element of this vector captures specific traffic data relevant to
+the movement mi at the intersection.
+After transmission, the state information for each movement is subjected to communication degradation, modeled
+as ¯Si
+t = fdegraded(Si
+t). This transformation simulates the effects of packet loss and noise on the transmitted data, as
+discussed earlier. Consequently, the collective state for all movements at time t, considering degraded communication
+scenarios, is given by:
+st =
+ ¯S1
+t , ¯S2
+t , · · · , ¯S8
+t
+T ,
+(3)
+where st ∈R8×5 and (·)T is the transpose operator.
+Action: Upon the conclusion of a given time slot, the RL agent executes an action at ∈P , selecting a phase from all
+the array of available phases for the forthcoming time slot.
+Reward: The objective of the RL agent is to minimize the waiting time of vehicles. In this work, the average waiting
+time of vehicles is employed as the reward.
+4.2
+Training RL Agent for Initial TSC Decisions
+The training of the RL-based agent is a critical aspect of the proposed framework. In this study, the Proximal Policy
+Optimization (PPO) algorithm [47] is employed to train the RL agent. PPO is chosen due to its suitability for policy-
+based reinforcement learning in environments with both discrete and continuous action spaces. This study utilizes two
+primary neural networks, namely a policy network denoted as πθ and a value network denoted as vϕ, where θ and ϕ
+are the respective network parameters. The policy network generates a probability distribution over the actions, given
+the current state, while the value network estimates the expected future return for that state. The traffic intersection
+observations st are used as input for both networks, generating πθ(st) and vϕ(st). Next, the following PPO objective
+is proposed by taking into account both a policy loss Lp(θ) and a value function loss Lv(ϕ):
+F(θ, ϕ) = −Lp(θ) + λLv(ϕ),
+(4)
+where λ is a hyperparameter that balances the two loss terms. Furthermore, the policy loss function Lp(θ) is defined
+as:
+Lp(θ) = ˆEπ
+h
+min
+
+J(θ) ˆAt, clip (J(θ), 1 −ϵ, 1 + ϵ) ˆAt
+i
+,
+(5)
+where ˆEπ denotes the empirical expectation under policy πθ while ϵ represents the clipping range. Furthermore, J(θ)
+and ˆAt take the following form:
+J(θ)
+=
+πθ(at|st)
+π˜θ(at|st),
+(6)
+ˆAt
+=
+rt+1 + γvϕ(st+1) −vϕ(st),
+(7)
+where γ is the discount factor that determines the present value of future rewards. πθ(·|·) and π˜θ(·|·) stand for the
+current and previous policy, respectively. The previous policy π˜θ(·|·) is used as a reference to ensure that the policy
+updates are consistent with the previous policy.
+Finally, the value function Lv(ϕ) is computed as the mean-squared error between the predicted state values vϕ(s) and
+the actual discounted returns:
+Lv(ϕ) = ˆEπ
+
+ˆAt
+2
+.
+(8)
+By minimizing this loss, the agent learns to predict the expected return from each state more accurately, which in turn
+helps the agent to choose better actions.
+4.3
+Encoding Traffic Scenario into Text
+As previously discussed, implementing RL-based TSC systems in real-world environments presents challenges, pri-
+marily due to the systems’ limited understanding of the environment, which is crucial for effective decision-making.
+Conversely, LLMs can enhance decision-making by interpreting the current traffic conditions at intersections through
+natural language.
+7
+iLLM-TSC
+A PREPRINT
+Role to be played: TSC Assessment
+Essential hints for decision-making:
+1. You must output a decision when you finish this task. 
+2. Your final output decision must be unique and not 
+ambiguous.
+3. You need to know your available actions and junction state 
+before you make any decision.
+4. Emergency vehicles have priority through intersections.
+5. [...]
+Logical chain of answers:
+1. Decision:Traffic light decision-making  judgment  whether 
+the Action is reasonable in the current state.
+2. Explalanation: Your explanation about your decision, 
+described your suggestions to the Crossing Guard. The 
+analysis should be as detailed as possible, including the 
+possible benefits of each action.
+3. Final Action: ONLY the number of Action you suggestion, 
+0, 1, 2 or 3
+Traffic scenario description:
+Static 
+1.  Phase to Movement
+2.  Action space  and their corresponding phases
+Dynamic
+1.  RL Agent Action
+2.  Mean occupancy of each movement
+3.  Number of cars waiting in each movement 
+4.  Movements exist emergency vehicles
+Answer Format:
+Format the output as JSON with the following keys: 
+```json
+{
+    "decision": string  // Judgment whether the RL Agent's ....
+    "expalanations": string  // Your explaination about ...
+    "final_action": string  // ONLY the number ...
+}
+Figure 4: The schematic diagram of LLM as a traffic assistant, illustrates the three-stage architecture of LLM in traffic
+control: formulating thought programs, acquiring environmental information, and optimizing RL actions.
+However, LLMs generally require inputs in natural language, which means the intersection information matrix st
+cannot be used directly. It is therefore essential to translate the traffic scenario into a comprehensible natural language
+description. Fig. 4 illustrates the structured prompt in natural language, which consists of five parts: the role of
+the LLM, essential hints for decision-making, a description of the traffic scenario, the logical chain to guide LLM
+reasoning, and the desired answer format.
+The first part of the prompt explicitly defines the role of the LLM to ensure it understands its function in the scenario.
+In this context, the LLM acts as a virtual tsc assessment, guiding its decision-making process. The second part provides
+contextual information, including traffic rules and decision-making logic, which assists the LLM in making informed
+decisions.
+8
+iLLM-TSC
+A PREPRINT
+The third part, the traffic scenario description, is the most crucial. Here, the scenario is translated into a text description
+that the LLM can interpret. This description encompasses both static and dynamic information: static information
+covers intersection topology and traffic phase information, while dynamic information includes real-time data such as
+lane occupancy and average speed, along with the proposed RL action at = πθ(st).
+The fourth part, the logic chain, assists the LLM in reasoning. It begins by analyzing the reasonableness of the RL
+decision, followed by providing explanations, and concludes with a recommended decision based on this analysis.
+The final part of the prompt specifies the output format for the LLM, instructing it to provide responses in a specific
+JSON format. This structured output facilitates the use of regular expressions to extract results for automatic analysis.
+This structured approach not only ensures that the LLM can interpret and analyze the traffic scenario effectively but
+also aligns with the requirements for integrating these insights into practical traffic management systems.
+4.4
+Enhancing RL Decisions with LLM Feedback
+After the traffic scene is translated into a natural language description, the LLMs can be employed to refine the
+decisions made by the RL agent. This process begins by inputting prompt Ωinto the LLM model PLLM. The LLM
+aims to maximize the probability of generating the optimal sequence of actions as described by Eq. (9), producing
+each character sequentially.
+p(Ot | Ω) =
+|Ot|
+Y
+i=1
+pLLM(oi | Ω, o<i),
+(9)
+where oi represents the i-th token, and Ot indicates the total number of tokens in the final response. The term o<i
+denotes all tokens preceding the i-th token. To ensure the LLM outputs are in the required format, we utilize regular
+expressions to extract the decision from Ot. However, as the LLM output may not always conform to the expected
+format, a maximum of K attempts is allowed. If the system exceeds K attempts without obtaining a correctly format-
+ted response, the original RL decision is executed. Algorithm 1 details the combined RL and LLM decision-making
+process in iLLM-TSC.
+According to Algorithm 1, the iLLM-TSC framework synergizes the strengths of RL and LLM to enhance the decision-
+making process in TSC systems. The LLM contributes its advanced capabilities in logical reasoning to analyze the
+actions proposed by the RL agent, thereby increasing the reliability of the system. Should there be a discrepancy
+between the RL suggestion and the LLM’s logical framework, the LLM intervenes to adjust the action, ensuring the
+stability and robustness of the traffic management system. This collaborative approach not only leverages the policy
+power of RL but also utilizes the contextual understanding of LLM to optimize traffic control decisions effectively.
+Algorithm 1 iLLM-TSC Inference Process
+1: Initialize environment and load RL model;
+2: Define K as the maximum number of attempts to refine the RL decision with LLM feedback;
+3: for each timestep t do
+4:
+Observe state st from the TSC environment;
+5:
+Get action at = πθ(st) from RL agent;
+6:
+for i ←1 to K do
+7:
+Convert state st to natural language prompt Ω;
+8:
+Get output Ot from LLM model PLLM using Ω;
+9:
+Attempt to extract action using regex on Ot;
+10:
+if action is successfully extracted then
+11:
+at ←extracted action;
+12:
+break;
+13:
+end if
+14:
+end for
+15:
+Apply action at to the environment;
+16:
+Observe next state st+1;
+17: end for
+9
+iLLM-TSC
+A PREPRINT
+Table 1: Comparison of model performance under normal or degraded communication scenario
+Model
+Normal Vehicles
+Emergency Vehicles
+Mean Travel Time
+Mean Waiting Time
+Mean Speed
+Mean Travel Time
+Mean Waiting Time
+Mean Speed
+Normal Scenarios
+Fix duration
+89.0
+22.6
+8.4
+106.5
+40.5
+6.7
+SOTL
+88.3
+19.8
+8.4
+85.5
+21.0
+8.2
+ADLight
+88.0
+18.6
+8.5
+90.5
+17.0
+7.9
+EMVLight
+84.8
+17.4
+8.8
+76.0
+10.0
+9.3
+SARL-TSC
+79.5
+14.3
+9.2
+97.5
+31.0
+7.3
+iLLM-TSC
+86.5
+16.4
+8.7
+80.5
+11.5
+8.5
+Degraded Communication Scenario
+SOTL
+89.4
+21.3
+8.3
+97.5
+23.8
+7.8
+ADLight
+89.1
+20.6
+8.5
+96.5
+22.0
+7.8
+EMVLight
+89.5
+21.1
+8.5
+93.7
+13.0
+8.0
+SARL-TSC
+83.6
+18.8
+8.5
+116.0
+36.0
+7.7
+iLLM-TSC
+88.3
+17.0
+8.5
+92.0
+9.5
+8.1
+5
+Experiment and Analysis
+5.1
+Experimental Setting
+Extensive experiments were conducted on the Simulation of Urban MObility (SUMO) platform. We simulated an
+intersection with the phase structure shown in Fig. 2, where a green light was followed by a yellow light for 3 seconds
+before changing to a red light. Extension to more intersection types and more complex light phasing can be performed
+straightforwardly. The duration of each time slot τ is set to 5 seconds. The LLM used in the following experiment was
+GPT-4 recently released by OpenAI. The RL parameters were configured as follows: the discount factor γ was set to
+0.99, the trace-decay parameter λ was set to 0.9, and the policy clipping range ϵ was established at 0.2. Additionally, we
+simulated a packet loss rate p of 0.2 and introduced a scaling factor for noise β of 0.1 to mimic realistic communication
+conditions. Furthermore, to evaluate the robustness and adaptability of the RL model when integrated with LLM
+feedback, we set the maximum number of attempts to refine the RL decision based on LLM feedback at K = 3.
+5.2
+Compared Methods
+Our evaluation encompasses five benchmark methods: two traditional TSC methods and three RL-based algorithms,
+detailed as follows:
+1. Fixed duration control: Fixed duration signal control algorithm is the most traditional method of TSC by pre-setting
+the traffic signal’s phase sequence, phase duration, and cycle time in advance. In our experiment the fixed duration
+is set 25s;
+2. SOTL model [14]: SOTL algorithms utilize straightforward rules and indirect communication to enable traffic
+lights to organize and adjust to dynamic traffic conditions autonomously, leading to a reduction in waiting times.
+3. ADLight [18]: ADLight is a method for controlling traffic signal lights based on the PPO strategy in RL. Integrating
+features of movement and action with the set current phase duration ensures uniformity in model structure across
+different intersections.
+4. EMVLight [9]: EMVLight is an RL framework that considers emergency vehicles (EMV) in TSC. This framework
+addresses the coupling issue between EMV navigation and TSC. EMVLight not only reduces the travel time of
+background vehicles but also shortens the waiting time of EMVs.
+5. SARL-TSC [16]: SARL-TSC proposes a two-stage framework and leverages temporal information to enhance the
+robustness of the RL model against observation-impaired. The feature extraction model utilized in this framework
+is the EAttention.
+5.3
+Evaluation Metrics
+We leverage mean travel time, mean waiting time, and mean speed of vehicles to evaluate the performance of different
+actions made by TSC agents.
+1. Mean travel time: The mean travel time quantifies the average duration of all the vehicles traveling from their
+origins to their destinations.
+10
+iLLM-TSC
+A PREPRINT
+2. Mean waiting time: The mean waiting time quantifies the average queuing time of vehicles at every intersection in
+the road network.
+3. Mean speed: The mean speed quantifies the average speed of vehicles traveling from their origins to their respective
+destinations.
+5.4
+Comparative Performance Analysis
+Table 1 provides a performance comparison between iLLM-TSC and baseline algorithms under both normal and
+degraded communication scenarios. Under normal circumstances, iLLM-TSC ensures rapid passage for emergency
+vehicles while sustaining efficiency for conventional vehicles. Specifically, iLLM-TSC enhances the average travel
+time, average waiting time, and mean speed for all vehicles by 2%, 11.9%, and 3%, respectively, compared to AD-
+Light. The significant improvement in mean waiting time relative to travel time and speed can be attributed to the RL
+optimization target being primarily focused on reducing waiting times at intersections, whereas travel time and speed
+are influenced by overall traffic density. This prioritization results in a more substantial reduction in waiting times.
+Furthermore, when compared to SARL-TSC, which utilizes temporal sequence data, iLLM-TSC shows a minor deficit
+in overall vehicle throughput strategy. This difference arises because SARL-TSC focuses solely on maximizing junc-
+tion efficiency, neglecting the prioritization of emergency vehicles. In contrast, iLLM-TSC reduces the waiting time
+for emergency vehicles by 62.9% compared to SARL-TSC, benefiting from the integration of LLM capabilities that
+enhance scene understanding and enable human-like reasoning during incidents.
+Compared to EMVLight, a method specifically addressing emergency vehicle prioritization, iLLM-TSC has a slightly
+longer average waiting time for emergency vehicles by 13.0%. However, EMVLight faces challenges in optimally
+balancing reward weights for normal vehicles and emergency vehicles during training, which compromises its vehicle
+control strategy for normal traffic conditions, leading to a 19.4% increase in average waiting time for all vehicles
+compared to iLLM-TSC. Overall, iLLM-TSC not only facilitates quicker passage for emergency vehicles but also
+maintains efficient average waiting times for general traffic. The addition of an LLM provides the system with en-
+hanced adaptability and the capability to manage unexpected situations effectively.
+Under degraded communication scenarios, all RL models that rely on observations experience a decline in perfor-
+mance, with the exception of the traditional Fixed Time control method. For instance, when compared with the
+ADLight model, our iLLM-TSC framework achieves a 17.5% improvement in mean waiting time. Furthermore,
+SARL-TSC, which performs optimally under normal conditions, exhibits a 10% increase in mean waiting time com-
+pared to iLLM-TSC in scenarios with compromised communication. While the Fixed Time control method remains
+unaffected by communication quality degradation, its mean waiting time is 25% higher than that observed with iLLM-
+TSC. This disparity is due to iLLM-TSC’s ability to compensate for information loss. Specifically, when data is
+missing or incomplete, the LLM component of iLLM-TSC detects issues in the current scenario and disregards the
+RL suggestions, instead applying common sense and any relevant information to reach a decision. Further details and
+examples of this process will be provided in Section 5.6.
+Additionally, iLLM-TSC significantly enhances emergency vehicles response efficiency in degraded communication
+scenarios. Compared to EMVLight, iLLM-TSC improves the mean waiting time for emergency vehicles by 35%, and
+also shows better performance in terms of mean speed and travel time. These results demonstrate that iLLM-TSC’s
+strategy of utilizing RL for decision-making under normal conditions and leveraging LLM capabilities under special
+circumstances effectively enhances system performance across various scenarios.
+Table 2: Ablation experiments on the levels of detail in the prompt
+Role
+Hints
+Scenario Description
+Logic
+Format
+Level 1
+✓
+✓
+✓
+Level 2
+✓
+✓
+✓
+✓
+Level 3
+✓
+✓
+✓
+✓
+✓
+5.5
+Prompt Ablation Experiments
+To investigate the influence of prompt components on the performance of LLMs, we conducted a series of ablation
+experiments based on the prompt structure depicted in Fig. 4. The prompt is composed of five elements: (1) the role of
+the LLM (role), (2) essential hints for decision-making (hints), (3) description of the traffic scenario (traffic scenario),
+(4) logical reasoning chain (logic), and (5) the format of the answer (format). Given the necessity for the LLM to
+comprehend the environment and respond in a specific format, the role, traffic scenario description, and answer format
+11
+iLLM-TSC
+A PREPRINT
+(a)
+(b)
+Figure 5: Comparison of the relative performance of different LLMs Using different level prompts. (a) Normal
+Vehicles. (b) Emergency Vehicles.
+are considered fundamental components. Consequently, our experiments focused on evaluating the impact of the hints
+and logic elements. The specific experimental conditions are detailed in Table 2. To assess the effects of varying
+prompts on different LLMs, we employed both GPT-3.5 and GPT-4 models. We introduced the mean waiting time
+ratio as the performance metric, defined as the ratio of the mean waiting time under each experimental condition to
+that obtained using the base level (Level 1) prompt with GPT-3.5 in the same traffic scenario. The experimental results
+are illustrated in Fig. 5.
+As depicted in Fig. 5(a), both GPT-3.5 and GPT-4 models exhibit optimal performance with the Level 3 prompt
+configuration. The transition from Level 1 to Level 2 prompts results in approximately a 20% improvement for GPT-
+3.5 and a 15% improvement for GPT-4 in performance, highlighting the beneficial role of adding logical reasoning
+components to the prompts. Further enhancement of about 5% is observed when progressing from Level 2 to Level 3,
+highlighting the significance of providing hints for LLM decision-making. Additionally, comparisons between the two
+models show that GPT-4 outperforms GPT-3.5 when using the same prompt, suggesting that advancements in LLM
+technology also play a crucial role in decision-making effectiveness. Moreover, for emergency vehicle scenarios, as
+shown in Fig. 5(b), employing a Level 3 prompt with GPT-3.5 results in a significant improvement of about 64%
+compared to the Level 1 prompt. This indicates that a well-structured prompt, incorporating logical reasoning and
+hints, substantially aids the LLM in making more effective decisions in complex traffic management scenarios.
+12
+iLLM-TSC
+A PREPRINT
+Level 1 
+Decision:  reasonable,
+Expalanations : "The RL Agent's decision to take Action 1 is reasonable given the current state. Action 1 
+corresponds to 'Phase 1' which includes movements 'E0_l' and 'E1_l'  ...   Although there is an emergency 
+vehicle at 'E3_s', this movement is not included in 'Phase 1' . However, since there is an information loss at 
+'E0_s', it is difficult to accurately assess the situation. Therefore, it would be beneficial to monitor the 
+situation closely and adjust the action if necessary ... 
+Final action:  1
+Level 2
+Decision:  reasonable,
+Expalanations:  The RL Agent's Action 1 corresponds to Phase 1, which allows movements 'E0_l' and 'E1_l'. 
+Given the high number of cars (92) waiting in the 'E1--l' movement, prioritizing this phase is essential to 
+alleviate significant congestion.  Although there is an emergency vehicle in 'E3--s', we must ensure maximum 
+traffic efficiency. Action 1 will effectively reduce the backlog of vehicles waiting to turn left from 'E1--l' and 
+also address the vehicles waiting in 'E0--l' ....
+Final action:  1
+Level 3
+Decision:  unreasonable,
+Expalanations:  ... The highest vehicle occupancy is in the 'E1_l' movement, which is indeed covered by 
+Phase 1. However, there is an emergency vehicle in the 'E3_s' movement, which is covered by Phase 2. 
+According to the rules, emergency vehicles have priority through intersections. Therefore, it would be more 
+reasonable to take Action 2 (Phase 2) to allow the emergency vehicle to pass through the intersection as 
+quickly as possible ....
+Final action:  2
+Observation 
+The decision RL Agent make thie step is `Action：1`. 
+The vehicles mean occupancy of each movement is: E1_s : 12.3% ... 
+The number of cars waiting in each movement is: E1_s: 3 ...
+Now these movements exist emergency vehicles ...
+E3
+E0
+E2
+E1
+Phase-0
+Phase-1
+Phase-2
+Phase-3
+Figure 6: Comparison of LLM Outputs for Level 1, Level 2, and Level 3 Prompts in a Normal Traffic Scenario with
+an Emergency Vehicle.
+To further understand the influence of various prompt components on the performance of the LLM, we conducted ex-
+periments using three different levels of prompts. These experiments were carried out under normal traffic conditions,
+which also included the presence of emergency vehicles, using the GPT-4 model. The outcomes of these experiments
+are illustrated in Fig. 6. The figure’s first row displays the current traffic scenario and the corresponding observations,
+followed by the results for each prompt level.
+Using Level 1 prompts often led to errors and outputs that were logically inconsistent. Specifically, although the LLM
+recognized the presence of an emergency vehicle at E3 s, it failed to accurately identify the traffic phase where the
+emergency vehicle was located and the congestion levels at each phase. Consequently, it was unable to prioritize
+the emergency vehicle. With Level 2 prompts, which included a logical chain of reasoning, the LLM demonstrated
+improved decision-making by acknowledging the presence of emergency vehicles. However, the model tended to
+prioritize the flow of the highest number of vehicles, aiming to enhance traffic efficiency. This approach does not align
+with real-world traffic management practices, where emergency vehicles should be given precedence. At Level 3, the
+LLM provided more accurate explanations and correctly prioritized the passage of the emergency vehicle, adhering to
+established traffic rules. This level clearly shows the importance of including comprehensive details in the prompts to
+guide the LLM in making decisions that conform to real-world traffic management protocols.
+Continuously refining prompt details allows us to better constrain the output of LLM agents, leveraging their capa-
+bilities to provide decisions and explanations more closely aligned with human cognition. This facilitates improved
+collaboration with LLM and RL agents in tasks such as TSC.
+5.6
+Typical Case Studies
+In this section, we analyze how RL and LLMs collaborate in decision-making through three cases.
+13
+iLLM-TSC
+A PREPRINT
+Observation
+Initial Action
+E0-s has 
+more vehicles
+E0
+E3
+E2
+E1-l has some 
+waiting vehicles 
+E1
+iLLM-TSC (Normal Scenario)
+Observation:
+The step time is:"189"
+The decision RL Agent make thie step is `Action：1`.
+The vehicles mean occupancy of each movement is:`{'E0_s': '29.6%', 
+'E1_s': '7.9%', 'E0_l': '3.4%', 'E1_l': '28.0%', 'E2_s': '0.0%', 'E3_s': '7.2%', 
+'E3_l': '10.5%', 'E2_l': '0.0%'}`. 
+The number of cars waiting in each movement is：`{'E0_s': 0, 'E1_s': 
+3, 'E1_l': 0, 'E0_l': 7, 'E3_s': 0, 'E2_s': 0, 'E3_l': 0, 'E2_l': 0}`. 
+[...]
+Phase-0
+Phase-1
+Phase-2
+Phase-3
+Expalanation
+Final Action
+E0
+E3
+E1
+E2
+Choose 
+Phase 1
+"final_action": "1"
+"decision": "reasonable",
+"expalanations": "The RL agent's decision to take Action 1 is
+reasonable. Action 1 corresponds to Phase 1, which controls the movements
+'E0_l' and 'E1_l'. The occupancy rates for these movements are 3.5% and
+28% respectively, and the number of waiting cars are 0 and 16 respectively.
+This indicates a significant amount of traffic in the 'E1_l' movement, which
+justifies the decision to take Action 1. Furthermore, there are no emergency
+vehicles present in the intersection, so there is no need to prioritize other
+movements. Therefore, the RL agent's decision is reasonable and should
+help to alleviate traffic congestion in the 'E1_l' movement."
+Decision:
+Final Action:
+Phase-0
+Phase-1
+Phase-2
+Phase-3
+Figure 7: Case 1: Normal Scenario. LLM confirms no special events; RL decision aimed at minimizing intersection
+wait times is endorsed and implemented.
+Expalanation
+Final Action
+EMV Vehicle
+Through
+E0
+E3
+E1
+E2
+Final Action:
+"final_action": "2"
+Decision:
+"decision" : "unreasonable",
+“expalanations”: “The RL Agent‘s decision is to stay in Phase 0 (Action
+0), which controls the movements 'E0_s' and 'E1_s'. However, the occupancy
+rates for these movements are relatively low (9.33% and 3.5% respectively)
+and the number of waiting cars is also low (7 and 3 respectively). On the
+other hand, the 'E1_l' movement has a high occupancy rate (10.5%) and a
+high number of waiting cars (16). Moreover, there is an emergency vehicle
+in the 'E3_s' movement, which should be given priority. Therefore, it would
+be more reasonable to switch to Phase 2 (Action 2), which controls the '-
+E3_s' movement, to allow the emergency vehicle to pass, and then to Phase 1
+(Action 1), which controls the '-E1_l' movement, to reduce congestion."
+Observation
+Initial Action
+E0
+E3
+E1
+E2
+EMV 
+Vehicle
+Waiting
+Vehicles
+iLLM-TSC (Emergency Vehicles Scenario)
+Observation:
+The step time is:"72"
+The decision RL Agent make thie step is `Action：0`.
+The vehicles mean occupancy of each movement is:`{'E0_s': '9.3%', 
+'E1_s': '3.5%', 'E0_l': '0.0%', 'E1_l': '10.5%', 'E2_s': '0.0%', 'E3_s': '5.2%', 
+'E3_l': '0.0%', 'E2_l': '0.0%'}`.
+The number of cars waiting in each movement is：`{'E0_s': 7, 'E1_s': 
+3, 'E0_l': 0, 'E1_l': 16, 'E2_s': 0, 'E3_s': 7, 'E3_l': 0, 'E2_l': 0}`.  
+Now these movements exist emergency vehicles：`['E3_s']`. 
+[...]
+Phase-0
+Phase-1
+Phase-2
+Phase-3
+Phase-0
+Phase-1
+Phase-2
+Phase-3
+Figure 8: Case 2: Normal Scenario with Emergency Vehicles. The LLM adjusts the RL decision to prioritize the
+emergency vehicle at the intersection.
+14
+iLLM-TSC
+A PREPRINT
+Observation
+Initial Action
+x
+E0
+E3
+E1
+E2
+E0-s information loss
+RL Agent
+Chose  Phase 1
+iLLM-TSC (Degraded Communication Scenario)
+The decision RLAgent make thie step is: `Action：1`.
+The vehicles mean occupancy of each movement is:`{'E0_s': ‘-1', 'E1_s':
+‘5.2%', 'E1_l': ’17.5%', 'E0_l': ‘6.9%', 'E3_s': ‘24.7%', 'E2_s': '0.0%', 'E3_l':
+‘3.9%', 'E2_l': ‘0.0%'}`.
+The number of cars waiting in each movement is：`{'E0_s’: -1, 'E1_s’:
+0, 'E1_l’: 45, 'E0_l’: 7, 'E3_s’: 21, 'E2_s': 0, 'E3_l': 0, 'E2_l‘: 0}`.
+Phase to Movement: '{'Phase 0': ['E0_s', 'E1_s'], 'Phase 1': ['E0_l',
+'E1_l'], 'Phase 2': ['E3_s', 'E2_s'], 'Phase 3': ['E3_l', 'E2_l']}’
+Is there a information loss now：'True’
+The loss ID is：' E0_s ‘
+[...]
+Observation:
+Phase-0
+Phase-1
+Phase-2
+Phase-3
+Expalanation
+Final Action
+Choose
+Phase 2
+E0
+E3
+E1
+E2
+ Final Action:
+"final_action" : ”2"
+Decision:
+"decision": "unreasonable",
+"expalanations": " The RL agent's decision to take Action 1 (Phase 1) 
+is not the most optimal in this situation. The highest vehicle occupancy is 
+in the 'E3_s' movement with 24.69% and the 'E1_l' movement with 17.5%. 
+However, Action 1 (Phase 1) only covers the 'E1_l' movement and not the 
+'E3_s' movement. The 'E3_s' movement also has a high number of waiting
+cars (21 cars). Therefore, it would be more beneficial to take Action 2 
+(Phase 2) which covers the 'E3_s' movement and can help reduce the 
+congestion in this lane. Furthermore, there is a loss of information in the 
+‘E0_s' movement, which makes Action 1 (Phase 1) less reliable.."
+Phase-0
+Phase-1
+Phase-2
+Phase-3
+Figure 9: Case 3: Degraded Communication Scenario. The LLM intervenes to correct the RL agent’s suboptimal
+decision under degraded communication conditions.
+5.6.1
+Case 1: Normal Scenario
+As depicted in Fig. 8, the first scenario represents a regular traffic condition at an intersection without any unusual or
+long-tail scenarios or communication issues. In this scenario, the traffic phase selected by the RL agent allows some
+vehicles to proceed, even though this phase might not correspond to the direction with the highest number of waiting
+vehicles. The LLM, using its capability to understand and describe the scene, confirms the absence of any special
+events currently affecting the traffic. At this point, the optimization goal of the LLM aligns with that of the RL agent.
+Consequently, the LLM endorses and supports the RL agent’s decision, which contributes to alleviating congestion
+at the intersection. This case demonstrates that iLLM-TSC does not merely prioritize the green light for the longest
+queue but instead supports the RL decision and applies reasoning akin to human common sense, a capability often
+lacking in traditional rule-based algorithms.
+5.6.2
+Case 2: Normal Scenario with Emergency Vehicles
+RL agents can sometimes fail to make optimal decisions in rare or unexpected situations, particularly when such
+scenarios are not included in the design of the reward function. Our approach, iLLM-TSC, which integrates a LLM
+with RL, addresses this limitation effectively. Fig. 8 illustrates a scenario where an emergency vehicle approaches
+an intersection. The RL component of iLLM-TSC initially selects Phase 0, prioritizing lanes with higher vehicle ac-
+cumulation, as the training did not specifically account for emergency vehicles. Recognizing the need to prioritize
+emergency responses, the LLM intervenes to override this decision by activating Phase 2. This action holds back
+other vehicles, thereby allowing the emergency vehicle to pass through the intersection promptly. This case study
+demonstrates that iLLM-TSC not only aims to minimize average waiting times but also effectively manages excep-
+tional traffic situations. Such adaptability is crucial in real-world traffic management, where diverse and unpredictable
+scenarios often arise.
+5.6.3
+Case 3: Degraded Communication Scenarios
+Communication disruptions can severely impact the performance of RL agents, particularly when the real-time data
+deviates from the training conditions. Fig. 9 depicts a situation characterized by communication problems, specifically
+packet loss, which prevents the accurate assessment of queue lengths at edge E0. Consequently, the RL agent defaults
+to activating Phase 0, which governs the movements E0 l and E1 l. These lanes exhibit relatively low occupancy
+15
+iLLM-TSC
+A PREPRINT
+rates of 6.9% and 17.5%, respectively. However, the LLM detects an anomaly in the reported congestion level, which
+is erroneously noted as −1, signaling a loss of critical information. Upon analyzing the current traffic conditions, the
+LLM identifies significant congestion in the E3 s movement, with 21 waiting vehicles. To alleviate this, the LLM
+recommends switching to Phase 2, which prioritizes the E3 s movement, thereby effectively addressing the congestion
+in this lane. Additionally, the unreliable data from the E0 s movement makes Phase 1 a less dependable option due to
+the information loss. This case illustrates how iLLM-TSC can adapt to communication faults by leveraging the LLM’s
+capability to interpret incomplete data and make informed decisions to optimize traffic flow.
+6
+Conclusion
+In this study, we introduce the iLLM-TSC framework aimed at enhancing the reliability of RL-based TSC systems in
+real-world scenarios. Specifically, this paper addresses the challenge of imperfect observations due to degraded com-
+munication scenarios and rare traffic conditions not considered by the reward function with our dual-step framework.
+By leveraging the generalization capabilities of LLMs and making preliminary judgments about RL agent actions, our
+method enhances the adaptability of TSC systems to handle the complexities of real-world situations. This dual-step
+decision-making process enables our method to effectively manage complex environments while maintaining the ro-
+bust performance characteristics of RL methods. Additionally, iLLM-TSC can be seamlessly integrated with existing
+RL-based TSC systems. Extensive experiments and tests validate the effectiveness of the proposed iLLM-TSC frame-
+work. In scenarios with degraded communication, iLLM-TSC reduces the average waiting time by 17.5% compared
+to traditional RL methods. This significant improvement underscores the enhanced scene comprehension capabilities
+of LLMs tailored specifically for TSC applications. It is important to note that this initial work only scratches the
+surface of the potential integration of LLM-assisted frameworks with RL and is expected to inspire further exploration
+of the synergy between LLM and RL.
+References
+[1] W. Yue, C. Li, Y. Chen, P. Duan, and G. Mao, “What is the root cause of congestion in urban traffic networks:
+Road infrastructure or signal control?,” IEEE Transactions on Intelligent Transportation Systems, vol. 23, no. 7,
+pp. 8662–8679, 2021.
+[2] P. Koonce and L. Rodegerdts, “Traffic signal timing manual.,” tech. rep., United States. Federal Highway Ad-
+ministration, 2008.
+[3] P. Lowrie, “Scats-a traffic responsive method of controlling urban traffic,” Sales information brochure published
+by Roads & Traffic Authority, Sydney, Australia, 1990.
+[4] N. Nigam, D. P. Singh, and J. Choudhary, “A review of different components of the intelligent traffic management
+system (itms),” Symmetry, vol. 15, no. 3, p. 583, 2023.
+[5] M. Noaeen, A. Naik, L. Goodman, J. Crebo, T. Abrar, Z. S. H. Abad, A. L. Bazzan, and B. Far, “Reinforcement
+learning in urban network traffic signal control: A systematic literature review,” Expert Systems with Applica-
+tions, vol. 199, p. 116830, 2022.
+[6] G. Dulac-Arnold, N. Levine, D. J. Mankowitz, J. Li, C. Paduraru, S. Gowal, and T. Hester, “Challenges of
+real-world reinforcement learning: definitions, benchmarks and analysis,” Machine Learning, vol. 110, no. 9,
+pp. 2419–2468, 2021.
+[7] M. Chen, Y. Bai, H. V. Poor, and M. Wang, “Efficient rl with impaired observability: Learning to act with delayed
+and missing state observations,” Advances in Neural Information Processing Systems, vol. 36, 2024.
+[8] A. Pang, Z. Xu, M. Wang, M.-O. Pun, and Y. Kan, “Reinforcement learning-based traffic signal control using
+delayed observations for v2x,” in ICC 2023 - IEEE International Conference on Communications, pp. 4020–
+4025, 2023.
+[9] H. Su, Y. D. Zhong, J. Y. Chow, B. Dey, and L. Jin, “Emvlight: A multi-agent reinforcement learning framework
+for an emergency vehicle decentralized routing and traffic signal control system,” Transportation Research Part
+C: Emerging Technologies, vol. 146, p. 103955, 2023.
+[10] D. Fu, X. Li, L. Wen, M. Dou, P. Cai, B. Shi, and Y. Qiao, “Drive like a human: Rethinking autonomous driving
+with large language models,” arXiv preprint arXiv:2307.07162, 2023.
+[11] L. Da, K. Liou, T. Chen, X. Zhou, X. Luo, Y. Yang, and H. Wei, “Open-ti: Open traffic intelligence with
+augmented language model,” arXiv preprint arXiv:2401.00211, 2023.
+16
+iLLM-TSC
+A PREPRINT
+[12] M. Wang, A. Pang, Y. Kan, M.-O. Pun, C. S. Chen, and B. Huang, “LLM-Assisted Light: Leveraging large
+language model capabilities for human-mimetic traffic signal control in complex urban environments,” arXiv
+preprint arXiv:2403.08337, 2024.
+[13] T. Wu, L. Luo, Y.-F. Li, S. Pan, T.-T. Vu, and G. Haffari, “Continual learning for large language models: A
+survey,” arXiv preprint arXiv:2402.01364, 2024.
+[14] S.-B. Cools, C. Gershenson, and B. D’Hooghe, “Self-organizing traffic lights: A realistic simulation,” Advances
+in applied self-organizing systems, pp. 45–55, 2013.
+[15] C. Wu, I. Kim, and Z. Ma, “Deep reinforcement learning based traffic signal control: A comparative analysis,”
+Procedia Computer Science, vol. 220, pp. 275–282, 2023.
+[16] A. Pang, M. Wang, Y. Chen, M.-O. Pun, and M. Lepech, “Scalable reinforcement learning framework for traffic
+signal control under communication delays,” IEEE Open Journal of Vehicular Technology, 2024.
+[17] M. Wang, X. Xiong, Y. Kan, C. Xu, and M.-O. Pun, “UniTSA: A universal reinforcement learning framework
+for v2x traffic signal control,” IEEE Transactions on Vehicular Technology, pp. 1–16, 2024.
+[18] M. Wang, Y. Xu, X. Xiong, Y. Kan, C. Xu, and M.-O. Pun, “ADLight: A universal approach of traffic signal
+control with augmented data using reinforcement learning,” in Transportation Research Board (TRB) 102nd
+Annual Meeting, 2023.
+[19] A. Pang, Z. Xu, M. Wang, M.-O. Pun, and Y. Kan, “Reinforcement learning-based traffic signal control using
+delayed observations for v2x,” in ICC 2023-IEEE International Conference on Communications, pp. 4020–4025,
+IEEE, 2023.
+[20] A. Oroojlooy, M. Nazari, D. Hajinezhad, and J. Silva, “Attendlight: Universal attention-based reinforcement
+learning model for traffic signal control,” Advances in Neural Information Processing Systems, vol. 33, pp. 4079–
+4090, 2020.
+[21] H. Wei, G. Zheng, H. Yao, and Z. Li, “Intellilight: A reinforcement learning approach for intelligent traffic light
+control,” in Proceedings of the 24th ACM SIGKDD international conference on knowledge discovery & data
+mining, pp. 2496–2505, 2018.
+[22] M. Wang, Y. Chen, Y. Kan, C. Xu, L. Michael, M.-O. Pun, and X. Xiong, “Traffic signal cycle control with cen-
+tralized critic and decentralized actors under varying intervention frequencies,” arXiv preprint arXiv:2406.08248,
+2024.
+[23] B. K˝ov´ari, B. Pelenczei, S. Aradi, and T. B´ecsi, “Reward design for intelligent intersection control to reduce
+emission,” IEEE Access, vol. 10, pp. 39691–39699, 2022.
+[24] L. Wang, C. Ma, X. Feng, Z. Zhang, H. Yang, J. Zhang, Z. Chen, J. Tang, X. Chen, Y. Lin, et al., “A survey on
+large language model based autonomous agents,” Frontiers of Computer Science, vol. 18, no. 6, p. 186345, 2024.
+[25] S. Lai, Z. Xu, W. Zhang, H. Liu, and H. Xiong, “Large language models as traffic signal control agents: Capacity
+and opportunity,” arXiv preprint arXiv:2312.16044, 2023.
+[26] J. Mao, Y. Qian, H. Zhao, and Y. Wang, “Gpt-driver:
+Learning to drive with gpt,” arXiv preprint
+arXiv:2310.01415, 2023.
+[27] C. Sima, K. Renz, K. Chitta, L. Chen, H. Zhang, C. Xie, P. Luo, A. Geiger, and H. Li, “Drivelm: Driving with
+graph visual question answering,” arXiv preprint arXiv:2312.14150, 2023.
+[28] T. Webb, S. S. Mondal, C. Wang, B. Krabach, and I. Momennejad, “A prefrontal cortex-inspired architecture for
+planning in large language models,” arXiv preprint arXiv:2310.00194, 2023.
+[29] Y. Cao, H. Zhao, Y. Cheng, T. Shu, G. Liu, G. Liang, J. Zhao, and Y. Li, “Survey on large language model-
+enhanced reinforcement learning: Concept, taxonomy, and methods,” arXiv preprint arXiv:2404.00282, 2024.
+[30] J. Lin, Y. Du, O. Watkins, D. Hafner, P. Abbeel, D. Klein, and A. Dragan, “Learning to model the world with
+language,” arXiv preprint arXiv:2308.01399, 2023.
+[31] H. Li, X. Yang, Z. Wang, X. Zhu, J. Zhou, Y. Qiao, X. Wang, H. Li, L. Lu, and J. Dai, “Auto mc-reward:
+Automated dense reward design with large language models for minecraft,” arXiv preprint arXiv:2312.09238,
+2023.
+[32] S. Chakraborty, K. Weerakoon, P. Poddar, P. Tokekar, A. S. Bedi, and D. Manocha, “Re-move: An adaptive policy
+design approach for dynamic environments via language-based feedback,” arXiv preprint arXiv:2303.07622,
+2023.
+[33] Y. J. Ma, W. Liang, G. Wang, D.-A. Huang, O. Bastani, D. Jayaraman, Y. Zhu, L. Fan, and A. Anandkumar,
+“Eureka: Human-level reward design via coding large language models,” arXiv preprint arXiv:2310.12931, 2023.
+17
+iLLM-TSC
+A PREPRINT
+[34] R. Shi, Y. Liu, Y. Ze, S. S. Du, and H. Xu, “Unleashing the power of pre-trained language models for offline
+reinforcement learning,” arXiv preprint arXiv:2310.20587, 2023.
+[35] P. Mondorf and B. Plank, “Beyond accuracy: Evaluating the reasoning behavior of large language models–a
+survey,” arXiv preprint arXiv:2404.01869, 2024.
+[36] G. Marvin, N. Hellen, D. Jjingo, and J. Nakatumba-Nabende, “Prompt engineering in large language models,” in
+International Conference on Data Intelligence and Cognitive Informatics, pp. 387–402, Springer, 2023.
+[37] J. Cheng, X. Liu, K. Zheng, P. Ke, H. Wang, Y. Dong, J. Tang, and M. Huang, “Black-box prompt optimization:
+Aligning large language models without model training,” arXiv preprint arXiv:2311.04155, 2023.
+[38] P. Sahoo, A. K. Singh, S. Saha, V. Jain, S. Mondal, and A. Chadha, “A systematic survey of prompt engineering
+in large language models: Techniques and applications,” arXiv preprint arXiv:2402.07927, 2024.
+[39] J. White, Q. Fu, S. Hays, M. Sandborn, C. Olea, H. Gilbert, A. Elnashar, J. Spencer-Smith, and D. C. Schmidt,
+“A prompt pattern catalog to enhance prompt engineering with chatgpt,” arXiv preprint arXiv:2302.11382, 2023.
+[40] S. K. K. Santu and D. Feng, “Teler: A general taxonomy of llm prompts for benchmarking complex tasks,” arXiv
+preprint arXiv:2305.11430, 2023.
+[41] L. Giray, “Prompt engineering with chatgpt: a guide for academic writers,” Annals of biomedical engineering,
+vol. 51, no. 12, pp. 2629–2633, 2023.
+[42] S. Yao, D. Yu, J. Zhao, I. Shafran, T. Griffiths, Y. Cao, and K. Narasimhan, “Tree of thoughts: Deliberate problem
+solving with large language models,” Advances in Neural Information Processing Systems, vol. 36, 2024.
+[43] Y. Gao, Y. Xiong, X. Gao, K. Jia, J. Pan, Y. Bi, Y. Dai, J. Sun, and H. Wang, “Retrieval-augmented generation
+for large language models: A survey,” arXiv preprint arXiv:2312.10997, 2023.
+[44] K.-F. Chu, A. Y. Lam, and V. O. Li, “Traffic signal control using end-to-end off-policy deep reinforcement
+learning,” IEEE Transactions on Intelligent Transportation Systems, vol. 23, no. 7, pp. 7184–7195, 2021.
+[45] I. Bocharova, B. Kudryashov, M. Rabi, N. Lyamin, W. Dankers, E. Frick, and A. Vinel, “Characterizing packet
+losses in vehicular networks,” IEEE Transactions on Vehicular Technology, vol. 68, no. 9, pp. 8347–8358, 2019.
+[46] V. Mannoni, V. Berg, S. Sesia, and E. Perraud, “A comparison of the v2x communication systems: Its-g5 and
+c-v2x,” in 2019 IEEE 89th Vehicular Technology Conference (VTC2019-Spring), pp. 1–5, IEEE, 2019.
+[47] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, “Proximal policy optimization algorithms,”
+arXiv preprint arXiv:1707.06347, 2017.
+18

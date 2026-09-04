@@ -1,0 +1,61 @@
+\section{Audit and crash reconstruction}\label{sec:res-audit}
+The audit layer was evaluated on seven pre-defined collision scenarios
+spanning the legally distinct cases (red-light running, EV exemption,
+maintenance vehicle, amber gambling, conflicting green, dark signal,
+spoofed EV). All seven prove end-to-end: hash chain verified, signatures
+verified, and an imposter re-signing attack caught in every scenario. The
+governing UK rule is \emph{inferred deterministically from the verified
+facts}: spoofed-EV correctly denies the exemption and anchors fault on
+the driver, and conflicting green alone attributes (weak,
+misfeasance-only) authority fault. The output is a cited evidence pack
+for a human adjudicator, never a verdict \cite{dahl2024legal}.
+
+Above the per-run chain sits the Certificate-Transparency-style
+completeness layer of \S\ref{sec:bg-audit}. Over a twelve-entry batch, a salted Merkle root hides the entry
+contents while remaining provable, the salt is erasable off-chain, and an inclusion
+proof verifies while the same proof under a \emph{forged} salt is rejected. Under a
+two-witness cross-audit the witnesses agree and the batch is consistent. When one
+witness is made to serve a different root, \finding{the equivocation is detected and
+consistency fails}, and a witness refuses to overwrite its own history. The
+cross-auditor's own honesty is an \risk{unverified assumption}, on a par
+with the identity root. One further limit: the mechanism passes but the
+batch is \risk{not externally anchored}. I withheld the public-log write
+rather than pollute a production transparency log.
+
+\subsection{A worked evidence pack}\label{sec:res-audit-worked}
+Figure~\ref{fig:evpack} traces the hardest of the seven end to end: a
+collision at a junction that emitted a conflicting green.
+
+Each cited rule carries the fact that triggered it, so an investigator can
+audit the inference rather than read a conclusion, and the doctrine cited
+runs against the deployer.
+
+\begin{figure}[t]
+\small
+\begin{lstlisting}
+VERIFIED RECORD (seq 0, junction J, hash 93dc0a0b..., t=100.0)
+  chain verified: True   signatures verified: True
+  imposter re-sign attempt: CAUGHT
+VERIFIED FACTS
+  signal_state = green      conflicting_green = True
+  crossing_class = civilian second_party_on_green = False
+  key_present = False       corroborated = False
+GOVERNING RULES (inferred from the facts above)
+  LR-authority-misfeasance [Bird v Pearce]  fault: low  (common law)
+    "the audit shows the system emitted a conflicting green
+     (a positively-wrong indication) -- misfeasance, not omission"
+  LR-authority-nonfeasance [Gorringe v Calderdale] fault: low (common law)
+    "authority fault otherwise defaults to zero; it turns non-zero only
+     on this misfeasance/conflicting-green branch (low confidence;
+     legal_causation NOT_ASSESSED)"
+OUTPUT: cited evidence pack for a human adjudicator -- not an adjudication
+\end{lstlisting}
+\caption{The conflicting-green evidence pack, reproduced from
+\texttt{results/experiment\_crash\_law.json} (record, facts, rule ids,
+fault weights and both \texttt{why} strings verbatim; headers and closing
+line editorial): the only one of the seven
+scenarios in which authority fault is non-zero, and the case where the
+system's own record is used against its operator.}
+\label{fig:evpack}
+\end{figure}
+

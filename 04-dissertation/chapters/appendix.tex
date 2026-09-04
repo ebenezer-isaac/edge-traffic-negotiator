@@ -4,12 +4,8 @@
 Every measurement in this dissertation was produced under the pins in
 Table~\ref{tab:pins}. The Foundry Local version is pinned deliberately:
 custom-model serving behaviour (registration format, execution-provider
-options) is version-sensitive, and an upgrade mid-campaign would have
-invalidated cross-run comparability. One consequence is recorded honestly
-in \S\ref{sec:res-reliability}: a newer model generation
-(Qwen3.5) ships a configuration schema this runtime cannot parse, so it is
-reported as blocked-by-runtime with the exact error rather than as a
-capability result.
+options) is version-sensitive, and a mid-campaign upgrade would have
+invalidated cross-run comparability.
 
 \begin{table}[h]
 \caption{Version and hardware pins.}
@@ -27,63 +23,61 @@ Simulator & SUMO with TraCI, 1{,}200-step horizon, $\approx$10\,s decision inter
 Serving/measurement GPU & NVIDIA RTX 2060, 6\,GB (the deployment envelope) \\
 Training GPU (3.8B) & UCL departmental NVIDIA RTX 4090, 24\,GB \\
 Training GPU (0.6B) & the RTX 2060 itself (13.5\,h) \\
-Host OS & Windows 10 (build 19045) --- predates Windows ML EP autoregistration \\
+Host OS & Windows 10 (build 19045), which predates Windows ML EP autoregistration \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \section{Seeds and dataset splits}
-\textbf{Training-state seeds:} $\{3, 7, 11, 29\}$. Junction states for
+\textbf{Training-state seeds:} $\{3, 7, 11, 29, 42, 57, 91, 123\}$. Junction states for
 distillation were sampled only from these.
 \textbf{Closed-loop evaluation seeds:}
-$\{1..30\}\setminus\{3,7,11,29\}\cup\{31,32,33,34\}$ --- thirty seeds,
+$\{1..30\}\setminus\{3,7,11,29\}\cup\{31,32,33,34\}$ gives thirty seeds
 disjoint from training (\S\ref{sec:met-disjoint}).
 \textbf{Offline holdout:} split by deterministic content hash
-(\texttt{HOLDOUT\_MOD}=12) and frozen before the first training run;
-5{,}580 held-out examples against 59{,}533 training examples, from 65{,}113
-accepted renderings (6 rejected by the sanity verifier for serving an
+(\texttt{HOLDOUT\_MOD}=12) and frozen before the first training run, which
+leaves 5{,}580 held-out examples against 59{,}533 training examples, from
+65{,}113 accepted renderings (6 rejected by the sanity verifier for serving an
 empty phase without a justifying note). Per format: sota 16{,}982, myopic
 16{,}982, prediction 18{,}596, coordination 12{,}553.
 
 \section{Prompt contract}
-All four formats share one output contract --- exactly
-\texttt{\{"phase": N\}} --- and the \emph{same rendering code serves
-training, offline evaluation, and closed-loop control}, so no format skew
-can flatter the offline numbers. The delay-aware (sota) system prompt is
-reproduced verbatim:
+All four formats share one output contract: exactly
+\texttt{\{"phase": N\}}. The \emph{same rendering code serves training,
+offline evaluation, and closed-loop control}, so no format skew can
+flatter the offline numbers. The delay-aware (sota) system prompt is
+reproduced in part:
 
-\begin{quote}\small\ttfamily
+\begin{quote}\small\ttfamily\raggedright
 You control ONE traffic-signal junction (this junction only; no neighbour
 information). For each green phase you are given: the number of waiting
 (queued) vehicles, the TOTAL accumulated waiting time of those vehicles in
 seconds, and whether it is the phase currently green. Choose the phase to
-serve next to MINIMISE total vehicle waiting time and unnecessary stops ---
+serve next to MINIMISE total vehicle waiting time and unnecessary stops -{}-
 not simply the longest queue.
 \end{quote}
 
-The myopic format withholds accumulated waiting; prediction adds
-short-horizon arrival counts; coordination adds neighbour release notes.
-Parsing falls through four tiers (strict JSON, braced, keyed, bare
-integer) with the tier recorded per decision.
+The myopic format withholds accumulated waiting, prediction adds
+short-horizon arrival counts, and coordination adds neighbour release
+notes. Parsing tiers are as given in \S\ref{sec:des-agent}.
 
 \section{The compile-and-serve chain}
-Reproducing a served custom model requires the following steps in order;
-each was established by failure during this project and none is documented
-by the vendor toolchain.
+Reproducing a served custom model requires the following steps in order,
+each established by failure during this project.
 
 \begin{enumerate}
 \item Train QLoRA adapters ($r{=}16$, NF4 double quantisation, fp16
 compute, completion-only loss, family-correct chat template).
 \item Merge adapters to a bf16 checkpoint.
 \item Compile with the onnxruntime-genai model builder
-(\texttt{-p int4 -e cpu}) using the pinned transformers pairing --- newer
-environments fail on attention-module or loss-utility imports.
+(\texttt{-p int4 -e cpu}) using the pinned transformers pairing, because
+newer environments fail on attention-module or loss-utility imports.
 \item Patch \texttt{tokenizer\_config.json}: \texttt{tokenizer\_class}
-must be a value the runtime accepts (\texttt{GPT2Tokenizer}); transformers-5
-era configs emit a backend name that fails to load.
+must be a value the runtime accepts (\texttt{GPT2Tokenizer}), because
+transformers-5 era configs emit a backend name that fails to load.
 \item For Phi checkpoints, strip remote-code \texttt{auto\_map} entries.
 \item \textbf{Synthesise} \texttt{inference\_model.json} (model name plus
-prompt template) --- the builder emits none, and without it the model
+prompt template). The builder emits none, and without it the model
 registers but returns HTTP 400 on every request.
 \item Copy into the Foundry Local cache directory and, for GPU serving,
 set \texttt{provider\_options} to WebGPU in \texttt{genai\_config.json}.
@@ -92,9 +86,9 @@ set \texttt{provider\_options} to WebGPU in \texttt{genai\_config.json}.
 \section{Harness invariants}
 Three properties of the experiment harness underwrite the results.
 \emph{Fail-loud:} API errors are counted and abort a run rather than being
-scored as answers; an unservable model records a skip, never a score.
+scored as answers. An unservable model records a skip, never a score.
 \emph{Resumable:} cells are keyed by (model, config, topology, seed) and
-skipped if already measured, so a crash loses at most one cell --- one
+skipped if already measured, so a crash loses at most one cell. One
 zero-byte cell caused by a mid-write power loss was detected by JSON
 validation and re-run.
 \emph{Recoverable:} after two observed mid-run service self-restarts, the
@@ -104,27 +98,27 @@ failed rows with statistics intact.
 \chapter{Extended results}\label{app:tables}
 
 \section{Per-topology closed-loop detail}
-Chapter~\ref{ch:results} reports means and paired tests; the per-seed
-cells behind them are retained as JSON in
+The per-seed cells behind the means and paired tests of
+Chapter~\ref{ch:results} are kept in
 \texttt{results/frontier\_raw/}, one file per (model, config, topology,
-seed) containing the baseline delay, controller delay, relative change,
-decision composition (SLM / substitution / anti-starvation), from which
-authored share, proposal acceptance and divergence rate are derived, plus
-the latency distribution and audit-chain verification result.
-Every figure in this dissertation is recomputable from those files with
-the aggregation scripts in \texttt{src/}.
+seed) containing the MaxPressure baseline delay, controller delay,
+relative change, decision composition (SLM / substitution /
+anti-starvation), from which authored share, acceptance and divergence
+derive, plus latency distribution and audit-chain check. The fixed-time
+floor is in \texttt{results/experiment\_fixedtime\_*.json}. Closed-loop
+figures recompute from both with the scripts in \texttt{src/}.
 
 \section{Failure forensics tables}
-The catastrophic-cell analysis of \S\ref{sec:res-forensics} --- 14 of 270
-cells at $\ge{+}20\%$ delay, their seed-matched comparators, and the
-shared-versus-arm-specific decomposition --- is tabulated in
-\texttt{results/failure\_forensics.md} with the underlying data in
+The catastrophic-cell analysis of \S\ref{sec:res-forensics} is tabulated
+in \texttt{results/failure\_forensics.md}: 14 of 270 cells at
+$\ge{+}20\%$ delay, their seed-matched comparators, and the
+shared-versus-arm-specific decomposition. The underlying data is in
 \texttt{results/failure\_forensics.json}.
 
 \section{Adversarial trust battery}
 Per-topology, per-scenario cells for all three controllers (stock and
 fine-tuned, both scales) are in
-\texttt{results/experiment\_trust\_traffic\_<model>.json}, with raw cells
+\texttt{results/\allowbreak experiment\_\allowbreak trust\_\allowbreak traffic\_\allowbreak <model>.json}, with raw cells
 under \texttt{results/trust\_traffic\_raw/} keyed by model, topology,
 scenario, and seed.
 
@@ -157,27 +151,27 @@ Rule & Authority & Effect \\
 Driver crossed red & RTA 1988 s36 & Criminal offence; driver fault high \\
 Red prohibition & TSRGD 2016 Sch14 & Must not proceed beyond stop line \\
 Amber & TSRGD 2016 5(9) & Driver fault high where a safe stop was possible \\
-EV exemption & TSRGD / conditional & Conditional on authorisation \emph{and}
-corroboration; endangerment test still applies \\
+EV exemption & TSRGD / conditional & Conditional on an emergency crossing
+class \emph{plus} either corroboration or a valid emergency-class key;
+endangerment test still applies \\
 Maintenance vehicle & no exemption & Works vehicle treated as an ordinary driver \\
 Dark signal & Highway Code r.176 & Duty to obey falls away; ordinary care governs \\
 Authority misfeasance & \emph{Bird v Pearce} & Positively-wrong indication:
 authority fault non-zero but low \\
 Authority nonfeasance & \emph{Gorringe v Calderdale} & Mere omission: authority
 fault defaults to zero \\
+EV apportionment anchor & \emph{Griffin v Mersey} & Default 60/40 against the
+non-emergency party \\
+Green due regard & TSRGD 2016 Sch14 Pt1 5(14) & Green-light party must proceed
+with due regard; typically the minority share \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Two properties of this design matter for the accountability claim. First,
-the doctrine is \emph{unfavourable to the deployer of this system}: fault
-attaches to the authority only through the misfeasance branch, which is
-exactly the branch the audit chain can prove or disprove from its own
-records, and the system reports it against itself when the facts support it
-(\S\ref{sec:res-audit-worked}). Second, a spoofed emergency-vehicle claim
-receives no exemption --- the conditional exemption requires a valid
-authorising key and corroboration, so a forged claim leaves the driver
-squarely within the red-light prohibition. Legal causation is never
-assessed by the system; it is marked \texttt{NOT\_ASSESSED} and left to a
-human adjudicator, in line with the treatment of legal hallucination risk
-in \S\ref{sec:bg-audit}.
+One property of the encoding matters for the accountability claim: the
+emergency exemption is gated first on the mechanically verified crossing
+class, which a forged key cannot manufacture, and only then on
+corroboration or a valid emergency-class key, so a spoofed claim leaves
+the driver squarely within the red-light prohibition
+(\S\ref{sec:res-audit-worked}). Legal causation is never assessed but
+marked \texttt{NOT\_ASSESSED} for a human adjudicator.

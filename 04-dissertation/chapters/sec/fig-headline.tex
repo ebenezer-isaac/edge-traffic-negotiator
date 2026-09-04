@@ -1,0 +1,35 @@
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\linewidth, height=5.4cm,
+  ybar, bar width=9pt,
+  ymin=-22, ymax=42,
+  ylabel={$\Delta$ mean delay vs comparator (\%)},
+  ylabel style={font=\sffamily\small},
+  symbolic x coords={Old Street, Bloomsbury, Bloomsbury cal., Euston, Euston cal.},
+  xtick=data, x tick label style={font=\sffamily\scriptsize},
+  ytick={-10,0,10,20,30,40}, yticklabel style={font=\sffamily\scriptsize},
+  legend style={font=\sffamily\scriptsize, at={(0.5,1.16)}, anchor=north, legend columns=2, draw=nbgrey},
+  axis line style={nbgrey}, tick style={nbgrey},
+  ymajorgrids, grid style={nbgrey!25},
+  enlarge x limits=0.13,
+  nodes near coords, every node near coord/.append style={font=\sffamily\tiny, /pgf/number format/fixed, /pgf/number format/precision=1},
+]
+\addplot[fill=nbteal!70, draw=nbteal,
+  nodes near coords style={xshift=-4pt}] coordinates
+  {(Old Street,-11.6) (Bloomsbury,0.8) (Bloomsbury cal.,-8.8) (Euston,15.5) (Euston cal.,8.5)};
+\addplot[fill=nbred!60, draw=nbred,
+  nodes near coords style={xshift=4pt}] coordinates
+  {(Old Street,-9.7) (Bloomsbury,2.8) (Bloomsbury cal.,11.9) (Euston,7.6) (Euston cal.,34.8)};
+\legend{fine-tuned, stock}
+\draw[nbgrey, dashed] (axis cs:Old Street,0) -- (axis cs:Euston cal.,0);
+\end{axis}
+\end{tikzpicture}
+\caption{Closed-loop delay against the fixed-time floor, $n{=}30$ training-disjoint
+seeds per cell. Negative is better than the floor. The distillation effect is the gap
+between the two bars: it is largest on the calibrated Bloomsbury grid, where the
+fine-tuned student beats the floor by $8.8\%$ while the stock model loses to it by
+$11.9\%$, and it does not reproduce at that size on the calibrated corridor.}
+\label{fig:headline}
+\end{figure}

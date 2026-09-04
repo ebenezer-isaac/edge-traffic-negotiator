@@ -1,0 +1,37 @@
+\section{Experiment inventory}\label{sec:met-inventory}
+Table~\ref{tab:inventory} maps every experiment family in
+Chapter~\ref{ch:results} to its design and artifact trail. All raw cells,
+per-seed records and aggregation scripts are retained in the repository,
+so every number is recomputable.
+
+\begin{table}[t]
+\caption{Experiment inventory.}
+\label{tab:inventory}
+\centering
+\small
+\begin{tabular}{p{0.30\linewidth}p{0.36\linewidth}p{0.22\linewidth}}
+\toprule
+Family & Design & Primary output \\
+\midrule
+Base-model factorial & 8 catalogue SLMs $\times$ 4 formats $\times$ 6
+topologies $\times$ up to 32 seeds & closed-loop delay vs baselines \\
+Explanatory (why) study & two-way ANOVA, 2 models $\times$ 4 topologies
+$\times$ 3 seeds (config fixed) & $F$, $\eta^2$, interaction \\
+Teacher cross-audit & second frontier model re-labels 4 batches of 150
+teacher-labelled states & label agreement \\
+Offline distillation & 7 phi rows + 4 qwen rows $\times$ 4 formats,
+frozen holdout & accuracy, JSON rate \\
+Fine-tune closed-loop & ft vs stock at 0.6B, plus a 3.8B ft confirmation
+arm, $\times$ 3 topologies $\times$ 30 disjoint seeds & paired delay, authorship \\
+Decision battery & cloud frontier vs local SLM on identical states & agreement, latency \\
+Accident / crash-law suite & scripted collision scenarios $\to$ audit
+reconstruction & evidence packs, chain verification \\
+Trust battery & honest / blatant / stealth misreporting & detection, delay impact \\
+Emergency / EV suite & scripted EV arrival and spoofing attack on the
+arterial corridor, 3 modes $\times$ 30 paired seeds & clearance metrics \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The full campaign spanned three machines and roughly six weeks of
+wall-clock compute.

@@ -1,0 +1,19 @@
+\section{Trust-coefficient mechanism}\label{sec:des-trust}
+Coordination requires acting on neighbour reports, which a compromised
+neighbour can abuse. The trust mechanism prices that risk with three
+commitments. First, \textbf{local sensing is the ultimate truth}: a
+junction's own sensors are never doubted, and a neighbour claim is scored
+against what local sensing later verifies, within a claim lifetime after
+which it is provisionally discounted. Second,
+\textbf{asymmetric update}: verified truths earn trust slowly (prior 0.5,
+ten consecutive truths to reach 0.9) while a detected lie from a high-trust
+source collapses it in one step (lie factor 0.25), because in
+infrastructure trusting a liar costs more than doubting an honest peer. Third, \textbf{discount-only wiring}: trust can strip a caught
+liar's power to corroborate a preemption, but can never \emph{add} an
+action on zero local evidence. Discounting alone cannot make safety
+worse, and a real ambulance within sensing range is preempted on the
+junction's own detection, never on a neighbour's trust. A
+truthful report verified late is vindicated retroactively, so honesty is
+never permanently penalised for latency. The adversarial evaluation and
+its partial results are reported in \S\ref{sec:res-trust}.
+

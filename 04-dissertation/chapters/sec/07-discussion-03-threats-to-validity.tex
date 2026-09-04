@@ -1,0 +1,47 @@
+\section{Threats to validity}\label{sec:dis-threats}
+Five declared threats, with defences.
+
+\textbf{Label-only distillation (construct).} I distil teacher labels,
+not reasoning traces. Orca-style trace distillation
+\cite{mukherjee2023orca} might transfer more, and the myopic format's
+ceiling prices the cost as a disclosed design property
+(\S\ref{sec:res-offline}).
+
+\textbf{Demand composition (external).} Only the corridor's vehicle counts come from
+measured DfT data, but the turning proportions at each junction remain
+assumed. Pressure-based control acts directly on movement
+demand, so every controller comparison here is conditional on that
+assumption, and the corridor results are plausibly the most exposed to it,
+the A501's short links making the through-versus-turning split decisive.
+Nothing in this study estimates that sensitivity.
+
+\textbf{Retention (internal).} Aggressive SFT can erode general
+capability with scale-dependent forgetting \cite{forgetting2024}. I
+measured it: a seeded 200-item MMLU sample through the same endpoints
+shows the 3.8B student at 57.5\% (stock) against 53.0\% (fine-tuned), a
+gap consistent with mild forgetting and not significant at this sample
+size ($z{=}0.91$, $p{=}.37$). At 0.6B the probe is uninformative by floor effect: stock already
+scores at chance (26.0\%). No significant general-knowledge damage was
+detected, though 200 items bound only large effects. That is not
+reassurance, because the nearer-neighbour authorisation probe
+(\S\ref{sec:res-lee}) shows both students well below their stock bases.
+The damage reads as a narrowing onto the trained contract, which
+general-knowledge benchmarks are poorly placed to detect.
+
+\textbf{Quantisation scope (construct).} ``Lossless'' int4 is claimed
+strictly as equal aggregate holdout accuracy under weight-only RTN.
+Per-item outputs were not retained, so output identity is untested, and no
+general equivalence is claimed, which the quantisation literature would
+not support \cite{quantlora2024,frantar2022gptq}.
+
+\textbf{Simulation and demand realism (external).} Everything is SUMO.
+Real-map demand \emph{magnitude} is measured, but the peak-hour fraction,
+the temporal profile, the directional split and the vehicle-level
+realisations are assumed or synthetic. Comparators exclude trained
+deep-RL systems. Legally, the audit scenarios use synthetic
+actors on real topology, so no real data subject exists, but a real
+deployment would face two residual exposures. First, curating which rules
+apply is itself a judgement about relevance, so the pack cannot be treated
+as a neutral readout, and I cite no authority for that proposition because
+I know of none. Second, the evidence pack attracts only qualified
+privilege, which disclosure defeats.

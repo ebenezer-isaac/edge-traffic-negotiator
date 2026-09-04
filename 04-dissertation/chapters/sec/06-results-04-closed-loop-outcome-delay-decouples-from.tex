@@ -1,0 +1,125 @@
+\section{Closed-loop outcome: delay decouples from accuracy}\label{sec:res-closedloop}
+Table~\ref{tab:closedloop-full} reports the Qwen3-0.6B closed-loop sweep:
+fine-tuned (ft) versus identically-compiled stock, three topologies
+$\times$ 30 training-disjoint seeds, paired per-seed against \emph{both}
+classical comparators (\S\ref{sec:res-maxpressure}).
+
+\begin{table}[t]
+\caption{Closed-loop delay against both classical comparators, and
+decision composition ($n{=}30$ disjoint seeds per cell). Negative $\Delta$
+favours the controller; significance is in Table~\ref{tab:robust}.
+\emph{auth} = share of all actuations authored by the SLM;
+\emph{a-s} = share forced by the anti-starvation floor; \emph{acc} =
+proposal acceptance; \emph{div} = divergence from MaxPressure among
+SLM-authored decisions. The substitution path is in
+Table~\ref{tab:composition}.}
+\label{tab:closedloop-full}
+\centering
+\small
+\begin{tabular}{llrrrrrr}
+\toprule
+Topology & Arm & vs fixed-time & vs MaxPr. & auth & a-s & acc & div \\
+\midrule
+Euston peak-hour & ft & $+15.5\%$ & $-3.9\%$ & 0.64 & 0.36 & 0.70 & 0.12 \\
+ & stock & $+7.6\%$ & $-6.2\%$ & 0.62 & 0.38 & 0.68 & 0.46 \\
+Bloomsbury grid & ft & $+0.8\%$ & $+0.7\%$ & 0.70 & 0.29 & 0.73 & 0.17 \\
+ & stock & $+2.8\%$ & $+2.6\%$ & 0.62 & 0.38 & 0.65 & 0.46 \\
+Old Street & ft & $\mathbf{-11.6\%}$ & $-3.1\%$ & 0.56 & 0.44 & 0.90 & 0.11 \\
+ & stock & $\mathbf{-9.7\%}$ & $-1.1\%$ & 0.39 & 0.61 & 0.54 & 0.60 \\
+\midrule
+Pooled ($n{=}90$) & ft & $+1.6\%$ & $-2.1\%$ & & & & \\
+ & stock & $+0.2\%$ & $-1.6\%$ & & & & \\
+\midrule
+Euston & phi ft & $+16.2\%$ & $-3.8\%$ & 0.64 & 0.36 & 0.70 & 0.13 \\
+Bloomsbury & phi ft & $+0.8\%$ & $+0.6\%$ & 0.70 & 0.30 & 0.73 & 0.17 \\
+Old Street & phi ft & $\mathbf{-9.7\%}$ & $-1.0\%$ & 0.57 & 0.43 & 0.88 & 0.12 \\
+Pooled ($n{=}90$) & phi ft & $+2.4\%$ & $-1.4\%$ & & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\finding{The comparator decides the outcome.} Against the fixed-time floor
+every arm significantly beats it on Old Street and none does on the other
+two maps. Against MaxPressure the only arm in this table
+to reach significance is stock on the Bloomsbury grid
+($+2.6\%$, $p{=}1.3{\times}10^{-3}$), a harm and not a gain. But one
+catalogue stock arm does beat MaxPressure on Old Street
+(\S\ref{sec:res-factorial}). The
+calibrated regime changes both pictures and is reported in
+\S\ref{sec:res-calib}.
+Comparator-invariant is the negative that matters: a $+42$-point offline
+accuracy gain produces no consistent delay change in these three regimes,
+and the pooled effect
+is indistinguishable from zero under either comparator. The decision
+battery anticipated this \finding{delay-decoupling paradox}.
+Fine-tuning's one significant effect is protective: stock
+control significantly \emph{harms} the congested Bloomsbury grid where the
+fine-tuned controller is neutral, the head-to-head favouring fine-tuning
+by $-1.8\%$ ($p{=}.022$). The mechanism is taken up in
+\S\ref{sec:dis-decoupling}: masking confines both arms to one
+conflict-free menu and the anti-starvation floor serves 23--61\% of ticks,
+though the floor's own share varies with the arm
+(\S\ref{sec:res-authorship}), so much served behaviour is identical by
+construction whatever the proposal quality. The substitution path is not
+part of this. I ran no unmasked arm, so this is
+a design-level reading, not a measurement. The headroom may also be small
+to begin with: external calibration puts the whole LLM-vs-MaxPressure gap
+at 1--2\% \cite{dglight2026}. Because paired $t$-tests on means hide the
+skew the catastrophic tail of \S\ref{sec:res-forensics} puts into the
+per-seed distributions,
+Table~\ref{tab:robust} adds 95\% CIs and a Wilcoxon signed-rank test on
+the \emph{typical} seed.
+
+\begin{table}[h]
+\caption{Closed-loop effects against the fixed-time floor, conventions as
+in Table~\ref{tab:mpfloor}, plus a Wilcoxon
+signed-rank test on the paired per-seed delays ($n{=}30$). Bold marks
+$p<.05$. The MaxPressure counterpart of every row is in
+Table~\ref{tab:closedloop-full}.}
+\label{tab:robust}
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+Arm & Topology & rel.\ (95\% CI) & $p_t$ & $p_{\text{Wilcoxon}}$ \\
+\midrule
+Qwen ft & Euston & $+15.5$ $[-1.9, +32.9]$ & .079 & .309 \\
+ & Bloomsbury & $+0.8$ $[-1.0, +2.6]$ & .354 & .516 \\
+ & Old Street & $\mathbf{-11.6}$ $[-17.2, -6.0]$ & \textbf{.0002} & \textbf{3.2e-6} \\
+Qwen stock & Euston & $+7.6$ $[-4.8, +20.0]$ & .222 & .349 \\
+ & Bloomsbury & $\mathbf{+2.8}$ $[+0.9, +4.6]$ & \textbf{.005} & \textbf{.008} \\
+ & Old Street & $\mathbf{-9.7}$ $[-13.3, -6.1]$ & \textbf{5.1e-6} & \textbf{1.2e-6} \\
+Phi ft & Euston & $+16.2$ $[-1.4, +33.9]$ & .070 & .245 \\
+ & Bloomsbury & $+0.8$ $[-0.9, +2.5]$ & .358 & .543 \\
+ & Old Street & $\mathbf{-9.7}$ $[-15.4, -3.9]$ & \textbf{.002} & \textbf{7.1e-5} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\finding{The Old Street win holds on the typical
+seed} as well as the mean ($p\le.002$ both tests). The Euston intervals
+are wide and zero-straddling on the topology with the heaviest failure
+tail, so the characterisation is \emph{typical-case behaviour with a
+catastrophic tail}, pointing at tail control (a per-decision timeout, or
+an outlier detector reverting to the classical policy) rather than at
+better average decisions.
+
+These rank-test results are not confirmatory: of
+roughly forty paired comparisons across the dissertation, the two reaching
+$p<.05$ only under the rank test would not survive a Holm correction
+across that family, and I pre-registered no confirmatory comparison. The
+fine-tuned-versus-stock head-to-head is nonetheless the study's primary
+contrast by design, the only cell in which a single variable is
+manipulated, and at $p{=}2.0{\times}10^{-21}$ it survives Holm where they
+do not.
+
+The Phi-4-mini confirmation arm (final rows of
+Table~\ref{tab:closedloop-full}) extends saturation end-to-end. The 3.8B
+fine-tuned student's closed-loop profile is not distinguishable from the
+0.6B's on either comparator, with the same divergence band
+(0.11 to 0.17) and authorship profile; on the calibrated grid the
+intervals bound any difference within $\pm0.4\%$ of delay. It serves at
+the lowest latency of my compiled arms (Table~\ref{tab:latency}). On the
+scale-threshold question that is a bounded non-difference, not a
+demonstrated equivalence (\S\ref{sec:res-calib}).
+

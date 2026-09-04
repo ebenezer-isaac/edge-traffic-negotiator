@@ -4,55 +4,54 @@
 This dissertation asked whether an on-device small language model, served
 by Microsoft Foundry Local within a 6\,GB envelope, can control real
 London junctions competently while producing an accident audit worth
-trusting --- and at what scale the learned component earns its place.
+trusting, and at what scale the learned component earns its place.
 
-The answer to feasibility is a qualified yes, and the qualifications are
-the substance. Shielded on-device SLM control significantly beats the
-fixed-time floor on the study's most complex junction geometry, is
-harmful on a saturated arterial before distillation and neutral after it,
-and is never demonstrably better than a naive fixed-time plan at thirty
-seeds. The classical baseline it is measured against turns out to be
-unreliable rather than uniformly weak on real geometry --- a three-seed
-result I retracted on replication. The full control loop, from
+Feasibility is a qualified yes, and the qualifications are the substance.
+Shielded on-device SLM control significantly beats the fixed-time floor on
+the study's most complex junction geometry and, once distilled, on a
+demand-calibrated grid. The same controller is worse on a saturated
+arterial whether distilled or not, and elsewhere indistinguishable from
+that floor except on the oversaturated grid, where the undistilled
+controller is significantly worse. The classical baseline changes sign
+with the network, and what looked like uniform weakness on real geometry
+was a three-seed result that replication retracted. The whole loop, from
 frontier-teacher distillation through QLoRA training to int4 serving, fits
-on one consumer device; the 0.6B student trained on the same GPU that
-serves it.
-
-The answer to scale is sharper than expected: distillation saturates at
-0.6B. A student six times larger lands on statistically identical
-decision accuracy, no format specialist beats a generalist even on its
-own format, and a student trained without one topology loses nothing on
-it. Within this deployable envelope, capability is not the bottleneck ---
-the distillation ceiling is.
+on one consumer device. The 0.6B student trained on the same GPU that
+serves it, and there distillation saturates: within this deployable
+envelope a student six times larger lands on statistically
+indistinguishable decision accuracy, which points at the distillation
+ceiling rather than model capacity.
 
 The central finding reframes what fine-tuning is \emph{for} in a shielded
-controller. Closed-loop, at thirty disjoint seeds per topology, the
-97\%-accurate student does not significantly beat the floor --- and
-neither does anything else inside the shield's envelope, whose compression
-of outcomes, together with the small delay headroom the wider literature
-itself reports, explains the decoupling on the maps that could not clear.
-But where the network \emph{can} flow, fine-tuning moves delay itself: on
-a demand-calibrated Bloomsbury grid the distilled controller improves on
-the identically-compiled stock model by 18.3\% and does so on every one
-of thirty seeds, while matching the fixed-time floor exactly. It moves
-authorship too --- the model's share of served actuations rises from
-0.39--0.62 to 0.56--0.77 as the fairness floor is needed less, and its
-divergence from MaxPressure falls four-fold. That the delay effect was
-invisible until I recalibrated an oversaturated test network is this
-study's sharpest methodological lesson. Because the audit layer proves
-who decided what --- seven collision scenarios reconstructed end-to-end,
-tampering caught, governing UK law inferred from verified facts into
-cited evidence packs --- authorship is what makes that audit concern the
-certified model rather than its fallback. Fine-tuning buys accountability
-everywhere, and delay wherever the network is not already broken.
+controller. On the maps that could not clear, the 97\%-accurate student
+does not significantly beat the floor, and neither does anything else
+inside the shield's envelope, though I ran no shield ablation to isolate
+that compression. Where the network \emph{can} flow, fine-tuning moves delay
+itself, and does so on every one of thirty seeds (\S\ref{sec:res-calib}).
+But applying the same calibration to the arterial corridor did not
+reproduce it, and I report that as the failed uniformity test it is.
+Fine-tuning moves authorship on every topology I tested
+(\S\ref{sec:res-authorship}). The audit layer proves who decided what, so
+authorship is what makes that audit concern the certified model rather
+than its fallback.
 
-The dissertation's credibility rests as much on its nulls as its wins:
-the corridor null at $n{=}30$, the stealth attacker that evades the trust
-ledger, the privileged-teacher ceiling on the myopic format, and the four
-serving-reliability failures are reported with mechanisms, because a
-feasibility study that hides its boundary conditions has not established
-feasibility. Within those boundaries, the case is made: an audited,
-shielded, on-device SLM junction controller is possible today, at 0.6B,
-on hardware a signal cabinet could house --- and the path from here runs
-through closed-loop objectives, synthesized shields, and a
-watchdog-supervised field pilot.
+The nulls bound the claim, each reported with its mechanism: the corridor
+harm, the stealth attacker the trust ledger misses, the privileged-teacher
+ceiling, and the three serving-reliability findings. Within
+them, the case is made: an audited, shielded, on-device SLM junction
+controller is possible today, at 0.6B, on a desktop-class 6\,GB GPU, with
+published figures for cabinet-class hardware suggesting but not
+establishing the same envelope (\S\ref{sec:dis-future}).
+
+For a signal engineer the practical reading is narrow. Deploy this where
+the network can still clear, or where no engineered plan exists at all,
+rather than on a saturated arterial; calibrate a test network to real
+demand before believing any delay figure it produces; and treat the audit
+trail, not the delay, as what certification would rest on. The
+path onward runs through closed-loop objectives, synthesised shields, and
+a watchdog-supervised field pilot.
+
+What this study settles is narrower and firmer: fine-tuning does not
+change that audit trail, which verifies identically in every arm; what it
+raises is the share of the record the model owns, and it moves delay only
+where the network can clear, and not on every network that can.

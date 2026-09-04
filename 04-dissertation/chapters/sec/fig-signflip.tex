@@ -1,0 +1,29 @@
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\linewidth, height=4.8cm,
+  xbar, bar width=11pt,
+  xmin=-14, xmax=30,
+  xlabel={MaxPressure vs fixed-time floor (\%), positive = MaxPressure worse},
+  xlabel style={font=\sffamily\small},
+  symbolic y coords={Euston cal., Euston, Bloomsbury, Old Street, Bloomsbury cal.},
+  ytick=data, y tick label style={font=\sffamily\scriptsize},
+  xtick={-10,0,10,20,30}, xticklabel style={font=\sffamily\scriptsize},
+  axis line style={nbgrey}, tick style={nbgrey},
+  xmajorgrids, grid style={nbgrey!25},
+  enlarge y limits=0.16,
+  nodes near coords, every node near coord/.append style={font=\sffamily\tiny, /pgf/number format/fixed, /pgf/number format/precision=1},
+]
+\addplot[fill=nbblue!55, draw=nbblue] coordinates
+  {(14.2,Euston cal.) (22.3,Euston) (0.2,Bloomsbury) (-8.2,Old Street) (-8.8,Bloomsbury cal.)};
+\draw[nbgrey, dashed] (axis cs:0,Euston cal.) -- (axis cs:0,Bloomsbury cal.);
+\end{axis}
+\end{tikzpicture}
+\caption{The classical baseline is not uniformly strong. MaxPressure is significantly
+worse than a naive fixed-time plan on the Euston corridor, significantly better on Old
+Street, and tied on the Bloomsbury grid. Its advantage tracks both geometry and
+saturation, which is why every controller claim in this dissertation is stated against
+the fixed-time floor with MaxPressure reported alongside.}
+\label{fig:signflip}
+\end{figure}

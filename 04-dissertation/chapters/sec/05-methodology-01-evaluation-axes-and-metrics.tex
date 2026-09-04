@@ -1,0 +1,29 @@
+\section{Evaluation axes and metrics}\label{sec:met-metrics}
+I evaluate along four axes, each with a primary metric.
+
+\textbf{Closed-loop control quality.} The primary metric is mean network
+delay: the mean, over all vehicles that \emph{departed} into the network,
+of total time in network (SUMO's tripinfo \texttt{duration}), over a fixed
+1,200-step horizon. A completed trip contributes its full travel time and a
+vehicle still running at the horizon the time it has accrued. Every
+controller cell is paired with a fixed-time baseline on the
+\emph{same topology and seed}, so the reported quantity is the paired relative
+delay change. The secondary metrics are completed-vehicle throughput,
+teleport count and undeparted backlog, which guard against delay
+``improved'' by starving demand.
+
+\textbf{Offline decision quality.} Accuracy against frozen frontier-teacher
+labels on a held-out set of junction states, at int4 precision exactly as
+served. I also report strict-JSON rate (the fraction of responses matching
+\texttt{\{"phase": N\}} exactly) and parse rate (any recoverable phase),
+because failing the output contract costs differently from choosing a wrong
+phase.
+
+\textbf{Structural authorship.} Authored share, proposal acceptance and
+divergence rate, defined in \S\ref{sec:des-shield}, reported alongside
+the decision composition itself (SLM / substitution / anti-starvation).
+
+\textbf{Serving viability.} Decision latency (p50/p99) against the 10\,s
+decision interval, and a log of serving-reliability events with their
+mitigations.
+

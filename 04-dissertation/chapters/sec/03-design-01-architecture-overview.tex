@@ -1,0 +1,71 @@
+\section{Architecture overview}\label{sec:des-overview}
+Each junction runs an identical control loop on a fixed decision interval
+($\approx$10\,s simulated). Per tick, local state (per-phase queue and
+waiting measurements from the junction's own sensors) is rendered into a
+prompt, and the on-device SLM served by Foundry Local proposes a phase
+that a deterministic parser extracts and the safety shield
+(\S\ref{sec:des-shield}) masks, validates, and possibly substitutes. The
+model is not consulted on every tick: a congestion gate serves MaxPressure
+whenever total halting demand falls below a threshold (two
+vehicles by default), intended to keep the learned component for the
+states where it can matter; I ran no gate-disabled arm at evaluation
+power. The served phase actuates the lights, and a signed audit record
+joins the run's hash chain under the junction's key
+(\S\ref{sec:des-audit}).
+MaxPressure is computed every tick regardless of the SLM and is at once
+the shield's reference, its fallback, and the strong baseline, so the
+learned component costs one model call and its marginal \emph{safety}
+risk is bounded by construction. Its delay risk is not: a stock proposer
+behind the same shield loses $22.7\%$ to MaxPressure on the calibrated
+grid.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=5mm and 15mm,
+  box/.style={draw=nbblue, thick, rounded corners=2pt, fill=nbband,
+    font=\sffamily\small, minimum height=7.5mm, inner xsep=2.5mm, align=center},
+  det/.style={box, draw=nbgrey, fill=white},
+  aud/.style={box, draw=nbteal, fill=nbteal!8},
+  arr/.style={-{Stealth[length=2.2mm]}, thick, nbblue},
+  darr/.style={-{Stealth[length=2.2mm]}, thick, nbgrey},
+  lab/.style={font=\sffamily\scriptsize, text=nbgrey}]
+\node[det] (sumo) {SUMO\\junction state};
+\node[box, right=of sumo] (prompt) {prompt\\builder};
+\node[box, right=of prompt] (slm) {SLM\\(Foundry Local)};
+\node[box, right=of prompt, yshift=-15mm, xshift=6mm] (shield)
+  {shield: mask $\cdot$ substitute\\$\cdot$ anti-starvation};
+\node[det, left=of shield] (mp) {MaxPressure\\(every tick)};
+\node[det, right=of shield] (act) {actuate\\lights};
+\node[aud, below=of shield, yshift=-1mm] (audit)
+  {signed, hash-chained audit record\\
+  \scriptsize state $\cdot$ proposal $\cdot$ served action $\cdot$ authorship};
+\draw[arr] (sumo) -- (prompt);
+\draw[arr] (prompt) -- (slm);
+\draw[arr] (slm) -- node[lab, right, xshift=1mm]{proposal} (shield);
+\draw[darr] (sumo.south) |- node[lab, below left, xshift=8mm]{} (mp.west);
+\draw[darr] (mp) -- node[lab, above]{reference} (shield);
+\draw[darr] (shield) -- node[lab, above]{served} (act);
+\draw[darr] (act.south) |- ([yshift=-2mm]audit.east) -- (audit.east);
+\draw[arr, nbteal] (shield.south) -- (audit.north);
+\draw[darr, dashed] (act.north) -- ++(0,23mm)
+  -| node[lab, above, pos=0.08] {next tick} ([xshift=-9mm]sumo.west)
+  -- (sumo.west);
+\end{tikzpicture}
+\caption{The junction control loop. The deterministic path (grey:
+state $\to$ MaxPressure $\to$ shield $\to$ actuation) is complete without
+the SLM; the learned proposer (blue) attaches to it, and every served
+decision lands in the signed audit chain (teal), whoever authored it.}
+\label{fig:architecture}
+\end{figure}
+
+Three consequences follow. First, graceful degradation is the default: a
+model timeout, garbage output, or a dead runtime (all observed,
+\S\ref{sec:res-reliability}) leaves the junction running MaxPressure with
+the failure recorded. Second, the architecture inverts iLLM-TSC
+\cite{pang2024illmtsc} (\S\ref{sec:bg-shields}): the LLM proposes and a
+local $O(\text{phases})$ verifier vetoes, since that path must be cheap,
+local and always available; I did not implement the inverse. Third, with
+the deterministic
+path complete, the SLM's value is measurable as a \emph{difference}
+against the same loop with the proposer disabled.
+

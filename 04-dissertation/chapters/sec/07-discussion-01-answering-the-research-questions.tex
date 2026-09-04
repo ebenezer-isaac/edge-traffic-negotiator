@@ -1,0 +1,57 @@
+\section{Answering the research questions}\label{sec:dis-rqs}
+\textbf{RQ1 (edge competence): qualified, and topology-dependent.} At
+powered replication ($n{=}30$ disjoint seeds) the picture splits by map.
+Stock SLM control significantly beats the floor on Old Street, but is
+significantly \emph{worse} on three of eight arms on the measured-demand
+Euston corridor, overturning a win the exploratory sweep had reported.
+Fine-tuning does not remove that deficit, widening it against the floor
+from $+7.6\%$ to $+15.5\%$. The defensible claim is narrow: competent on
+complex junction geometry, harmful on a saturated arterial, and superior to the naive fixed-time plan only where the
+network can clear.
+
+\textbf{RQ2 (what distillation buys): delay where the network can flow,
+authorship everywhere, and it saturates at 0.6B.} Offline, distillation is
+dramatic (55--69\% $\to$ 97--99\%) and scale-flat. On a demand-calibrated
+grid, and
+on 30 of 30 seeds against the identically-compiled stock model,
+distillation lifts the controller above the naive fixed-time floor and is
+worth $18.3\%$ delay. The two student scales sit within $\pm0.38\%$ of
+each other, so scale saturation here is a bounded difference rather than
+an absence of evidence. Calibrating the Euston corridor by the same rule
+leaves the head-to-head not significant: the corridor deficit survives
+calibration, and I cannot attribute it to topology
+(\S\ref{sec:res-calib}). Independently of delay, distillation raises
+\emph{ownership}: the SLM's share of logged decision ticks rises from an
+already substantial $0.39$--$0.62$. For a shielded, audited controller I
+argue ownership is the criterion that generalises, since it holds even
+where delay effects are compressed (\S\ref{sec:dis-decoupling}).
+
+The saturation runs deeper than the accuracy tables show, the two students
+reproducing each other's control trajectory exactly on a tenth of all
+cells (\S\ref{sec:res-forensics}), so a larger second student adds less
+diversity than its parameter count suggests, though 56 of the 90 cells
+still differ and no ensemble was built or costed. Against that,
+distillation is not free: on an adjacent structured task the fine-tuned
+students are worse than their own stock bases, one unable to emit the
+required output schema at all (\S\ref{sec:res-lee}). That is acceptable
+for a component doing one decision type behind a deterministic gate, but
+unacceptable if the same weights were expected to serve the authorisation
+or legal-note roles.
+
+\textbf{RQ3 (provable audit): yes, as designed.} Seven scenario
+reconstructions prove end-to-end with tampering caught
+(\S\ref{sec:res-audit}). The legally weak branches are weak \emph{in the
+law}, faithfully represented rather than overstated.
+
+\textbf{RQ4 (trust): partial, and the partiality is structured.} The
+mechanism's properties hold under all three controllers tested, because
+the ledger scores claims against local sensing rather than model
+behaviour. At three seeds per cell these are descriptive magnitudes, and
+the three limits of \S\ref{sec:res-trust} stand. The design-relevant tendency is that a blatant attack
+costs \emph{more} against fine-tuned controllers than stock, which would
+mean authorship cuts both ways, a model that acts on its inputs
+being moved further by poisoned ones. I state it as a tendency because it
+is not uniform: of the six controller-map cells where lies are injectable,
+the fine-tuned cost is larger in four and smaller in two. A trust ledger
+is not a sufficient defence, and this study did not run a distilled
+deployment without one.

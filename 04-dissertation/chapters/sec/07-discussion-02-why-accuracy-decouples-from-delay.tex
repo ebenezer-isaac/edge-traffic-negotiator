@@ -1,0 +1,24 @@
+\section{Why accuracy decouples from delay}\label{sec:dis-decoupling}
+Three mechanisms plausibly explain the delay-decoupling paradox, and they
+differ in how well this study evidences them. First, \emph{the shield may
+compress the outcome distribution}: masking confines every arm to the same
+conflict-free menu and the anti-starvation floor serves 23--61\% of ticks,
+intervening most in the weaker arm (\S\ref{sec:res-authorship}), so the gap between a 59\% and a 97\% proposer may be
+far smaller served than raw. I ran no unmasked arm, and the substitution
+path fires on $0.54\%$ of decisions in one cell and $0.00\%$ elsewhere
+(\S\ref{sec:res-authorship}), so it bounds nothing. This is a design-level
+argument, not a measurement. Second, \emph{the headroom was small}: external
+calibration from a 13$\times$ larger tuned model puts the whole
+LLM-vs-MaxPressure delay gap at 1--2\% \cite{dglight2026}, and my own
+decision battery showed a near-chance proposer winning closed-loop
+cells, because per-decision agreement with a delay-optimal heuristic is
+not the trajectory-level objective. Third, and the only one measured here, \emph{the test network
+must be able to express the difference}: on an oversaturated map every
+controller is compressed toward the same terrible mean, while the same
+experiment on a network that clears recovers the effect on every seed
+(\S\ref{sec:res-calib}). The second and third are therefore properties of
+the problem and the test network; the first is a property of the
+controller I did not test. The practical reading: fine-tune to own the
+decisions, expect both the delay gain and the removal of harm tails only
+where the network is not already saturated (\S\ref{sec:res-forensics}),
+and never evaluate a controller on one that cannot clear.

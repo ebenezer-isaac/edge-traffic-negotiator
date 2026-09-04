@@ -1,0 +1,35 @@
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\linewidth, height=5.2cm,
+  ybar, bar width=7pt,
+  ymin=0, ymax=112,
+  ylabel={holdout accuracy vs teacher (\%)},
+  ylabel style={font=\sffamily\small},
+  symbolic x coords={myopic, sota, prediction, coordination},
+  xtick=data, x tick label style={font=\sffamily\scriptsize},
+  ytick={0,25,50,75,100}, yticklabel style={font=\sffamily\scriptsize},
+  legend style={font=\sffamily\scriptsize, at={(0.5,1.18)}, anchor=north, legend columns=4, draw=nbgrey},
+  axis line style={nbgrey}, tick style={nbgrey},
+  ymajorgrids, grid style={nbgrey!25},
+  enlarge x limits=0.18,
+]
+\addplot[fill=nbred!55, draw=nbred] coordinates
+  {(myopic,45.6) (sota,55.1) (prediction,63.3) (coordination,69.3)};
+\addplot[fill=nbred!25, draw=nbred] coordinates
+  {(myopic,87.5) (sota,59.0) (prediction,86.0) (coordination,87.0)};
+\addplot[fill=nbteal!70, draw=nbteal] coordinates
+  {(myopic,87.9) (sota,97.7) (prediction,97.6) (coordination,99.0)};
+\addplot[fill=nbteal!35, draw=nbteal] coordinates
+  {(myopic,88.7) (sota,97.1) (prediction,97.4) (coordination,99.3)};
+\legend{0.6B stock, 3.8B stock, 0.6B ft, 3.8B ft}
+\end{axis}
+\end{tikzpicture}
+\caption{Offline decision accuracy against frozen teacher labels, at int4 precision as
+served. Distillation closes almost the whole gap, and the two fine-tuned students land
+on each other at every format: six times the parameters buy nothing per-decision. The
+myopic format is the exception at $88\%$, which is the privileged-teacher ceiling
+described in \S\ref{sec:res-offline}.}
+\label{fig:offline}
+\end{figure}

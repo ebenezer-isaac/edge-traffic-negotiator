@@ -1,0 +1,8 @@
+\section{Compile-and-serve chain}\label{sec:imp-compile}
+Six steps take merged bf16 weights to a served endpoint: QLoRA merge
+$\to$ int4 RTN compile $\to$ config patch $\to$ manifest synthesis $\to$
+cache registration $\to$ WebGPU provider swap. That chain is, to my
+knowledge, the first documented end-to-end recipe for serving a custom
+fine-tuned model through Foundry Local;
+Appendix~\ref{app:repro} records each step with the failure that
+established it.

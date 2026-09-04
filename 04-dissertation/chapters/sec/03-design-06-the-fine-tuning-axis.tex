@@ -1,0 +1,26 @@
+\section{The fine-tuning axis}\label{sec:des-ft}
+The final axis asks what changes when the proposer is fine-tuned rather
+than stock, and its pipeline is label distillation: a frontier teacher labels
+junction states sampled from training-reserved seeds, a second frontier
+model re-labels four audit samples of the teacher's output (600 states,
+98.5\% agreement, \S\ref{sec:imp-dataset}), and a deterministic sanity verifier
+screens the teacher's own answer rather than the state, rejecting a label
+that serves an empty phase while other approaches are waiting, or that
+names a phase outside the junction's range. The teacher
+is therefore second-guessed on exactly two degenerate cases, never by a
+weaker rule competing on the decision itself. The four prompt
+formats are rendered from three separately sampled and labelled state pools
+into one mixed training set. Training is QLoRA
+\cite{dettmers2023qlora}, and the merged model is compiled to weight-only
+int4 ONNX and served through the same runtime as every stock model
+(\S\ref{sec:imp-dataset}, \S\ref{sec:imp-compile}).
+
+Three rules protect the comparisons, enforced where specified
+(\S\ref{sec:met-disjoint}, \S\ref{sec:met-baselines}): a holdout
+hash-frozen before any training, closed-loop evaluation seeds disjoint
+from training seeds, and a control arm of the same base model compiled
+through the identical int4 pipeline, so the only manipulated variable is
+the weights on the 0.6B axis. The 3.8B student has no identically-compiled
+stock control. Ablation students test memorisation and specialisation
+hypotheses: leave-one-topology-out and four format specialists, all
+trained under the same recipe.

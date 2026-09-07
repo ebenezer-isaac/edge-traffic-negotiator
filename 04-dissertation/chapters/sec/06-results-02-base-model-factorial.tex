@@ -1,82 +1,72 @@
-\section{Base-model factorial}\label{sec:res-factorial}
-The base-model sweep (eight servable catalogue models $\times$
-four prompt formats $\times$ six topologies) established three facts
-before any fine-tuning. It is a sweep, not a full factorial: three models
-were never swept on the later measured-demand corridor,
-phi-4-mini-reasoning is latency-excluded (\S\ref{sec:met-baselines}) after
-a single-seed corridor probe, and the ANOVA is fitted on the balanced subset.
-The 6\,GB card caps the ladder at $\sim$4B (\S\ref{sec:imp-foundry}) and
-a runtime schema change blocked a newer generation.
+\subsection{Base-model factorial}\label{sec:res-factorial}
+The base-model sweep (eight servable catalogue models $\times$ four prompt
+formats $\times$ six topologies) established three facts before any
+fine-tuning. It is a sweep, not a full factorial. Three models were never
+swept on the later measured-demand corridor, phi-4-mini-reasoning is
+latency-excluded (\S\ref{sec:met-baselines}) after a single-seed corridor
+probe, and the ANOVA is fitted on the balanced subset; the 6\,GB card caps
+the ladder at $\sim$4B (\S\ref{sec:imp-foundry}).
 
-First, in that exploratory sweep the best shielded stock arm beat the
-fixed-time floor on every topology, from $-4.3\%$ on Bloomsbury to
-$-29\%$ on grid4$\times$4 (Old Street $-14\%$, seed-noisy). Those are per-map bests, not the class: averaged
-over all arms the sweep is worse than the floor on Bloomsbury. The per-map
-win does \emph{not} survive
-replication on the measured-demand corridor, so it is motivation for the
-powered design below, not evidence. Second, results must be conditioned on
-topology: pooling across maps is a Simpson's-paradox trap. Third, across
-base models per-decision reasoning quality does not predict closed-loop
-value: on 80
-identical junction states cloud frontier models agree with the
+The sweep ran three seeds per cell with MaxPressure as its only
+comparator. In it the best shielded stock arm beat MaxPressure on every
+topology, from $-2.4\%$ on grid4$\times$4 to $-31.0\%$ on the daily-demand
+corridor (Bloomsbury $-6.1\%$, Old Street $-15.4\%$). Those are per-map
+bests. Averaged over all stock arms the sweep is far worse than MaxPressure
+on the synthetic grids ($+20\%$ and $+36\%$) and mixed on the real maps,
+from $-15.8\%$ on the daily-demand corridor to $+0.1\%$ on Euston
+peak-hour, and the per-map win does \emph{not} survive replication on the
+measured-demand corridor. It motivated the powered design rather than
+counting as evidence. Results must also be conditioned on topology,
+because pooling across maps is a Simpson's-paradox trap. And per-decision
+reasoning quality does not predict closed-loop value across base models.
+On 80 identical junction states cloud frontier models agree with the
 delay-optimal heuristic at 92--96\% against 51--72\% for local SLMs, yet a
-near-chance local model still won closed-loop cells. Within one base it
-can (\S\ref{sec:res-calib}). The controller's
-value is plausibly systemic: SLM, shield and gating together, though no
-arm here removes the shield or the gate to test that, and this battery
-is open-loop by construction.
+near-chance local model still won closed-loop cells; within one base it
+can (\S\ref{sec:res-calib}). The controller's value is plausibly systemic,
+SLM, shield and gating together, though no arm removes the shield or the
+gate to test that, and this battery is open-loop by construction.
 
-An explanatory two-way ANOVA (Table~\ref{tab:inventory}) confirms the
-structure: topology
-dominates (partial $\eta^2{=}0.97$), the model matters
-(partial $\eta^2{=}0.83$), and the two interact strongly ($F{=}32.2$,
-$p{<}0.001$, partial $\eta^2{=}0.86$), though at three seeds per cell this
-is exploratory replication, not the powered design.
+An explanatory two-way ANOVA (2 models $\times$ 4 topologies $\times$ 3
+seeds, config fixed) confirms the structure, topology dominating (partial
+$\eta^2{=}0.97$), the model mattering (partial $\eta^2{=}0.83$) and the two
+interacting strongly ($F{=}32.2$, $p{<}0.001$, partial $\eta^2{=}0.86$),
+though at three seeds per cell this is exploratory, not the powered design.
 
 The powered stock-model replication ($n{=}30$ per cell, seeds 1--30, four
 catalogue models $\times$ two formats, both baselines) sharpens this per
-topology. Stock models have no training set, so the training-disjoint
-seeds used elsewhere are not required here.
-On \textbf{Old Street} stock SLM control achieves the campaign's strongest
-powered wins against the fixed-time floor: Qwen2.5-0.5B sota $-11.8\%$
-($p{<}0.001$), Qwen3-0.6B sota $-9.6\%$ ($p{<}0.001$), Phi-4-mini myopic
-$-8.6\%$ ($p{<}0.001$), with one arm also significantly beating MaxPressure
-(Qwen2.5-0.5B sota, $-4.9\%$, $p{=}.028$).
+topology; stock models have no training set, so training-disjoint seeds are
+not required. On \textbf{Old Street} stock SLM control achieves the
+campaign's strongest powered wins against the fixed-time floor:
+Qwen2.5-0.5B sota $-11.8\%$ ($p{<}0.001$), Qwen3-0.6B sota $-9.6\%$
+($p{<}0.001$), Phi-4-mini myopic $-8.6\%$ ($p{<}0.001$), one arm also
+significantly beating MaxPressure (Qwen2.5-0.5B sota, $-4.9\%$,
+$p{=}.028$).
 
 On \textbf{Euston peak-hour}, with demand set to the DfT-measured
 peak-hour magnitude, directional split and vehicle mix for the A501 count
 points (turning proportions assumed, single weekday survey), the result
-reverses: every stock arm
-is \risk{worse than the fixed-time floor by $7.4\%$ to $19.7\%$},
-significantly on three of eight arms (two-sided $p$ .017--.026, a fourth
-at $p{=}.053$), yet statistically indistinguishable from MaxPressure. Not
-a null but a measured harm.
-The powered run's measured peak-hour magnitude loads the corridor
-\emph{less} heavily than the daily average it replaces: 780
-vehicles against 1{,}071, 44.3\% completing against 33.1\%. Whether that
-lighter load is what makes the harm visible cannot be said here, because
-\S\ref{sec:res-calib} finds that reducing Euston's saturation further does
-not behave as a saturation-compression account predicts.
-\risk{Distillation does not repair this.} Against the same comparator the
-fine-tuned Qwen and Phi arms are $+15.5\%$ and $+16.2\%$ here
-(Table~\ref{tab:closedloop-full}), inside rather than below the stock
-band. An earlier draft claimed the opposite, an artefact of scoring
-fine-tuned arms against MaxPressure and stock arms against fixed-time.
-Whether the deficit is topological or a residue of
-congestion that calibration could not remove is left open in
-\S\ref{sec:res-calib}.
+reverses. Every stock arm is \risk{worse than the fixed-time floor by
+$7.4\%$ to $19.7\%$}, significantly on three of eight arms (two-sided $p$
+.017--.026, a fourth at $p{=}.053$), yet statistically indistinguishable
+from MaxPressure. That is not a null but a measured harm. The measured
+magnitude loads the corridor \emph{less} heavily than the daily average it
+replaces (780 vehicles against 1{,}071, 45.3\% completing against 33.1\%).
+Whether the lighter load is what makes the harm visible cannot be said
+here, because reducing Euston's saturation further does not behave as a
+saturation-compression account predicts (\S\ref{sec:res-calib}).
+\risk{Distillation does not repair this}: the fine-tuned Qwen and Phi arms
+are $+15.5\%$ and $+16.2\%$ against the same comparator
+(Table~\ref{tab:closedloop-full}), inside the stock band. An earlier draft
+claimed the opposite, an artefact of scoring fine-tuned arms against
+MaxPressure and stock arms against fixed-time. Whether the deficit is
+topological or a residue of congestion that calibration could not remove
+is left open in \S\ref{sec:res-calib}.
 
 The replication also yielded an unplanned methodological finding. On the
 26 seeds shared between runs, the \emph{catalogue} Qwen3-0.6B artifact and
 my identically-prompted, identically-shielded compile of the same weights
 differ by nine points of mean relative delay ($+4.1\%$ vs $-5.2\%$ against
-MaxPressure) on this high-variance topology: quantisation and packaging
-provenance alone shift the headline sign. The gap is comparator-robust
-though the sign flip is not, because against the fixed-time floor the
-same two artifacts are $+17.4\%$ and $+4.8\%$, both worse than the floor
-but still 12.6 points apart. So \S\ref{sec:met-baselines} runs an
-identical-pipeline control, and so should the field, because ``the same
-model'' is not the same controller across serving artifacts, on two of the
-three topologies where I could compare them (Old Street $-0.2\%$,
-$p{=}.93$).
-
+MaxPressure) on this high-variance topology. Quantisation and packaging
+provenance alone shift the headline sign (Appendix~\ref{app:provenance}).
+Hence the identical-pipeline control of \S\ref{sec:met-baselines}: ``the
+same model'' is not the same controller across serving artifacts.

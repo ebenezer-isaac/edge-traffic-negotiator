@@ -1,15 +1,14 @@
-\chapter{Reproducibility artifacts}\label{app:repro}
+\section{Reproducibility artifacts}\label{app:repro}
 
-\section{Environment and version pins}
-Every measurement in this dissertation was produced under the pins in
+\subsection{Environment and version pins}
+Every measurement in this report was produced under the pins in
 Table~\ref{tab:pins}. The Foundry Local version is pinned deliberately:
 custom-model serving behaviour (registration format, execution-provider
 options) is version-sensitive, and a mid-campaign upgrade would have
 invalidated cross-run comparability.
 
-\begin{table}[h]
-\caption{Version and hardware pins.}
-\label{tab:pins}
+\begin{table*}[t]
+
 \centering
 \small
 \begin{tabular}{ll}
@@ -18,7 +17,7 @@ Component & Pin \\
 \midrule
 Serving runtime & Microsoft Foundry Local 0.8.119 \\
 Compile path & onnxruntime-genai model builder, int4 RTN, weight-only \\
-Execution providers & CPU and WebGPU (decision-equivalent, \S\ref{sec:imp-foundry}) \\
+Execution providers & CPU and WebGPU (equal aggregate holdout accuracy, \S\ref{sec:imp-foundry}) \\
 Simulator & SUMO with TraCI, 1{,}200-step horizon, $\approx$10\,s decision interval \\
 Serving/measurement GPU & NVIDIA RTX 2060, 6\,GB (the deployment envelope) \\
 Training GPU (3.8B) & UCL departmental NVIDIA RTX 4090, 24\,GB \\
@@ -26,9 +25,11 @@ Training GPU (0.6B) & the RTX 2060 itself (13.5\,h) \\
 Host OS & Windows 10 (build 19045), which predates Windows ML EP autoregistration \\
 \bottomrule
 \end{tabular}
-\end{table}
+\caption{Version and hardware pins.}
+\label{tab:pins}
+\end{table*}
 
-\section{Seeds and dataset splits}
+\subsection{Seeds and dataset splits}
 \textbf{Training-state seeds:} $\{3, 7, 11, 29, 42, 57, 91, 123\}$. Junction states for
 distillation were sampled only from these.
 \textbf{Closed-loop evaluation seeds:}
@@ -37,11 +38,12 @@ disjoint from training (\S\ref{sec:met-disjoint}).
 \textbf{Offline holdout:} split by deterministic content hash
 (\texttt{HOLDOUT\_MOD}=12) and frozen before the first training run, which
 leaves 5{,}580 held-out examples against 59{,}533 training examples, from
-65{,}113 accepted renderings (6 rejected by the sanity verifier for serving an
-empty phase without a justifying note). Per format: sota 16{,}982, myopic
+65{,}113 accepted renderings (6 delay-aware states rejected by the sanity
+verifier for serving an empty phase without a justifying note, removing
+their sota and myopic renderings). Per format: sota 16{,}982, myopic
 16{,}982, prediction 18{,}596, coordination 12{,}553.
 
-\section{Prompt contract}
+\subsection{Prompt contract}
 All four formats share one output contract: exactly
 \texttt{\{"phase": N\}}. The \emph{same rendering code serves training,
 offline evaluation, and closed-loop control}, so no format skew can
@@ -61,7 +63,7 @@ The myopic format withholds accumulated waiting, prediction adds
 short-horizon arrival counts, and coordination adds neighbour release
 notes. Parsing tiers are as given in \S\ref{sec:des-agent}.
 
-\section{The compile-and-serve chain}
+\subsection{The compile-and-serve chain}
 Reproducing a served custom model requires the following steps in order,
 each established by failure during this project.
 
@@ -83,7 +85,7 @@ registers but returns HTTP 400 on every request.
 set \texttt{provider\_options} to WebGPU in \texttt{genai\_config.json}.
 \end{enumerate}
 
-\section{Harness invariants}
+\subsection{Harness invariants}
 Three properties of the experiment harness underwrite the results.
 \emph{Fail-loud:} API errors are counted and abort a run rather than being
 scored as answers. An unservable model records a skip, never a score.
@@ -95,11 +97,44 @@ validation and re-run.
 offline evaluator rediscovers the endpoint, reloads the model, and retries
 failed rows with statistics intact.
 
-\chapter{Extended results}\label{app:tables}
+\section{Extended results}\label{app:tables}
 
-\section{Per-topology closed-loop detail}
+\subsection{Experiment inventory}
+Every experiment family in \S\ref{ch:results}, with its design and primary output.
+
+\begin{table*}[t]
+
+\centering
+\small
+\begin{tabular}{p{0.30\linewidth}p{0.36\linewidth}p{0.22\linewidth}}
+\toprule
+Family & Design & Primary output \\
+\midrule
+Base-model factorial & 8 catalogue SLMs $\times$ 4 formats $\times$ 6
+topologies $\times$ up to 32 seeds & closed-loop delay vs baselines \\
+Explanatory (why) study & two-way ANOVA, 2 models $\times$ 4 topologies
+$\times$ 3 seeds (config fixed) & $F$, $\eta^2$, interaction \\
+Teacher cross-audit & second frontier model re-labels 4 batches of 150
+teacher-labelled states & label agreement \\
+Offline distillation & 7 phi rows + 4 qwen rows $\times$ 4 formats,
+frozen holdout & accuracy, JSON rate \\
+Fine-tune closed-loop & ft vs stock at 0.6B, plus a 3.8B ft confirmation
+arm, $\times$ 3 topologies $\times$ 30 disjoint seeds & paired delay, authorship \\
+Decision battery & cloud frontier vs local SLM on identical states & agreement, latency \\
+Accident / crash-law suite & scripted collision scenarios $\to$ audit
+reconstruction & evidence packs, chain verification \\
+Trust battery & honest / blatant / stealth misreporting & detection, delay impact \\
+Emergency / EV suite & scripted EV arrival and spoofing attack on the
+arterial corridor, 3 modes $\times$ 30 paired seeds & clearance metrics \\
+\bottomrule
+\end{tabular}
+\caption{Experiment inventory.}
+\label{tab:inventory}
+\end{table*}
+
+\subsection{Per-topology closed-loop detail}
 The per-seed cells behind the means and paired tests of
-Chapter~\ref{ch:results} are kept in
+\S\ref{ch:results} are kept in
 \texttt{results/frontier\_raw/}, one file per (model, config, topology,
 seed) containing the MaxPressure baseline delay, controller delay,
 relative change, decision composition (SLM / substitution /
@@ -108,28 +143,32 @@ derive, plus latency distribution and audit-chain check. The fixed-time
 floor is in \texttt{results/experiment\_fixedtime\_*.json}. Closed-loop
 figures recompute from both with the scripts in \texttt{src/}.
 
-\section{Failure forensics tables}
+\subsection{Failure forensics tables}
 The catastrophic-cell analysis of \S\ref{sec:res-forensics} is tabulated
 in \texttt{results/failure\_forensics.md}: 14 of 270 cells at
 $\ge{+}20\%$ delay, their seed-matched comparators, and the
 shared-versus-arm-specific decomposition. The underlying data is in
 \texttt{results/failure\_forensics.json}.
 
-\section{Adversarial trust battery}
+\subsection{Adversarial trust battery}
 Per-topology, per-scenario cells for all three controllers (stock and
 fine-tuned, both scales) are in
 \texttt{results/\allowbreak experiment\_\allowbreak trust\_\allowbreak traffic\_\allowbreak <model>.json}, with raw cells
 under \texttt{results/trust\_traffic\_raw/} keyed by model, topology,
 scenario, and seed.
 
-\section{Authorisation re-test}
+\subsection{Authorisation re-test}
 The four-model, two-arm fair re-test of \S\ref{sec:res-lee} is recorded in
 \texttt{results/slm\_auth\_lee\_<model>.json}, each containing class
 accuracy, grant accuracy, precision, recall, false-positive and
 false-negative rates, dangerous false grants, parse failures, and
 P50/P95/P99 latency per arm.
 
-\chapter{UK-law fault-grounding knowledge base}\label{app:uklaw}
+\input{chapters/sec/app-tables}
+
+\input{chapters/sec/app-extended}
+
+\section{UK-law fault-grounding knowledge base}\label{app:uklaw}
 
 The reconstruction layer matches verified collision facts against a
 curated knowledge base of UK traffic law. The base is deliberately small,
@@ -139,9 +178,8 @@ binding strength (\texttt{MUST} for statutory prohibitions,
 verified fact that triggers it. Table~\ref{tab:uklaw} lists the rules
 exercised by the seven evaluated scenarios.
 
-\begin{table}[h]
-\caption{Fault-grounding rules exercised by the evaluated scenarios.}
-\label{tab:uklaw}
+\begin{table*}[t]
+
 \centering
 \small
 \begin{tabular}{p{0.28\linewidth}p{0.26\linewidth}p{0.36\linewidth}}
@@ -166,7 +204,9 @@ Green due regard & TSRGD 2016 Sch14 Pt1 5(14) & Green-light party must proceed
 with due regard; typically the minority share \\
 \bottomrule
 \end{tabular}
-\end{table}
+\caption{Fault-grounding rules exercised by the evaluated scenarios.}
+\label{tab:uklaw}
+\end{table*}
 
 One property of the encoding matters for the accountability claim: the
 emergency exemption is gated first on the mechanically verified crossing
@@ -175,3 +215,5 @@ corroboration or a valid emergency-class key, so a spoofed claim leaves
 the driver squarely within the red-light prohibition
 (\S\ref{sec:res-audit-worked}). Legal causation is never assessed but
 marked \texttt{NOT\_ASSESSED} for a human adjudicator.
+
+\input{chapters/sec/app-deployment}

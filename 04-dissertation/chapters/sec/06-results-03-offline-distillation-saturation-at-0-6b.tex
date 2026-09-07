@@ -1,91 +1,59 @@
-\section{Offline distillation: saturation at 0.6B}\label{sec:res-offline}
-Table~\ref{tab:offline-full} gives the complete offline campaign: both
-student scales, stock versus fine-tuned through the identical int4
-pipeline, plus LOTO and format-specialist controls, on the frozen
-5{,}580-state holdout as served (WebGPU, int4).
-
-\begin{table}[t]
-\caption{Holdout accuracy (\%) against frozen frontier-teacher labels,
-int4-as-served. All fine-tuned rows and the stock Phi row emit 100\% strict JSON; stock
-Qwen3-0.6B reaches 93.4\% on sota.}
-\label{tab:offline-full}
-\centering
-\small
-\begin{tabular}{lcccc}
-\toprule
- & myopic & sota & prediction & coordination \\
-\midrule
-Qwen3-0.6B stock & 45.6 & 55.1 & 63.3 & 69.3 \\
-\textbf{Qwen3-0.6B generalist ft} & \textbf{87.9} & \textbf{97.7} & \textbf{97.6} & \textbf{99.0} \\
-Phi-4-mini stock & 87.5 & 59.0 & 86.0 & 87.0 \\
-\textbf{Phi-4-mini generalist ft} & \textbf{88.7} & \textbf{97.1} & \textbf{97.4} & \textbf{99.3} \\
-Phi-4-mini LOTO & 88.3 & 96.8 & 97.4 & 99.1 \\
-Phi-4-mini sota-specialist & 87.9 & 97.8 & 89.5 & 93.3 \\
-Phi-4-mini myopic-specialist & 87.0 & 87.9 & 88.8 & 91.8 \\
-Phi-4-mini prediction-specialist & 87.9 & 91.3 & 97.3 & 98.4 \\
-Phi-4-mini coordination-specialist & 87.4 & 89.1 & 94.7 & 99.3 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{Offline distillation: saturation at 0.6B}\label{sec:res-offline}
+Table~\ref{tab:offline-full} (Appendix~\ref{app:tables}) gives the complete
+offline campaign on the frozen 5{,}580-state holdout as served (WebGPU,
+int4): both student scales, stock versus fine-tuned through the identical
+int4 pipeline, plus LOTO and format-specialist controls;
+Figure~\ref{fig:offline} plots the four main rows.
 
 \input{chapters/sec/fig-offline}
 
-One naming point comes first, because two Qwen checkpoints appear in
-this dissertation and they are not the same model. The row above is the
+Two Qwen checkpoints appear in this report: the tabled row is the
 \emph{generalist} student, trained and evaluated on all four formats,
-while every closed-loop result in this chapter uses the \emph{sota-only}
-student, trained on the delay-aware format alone and served in it, which
-scores 97.4\% against the generalist's 97.7\% on the only format either is
-asked to act in. The offline table therefore characterises the
-distillation rather than the provenance of the closed-loop arms.
-
-Five findings follow.
+while every closed-loop result uses the \emph{sota-only} student, trained
+on the delay-aware format alone and served in it, which scores 97.4\%
+against the generalist's 97.7\% on the only format either is asked to act
+in. The offline table therefore characterises the distillation rather than
+the provenance of the closed-loop arms. Five findings follow.
 
 \begin{enumerate}
 \item \finding{Scale saturation.} The 0.6B and 3.8B generalists are
 statistically indistinguishable on every format: the largest gap, 0.8
 points on myopic, sits against a standard error of about 1.2 points on
 $n{=}1{,}510$, so no two-proportion test approaches significance. That
-test is conservative here: both students are scored on the same
-frozen items, so the comparison is paired, but I retained only aggregate
-accuracies per format, making the exact paired test (McNemar)
-uncomputable after the fact. Both students sit at the label-noise ceiling
-on three of four formats (97 to 99\% against 97.3 to 99.3\% agreement
-between the two frontier models that produced the labels, on 600
-cross-checked items), myopic excepted at 88\% and explained below. Six
-times the parameters buy no measurable per-decision gain.
+test is conservative, since both students are scored on the same frozen
+items, but only aggregate accuracies per format were retained, making the
+exact paired test (McNemar) uncomputable after the fact. Both sit at the
+label-noise ceiling on three of four formats (97 to 99\% against 97.3 to
+99.3\% agreement between the two frontier models that produced the labels,
+on 600 cross-checked items), myopic excepted at 88\%. Six times the
+parameters buy no measurable per-decision gain.
 \item \finding{Where the gain lands depends on the base.} The 0.6B is
-lifted by $+29.7$ to $+42.6$ points on every format, while Phi-4-mini
-gains most on the delay-aware
-sota format ($+38.1$) and negligibly on myopic ($+1.2$): for a capable
-base, fine-tuning raises decision quality from a floor already high on
-three of four formats (87.5, 59.0, 86.0, 87.0) rather than instilling
-format discipline, since
-stock Phi is already 100\% format-compliant.
+lifted by $+29.7$ to $+42.6$ points on every format; Phi-4-mini, already
+100\% format-compliant, gains most on the delay-aware sota format
+($+38.1$) and negligibly on myopic ($+1.2$), so for a capable base
+fine-tuning raises decision quality from an already high floor (87.5,
+59.0, 86.0, 87.0) rather than instilling format discipline.
 \item \finding{Generalists only.} No format specialist beats the generalist
-on its own format by more than $0.7$ points while off-format costs run
-from $0.8$ to $9.2$ points, and the myopic specialist loses \emph{even
+on its own format by more than $0.7$ points while off-format costs run from
+$0.8$ to $9.2$ points, and the myopic specialist loses \emph{even
 on-format} (87.0 vs 88.7), consistent with mixed-format training
-regularising against the noisy privileged-teacher labels that pure-myopic
-training overfits. The specialist sweep ran at 3.8B only, a
-single-scale result, and the sota-only
-Qwen student used in the closed-loop runs is not part of it.
+regularising against noisy privileged-teacher labels; the sweep ran at
+3.8B only, and the sota-only Qwen student is not part of it.
 \item \finding{No detectable topology memorisation.} The LOTO student,
-trained with all Old Street states removed, matches the generalist on
-every format. Old Street is 4.2\% of the sota rows and 0.4\% of
-coordination, so this bounds a held-out-topology deficit near 7 points
-rather than measuring one; per-topology accuracy was not retained.
+trained with all Old Street states removed, matches the generalist on every
+format; Old Street is 4.2\% of the sota rows and 0.4\% of coordination, so
+this bounds a held-out-topology deficit near 7 points rather than measuring
+one, and per-topology accuracy was not retained.
 \item \finding{Quantised serving costs no measurable accuracy here.} The
 CPU and WebGPU int4 artifacts score identically in aggregate (97.42\% both
-on the sota holdout, $n{=}1{,}510$). Per-item outputs were not retained,
-so this is equality of accuracy, not demonstrated output identity, and the
+on the sota holdout, $n{=}1{,}510$). Per-item outputs were not retained, so
+this is equality of accuracy, not demonstrated output identity, and the
 ``lossless'' claim is scoped narrowly in \S\ref{sec:dis-threats}.
 \end{enumerate}
 The myopic ceiling ($\sim$88\%) is most likely intrinsic to the format
 rather than a training failure: the teacher was privileged with
 waiting-time state the myopic prompt hides, an Orca-style label-only
-distillation cost \cite{mukherjee2023orca}. Every myopic arm bar the stock
-0.6B, fine-tuned or not, lands within 1.7 points of that ceiling,
-consistent with a label-noise floor. The non-privileged-label control that
-would establish it was not run.
-
+distillation cost \cite{mukherjee2023orca}, and every myopic arm bar the
+stock 0.6B lands within 1.7 points of that ceiling, consistent with a
+label-noise floor; the non-privileged-label control that would establish
+it was not run.

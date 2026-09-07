@@ -1,50 +1,19 @@
-\section{Trust-coefficient battery}\label{sec:res-trust}
-The trust mechanism passes its full property battery (9/9): a persistently
-honest junction climbs to 0.929 trust, a persistent liar collapses to
-0.011 and loses the power to corroborate, the designed asymmetry holds in
-both directions, and a truthful-but-late report is vindicated
-retroactively by local sensing (\S\ref{sec:des-trust}).
-
-In closed-loop traffic (honest, blatant and stealth misreporting injected
-into SUMO) I ran the battery against three controller arms: fine-tuned
-3.8B, stock 0.6B and fine-tuned 0.6B. One scoping point governs every
-number below: trust gating is off in these runs, so the ledger did not
-alter any served phase. Detection is scored by replaying each run's
-recorded claims and local-sensing confirmations through the ledger, which
-measures what the mechanism would have caught, not what it prevented. The
-delay costs reported here are therefore the attack's effect on an
-undefended controller. No stock-3.8B trust run exists, so
-the stock/fine-tuned contrast is available at 0.6B only. It
-is the fine-tuned deployment that matters
-(\S\ref{sec:res-authorship}), since a controller acting on its
-coordination inputs is what poisoned inputs can move. Three findings, at three seeds
-per cell (descriptive). First, \finding{detection is
+\subsection{Trust-coefficient battery}\label{sec:res-trust}
+The mechanism passes its 9/9 property battery (\S\ref{sec:des-trust}). In
+closed-loop traffic I ran it against fine-tuned 3.8B, stock 0.6B and
+fine-tuned 0.6B controllers, at three seeds per cell and with gating off,
+so the figures are descriptive and not comparable cell-for-cell with
+Table~\ref{tab:closedloop-full}. Appendix~\ref{app:trust} gives the
+detail. Three findings follow. \finding{Detection is
 controller-independent by design and in measurement}: every controller
-catches and collapses a blatant liar on Bloomsbury (62--70 catches,
-final trust 0.21--0.27) and grid4$\times$4 (146--151 catches, trust
-$\le$0.03, corroboration stripped), while a calibrated stealth attacker evades
-essentially everywhere ($\le$2 catches, trust $\ge$0.92), an open
-limitation. On the corridor, Euston peak-hour and Old Street the liar
-junction is never consulted, so the mechanism is inert on all three (zero
-lies injectable). Second, \finding{the delay cost of blatant lying
-survives detection}: on the synthetic grids it adds $+2.7$ to $+11.5$
-points over the same controller's honest run even as the liar's trust
-collapses, because detection bounds future influence without undoing
-congestion. On Bloomsbury the damage stays within
-$\sim$3 points (fine-tuned qwen $-1.3\%$ under attack against $-1.1\%$
-honest). The design predicts this is the local-sensing override, but no
-override-ablated arm was run, so map structure is an equally live
-explanation and the two are not separated. Those trust figures are not comparable cell-for-cell with
-Table~\ref{tab:closedloop-full}: this battery runs three seeds
-($42, 123, 31$) in the coordination format against the same-seed
-MaxPressure baseline, where the main sweep uses thirty disjoint seeds in
-the sota format. Two of its three seeds (42 and 123) are training-state
-seeds and the third (31) is a disjoint evaluation seed
-(\S\ref{sec:met-disjoint}), so this is the one family in the study whose
-fine-tuned arms partly see states the students were distilled from.
-Third, \finding{stealth's harm is positional, not congestive}: its
-intermittent inflations cost $-2.3$ to $+2.9$ points, buying retained
-corroboration power at high trust to abuse later. The threat model for a
-fine-tuned deployment is therefore asymmetric. Distributional detection is the right next defence
+catches and collapses a blatant liar where lies are injectable, while a
+calibrated stealth attacker evades essentially everywhere, an open
+limitation. \finding{The delay cost of blatant lying survives detection},
+adding $+2.7$ to $+11.5$ points on the synthetic grids, because detection
+bounds future influence without undoing congestion. And
+\finding{stealth's harm is positional, not congestive}. The threat model
+for a fine-tuned deployment is therefore asymmetric, and that is the
+deployment that matters, since a controller acting on its coordination
+inputs is what poisoned inputs can move (\S\ref{sec:res-authorship}).
+Distributional detection is the right next defence
 (\S\ref{sec:dis-future}).
-

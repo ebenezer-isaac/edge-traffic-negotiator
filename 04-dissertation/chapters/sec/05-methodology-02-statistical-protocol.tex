@@ -1,21 +1,19 @@
-\section{Statistical protocol}\label{sec:met-stats}
-Every powered closed-loop cell is replicated over $n{=}30$ seeds per topology; the exploratory sweep that preceded them ran three seeds per cell and is labelled as such throughout.
-The test for a delay effect is a one-sample $t$-test on the per-seed
-relative change against each baseline, computed on the same quantity as the
-reported CI, and I pool across topologies ($n{=}90$) where the hypothesis
-is topology-independent.
-The explanatory study's ANOVA uses the project's
-pure-mathematics regularised incomplete beta, so no library version can
-silently change it. The closed-loop $t$ and Wilcoxon $p$-values are SciPy's,
-recomputable from the committed per-seed JSON. For the factorial explanatory analysis I report effect sizes
-(partial $\eta^2$) alongside $F$ statistics, and for headline comparisons I state
-direction, magnitude and $p$ together rather than significance alone.
-
-Two commitments were made in advance. First, the honest-null policy: a
-non-significant result at $n{=}30$ is reported with its magnitude and
-uncertainty, not suppressed or re-run until significant. Second, no
-mid-experiment stopping: cell counts were fixed by the factorial design
-before launch, and the resumable runner (\S\ref{sec:imp-harness}) re-runs
-only cells that produced no measurement (crash, probe failure), never cells
-whose answer was unwelcome.
-
+\subsection{Statistical protocol}\label{sec:met-stats}
+Every powered closed-loop cell is replicated over $n{=}30$ seeds per
+topology; the exploratory sweep that preceded them ran three seeds per cell
+and is labelled as such throughout. The test for a delay effect is a
+one-sample $t$-test on the per-seed relative change against each baseline,
+computed on the same quantity as the reported CI and pooled across
+topologies ($n{=}90$) where the hypothesis is topology-independent. The
+explanatory ANOVA uses the project's pure-mathematics regularised
+incomplete beta, so no library version can silently change it; the
+closed-loop $t$ and Wilcoxon $p$-values are SciPy's, recomputable from the
+committed per-seed JSON; effect sizes (partial $\eta^2$) accompany $F$
+statistics, and headline comparisons state direction, magnitude and $p$
+together. Two commitments were made in advance: the honest-null policy,
+under which a non-significant result at $n{=}30$ is reported with its
+magnitude and uncertainty rather than suppressed or re-run until
+significant; and no mid-experiment stopping, cell counts being fixed by
+the factorial design before launch, with the resumable runner
+(\S\ref{sec:imp-harness}) re-running only cells that produced no
+measurement, never cells whose answer was unwelcome.

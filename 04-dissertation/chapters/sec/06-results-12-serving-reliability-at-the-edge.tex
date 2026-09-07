@@ -1,44 +1,15 @@
-\section{Serving reliability at the edge}\label{sec:res-reliability}
+\subsection{Serving reliability at the edge}\label{sec:res-reliability}
 Sustained on-device serving produced three documented reliability
-findings. One long offline evaluation died at 5{,}500 of 5{,}580 rows on a
-host \texttt{OSError(28)} (no space left on device) and had to be re-run;
-registering builder-compiled models required undocumented synthesis of the
-inference manifest; and I observed the catalogue Qwen3-0.6B GPU artifact
-producing malformed output after extended service uptime, which I record
-as an unlogged operational observation rather than a measured finding and
-which is why \S\ref{sec:met-baselines} takes the pipeline-compiled
-artifact as the control. Each was mitigated in
-harness (\S\ref{sec:imp-harness}).
-
-Decision latency is summarised in Table~\ref{tab:latency}. The 3.8B
-student is the fastest of my pipeline-compiled arms and the 0.6B students
-the slowest, a counter-intuitive ordering that is a property of the
-compiled artifacts rather than of parameter
-count. The ordering holds only within my own compiles:
-four vendor catalogue arms are faster still, including the catalogue build
-of the student's own weights at 0.68\,s, the 2.6$\times$ compile
-penalty of \S\ref{sec:imp-foundry} from the other side. One call in
-the 0.6B arms exceeded the 10\,s
-decision interval, so the real-time margin is comfortable
-at the median and not guaranteed in the tail. This is the criterion that excludes
-phi-4-mini-reasoning (\S\ref{sec:met-baselines}), which differs only in
-frequency: a lone outlier here against a p99 above the interval
-there. A deployment would need a hard timeout with deterministic
-fallback, which the architecture already supports.
-
-\begin{table}[h]
-\caption{Decision latency across closed-loop cells (per-cell summaries,
-GPU-served, sota arms). The decision interval is 10\,s.}
-\label{tab:latency}
-\centering
-\small
-\begin{tabular}{lrrrr}
-\toprule
-Arm & p50 (median) & p50 range & p99 (worst cell) & worst call \\
-\midrule
-Qwen3-0.6B ft & 1.75\,s & 1.39--2.57\,s & 7.58\,s & 13.79\,s \\
-Qwen3-0.6B stock & 1.74\,s & 1.46--2.51\,s & 2.97\,s & 9.88\,s \\
-Phi-4-mini ft & 0.94\,s & 0.92--1.20\,s & 1.46\,s & 1.49\,s \\
-\bottomrule
-\end{tabular}
-\end{table}
+findings (a disk-full crash at 5{,}500 of 5{,}580 evaluation rows,
+undocumented manifest synthesis for builder-compiled models, and malformed
+output from the catalogue Qwen3-0.6B GPU artifact after extended uptime,
+the unlogged observation behind the pipeline-compiled control of
+\S\ref{sec:met-baselines}), each mitigated in harness
+(Appendix~\ref{app:serving}). Decision latency (Table~\ref{tab:latency},
+Appendix~\ref{app:tables}) is comfortable at the median and not guaranteed
+in the tail: p50 is 0.94--1.75\,s against the 10\,s decision interval,
+vendor catalogue builds are faster still (0.68\,s for the student's own
+weights, the 2.6$\times$ compile penalty of \S\ref{sec:imp-foundry} seen
+from the other side), but one 0.6B call took 13.79\,s, the criterion that
+excludes phi-4-mini-reasoning. A deployment would need a hard timeout with
+deterministic fallback, which the architecture already supports.

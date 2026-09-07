@@ -1,4 +1,4 @@
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -26,10 +26,9 @@
 \legend{0.6B stock, 3.8B stock, 0.6B ft, 3.8B ft}
 \end{axis}
 \end{tikzpicture}
-\caption{Offline decision accuracy against frozen teacher labels, at int4 precision as
-served. Distillation closes almost the whole gap, and the two fine-tuned students land
-on each other at every format: six times the parameters buy nothing per-decision. The
-myopic format is the exception at $88\%$, which is the privileged-teacher ceiling
-described in \S\ref{sec:res-offline}.}
+\caption{Offline decision accuracy against frozen teacher labels, int4 as
+served. Distillation closes almost the whole gap and the two fine-tuned
+students land on each other at every format; the myopic exception at
+$88\%$ is the privileged-teacher ceiling (\S\ref{sec:res-offline}).}
 \label{fig:offline}
-\end{figure}
+\end{figure*}

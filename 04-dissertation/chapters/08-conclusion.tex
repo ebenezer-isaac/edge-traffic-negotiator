@@ -1,57 +1,43 @@
-\chapter{Conclusion}\label{ch:conclusion}
-% WORD BUDGET: ~700 words (12k total target; COMP0234 limit UNVERIFIED — confirm on Moodle)
-
-This dissertation asked whether an on-device small language model, served
-by Microsoft Foundry Local within a 6\,GB envelope, can control real
-London junctions competently while producing an accident audit worth
-trusting, and at what scale the learned component earns its place.
+\section{Conclusion}\label{ch:conclusion}
 
 Feasibility is a qualified yes, and the qualifications are the substance.
 Shielded on-device SLM control significantly beats the fixed-time floor on
 the study's most complex junction geometry and, once distilled, on a
-demand-calibrated grid. The same controller is worse on a saturated
+demand-calibrated grid; the same controller is worse on a saturated
 arterial whether distilled or not, and elsewhere indistinguishable from
 that floor except on the oversaturated grid, where the undistilled
 controller is significantly worse. The classical baseline changes sign
 with the network, and what looked like uniform weakness on real geometry
 was a three-seed result that replication retracted. The whole loop, from
 frontier-teacher distillation through QLoRA training to int4 serving, fits
-on one consumer device. The 0.6B student trained on the same GPU that
-serves it, and there distillation saturates: within this deployable
-envelope a student six times larger lands on statistically
-indistinguishable decision accuracy, which points at the distillation
-ceiling rather than model capacity.
+on one consumer device, and there distillation saturates: a student six
+times larger lands on statistically indistinguishable decision accuracy,
+pointing at the distillation ceiling rather than model capacity.
 
 The central finding reframes what fine-tuning is \emph{for} in a shielded
 controller. On the maps that could not clear, the 97\%-accurate student
 does not significantly beat the floor, and neither does anything else
 inside the shield's envelope, though I ran no shield ablation to isolate
-that compression. Where the network \emph{can} flow, fine-tuning moves delay
-itself, and does so on every one of thirty seeds (\S\ref{sec:res-calib}).
-But applying the same calibration to the arterial corridor did not
-reproduce it, and I report that as the failed uniformity test it is.
-Fine-tuning moves authorship on every topology I tested
-(\S\ref{sec:res-authorship}). The audit layer proves who decided what, so
-authorship is what makes that audit concern the certified model rather
-than its fallback.
+that compression. Where the network \emph{can} flow, fine-tuning moves
+delay itself, on every one of thirty seeds (\S\ref{sec:res-calib});
+applying the same calibration to the arterial corridor did not reproduce
+it, and I report that as the failed uniformity test it is. Fine-tuning
+moves authorship on every topology I tested (\S\ref{sec:res-authorship}),
+and the audit layer proves who decided what, so authorship is what makes
+that audit concern the certified model rather than its fallback.
 
 The nulls bound the claim, each reported with its mechanism: the corridor
 harm, the stealth attacker the trust ledger misses, the privileged-teacher
-ceiling, and the three serving-reliability findings. Within
-them, the case is made: an audited, shielded, on-device SLM junction
-controller is possible today, at 0.6B, on a desktop-class 6\,GB GPU, with
-published figures for cabinet-class hardware suggesting but not
-establishing the same envelope (\S\ref{sec:dis-future}).
-
-For a signal engineer the practical reading is narrow. Deploy this where
-the network can still clear, or where no engineered plan exists at all,
-rather than on a saturated arterial; calibrate a test network to real
-demand before believing any delay figure it produces; and treat the audit
-trail, not the delay, as what certification would rest on. The
-path onward runs through closed-loop objectives, synthesised shields, and
-a watchdog-supervised field pilot.
-
-What this study settles is narrower and firmer: fine-tuning does not
-change that audit trail, which verifies identically in every arm; what it
-raises is the share of the record the model owns, and it moves delay only
-where the network can clear, and not on every network that can.
+ceiling, and the three serving-reliability findings. Within them, an
+audited, shielded, on-device SLM junction controller is possible today, at
+0.6B, on a desktop-class 6\,GB GPU, with published figures for
+cabinet-class hardware suggesting but not establishing the same envelope
+(Appendix~\ref{app:deploy}). For a signal engineer the reading is narrow:
+deploy this where the network can still clear or where no engineered plan
+exists, not on a saturated arterial; calibrate a test network to real
+demand before believing any delay figure; and treat the audit trail, not
+the delay, as what certification would rest on. What this study settles is
+narrower and firmer: fine-tuning does not change the audit trail, which
+verifies identically in every arm; it raises the share of the record the
+model owns, and it moves delay only where the network can clear, and not
+on every network that can.

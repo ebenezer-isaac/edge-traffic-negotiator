@@ -1,37 +1,12 @@
-\section{Emergency preemption: what the priority path is worth}\label{sec:res-ev}
+\subsection{Emergency preemption: what the priority path is worth}\label{sec:res-ev}
 The authorisation machinery serves a concrete function, measured over
-thirty seeds on the synthetic arterial corridor with a scripted
-ambulance and spoofing attack, in three modes: \emph{nopreempt}
-(no signal priority,
-as at an installation without emergency-vehicle detection),
-\emph{naive} (preempts on any claim), and \emph{defended} (preempts only
-on a claim with a valid authorising key and corroboration,
-\S\ref{sec:des-trust}).
-
-\begin{table}[h]
-\caption{Emergency-vehicle priority, $n{=}30$ seeds, 95\% CIs. Positive
-values are seconds saved.}
-\label{tab:ev}
-\centering
-\small
-\begin{tabular}{lrr}
-\toprule
-Quantity & Mean & 95\% CI \\
-\midrule
-Ambulance time saved by priority (nopreempt $-$ defended) & 31.1\,s & $[25.4, 36.5]$ \\
-Cost to the ambulance of the authorisation gate (defended $-$ naive) & 8.0\,s & $[3.7, 12.5]$ \\
-Cross-traffic harm avoided under attack, mean & 4.6\,s & $[3.3, 6.0]$ \\
-Cross-traffic harm avoided under attack, worst case & 16.1\,s & $[11.5, 20.4]$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-All four intervals exclude zero. \finding{Signal priority is worth about
-half a minute to an emergency vehicle} against a no-priority controller,
-\finding{security has a measurable price}, and \finding{that price buys
-quantified protection}. Whether that
-exchange is worth making is a policy judgement. Scope: one
-scripted ambulance and one attack window per run, so these are
-per-event magnitudes, not expected values under a naturalistic call rate,
-and the baseline characterises no specific deployed system.
-
+thirty seeds on the synthetic arterial corridor with a scripted ambulance
+and spoofing attack in three modes, no preemption, naive and defended
+(Appendix~\ref{app:ev-detail}, Table~\ref{tab:ev}). All four intervals
+exclude zero: \finding{signal priority is worth about half a minute to an
+emergency vehicle} (31.1\,s), \finding{security has a measurable price}
+(8.0\,s to the ambulance), and \finding{that price buys quantified
+protection} (4.6\,s mean and 16.1\,s worst-case cross-traffic harm avoided
+under attack). These are per-event magnitudes from one scripted ambulance
+and one attack window per run, not expected values under a naturalistic
+call rate, and the baseline characterises no specific deployed system.

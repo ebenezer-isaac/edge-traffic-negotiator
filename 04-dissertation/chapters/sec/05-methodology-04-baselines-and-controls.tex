@@ -1,35 +1,31 @@
-\section{Baselines and controls}\label{sec:met-baselines}
-\textbf{Fixed-time} is the floor every deployed junction achieves:
-each network's own default cyclic plan, the same phase menu as every other arm.
+\subsection{Baselines and controls}\label{sec:met-baselines}
+\textbf{Fixed-time} is the floor every deployed junction achieves: each
+network's own default cyclic plan, the same phase menu as every other arm.
 \textbf{MaxPressure} is the theoretically-grounded adaptive baseline
 \cite{varaiya2013maxpressure}, and doubles as the shield's fallback policy.
-
 The control for every fine-tuning comparison is the \emph{same base model
-compiled through the identical int4 pipeline} (denoted stock, or ft0),
-not the vendor catalogue artifact. The choice has two motivations. First,
-I observed the catalogue Qwen3-0.6B GPU artifact emitting corrupted tokens
-after long service uptime, an unlogged operational observation rather than
-a measured finding (\S\ref{sec:res-reliability}). Second, and
-independently, that artifact differs from my compiled one in quantisation
-recipe even when healthy. The second reason is sufficient on its own: holding the
-compilation pipeline fixed leaves the fine-tuned weights as the single
-manipulated variable.
+compiled through the identical int4 pipeline} (denoted stock, or ft0), not
+the vendor catalogue artifact, for two reasons. I observed the catalogue
+Qwen3-0.6B GPU artifact emitting corrupted tokens after long service
+uptime, an unlogged operational observation rather than a measured finding
+(\S\ref{sec:res-reliability}). Independently, and sufficient on its own,
+that artifact differs from my compiled one in quantisation recipe even
+when healthy. Holding the compilation pipeline fixed leaves the fine-tuned
+weights as the single manipulated variable.
 
 One model class is excluded by measurement rather than swept:
-phi-4-mini-reasoning's p99 decision latency (11.1\,s) exceeds the
-10\,s decision interval on this hardware, so no deployment could serve it
-in time. That is a deployability finding, not a control one: the harness
-blocks on the model call with simulated time stopped, so a closed-loop
-cell would flatter a slow model rather than penalise it. The p99 is also
-one format of four on one seed, the other three at 8.69, 9.61 and
-9.74\,s. It is recorded as latency-excluded, its single corridor probe
-retained descriptively.
-
-Two further controls target specific hypotheses. A \textbf{leave-one-topology-out}
-(LOTO) student, trained with all Old Street states removed, tests whether
-distillation gains are topology memorisation, and four \textbf{format-specialist}
-students, each trained on one prompt format alone, test whether a deployed
-junction would prefer a per-format model over a generalist. The answer
+phi-4-mini-reasoning's p99 decision latency (11.1\,s) exceeds the 10\,s
+decision interval on this hardware, so no deployment could serve it in
+time. That is a deployability finding, not a control one, since the
+harness blocks on the model call with simulated time stopped and a
+closed-loop cell would flatter a slow model rather than penalise it; the
+p99 is one format of four on one seed, the other three at 8.69, 9.61 and
+9.74\,s, and the model is recorded as latency-excluded with its single
+corridor probe retained descriptively. Two further controls target specific
+hypotheses: a \textbf{leave-one-topology-out} (LOTO) student, trained with
+all Old Street states removed, tests whether distillation gains are
+topology memorisation, and four \textbf{format-specialist} students, each
+trained on one prompt format alone, test whether a deployed junction would
+prefer a per-format model over a generalist. The answer
 (\S\ref{sec:res-offline}) was no, at the single scale (3.8B) that sweep
 ran at.
-

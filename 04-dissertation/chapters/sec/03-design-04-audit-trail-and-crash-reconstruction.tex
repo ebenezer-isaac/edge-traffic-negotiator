@@ -1,37 +1,32 @@
-\section{Audit trail and crash reconstruction}\label{sec:des-audit}
-The audit layer is designed backwards from what an investigator asks
-after a collision: \emph{what did the controller know, what did it
-decide, who authored it, and can the record be trusted?}
-
-Every logged decision tick appends a record containing the halting-queue
-state vector, the model's parsed proposal, the shield's proposal, the served
-action, authorship (SLM / shield-substitution / anti-starvation) and the
-override flag; model identity and per-call latency are recorded once
-at run level, not per tick. Records are Ed25519-signed per junction and
-hash-chained into a single append-only chain per run. Chain and
-signature verification run end-to-end after every experiment, and the
-threat model includes an imposter re-signing attack (caught in all
-evaluated scenarios, \S\ref{sec:res-audit}). The chain head can be anchored
-to external witnesses in a Certificate-Transparency-style quorum
-\cite{rfc6962}, with a permissioned-ledger anchor implemented as one
+\subsection{Audit trail and crash reconstruction}\label{sec:des-audit}
+The audit layer is designed backwards from what an investigator asks after
+a collision: \emph{what did the controller know, what did it decide, who
+authored it, and can the record be trusted?} Every logged decision tick
+appends a record containing the halting-queue state vector, the model's
+parsed proposal, the shield's proposal, the served action, authorship (SLM
+/ shield-substitution / anti-starvation) and the override flag; model
+identity and per-call latency are recorded once at run level. Records are
+Ed25519-signed per junction and hash-chained into a single append-only
+chain per run; chain and signature verification run end-to-end after every
+experiment, and the threat model includes an imposter re-signing attack
+(caught in all evaluated scenarios, \S\ref{sec:res-audit}). The chain head
+can be anchored to external witnesses in a Certificate-Transparency-style
+quorum \cite{rfc6962}, with a permissioned-ledger anchor implemented as one
 optional witness rather than as a contribution.
 
 On top of verified records sits the reconstruction layer: a UK-traffic-law
 knowledge base (statutes, case law, the conditional emergency-vehicle
-exemption) against which a collision scenario's verified facts are
-matched deterministically. The output is a \emph{cited evidence pack}, never
-a verdict: the governing rules, the verified facts triggering them, and
-the fault anchor each rule implies. That answers the legal-hallucination
-risk \cite{dahl2024legal} of \S\ref{sec:bg-audit}: the legal
-knowledge is a curated, citable database and the adjudicative act is left
-to humans. My scenarios use synthetic actors on real
-topology, so no real data subject exists, and the residual legal exposure
-of a real deployment is analysed in \S\ref{sec:dis-threats}.
-
-The audit's value depends in turn on authorship
-(\S\ref{sec:des-shield}). An evidence pack over a deployment whose
-decisions are mostly floor overrides attributes the behaviour to a
-fairness timer, not to the learned component. The audit is about the
+exemption; Appendix~\ref{app:uklaw}) against which a collision scenario's
+verified facts are matched deterministically. The output is a \emph{cited evidence pack}, never a
+verdict: the governing rules, the verified facts triggering them, and the
+fault anchor each rule implies, which answers the legal-hallucination risk
+\cite{dahl2024legal} of \S\ref{sec:bg-audit} by keeping the legal
+knowledge a curated, citable database and leaving the adjudicative act to
+humans. My scenarios use synthetic actors on real topology, so no real
+data subject exists; the residual legal exposure of a real deployment is
+in \S\ref{sec:dis-threats}. The audit's value depends in turn on
+authorship (\S\ref{sec:des-shield}): an evidence pack over a deployment
+whose decisions are mostly floor overrides attributes the behaviour to a
+fairness timer, not to the learned component, so the audit is about the
 model in proportion to what the model authored, and fine-tuning raises
 that share (\S\ref{sec:res-authorship}).
-

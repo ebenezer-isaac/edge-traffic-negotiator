@@ -1,0 +1,196 @@
+% Secondary result detail moved out of the body (appendices are outside the
+% SE-IoT word count). Every number quoted in the body is unchanged.
+
+\subsection{Backpressure guarantees and their assumptions}\label{app:backpressure}
+The four assumptions behind MaxPressure's throughput-optimality
+\cite{varaiya2013maxpressure} that \S\ref{sec:bg-classical} says fail in
+central London. First, the proof assumes unbounded queue storage: Gregoire
+et al.\ \cite{gregoire2014backpressure} prove that linear-pressure control
+of Varaiya's form is not work-conserving once queue capacities are finite,
+construct explicit deadlocks, and repair it with a capacity-normalised
+pressure that is \emph{not} part of standard MaxPressure; central London's
+short links imply small capacities, so that failure condition is plausibly
+standing here, though I do not measure it. Second, the only stability
+result for a deployable (non-oracle) backpressure controller holds under
+heavy load alone: Gregoire et al.\ \cite{gregoire2014routing} require
+every queue to exceed saturation flow, concede that sub-saturation queues
+``can unstabilize the queuing network'', and call stability outside it
+``still a challenging problem''; measured diurnal demand sits below that
+threshold most of the day, and the candidate mechanism there, the pressure
+signal chasing arrival noise where a fixed cycle holds steady, I do not
+test. Third, every favourable empirical figure is a grid figure (roughly
+90\% of oracle backpressure on a uniform $21\times21$ grid, about 80\%
+under heterogeneous parameters), and the authors caution that grid results
+cannot extend to arbitrary networks. Fourth, junctions with give-way
+movements, gap acceptance or gyratory circulation fall outside the model
+domain: service in these theorems is binary and phase-determined, so no
+guarantee applies.
+
+\subsection{Seed families outside the disjoint set}\label{app:seedfamilies}
+Three families of \S\ref{sec:met-disjoint} do not use the training-disjoint
+seed set. The powered base-model factorial of \S\ref{sec:res-factorial}
+(seeds $\{1..30\}$) and the exploratory sweep that motivated it (three
+seeds per cell) involve no model fine-tuned in this project, so seed
+disjointness carries no leakage meaning for them. The trust battery of
+\S\ref{sec:res-trust} does run fine-tuned controllers on training-state
+seeds (42 and 123, with 31 a disjoint evaluation seed) and is flagged
+there. Every other closed-loop \emph{controller} number in
+\S\ref{ch:results} is a disjoint-seed number.
+
+\subsection{Longest-queue-first control}\label{app:lqf}
+A third classical baseline tests whether the results of
+\S\ref{sec:res-maxpressure} are specific to \emph{pressure}.
+Longest-queue-first serves the largest upstream queue with no downstream
+term, so unlike MaxPressure it will discharge into a blocked exit, though
+the two are routinely conflated. Over the same thirty seeds with shield,
+minimum green, clearance and anti-starvation floor identical,
+longest-queue-first is statistically indistinguishable from MaxPressure on
+all five topologies ($-0.9\%$ to $+13.4\%$, every $p\ge.30$) and
+reproduces its pattern against the naive floor: worse on the corridor
+($+13.6\%$, $p{=}.027$), better on Old Street ($-5.9\%$) and the
+calibrated grid ($-8.3\%$). The pressure formulation is not detectably
+part of the classical weakness on a saturated arterial, though the
+intervals are wide (Euston calibrated $[-12.7, +39.5]$), so this is a
+non-rejection rather than a demonstrated equivalence; saturation, link
+storage and the assumed turning split all remain candidates.
+
+\subsection{Serving-artifact provenance}\label{app:provenance}
+The nine-point gap of \S\ref{sec:res-factorial} is comparator-robust
+though the sign flip is not: against the fixed-time floor the catalogue
+and pipeline-compiled Qwen3-0.6B artifacts are $+17.4\%$ and $+4.8\%$,
+both worse than the floor but 12.6 points apart, and the gap holds on two
+of the three topologies where I could compare them (Old Street $-0.2\%$,
+$p{=}.93$).
+
+\subsection{Multiple comparisons}\label{app:holm}
+The rank-test results of \S\ref{sec:res-closedloop} are not confirmatory:
+of roughly forty paired comparisons across the report, the two reaching
+$p<.05$ only under the rank test would not survive a Holm correction
+across that family, and I pre-registered no confirmatory comparison. The
+fine-tuned-versus-stock head-to-head is nonetheless the study's primary
+contrast by design, the only cell in which a single variable is
+manipulated, and at $p{=}2.0{\times}10^{-21}$ it survives Holm where they
+do not.
+
+\subsection{Calibration decision audit}\label{app:calib-audit}
+Is the demand calibration of \S\ref{sec:res-calib} a principled correction
+or a search for a more favourable test bed? In favour: the guard metrics
+were recorded in every cell from the campaign's first run, so their values
+were not produced by looking; the diagnosis is outcome-independent; and
+the 40\% target matched Old Street's completion rate, not any effect size.
+Against: the decision to look followed a weak result, a data-dependent
+choice that retaining the superseded cells does not by itself redeem.
+Uniform application is the check I can offer: Euston peak-hour also fails
+the guard and is where SLM control looks worst (\S\ref{sec:res-factorial}),
+so calibrating the corridor risked the conclusion rather than protecting
+it, and I calibrated it, though the probed fractions bracketed failure only
+on the grid. The rule, take the largest demand fraction that still clears,
+is stated in the text rather than encoded in the calibration script, which
+prints completion at each probed fraction and leaves the choice to the
+analyst.
+
+\subsection{Trajectory-level convergence detail}\label{app:convergence}
+The identical cells of \S\ref{sec:res-forensics} are separate runs serving
+the same phase sequence, not duplicated records: wall-clock differs by up
+to 2.15$\times$ and median latency by 2.23$\times$, and in one both arms
+took 307 decisions with SLM/floor attribution differing by exactly one
+tick, where floor and model chose the same phase. Of the 14 catastrophic
+cells, five are the stock arm alone, one the 3.8B student alone, and eight
+are four seed pairs on which both fine-tuned students fail together with
+per-seed relative delay agreeing to within 0.1--0.2 points; that pairing
+restates the convergence rather than explaining it, and the independent
+evidence is the decision-level agreement.
+
+\subsection{Completeness layer}\label{app:ct}
+Above the per-run chain sits the Certificate-Transparency-style
+completeness layer of \S\ref{sec:bg-audit}. Over a twelve-entry batch, a
+salted Merkle root hides the entry contents while remaining provable, the
+salt is erasable off-chain, and an inclusion proof verifies while the same
+proof under a \emph{forged} salt is rejected; under a two-witness
+cross-audit the witnesses agree, and when one is made to serve a different
+root the equivocation is detected and consistency fails, a witness
+refusing to overwrite its own history. The cross-auditor's own honesty is
+an unverified assumption, on a par with the identity root, and the batch is
+not externally anchored: I withheld the public-log write rather than
+pollute a production transparency log.
+
+\subsection{Trust-coefficient battery detail}\label{app:trust}
+The property battery of \S\ref{sec:res-trust} (9/9): a persistently honest
+junction climbs to 0.929 trust, a persistent liar collapses to 0.011 and
+loses the power to corroborate, the designed asymmetry holds in both
+directions, and a truthful-but-late report is vindicated retroactively by
+local sensing. In closed-loop traffic (honest, blatant and stealth
+misreporting injected into SUMO) the battery ran against fine-tuned 3.8B,
+stock 0.6B and fine-tuned 0.6B controllers. Trust gating was off, so the
+ledger altered no served phase: detection is scored by replaying each
+run's recorded claims and local-sensing confirmations through the ledger,
+measuring what it would have caught rather than what it prevented, and the
+delay costs are the attack's effect on an undefended controller. No
+stock-3.8B run exists, so the stock/fine-tuned contrast is available at
+0.6B only. The battery runs three seeds ($42, 123, 31$) in the
+coordination format against the same-seed MaxPressure baseline; 42 and 123
+are training-state seeds and 31 a disjoint evaluation seed
+(\S\ref{sec:met-disjoint}), making this the one family whose fine-tuned
+arms partly see states the students were distilled from. Every controller
+catches and collapses a blatant liar on Bloomsbury (62--70 catches, final
+trust 0.21--0.27) and grid4$\times$4 (146--151 catches, trust $\le$0.03,
+corroboration stripped), while a calibrated stealth attacker evades
+essentially everywhere ($\le$2 catches, trust $\ge$0.92); on the
+daily-demand corridor, Euston peak-hour and Old Street the liar junction is
+never consulted, so the mechanism is inert there. Blatant lying adds $+2.7$ to $+11.5$ points
+over the same controller's honest run on the synthetic grids even as the
+liar's trust collapses; on Bloomsbury the damage stays within $\sim$3
+points (fine-tuned qwen $-1.3\%$ under attack against $-1.1\%$ honest),
+which the design predicts is the local-sensing override, but no
+override-ablated arm was run, so map structure is an equally live
+explanation. Stealth's intermittent inflations cost $-2.3$ to $+2.9$
+points, buying retained corroboration power at high trust to abuse later.
+
+\subsection{Emergency-vehicle priority detail}\label{app:ev-detail}
+The three modes of \S\ref{sec:res-ev} are \emph{nopreempt} (no signal
+priority, as at an installation without emergency-vehicle detection),
+\emph{naive} (preempts on any claim), and \emph{defended} (preempts only on
+a claim with a valid authorising key and corroboration,
+\S\ref{sec:des-trust}). Table~\ref{tab:ev} gives the four quantities with
+95\% CIs over thirty seeds. Whether the exchange of 8.0\,s of ambulance
+time for the protection the gate buys is worth making is a policy
+judgement.
+
+\subsection{Authorisation re-test detail}\label{app:lee}
+The legal-note pilot of \S\ref{sec:res-lee} ran at 37.8\,s per note, and
+its gold is policy-base-derived rather than human-graded, so that negative
+is a pilot proxy. The objection held that the negative could not stand
+until the SLM was re-tested with explicit in-prompt rules and a
+reason-then-classify structure, which the scaffolded arm supplies. The
+required output schema was \texttt{\{"class", "grant"\}}; the fine-tuned
+students' training schema was \texttt{\{"phase": N\}}. The harness did not
+retain raw responses, so what ft-Qwen emitted instead of the schema cannot
+be shown.
+
+\subsection{Residual legal exposure}\label{app:legal}
+The audit scenarios use synthetic actors on real topology, so no real data
+subject exists, but a real deployment would face two residual exposures
+(\S\ref{sec:dis-threats}): curating which rules apply is itself a
+judgement about relevance, so the evidence pack cannot be treated as a
+neutral readout, and I cite no authority for that proposition because I
+know of none; and the pack attracts only qualified privilege, which
+disclosure defeats.
+
+\subsection{Serving reliability and latency detail}\label{app:serving}
+The three reliability findings of \S\ref{sec:res-reliability} in full: one
+long offline evaluation died at 5{,}500 of 5{,}580 rows on a host
+\texttt{OSError(28)} (no space left on device) and had to be re-run;
+registering builder-compiled models required undocumented synthesis of the
+inference manifest; and the catalogue Qwen3-0.6B GPU artifact produced
+malformed output after extended service uptime, an unlogged operational
+observation rather than a measured finding, and the reason
+\S\ref{sec:met-baselines} takes the pipeline-compiled artifact as the
+control. Table~\ref{tab:latency} summarises decision latency. The 3.8B
+student is the fastest of my pipeline-compiled arms and the 0.6B students
+the slowest, a counter-intuitive ordering that is a property of the
+compiled artifacts rather than of parameter count and holds only within my
+own compiles: four vendor catalogue arms are faster still, including the
+catalogue build of the student's own weights at 0.68\,s. One call in the
+0.6B arms exceeded the 10\,s decision interval; phi-4-mini-reasoning
+differs only in frequency, a lone outlier here against a p99 above the
+interval there.

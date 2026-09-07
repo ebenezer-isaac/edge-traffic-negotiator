@@ -1,20 +1,18 @@
-\section{Distillation dataset and training}\label{sec:imp-dataset}
+\subsection{Distillation dataset and training}\label{sec:imp-dataset}
 From eight training-reserved seeds ($\{3, 7, 11, 29, 42, 57, 91, 123\}$) I
 sampled 48{,}137 unique junction states across three separately sampled
 pools: 16{,}988 delay-aware states that also render the privileged myopic
 rows, 18{,}596 prediction and 12{,}553 coordination. A frontier teacher
 labelled them, and a second frontier model re-labelled 600 of them in four
-audit samples of 150, agreeing on 98.5\% (97.3--99.3\% per sample). Rendering the four prompt formats over those pools
-yields 59{,}533 training examples and
-a hash-frozen holdout of 5{,}580 (\texttt{HOLDOUT\_MOD}=12). Rendering is
-family-aware: ChatML with an empty think block and no-think marker for
-Qwen3, Qwen2.5's ChatML without the marker, and Phi's
-\texttt{<|system|>\ldots<|end|>} convention. Loss applies to the
-completion only, targeting exactly \texttt{\{"phase": N\}}.
-
-Training is QLoRA $r{=}16$, NF4 double quantisation, fp16 compute. The
-0.6B student trained on the serving machine itself (13.5\,h on the
-RTX~2060), so the full loop from teacher to served controller fits on one
-consumer device. The 3.8B student and its five ablation variants trained
-on a single UCL RTX~4090 (2.3\,h each, 8.9M trainable parameters, 0.23\%).
-
+audit samples of 150, agreeing on 98.5\% (97.3--99.3\% per sample).
+Rendering the four prompt formats over those pools yields 59{,}533
+training examples and a hash-frozen holdout of 5{,}580
+(\texttt{HOLDOUT\_MOD}=12), rendered family-aware (ChatML with an empty
+think block and no-think marker for Qwen3, Qwen2.5's ChatML without the
+marker, Phi's \texttt{<|system|>\ldots<|end|>} convention), with loss on
+the completion only, targeting exactly \texttt{\{"phase": N\}}. Training
+is QLoRA $r{=}16$, NF4 double quantisation, fp16 compute. The 0.6B student
+trained on the serving machine itself (13.5\,h on the RTX~2060), so the
+full loop from teacher to served controller fits on one consumer device;
+the 3.8B student and its five ablation variants trained on a single UCL
+RTX~4090 (2.3\,h each, 8.9M trainable parameters, 0.23\%).

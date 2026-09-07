@@ -1,64 +1,55 @@
-\section{The safety shield}\label{sec:des-shield}
+\subsection{The safety shield}\label{sec:des-shield}
 The shield composes three mechanisms, named with the formal literature's
-vocabulary (\S\ref{sec:bg-shields}):
-
-\begin{enumerate}
-\item \textbf{Preemptive action masking} \cite{huang2020masking}: the model
-chooses from a fixed menu of conflict-free phases, so no proposal can
-create a conflicting green.
-\item \textbf{Post-posed default substitution}: an invalid, unparseable, or
-absent proposal is replaced by the MaxPressure phase and recorded as a
-served decision the SLM did not author.
-\item \textbf{Anti-starvation runtime monitor}: a minimum-service floor
-force-serves any green phase passed over for more than a bounded number
-of consecutive intervals, overriding both the SLM and MaxPressure, except
-while an admissible emergency preemption holds the signal. It is
-best-effort rather than proved: only one phase can be served per
-interval, so when two reach the threshold together the code records the
-residue as a violation.
-\end{enumerate}
-
-This is a sound heuristic composite, not a correct-by-construction shield
-in the Alshiekh sense \cite{alshiekh2018shield}: no synthesis from a
-temporal-logic specification, no minimal-interference proof, a limitation
-with an upgrade path
-(\S\ref{sec:dis-future}). It still enforces, for every arm
+vocabulary (\S\ref{sec:bg-shields}). \textbf{Preemptive action masking}
+\cite{huang2020masking}: the model chooses from a fixed menu of
+conflict-free phases, so no proposal can create a conflicting green.
+\textbf{Post-posed default substitution}: an invalid, unparseable or absent
+proposal is replaced by the MaxPressure phase and recorded as a served
+decision the SLM did not author. \textbf{Anti-starvation runtime
+monitor}: a minimum-service floor force-serves any green phase passed over
+for more than a bounded number of consecutive intervals, overriding both
+the SLM and MaxPressure, except while an admissible emergency preemption
+holds the signal. The floor is best-effort rather than proved. Only one
+phase can be served per interval, so when two reach the threshold together
+the code records the residue as a violation. This is a sound heuristic
+composite, not a correct-by-construction shield in the Alshiekh sense
+\cite{alshiekh2018shield}: there is no synthesis from a temporal-logic
+specification and no minimal-interference proof, a limitation with an
+upgrade path (\S\ref{sec:dis-future}). It still enforces, for every arm
 including the baselines, no conflicting greens and no approach starved
 beyond the floor except where the code records a violation.
 
 Three measured quantities are defined on this structure, and their
-denominators matter. Every
-logged decision tick is labelled by \emph{who authored the phase actually
-served}: SLM, MaxPressure substitution, or anti-starvation floor.
+denominators matter. Every logged decision tick is labelled by \emph{who
+authored the phase actually served}: the SLM, a MaxPressure substitution,
+or the anti-starvation floor.
 
-\textbf{Authored share} is $\text{slm}/\text{decisions}$, the quantity the
-audit argument needs: the fraction of \emph{logged decision ticks} whose
-phase originated with the SLM. The denominator is the ticks the
-controller logged, those where the congestion gate admitted the SLM
-plus gate-skipped ticks on which the anti-starvation floor changed the
-served phase; intervals the gate skipped without a phase change are served
-by MaxPressure and counted on neither side. The ratio therefore understates
-neither arm, but is a share of \emph{decisions taken}, not of wall-clock
-signal time.
+\textbf{Authored share} is $\mathrm{slm}/\mathrm{decisions}$, the quantity
+the audit argument needs: the fraction of \emph{logged decision ticks}
+whose phase originated with the SLM. The denominator is the ticks the
+controller logged. Those are the ticks where the congestion gate admitted
+the SLM, plus gate-skipped ticks on which the anti-starvation floor changed
+the served phase. Intervals the gate skipped without a phase change are
+served by MaxPressure and counted on neither side. The ratio therefore
+understates neither arm, but it is a share of \emph{decisions taken}, not
+of wall-clock signal time.
 
 \textbf{Proposal acceptance} is
-$\text{slm\_served}/\text{slm\_valid\_proposals}$: of the ticks where the
-SLM returned a well-formed proposal, the fraction where that proposal was
-served rather than displaced. In practice the anti-starvation floor
+$\mathrm{slm\_served}/\allowbreak\mathrm{slm\_valid\_proposals}$: of the
+ticks where the SLM returned a well-formed proposal, the fraction served
+rather than displaced. In practice the anti-starvation floor is what
 displaces it.
 
 \textbf{Divergence rate} is
-$\text{diverged\_and\_served}/\text{slm\_served}$: of the decisions the SLM
-authored, the fraction whose phase differed from what MaxPressure would
-have chosen. It measures how far the served policy departs from the
-classical reference, \emph{not} how often the shield vetoed the model.
-Masking makes such a veto structurally impossible for unsafe actions, and
-in the fine-tuned and stock 0.6B arms substitution fires on a negligible
-fraction of ticks (\S\ref{sec:res-authorship}).
+$\mathrm{diverged\_and\_served}/\allowbreak\mathrm{slm\_served}$: of the
+decisions the SLM authored, the fraction whose phase differed from what
+MaxPressure would have chosen. It measures how far the served policy
+departs from the classical reference, \emph{not} how often the shield
+vetoed the model. Masking makes such a veto structurally impossible for
+unsafe actions, and substitution fires on a negligible fraction of ticks in
+the fine-tuned and stock 0.6B arms (\S\ref{sec:res-authorship}).
 
-None of the three metrics counts unsafe actions blocked: the substitution
+None of the three counts unsafe actions blocked, since the substitution
 path catches only malformed or absent output. Reporting all three
-separately prevents the interpretive
-error of reading a high acceptance rate as a high share of authorship
-(\S\ref{sec:res-authorship}).
-
+separately prevents the error of reading a high acceptance rate as a high
+share of authorship.

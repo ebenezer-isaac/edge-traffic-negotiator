@@ -1,14 +1,13 @@
-\section{Experiment harness}\label{sec:imp-harness}
+\subsection{Experiment harness}\label{sec:imp-harness}
 Two harnesses produced the closed-loop sweep and offline-evaluation
-numbers. The \textbf{factorial runner} executes model $\times$ format
+numbers: the \textbf{factorial runner} executes model $\times$ format
 $\times$ topology $\times$ seed cells with per-cell raw JSON artifacts, a
-pre-flight serving probe per cell, and multi-pass retry for deferred
-cells; the \textbf{offline evaluator} scores holdout rows against the
-served endpoint. Standalone probes supplied the rest: the fixed-time
-floor, emergency preemption, the attack battery, the crash-law audit, the
-authorisation re-test and the retention probe. Both harnesses are
-fail-loud, resumable and recoverable in the senses
-Appendix~\ref{app:repro} defines. They survived a six-week unattended
-campaign including two service restarts, one machine reboot, and one
-mid-write power loss (one corrupted cell, detected by JSON validation and
-re-run).
+pre-flight serving probe per cell and multi-pass retry for deferred cells,
+and the \textbf{offline evaluator} scores holdout rows against the served
+endpoint; standalone probes supplied the fixed-time floor, emergency
+preemption, the attack battery, the crash-law audit, the authorisation
+re-test and the retention probe. Both are fail-loud, resumable and
+recoverable in the senses Appendix~\ref{app:repro} defines, and survived a
+six-week unattended campaign including two service restarts, one machine
+reboot and one mid-write power loss (one corrupted cell, detected by JSON
+validation and re-run).

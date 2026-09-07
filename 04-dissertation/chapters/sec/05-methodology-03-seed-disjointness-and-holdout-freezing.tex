@@ -1,34 +1,24 @@
-\section{Seed-disjointness and holdout freezing}\label{sec:met-disjoint}
-Two leakage paths exist between training and evaluation. The first is
-closed by construction; the second is narrowed, not closed.
-
-\textbf{State-level leakage.} The distillation dataset is built from junction
-states sampled on eight reserved seeds (Appendix~\ref{app:repro}). The
-offline holdout is split from those pools by a deterministic hash of the
-state content, frozen at build time, before any training example was
-rendered. No training example, under any format rendering, shares a state
-with a holdout example.
-
-\textbf{Trajectory-level leakage.} Closed-loop evaluation uses thirty
-seeds fully disjoint from the training seeds:
-$\{1..30\}\setminus\{3,7,11,29\}\cup\{31,32,33,34\}$. This matters because
-a controller fine-tuned on states from seed $s$ has seen a compressed
-replay of that seed's trajectory, so evaluating on it would overstate
-generalisation. The route files are static, with fixed vehicle
+\subsection{Seed-disjointness and holdout freezing}\label{sec:met-disjoint}
+Two leakage paths exist between training and evaluation; the first is
+closed by construction, the second narrowed, not closed.
+\textbf{State-level leakage.} The distillation dataset is built from
+junction states sampled on eight reserved seeds (Appendix~\ref{app:repro});
+the offline holdout is split from those pools by a deterministic hash of
+the state content, frozen before any training example was rendered, so no
+training example, under any format rendering, shares a state with a
+holdout example. \textbf{Trajectory-level leakage.} Closed-loop evaluation
+uses thirty seeds fully disjoint from the training seeds,
+$\{1..30\}\setminus\{3,7,11,29\}\cup\{31,32,33,34\}$, since a controller
+fine-tuned on states from seed $s$ has seen a compressed replay of that
+seed's trajectory. The route files are static, with fixed vehicle
 identities and departure times, and the SUMO seed varies microscopic
-car-following and lane-change randomness rather than the demand itself.
-Disjointness therefore narrows this path without closing it: a held-out
-seed is a different realisation of the same demand, not a different
-demand. Head-to-head arm comparisons are unaffected, since both arms run
-the identical route file and seeds, but generalisation beyond the trained
-demand is not established here. Three families do not use the disjoint
-set. The first two, the powered base-model factorial of
-\S\ref{sec:res-factorial}, reported over seeds $\{1..30\}$, and the
-exploratory sweep that motivated the powered design, at three seeds per
-cell, involve no model fine-tuned in this project, so seed disjointness
-carries no leakage meaning for them. The third, the trust battery of
-\S\ref{sec:res-trust},
-does run fine-tuned controllers on training-state seeds, and is flagged
-there. Every other closed-loop \emph{controller} number in
-Chapter~\ref{ch:results} is a disjoint-seed number.
-
+car-following and lane-change randomness rather than the demand itself, so
+disjointness narrows this path without closing it: a held-out seed is a
+different realisation of the same demand, not a different demand.
+Head-to-head arm comparisons are unaffected, since both arms run the
+identical route file and seeds, but generalisation beyond the trained
+demand is not established here. Three families (the powered base-model
+factorial, the exploratory sweep, and the trust battery) do not use the
+disjoint set, for the reasons given in Appendix~\ref{app:seedfamilies};
+every other closed-loop \emph{controller} number in \S\ref{ch:results} is
+a disjoint-seed number.

@@ -1,83 +1,38 @@
-\section{Authorship: what fine-tuning actually moves}\label{sec:res-authorship}
+\subsection{Authorship: what fine-tuning actually moves}\label{sec:res-authorship}
 The structural columns of Table~\ref{tab:closedloop-full} carry the
-dissertation's central finding, which emerges only if the three
-denominators of \S\ref{sec:des-shield} are kept apart.
-
-\begin{table}[t]
-\caption{Decision composition for every closed-loop experiment ($n{=}30$
-training-disjoint seeds per cell, sota format). Columns are shares of all
-logged decision ticks except \emph{diverg.}, the share of
-\emph{SLM-authored} decisions whose phase differed from MaxPressure's. The
-\emph{shield} column is the substitution path, the shield replacing an
-invalid or absent proposal with the MaxPressure phase; in the MaxPressure
-arm there is no SLM to substitute for, so the column does not apply and
-the classical policy authors every non-floor tick.}
-\label{tab:composition}
-\centering
-\small
-\begin{tabular}{llrrrr}
-\toprule
-Topology & Arm & SLM & shield & floor & diverg. \\
-\midrule
-Euston peak-hour & MaxPressure & 0.00 & n/a & 34.1 & n/a \\
- & qwen ft & 0.64 & 0.00 & 35.7 & 0.12 \\
- & qwen stock & 0.62 & 0.00 & 38.2 & 0.46 \\
- & phi ft & 0.64 & 0.00 & 36.0 & 0.13 \\
-\midrule
-Bloomsbury grid & MaxPressure & 0.00 & n/a & 28.4 & n/a \\
- & qwen ft & 0.70 & \textbf{0.54} & 29.5 & 0.17 \\
- & qwen stock & 0.62 & 0.00 & 37.6 & 0.46 \\
- & phi ft & 0.70 & 0.00 & 29.6 & 0.17 \\
-\midrule
-Old Street & MaxPressure & 0.00 & n/a & 43.1 & n/a \\
- & qwen ft & 0.56 & 0.00 & 43.6 & 0.11 \\
- & qwen stock & 0.39 & 0.00 & 61.2 & 0.60 \\
- & phi ft & 0.57 & 0.00 & 43.2 & 0.12 \\
-\midrule
-Bloomsbury calib. & MaxPressure & 0.00 & n/a & 24.3 & n/a \\
- & qwen ft & 0.76 & 0.00 & 23.5 & 0.04 \\
- & qwen stock & 0.59 & 0.00 & 41.4 & 0.56 \\
- & phi ft & 0.77 & 0.00 & 23.3 & 0.04 \\
-\midrule
-Euston calib. & MaxPressure & 0.00 & n/a & 36.3 & n/a \\
- & qwen ft & 0.62 & 0.00 & 37.7 & 0.07 \\
- & qwen stock & 0.59 & 0.00 & 40.6 & 0.37 \\
-\bottomrule
-\end{tabular}
-\end{table}
+report's central finding. It emerges only if the three denominators of
+\S\ref{sec:des-shield} are kept apart (full composition per cell:
+Table~\ref{tab:composition}, Appendix~\ref{app:tables}).
 
 Any claim that an SLM arm ``matches'' MaxPressure would be circular were
 the shield quietly substituting the classical phase. \finding{It is not.}
-Across fourteen
-arm-by-topology cells and 420 seed-runs the substitution path fired in
-exactly one cell, the fine-tuned arm on the Bloomsbury grid, at 0.54\% of
-decisions on average (110 in total, 8.99\% on its worst single seed).
-Every other cell is 0.00\% on every individual seed: wherever the gate
-admitted them, stock and fine-tuned models alike returned a
-well-formed, in-menu proposal (\texttt{shield\_fallbacks\_none} is zero in
-every SLM cell of the campaign).
+Across fourteen arm-by-topology cells and 420 seed-runs the substitution
+path fired in exactly one cell, the fine-tuned arm on the Bloomsbury grid,
+at 0.54\% of decisions on average (110 in total, 8.99\% on its worst
+single seed). Every other cell is 0.00\% on every seed
+(\texttt{shield\_fallbacks\_none} is zero in every SLM cell).
 
-The anti-starvation floor is the large non-SLM component, at 23 to 61\%
-of ticks, and it authors 24 to 43\% of the \emph{MaxPressure} arm on the
-same maps. The rule is identical in every arm but its share is not:
-paired per seed, the stock arm carries 4 to 18 points more
-floor than MaxPressure on every map ($p\le1.2{\times}10^{-9}$), while the
-fine-tuned arm sits at the MaxPressure rate. The floor therefore
-intervenes most in the arm that performs worst, and what fine-tuning
-removes is the stock proposer's excess over the no-SLM rate.
+The anti-starvation floor is the large non-SLM component, at 23 to 61\% of
+ticks, and it authors 24 to 43\% of the \emph{MaxPressure} arm on the same
+maps. The rule is identical in every arm but its share is not. Paired per
+seed, the stock arm carries 4 to 18 points more floor than MaxPressure on
+every map ($p\le1.2{\times}10^{-9}$), while the fine-tuned arm sits at the
+MaxPressure rate. So the floor intervenes most in the arm that performs
+worst, and what fine-tuning removes is the stock proposer's excess over
+the no-SLM rate.
 
-\finding{Fine-tuning raises the SLM's true authorship of
-actuations}, most where stock was weakest: Old Street 0.39 to 0.56,
-Bloomsbury 0.62 to 0.70 (0.77 once calibrated), Euston 0.62 to 0.64.
+\finding{Fine-tuning raises the SLM's true authorship of actuations}, most
+where stock was weakest: Old Street 0.39 to 0.56, Bloomsbury 0.62 to 0.70
+(0.76 once calibrated), Euston 0.62 to 0.64 (Figure~\ref{fig:authorship}).
 The floor column is the arithmetic complement (Old Street 0.61 $\to$
-0.44), so it adds no independent evidence; proposal acceptance, which
-does, rises with it (0.54 $\to$ 0.90). The natural reading is
-that the distilled model serves neglected approaches before the fairness
-timer must, but the logs record only who served each tick, not which
-approach, so that cannot be separated from the arm simply tripping the
-timer less often. The honest headline is
-the authored share, not the acceptance rate: even the best fine-tuned arm
-leaves \emph{23 to 44\% of actuations authored by a hard-coded timer}.
+0.44), so it adds no independent evidence. Proposal acceptance, which
+does, rises with it (0.54 $\to$ 0.90). The natural reading is that the
+distilled model serves neglected approaches before the fairness timer
+must. That cannot be separated from the arm simply tripping the timer less
+often, because the logs record only who served each tick, not which
+approach. The honest headline is the authored share, not the acceptance
+rate: even the best fine-tuned arm leaves \emph{23 to 44\% of actuations
+authored by a hard-coded timer}.
 
 \begin{figure}[t]
 \centering
@@ -110,31 +65,26 @@ among SLM-authored decisions.}
 \end{figure}
 
 Cutting against the simple reading, \risk{the fine-tuned arms land level
-with MaxPressure while they choose what MaxPressure would have chosen}:
-divergence among SLM-authored decisions falls from 0.46--0.60 to
+with MaxPressure while they choose what MaxPressure would have chosen}.
+Divergence among SLM-authored decisions falls from 0.46--0.60 to
 0.11--0.17, and on the calibrated networks that carry the headline it
 falls to 0.04 and 0.07, the two lowest in the study, with authorship at
 0.59 against 0.76--0.77. That is genuine authorship of a near-classical
-policy, not a scaffold masquerading as one, but the deflationary reading is strongest exactly
-where the delay result is largest. Distillation may have taught the
-student to imitate the classical reference, an explanation neither
-established nor excluded, but two observations bound it. First, the teacher was a
-frontier model reasoning over accumulated waiting, not MaxPressure, and the
-students agree with its held-out labels at 97--99\%
-(\S\ref{sec:res-offline}), so any convergence is at most indirect.
-Second, closed-loop delay cannot discriminate imitation from rediscovery:
-against the fixed-time comparator MaxPressure is $+22.3\%$ on Euston
-peak-hour against the
-fine-tuned arm's $+15.5\%$, similarity rather than separation, and on the
-calibrated grid the two coincide within $0.03\%$. Only the
+policy. But the deflationary reading is strongest exactly where the delay
+result is largest: distillation may have taught the student to imitate the
+classical reference, an explanation neither established nor excluded. Two
+observations bound it. The teacher was a frontier model reasoning over
+accumulated waiting, not MaxPressure, and the students agree with its
+held-out labels at 97--99\% (\S\ref{sec:res-offline}), so any convergence
+is at most indirect. And closed-loop delay cannot discriminate imitation
+from rediscovery: against the fixed-time comparator MaxPressure is
+$+22.3\%$ on Euston peak-hour against the fine-tuned arm's $+15.5\%$, and
+on the calibrated grid the two coincide within $0.03\%$. Only the
 remaining one-in-ten divergences, where the arms differ from both
-baselines, could discriminate them, and I have not characterised those, so
-the most substantive open question here needs a
-decision-level counterfactual study I did not run.
-
-What survives is the audit-relevant claim at its true
-magnitude: over the stock Old Street deployment an accident audit could
-attribute 39\% of actuations to the learned component, over the
-fine-tuned one 56\%, the balance falling to a deterministic timer, a
-smaller claim than \emph{the model is the controller}.
-
+baselines, could discriminate them. I have not characterised those, so the
+question needs a decision-level counterfactual study I did not run. What
+survives is the audit-relevant claim at its true magnitude: over the stock
+Old Street deployment an accident audit could attribute 39\% of actuations
+to the learned component, over the fine-tuned one 56\%, the balance
+falling to a deterministic timer. That is a smaller claim than \emph{the
+model is the controller}.

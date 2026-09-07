@@ -1,19 +1,13 @@
-\section{Baseline landscape: what the fixed-time floor revealed}\label{sec:res-maxpressure}
-In the exploratory sweep (three seeds per
-cell, daily-resolution demand) the theoretically throughput-optimal
-MaxPressure \cite{varaiya2013maxpressure} appeared \emph{worse than naive
-fixed-time on every real London topology} (Euston $+15\%$, Old Street
-$+5\%$, Bloomsbury $+3\%$) yet dominated the synthetic grids ($-27\%$ on
-grid4$\times$4, $-19\%$ on grid3$\times$3).
-Replication kills it: Table~\ref{tab:mpfloor} recomputes
-it paired per seed over the thirty training-disjoint evaluation seeds.
+\subsection{Baseline landscape: what the fixed-time floor revealed}\label{sec:res-maxpressure}
+In the exploratory sweep (three seeds per cell, daily-resolution demand) the
+theoretically throughput-optimal MaxPressure \cite{varaiya2013maxpressure}
+appeared \emph{worse than naive fixed-time on every real London topology}
+(Euston $+15\%$, Old Street $+5\%$, Bloomsbury $+3\%$) yet dominated the
+synthetic grids ($-27\%$ on grid4$\times$4, $-19\%$ on grid3$\times$3).
+Replication kills it: Table~\ref{tab:mpfloor} recomputes it paired per seed
+over the thirty training-disjoint evaluation seeds.
 
-\begin{table}[h]
-\caption{MaxPressure vs fixed-time, paired per seed ($n{=}30$).
-Positive = MaxPressure worse. CI is 95\% on the mean relative change and
-$p$ is the one-sample $t$ on that same quantity, the convention used
-throughout this chapter.}
-\label{tab:mpfloor}
+\begin{table*}[t]
 \centering
 \small
 \begin{tabular}{l S[table-format=3.1] S[table-format=3.1] S[table-format=+2.1] c r}
@@ -27,64 +21,53 @@ Bloomsbury calibrated & 158.4 & 173.7 & -8.8 & $[-9.2, -8.3]$ & $\mathbf{8{\time
 Euston calibrated & 151.7 & 155.4 & +14.2 & $[-2.6, +31.0]$ & .095 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\caption{MaxPressure vs fixed-time, paired per seed ($n{=}30$).
+Positive = MaxPressure worse. CI is 95\% on the mean relative change and
+$p$ is the one-sample $t$ on that same quantity, the convention used
+throughout this section.}
+\label{tab:mpfloor}
+\end{table*}
 
-At $n{=}30$ the picture is not a reversal but a \finding{sign flip that
-tracks geometry}: on Old Street, the study's most complex geometry at five
-arms and seventeen movements, MaxPressure is \emph{significantly better}
-than fixed-time, contradicting the exploratory result outright, while on
-the Bloomsbury grid at its default oversaturated demand the two are
-indistinguishable. But on the same network calibrated to clear,
-MaxPressure is $8.8\%$ better, so every ``tied on Bloomsbury'' statement
-here is scoped to the oversaturated regime. Calibration does not rescue it
-everywhere, but neither does it settle the corridor: there the same rule
-leaves the comparison inconclusive ($p{=}.095$, a CI straddling zero, and
-absolute means that favour MaxPressure by $2.4\%$).\footnote{The
+At $n{=}30$ the picture is a \finding{sign flip that tracks geometry}
+(Figure~\ref{fig:signflip}), not a reversal: on Old Street, the study's most complex geometry at five arms
+and seventeen movements, MaxPressure is \emph{significantly better} than
+fixed-time, while on the oversaturated Bloomsbury grid the two are
+indistinguishable; calibrated to clear, the same network puts MaxPressure
+$8.8\%$ ahead, so every ``tied on Bloomsbury'' statement is scoped to the
+oversaturated regime. Calibration does not settle the corridor, where the
+same rule leaves the comparison inconclusive ($p{=}.095$, a CI straddling
+zero, absolute means favouring MaxPressure by $2.4\%$),\footnote{The
 $+14.2\%$ is the mean of per-seed ratios, the convention used throughout
-this chapter, and it is inflated by a single $+140.3\%$ seed. On absolute
+this section, and it is inflated by a single $+140.3\%$ seed. On absolute
 paired delays the same comparison gives $p{=}.82$. The row is reported
 because the convention is applied uniformly, not because it supports a
-direction.} The same treatment therefore produces different
-outcomes on the two networks, which leaves saturation unconfirmed as a
-\emph{sufficient} account of MaxPressure's weakness without identifying
-what replaces it on the corridor: the two networks differ in
-several respects at once and nothing here varies them independently. On the
-saturated Euston corridor before calibration MaxPressure is
-\emph{significantly worse} than fixed-time too, with a caveat: its
-per-seed spread is heavily skewed, and on absolute rather than relative
-delays the paired test would not reach significance ($p{=}.083$), making
-Euston the least robust of the three real networks to how the question is
-posed.
+direction.} so saturation is unconfirmed as a \emph{sufficient} account of
+MaxPressure's weakness: the networks differ in several respects at once and
+nothing here varies them independently. Before calibration MaxPressure is
+\emph{significantly worse} than fixed-time on the saturated corridor too,
+with a caveat: its per-seed spread is heavily skewed, and on absolute
+rather than relative delays the paired test would not reach significance
+($p{=}.083$), making Euston the least robust of the three real networks to
+how the question is posed.
 
-A third classical baseline tests whether any of this is specific to
-\emph{pressure}. Longest-queue-first serves the largest upstream queue with no
-downstream term, so unlike MaxPressure it will discharge into a blocked
-exit, though the two are routinely conflated. I ran it over the same thirty seeds with shield,
-minimum green, clearance and anti-starvation floor identical between the
-arms. \finding{The downstream
-term buys nothing measurable on these networks}: longest-queue-first is
-statistically indistinguishable from MaxPressure on all five topologies
-($-0.9\%$ to $+13.4\%$, every $p\ge.30$), and it reproduces MaxPressure's pattern
-against the naive floor, worse on the corridor ($+13.6\%$, $p{=}.027$) and better
-on Old Street and the calibrated grid ($-5.9\%$, $-8.3\%$). Whatever makes the
-classical policy weak on a saturated arterial, the pressure formulation is not
-detectably part of it, though the intervals are wide (Euston calibrated
-$[-12.7, +39.5]$), making this a non-rejection rather than a demonstrated
-equivalence. It weakens one candidate without removing it; saturation,
-link storage and the assumed turning split all remain.
+A third classical baseline, longest-queue-first, which serves the largest
+upstream queue with no downstream term, is statistically indistinguishable
+from MaxPressure on all five topologies ($-0.9\%$ to $+13.4\%$, every
+$p\ge.30$) and reproduces its pattern against the naive floor
+(Appendix~\ref{app:lqf}), so \finding{the downstream term buys nothing
+measurable}; the intervals are wide, so this is a non-rejection rather than
+a demonstrated equivalence, and saturation, link storage and the assumed
+turning split all remain candidates.
 
 \input{chapters/sec/fig-signflip}
 
-MaxPressure's advantage is uniform and substantial only on the
-regular synthetic grids the literature favours, which are the cells
-replication did not reach: those figures remain three-seed.
-Backpressure theory suggests why the arterial is its weakest case, as the
-unbounded-storage and heavy-load assumptions of \S\ref{sec:bg-classical}
-\cite{gregoire2014backpressure,gregoire2014routing} are both violated by a
-saturated short-link corridor: a hypothesis consistent with
-the Euston direction, not a demonstrated explanation, since nothing here
-manipulates storage capacity to test it. Either way, SLM-vs-MaxPressure
-comparisons on real topologies are confounded by MaxPressure's own
-variable strength, so every controller claim is stated against the
-fixed-time floor, with MaxPressure alongside.
-
+MaxPressure's advantage is uniform and substantial only on the regular
+synthetic grids the literature favours, which replication did not reach:
+those figures remain three-seed. Backpressure theory suggests why the
+arterial is its weakest case, a saturated short-link corridor violating
+both the unbounded-storage and heavy-load assumptions of
+\S\ref{sec:bg-classical} \cite{gregoire2014backpressure,gregoire2014routing};
+that is a hypothesis consistent with the Euston direction, not a
+demonstrated explanation, since nothing here manipulates storage capacity.
+Every controller claim is therefore stated against the fixed-time floor,
+with MaxPressure alongside.

@@ -1,27 +1,21 @@
-\section{On-device serving with Foundry Local}\label{sec:imp-foundry}
+\subsection{On-device serving with Foundry Local}\label{sec:imp-foundry}
 Serving is Microsoft Foundry Local (pinned 0.8.119) on an RTX~2060 with
 6\,GB VRAM, consumer hardware of roughly signal-cabinet class and a hard
-project constraint: it caps the ladder at
-$\sim$4B (7B-class models OOM the runtime, recorded), which is what makes
-the scale-saturation result (\S\ref{sec:res-offline}) deployment-relevant
-rather than academic.
+project constraint: it caps the ladder at $\sim$4B (7B-class models OOM
+the runtime, recorded), which makes the scale-saturation result
+(\S\ref{sec:res-offline}) deployment-relevant rather than academic.
 
 Custom models serve through two execution providers. The CPU path works
-out of the box, but WebGPU requires editing the compiled model's
+out of the box; WebGPU requires editing the compiled model's
 \texttt{genai\_config.json} provider options and delivers about
 $1.6\times$ lower latency at \emph{equal aggregate holdout accuracy} on the
 one artifact and format where both providers were scored
-(\S\ref{sec:res-offline}), which
-licensed running every sweep GPU-served. The comparison is within one
-artifact, not a claim of absolute speed: my
+(\S\ref{sec:res-offline}), which licensed running every sweep GPU-served.
+That comparison is within one artifact, not a claim of absolute speed: my
 pipeline-compiled 0.6B artifacts serve at roughly 2.6 times the median
 latency of the vendor catalogue build of the same weights
 (\S\ref{sec:res-reliability}), a real cost of controlling the compile
-chain. Windows~ML CUDA
-autoregistration requires a newer Windows build than this machine's,
-making WebGPU the effective GPU path.
-
-Three reliability findings from sustained unattended serving are
-mitigated in harness (\S\ref{sec:imp-harness}) and reported in
-\S\ref{sec:res-reliability}.
-
+chain. Windows~ML CUDA autoregistration requires a newer Windows build than
+this machine's, making WebGPU the effective GPU path. Three reliability
+findings from sustained unattended serving are mitigated in harness
+(\S\ref{sec:imp-harness}) and reported in \S\ref{sec:res-reliability}.

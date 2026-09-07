@@ -1,73 +1,28 @@
-\section{Limitations and future work}\label{sec:dis-future}
+\subsection{Limitations and future work}\label{sec:dis-future}
 Five directions follow from the findings. \textbf{A decision-level
-counterfactual}: replaying the divergent ticks and scoring what
-MaxPressure would have done against what the student did is what would
-give the imitation-versus-rediscovery question direct evidence
-(\S\ref{sec:res-authorship}). \textbf{Formal shield
-synthesis}: replace the heuristic composite with a shield synthesised from
-a temporal-logic safety specification \cite{alshiekh2018shield}, since the
-per-junction product game may be small enough for exact synthesis and the
+counterfactual}: replaying the divergent ticks and scoring what MaxPressure
+would have done against what the student did would give the
+imitation-versus-rediscovery question direct evidence
+(\S\ref{sec:res-authorship}). \textbf{Formal shield synthesis} from a
+temporal-logic safety specification \cite{alshiekh2018shield}: the
+per-junction product game may be small enough for exact synthesis, and the
 authorship metrics defined here would then carry minimal-interference
 guarantees. \textbf{Closed-loop objectives}: GRPO-style tuning against
 trajectory reward \cite{dglight2026} attacks the decoupling directly,
-because label distillation optimises agreement rather than the
-trajectory, and moved delay on one network of five.
-\textbf{Stealth-robust trust}: detection calibrated to distributional
-implausibility rather than single-report bounds.
-\textbf{Hardware-in-the-loop}: the serving-reliability findings
-(\S\ref{sec:res-reliability}) are the failure class a cabinet deployment
-must survive, and argue for a watchdog-supervised serving architecture.
+because label distillation optimises agreement rather than the trajectory,
+and moved delay on one network of five. \textbf{Stealth-robust trust}:
+detection calibrated to distributional implausibility rather than
+single-report bounds. \textbf{Hardware-in-the-loop}: the
+serving-reliability findings (\S\ref{sec:res-reliability}) are the failure
+class a cabinet deployment must survive, and argue for a
+watchdog-supervised serving architecture.
 
-\subsection{Deployment vectors this architecture is suited to}
+\subsubsection{Deployment vectors}\label{sec:dis-deploy}
 The evaluation above measures the hardest case for this controller, a
-permanent junction already running the network's own default signal
-plan, so matching it buys little. Two settings invert that arithmetic,
-and one cost question conditions both. For each I give the evidence and
-the remaining work.
-
-\textbf{Temporary and roadworks signals.} Portable signals at a lane
-closure have no engineered plan, so a controller needing \emph{no site configuration}
-is worth more there than one matching a tuned plan. One design property
-and two supporting results transfer. By design, the phase model is
-derived from the live network at start-up (\S\ref{sec:des-overview}).
-Measured, the leave-one-topology-out
-student matched the generalist across the mixed holdout
-(\S\ref{sec:res-offline}), which is
-evidence against topology memorisation in aggregate rather than parity on
-the withheld layout; and the anti-starvation floor
-enforces alternation deterministically except where it records a
-violation (\S\ref{sec:des-shield}), one requirement of
-shuttle working. Three gaps are clear. No lane-closure layout was
-tested. The phase model is read once, so mid-deployment
-reconfiguration needs re-initialisation. Shuttle working's clearance-time
-constraint, the safety-critical one, belongs in the shield and is not
-implemented.
-
-\textbf{Emergency-vehicle priority across a corridor.} Installations
-without emergency-vehicle detection give an approaching vehicle no
-priority, an omission \S\ref{sec:res-ev} measures at 31.1\,s per event.
-The substrate exists: junctions exchange Ed25519-signed
-reports over an MQTT adapter that places a real broker between publisher
-and subscriber. Capability is not a deployment claim: the bus has run in
-simulation and over a local broker, not a field radio under loss and
-latency. The scenario is scripted, with the scope \S\ref{sec:res-ev}
-declares, and corridor-scale progressive preemption is designed for but
-unmeasured.
-
-\textbf{Deployment economics.} A market survey of published prices
-(September 2026)\footnote{Vendor list prices, council committee papers and
-published trade estimates compiled in September 2026: NVIDIA's developer
-price list (July 2026), a Greater London Authority estimate for signalised
-crossings, TRL's SCOOT rollout evaluation, and 1NCE and UK MVNO tariffs.
-None originates from this study's measurements.} places the compute node
-at well under 1\% of site cost. A Jetson-class module lists at roughly
-\pounds315--400 and runs this study's 0.6B student at a community-measured
-$\sim$50 tokens/s within a 7--25\,W envelope, against
-\pounds80,000--130,000 for a signalised crossing. The power figure matters
-more than the price: it answers the objection that my 6\,GB desktop GPU
-misrepresents a cabinet power budget, on a published figure this study did
-not verify. TRL's SCOOT rollout averaged a 12.8\%
-delay reduction, which sets the bar any deployment would have to clear.
-Enclosure, certification, maintenance and integration dominate hardware at
-these ratios, so the whole-life case needs a costing study this
-dissertation's data cannot supply.
+permanent junction already running the network's own default signal plan,
+so matching it buys little. Two settings invert that arithmetic, temporary
+roadworks signals with no engineered plan and corridor-scale
+emergency-vehicle priority, and a September-2026 survey of published
+prices places the compute node at well under 1\% of site cost;
+Appendix~\ref{app:deploy} gives the evidence, the open gaps and the cost
+figures, none of which originates from this study's measurements.

@@ -5,8 +5,8 @@
   width=0.92\linewidth, height=4.8cm,
   xbar, bar width=11pt,
   xmin=-14, xmax=30,
-  xlabel={MaxPressure vs fixed-time floor (\%), positive = MaxPressure worse},
-  xlabel style={font=\sffamily\small},
+  xlabel={MaxPressure vs fixed-time (\%); positive = MaxPressure worse},
+  xlabel style={font=\sffamily\scriptsize},
   symbolic y coords={Euston cal., Euston, Bloomsbury, Old Street, Bloomsbury cal.},
   ytick=data, y tick label style={font=\sffamily\scriptsize},
   xtick={-10,0,10,20,30}, xticklabel style={font=\sffamily\scriptsize},
@@ -20,10 +20,11 @@
 \draw[nbgrey, dashed] (axis cs:0,Euston cal.) -- (axis cs:0,Bloomsbury cal.);
 \end{axis}
 \end{tikzpicture}
-\caption{The classical baseline is not uniformly strong. MaxPressure is significantly
-worse than a naive fixed-time plan on the Euston corridor, significantly better on Old
-Street, and tied on the Bloomsbury grid. Its advantage tracks both geometry and
-saturation, which is why every controller claim in this dissertation is stated against
-the fixed-time floor with MaxPressure reported alongside.}
+\caption{The classical baseline is not uniformly strong: MaxPressure is
+significantly worse than naive fixed-time on the Euston corridor,
+significantly better on Old Street, and tied on the oversaturated
+Bloomsbury grid; calibrated to clear, the grid favours MaxPressure and the
+corridor stays inconclusive. Every controller claim is therefore stated
+against the fixed-time floor with MaxPressure alongside.}
 \label{fig:signflip}
 \end{figure}

@@ -1,35 +1,20 @@
-\section{The fair re-test of the SLM authorisation negative}\label{sec:res-lee}
-An early measured negative carried a supervisor-posed objection (Stott).
-The raw SLM lost to a deterministic template on its legal-note job,
-citation-F1 0.12 retrieval-free and 0.34 with retrieval against the
-template's 0.48 over 97 held-out notes, at 37.8\,s per note. That gold is
-policy-base-derived rather than human-graded, so the negative is a pilot
-proxy. The objection: the model was guessing because the policy was never in front
-of it, so the negative cannot stand until the SLM is re-tested with
-explicit in-prompt rules and reason-then-classify structure. I ran that re-test
-on the balanced 26-claim authorisation dataset, four models $\times$ two
-arms (policy-scaffolded vs bare), scored against the deterministic
-knowledge-base gate.
-
-The objection is partially vindicated: the scaffold works for a capable
-stock model. Stock Phi-4-mini rises from 42.3\% to 69.2\% class accuracy
-and stops denying genuine emergencies, its false-negative rate falling
-to zero. But the negative holds: even that best cell makes
-\risk{four dangerous false grants} (granting preemption to claims that
-must be denied, four of 18 such claims) where the gate makes none in
-26/26. Policy grounding rescues recall, not safety.
-
-The re-test also produced the clearest evidence of specialisation cost:
-the \emph{fine-tuned} students are far worse than their own stock bases,
-with ft-Phi falling to 19.2\% scaffolded and 15 of 26 responses
-unparseable, and ft-Qwen, the generalist Qwen student
-(\S\ref{sec:res-offline}) rather than the sota-only student deployed in
-the closed loop, unable to emit the required
-\texttt{\{"class", "grant"\}} schema at all bare (26/26 parse failures).
-The harness did not retain the raw responses, so what it emitted instead
-cannot be shown; format capture by its training schema
-\texttt{\{"phase": N\}} is the natural reading, but an inference and not a
-measurement. The
-retention probe's mild MMLU decline (\S\ref{sec:dis-threats}) understates
-the cost on near-neighbour structured tasks.
-
+\subsection{The fair re-test of the SLM authorisation negative}\label{sec:res-lee}
+An early measured negative, the raw SLM losing to a deterministic template
+on its legal-note job (citation-F1 0.12 retrieval-free and 0.34 with
+retrieval against the template's 0.48 over 97 held-out notes), carried a
+supervisor-posed objection (Stott): the model was guessing because the
+policy was never in front of it. The re-test partially vindicates it
+(balanced 26-claim authorisation dataset, four models $\times$
+policy-scaffolded and bare arms, scored against the deterministic
+knowledge-base gate; Appendix~\ref{app:lee}). Stock Phi-4-mini rises
+from 42.3\% to 69.2\% class accuracy and its false-negative rate falls to
+zero. Even that best cell makes \risk{four dangerous false grants}
+(four of 18 claims that must be denied) where the gate makes none in
+26/26, so policy grounding rescues recall, not safety. The \emph{fine-tuned}
+students are far worse than their own stock bases, ft-Phi falling to
+19.2\% scaffolded with 15 of 26 responses unparseable and ft-Qwen (the
+generalist of \S\ref{sec:res-offline}) unable to emit the required schema
+at all bare (26/26 parse failures); format capture by its training schema
+is the natural reading, an inference and not a measurement. The retention
+probe's mild MMLU decline (\S\ref{sec:dis-threats}) understates the cost
+on near-neighbour structured tasks.

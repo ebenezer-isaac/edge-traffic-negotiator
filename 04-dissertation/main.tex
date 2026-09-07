@@ -1,19 +1,28 @@
-% The Edge Negotiator — MSc dissertation
+% The Edge Negotiator — SEIoT MSc final project report (COMP0234, 2025/26).
+% Template: SEIoT MSc report template (CEUR-WS two-column style, twocolceurws.sty).
 % Build: latexmk -pdf main.tex   (MiKTeX; biber backend)
-\documentclass[11pt,a4paper,oneside]{report}
+\documentclass[a4paper]{article}
+\usepackage{twocolceurws}
 \input{preamble}
+
+\title{The Edge Negotiator: Trustworthy On-Device Small-Language-Model Control of Urban Traffic Signals, with a Provable Accident Audit}
+\newcommand\Year{2026}
+
+\author{
+\textbf{WKSR2} \\
+SEIoT MSc Final Project Report \Year\\
+University College London \\
+Supervisors: Dr Akin Delibasi (UCL), Lee Stott (Microsoft)
+}
+
+\institution{}
 
 \addbibresource{references.bib}
 
 \begin{document}
+\maketitle
 
 \input{frontmatter}
-
-\tableofcontents
-\clearpage
-
-\input{chapters/sec/00-terms}
-\clearpage
 
 \input{chapters/01-introduction}
 \input{chapters/02-background}
@@ -24,7 +33,14 @@
 \input{chapters/07-discussion}
 \input{chapters/08-conclusion}
 
-\printbibliography[heading=bibintoc]
+\section*{Acknowledgements}
+I thank Dr~Akin~Delibasi for supervision that pushed this work towards
+harder evidence, Lee~Stott (Microsoft) for the policy-driven architecture
+guidance and the objection that became \S\ref{sec:res-lee}, and UCL
+Computer Science for the departmental GPU cluster on which the 3.8B
+students were trained.
+
+\printbibliography
 
 \appendix
 \input{chapters/appendix}

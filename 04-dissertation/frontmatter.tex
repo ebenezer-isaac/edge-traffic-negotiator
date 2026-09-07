@@ -1,114 +1,37 @@
-% ==================== TITLE PAGE ====================
-\begin{titlepage}
-\centering
-\vspace*{1.2cm}
+% ==================== ABSTRACT (template: ~250 words, hard max 300) ====================
+\begin{abstract}
+When a signalised junction is involved in a collision, someone must prove
+what the controller knew and what it decided. Published language-model
+controllers are cloud-served and cannot answer that question. This
+report asks whether a cabinet-sized language model can control real London
+junctions competently and bind every actuation into a record an
+investigator can trust, and what fine-tuning contributes. The answer,
+inside a deterministic shield, is that what fine-tuning reliably moves is
+\emph{authorship}, not delay.
 
-{\sffamily\bfseries\large COMP0234: MSc Systems Engineering for the\\Internet of Things Project\par}
-\vspace{1.4cm}
+The full stack runs on one consumer device: a small language model
+served by Microsoft Foundry Local within 6\,GB proposes phases behind a
+MaxPressure shield and anti-starvation floor, and every decision is
+Ed25519-signed into a per-junction hash chain, reconstructable after a
+collision into a cited UK-law evidence pack. A frontier teacher is distilled
+into 0.6B and 3.8B students with QLoRA, compiled to int4 ONNX, and evaluated
+offline on a hash-frozen holdout and closed-loop in SUMO on measured London
+topologies over thirty training-disjoint seeds.
 
-{\sffamily\itshape\Large ``The Edge Negotiator\par}
-\vspace{6pt}
-{\sffamily\itshape\large Trustworthy on-device small-language-model control of urban
-traffic signals, with a provable accident audit.''\par}
-\vspace{2.2cm}
+The model's share of logged decision ticks rises from
+0.39--0.62 to 0.56--0.77, while its divergence from MaxPressure among the
+decisions it authors falls from 0.37--0.60 to 0.04--0.17, a deflationary
+reading I bound. Delay moves only
+where the network can clear: on a Bloomsbury grid calibrated so that 87\%
+of vehicles complete, the distilled controller beats the fixed-time floor
+by 8.8\% where the stock one loses by 11.9\%, an 18.3\% head-to-head gain
+on 30 of 30 seeds ($p{=}2.0{\times}10^{-21}$); the same calibration on the
+Euston corridor does not reproduce it. Distillation saturates at 0.6B, a
+three-seed MaxPressure result is retracted at thirty seeds, seven collision
+scenarios reconstruct with tampering caught, and a trust ledger catches
+blatant but not calibrated stealth misreporting.
+\end{abstract}
 
-{\large by\par}
-\vspace{10pt}
-{\sffamily\bfseries\large Ebenezer Veeraraju\par}
-\vspace{8pt}
-{\sffamily\bfseries\large 25153651\par}
-\vspace{8pt}
-{\sffamily\bfseries\large September 2026\par}
-\vspace{8pt}
-{\sffamily\bfseries\large Word count: \WORDCOUNT\par}
-\vspace{2.4cm}
-
-{\small Dissertation submitted in part fulfilment of the\\
-Degree of Master MSc Systems Engineering for the Internet of Things\par}
-\vspace{10pt}
-{\small Department of Computer Science\\
-University College London\par}
-\vspace{10pt}
-{\small\color{nbgrey} Supervisors: Dr~Akin~Delibasi (UCL) \,$\vert$\, Lee~Stott (Microsoft)\par}
-
-\vfill
-{\footnotesize\color{nbgrey}
-This report is submitted as part requirement for the MSc Systems Engineering for the
-Internet of Things at University College London. It is substantially the result of my
-own work except where explicitly indicated in the text.\par}
-\end{titlepage}
-
-% ==================== ABSTRACT ====================
-\chapter*{Abstract}
-\addcontentsline{toc}{chapter}{Abstract}
-When a signalised junction is involved in a collision, someone must be able
-to prove what the controller knew and what it decided. Language-model
-traffic controllers are now competitive in simulation, but every published
-system is served from the cloud and none can answer that question. This
-dissertation asks whether a language model small enough to live in the
-signal cabinet can control real London junctions competently \emph{and}
-bind every actuation into a record an investigator can trust. The second
-question is what, if anything, fine-tuning contributes.
-
-I build the full stack on one consumer device: a small language model
-served by Microsoft Foundry Local within a 6\,GB envelope, proposing signal
-phases behind a MaxPressure shield and anti-starvation floor, with every
-decision Ed25519-signed into a per-junction hash chain and reconstructable
-after a collision into a cited UK-law evidence pack. I distil a frontier
-teacher into 0.6B and 3.8B students with QLoRA, compile to int4 ONNX, and
-evaluate offline against a hash-frozen holdout and closed-loop in SUMO on
-measured London topologies over thirty training-disjoint seeds per cell.
-
-Several results stand out. Distillation \emph{saturates at 0.6B}: the
-3.8B student is statistically indistinguishable from the 0.6B one offline
-and closed-loop, and four of the five catastrophic fine-tuned cells fall
-among the trajectories they share.
-Closed-loop delay \emph{decouples} from decision accuracy on networks that
-cannot clear, where a 42-point accuracy gain yields no significant delay
-improvement inside the shield's envelope. A three-seed finding that MaxPressure is worse than a naive
-fixed-time floor on \emph{every} real London topology fails to replicate at
-thirty paired seeds, its sign varying with the network without my
-isolating which property carries it, so I report
-that retraction rather than the headline it would have made. Fine-tuning's value emerges
-only when the test network can flow. On a Bloomsbury grid left at its
-default demand, the distilled and stock controllers differ by less than
-two points because under 15\% of vehicles clear. On the same network
-calibrated so that 87\% clear, the distilled controller \emph{beats} the
-fixed-time floor by 8.8\% while the stock one loses to it by 11.9\%,
-which is an \emph{18.3\% head-to-head improvement that holds on 30 of
-30 seeds} ($p{=}2.0{\times}10^{-21}$), and against the stronger MaxPressure
-comparator the same distilled controller draws level to within 0.03\%.
-Applying the identical calibration to the corridor where the controller
-looks worst does \emph{not} reproduce that effect. The head-to-head
-there is $-3.7\%$ and not significant, so the large effect is a
-single-network result, and I report the failed replication alongside it. Network gridlock had been masking the effect, which
-suggests published effect sizes in this field may be compressed by the
-same cause. Fine-tuning also raises \emph{authorship}: the model's share of
-logged decision ticks rises from 0.39--0.62 to 0.56--0.77, while its
-divergence from MaxPressure among the decisions it authors falls from
-0.46--0.60 to 0.04--0.17. That matters for accountability: an audit of the
-stock deployment could attribute two decisions in five to the learned
-component, against four in seven after distillation, a deterministic timer
-authoring the rest. I also state the deflationary reading this invites,
-namely that distillation partly taught the student to imitate the
-classical reference, and bound it with the available evidence. Seven collision scenarios reconstruct
-end-to-end with tampering caught, an adversarial trust battery, scored by offline
-replay with gating off, catches most blatant misreporting and is evaded by
-a calibrated stealth attacker, and
-the nulls, latency exclusions, and specialisation costs are reported with
-their mechanisms rather than omitted.
-
-% ==================== ACKNOWLEDGEMENTS ====================
-\chapter*{Acknowledgements}
-\addcontentsline{toc}{chapter}{Acknowledgements}
-I thank Dr~Akin~Delibasi for supervision that consistently pushed this work
-towards harder evidence. The throughput-alongside-delay test, the
-multi-seed robustness requirement, and the scope expansion into fine-tuning
-all originate with him. I thank Lee~Stott (Microsoft) for the
-policy-driven architecture guidance that shaped the authorisation layer,
-and specifically for the objection that became \S\ref{sec:res-lee}: that a
-model cannot be judged on a task whose rules were never put in front of it.
-Testing that objection properly changed what this dissertation is able to
-claim. I am grateful to UCL Computer Science for access to the departmental
-GPU cluster, on which the 3.8B student and its five ablation variants were
-trained.
+\noindent\textbf{Author Keywords}\\
+Small language models; traffic signal control; on-device inference;
+knowledge distillation; safety shield; audit trail; Foundry Local.\\

@@ -1,58 +1,42 @@
-\section{Failure forensics: the audit layer explains the tail}\label{sec:res-forensics}
+\subsection{Failure forensics: the audit layer explains the tail}\label{sec:res-forensics}
 The audit architecture's value shows most clearly when control fails. Of
 the 270 uncalibrated-topology closed-loop cells, 14 (5.2\%) are
 catastrophic (delay $\ge{+}20\%$ vs the seed-matched MaxPressure
-baseline), and all 14 signed chains verify, so each failure has a
-provable record.
-
-First, \finding{failures are a controller property, not seed hardness}: the
-catastrophic seeds are baseline-easy or median demand realisations
+baseline), and all 14 signed chains verify, so each failure has a provable
+record. \finding{Failures are a controller property, not seed hardness.}
+The catastrophic seeds are baseline-easy or median demand realisations
 (baseline delay ranks 1--20 of $\sim$35, never the hard tail), and no seed
-breaks all three arms.
+breaks all three arms. The two failure regimes also have different,
+attributable mechanisms. Four of the stock arm's five failures are its own
+served decisions. In the worst cell (Euston s13, $+110.3\%$) the chain
+shows 214 of 335 decisions SLM-authored, 119 divergent proposals served
+(override 0.556), zero shield fallbacks and normal anti-starvation, so the
+collapse was the model's policy; same-seed fine-tuned arms sit at $+1.1\%$
+and $+5.5\%$. The fifth (Euston s19) sits at arm norms and the chain
+clears it. And \finding{the two fine-tuned students converge at the
+trajectory level on a substantial minority of cells}. Of the 90 shared
+cells, nine produce \emph{bit-identical} mean delay, 25 more agree within
+0.5 points, and 56 differ, and the students' catastrophic cells are
+paired: the 0.6B student's four all coincide, seed for seed, with four of
+the 3.8B student's five (Appendix~\ref{app:convergence}). I read it as the
+behavioural counterpart of offline saturation. Partial convergence is
+equally consistent with both students defaulting alike on easier cells,
+and I have not separated those explanations.
 
-Second, the two failure regimes have different, attributable mechanisms.
-Four of the stock arm's five failures are its own served decisions: in
-the worst cell (Euston s13, $+110.3\%$) the chain shows 214 of 335
-decisions SLM-authored, 119 divergent proposals served (override 0.556),
-zero shield fallbacks and normal anti-starvation, so the collapse was
-the model's policy. Same-seed fine-tuned arms sit at $+1.1\%$ and
-$+5.5\%$. The fifth (Euston s19) sits at arm norms and the chain
-clears it.
-
-Third, \finding{the two fine-tuned students converge at the trajectory
-level on a substantial minority of cells}. Across the 90 shared cells,
-nine produce \emph{bit-identical} mean delay, 25 more agree within 0.5
-points, and 56 differ. The identical cells are separate runs serving the
-same phase sequence, not duplicated records: wall-clock differs by up to
-2.15$\times$ and median latency by 2.23$\times$, and in one both arms took
-307
-decisions with SLM/floor attribution differing by exactly one tick, where
-floor and model chose the same phase. Four of the five catastrophic
-fine-tuned cells fall inside this converged subset, which restates the
-convergence by construction rather than explaining it; the independent
-evidence is the decision-level agreement above. I
-read it as the behavioural counterpart of offline saturation, in which
-the distillation target constrains not only what the students score but
-what they \emph{do}. The limit stands: partial convergence is equally
-consistent with both students defaulting alike on easier cells, and I have
-not separated those explanations.
-
-Counted across the calibrated regimes, the same catastrophic cells show
-the clearest effect fine-tuning has anywhere in this study, and it is not
-an effect on mean delay. Paired over the same thirty seeds against the
+Across the calibrated regimes the same catastrophic cells show the clearest
+effect fine-tuning has anywhere in this study, and it is not an effect on
+mean delay. Paired over the same thirty seeds against the
 identically-compiled stock control, catastrophic cells fall from
 \textbf{20 to 0} on the calibrated Bloomsbury grid and from \textbf{8 to
-1} on the calibrated Euston corridor, with the 3.8B student reproducing
-the grid result at 0. Where the network cannot clear the tail does not
-move: 3 to 3 on Euston peak-hour, 2 to 1 on Old Street, 0 to 0 on the
-gridlocked grid. \finding{Distillation removes the harm tail on both
-networks that clear}, including the corridor where it moved no mean
-delay, so the tail and the mean answer to the same clearance condition
-but not to the same degree. I did not isolate the mechanism.
-
-One honest gap: this campaign persisted aggregate decision statistics per
-cell, not per-step audit records, so \emph{when} within a run the
-divergence concentrated is unrecoverable here, though the per-step chain
-is retained in the dedicated accident-suite runs (\S\ref{sec:res-audit}).
-Full tables in \texttt{results/failure\_forensics.md}.
-
+1} on the calibrated Euston corridor, the 3.8B student reproducing the
+grid result at 0. Where the network cannot clear the tail does not move: 3
+to 3 on Euston peak-hour, 2 to 1 on Old Street, 0 to 0 on the gridlocked
+grid. \finding{Distillation removes the harm tail on both networks that
+clear}, including the corridor where it moved no mean delay. The tail and
+the mean answer to the same clearance condition but not to the same
+degree, and I did not isolate the mechanism. One honest gap: this campaign
+persisted aggregate decision statistics per cell, not per-step audit
+records, so \emph{when} within a run the divergence concentrated is
+unrecoverable here, though the per-step chain is retained in the dedicated
+accident-suite runs (\S\ref{sec:res-audit}). Full tables in
+\texttt{results/failure\_forensics.md} (Appendix~\ref{app:tables}).

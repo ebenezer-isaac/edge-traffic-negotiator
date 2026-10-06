@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from slm_agent import _match_model  # noqa: E402
+from slm_agent import _match_model, _parse_endpoint  # noqa: E402
 
 CACHED = [
     "deepseek-r1-distill-qwen-7b-generic-gpu:4",
@@ -51,3 +51,20 @@ def test_cpu_build_used_when_no_gpu_build_cached():
 def test_unknown_alias_and_empty_list_return_none():
     assert _match_model(CACHED, "llama-9b") is None
     assert _match_model([], "qwen3-0.6b") is None
+
+
+# Foundry status output -> endpoint. 0.8.x prints `foundry service status`; the preview CLI
+# renamed it to `foundry server status` and may print localhost. Both must resolve.
+def test_endpoint_from_0_8_service_status_line():
+    line = "🟢 Model management service is running on http://127.0.0.1:51363/openai/status"
+    assert _parse_endpoint(line) == "http://127.0.0.1:51363/v1"
+
+
+def test_endpoint_from_localhost_url():
+    assert _parse_endpoint("Endpoint: http://localhost:39839/v1") == "http://127.0.0.1:39839/v1"
+
+
+def test_endpoint_absent_or_empty_returns_none():
+    assert _parse_endpoint("Foundry Local daemon is not running.") is None
+    assert _parse_endpoint("") is None
+    assert _parse_endpoint(None) is None

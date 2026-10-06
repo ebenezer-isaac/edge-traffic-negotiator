@@ -188,17 +188,29 @@ SYSTEM_JOB_A_CAG = (
 )
 
 
+def _parse_endpoint(status_text: str) -> str | None:
+    """Pull the local OpenAI-compatible base URL out of Foundry's status output."""
+    m = re.search(r"(?:127\.0\.0\.1|localhost):(\d+)", status_text or "")
+    return f"http://127.0.0.1:{m.group(1)}/v1" if m else None
+
+
 def _service_endpoint() -> str | None:
-    """Parse `foundry service status` for the running OpenAI-compatible endpoint."""
+    """Find the running Foundry Local endpoint.
+
+    The preview CLI renamed `foundry service status` (0.8.x, what this study used) to
+    `foundry server status`; try the new name first, then the old one.
+    """
     import subprocess
 
-    try:
-        out = subprocess.run(["foundry", "service", "status"], capture_output=True,
-                             text=True, timeout=15).stdout
-        m = re.search(r"127\.0\.0\.1:(\d+)", out)
-        return f"http://127.0.0.1:{m.group(1)}/v1" if m else None
-    except Exception:
-        return None
+    for cmd in (["foundry", "server", "status"], ["foundry", "service", "status"]):
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        except Exception:
+            continue
+        base = _parse_endpoint(out.stdout + out.stderr)
+        if base:
+            return base
+    return None
 
 
 def _model_ids(base: str) -> list[str]:

@@ -14,8 +14,12 @@ Each zip is a ready-to-serve Foundry Local custom model: int4 ONNX weights, toke
 | `qwen3-0.6b-lora-v1.zip`, `qwen3-0.6b-lora-v2.zip` | n/a | The LoRA adapters for `ft1` and `ft2` (apply to `Qwen/Qwen3-0.6B`). |
 | `ft_dataset_train.jsonl.gz` | n/a | The 59,533-row distillation training set (the 5,580-row holdout is in `results/ft_dataset/holdout.jsonl`). |
 
+Tested with Foundry Local 0.8.119 on Windows with an NVIDIA RTX 2060 (WebGPU). Newer preview
+releases renamed `foundry service ...` to `foundry server ...` and `foundry model run` to
+`foundry run`; other platforms and versions are untested.
+
 Why not the catalog `qwen3-0.6b`? On the RTX 2060 the catalog WebGPU build of Qwen3-0.6B emits
-garbage tokens (try it: `foundry model run qwen3-0.6b`). `ft0` is the same stock weights through the
+garbage tokens . `ft0` is the same stock weights through the
 pipeline that works, and it is the control the dissertation compares against.
 
 The same models are on Hugging Face, one repo each:

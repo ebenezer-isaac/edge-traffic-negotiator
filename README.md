@@ -32,12 +32,18 @@ Running maxpressure on bloomsbury_calibrated (seed 1, 1200 s)...
   audit entries        441  chain ok=True  signatures ok=True  merkle proof ok=True
 ```
 
-**Add a language model.** Install [Foundry Local](https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started), then:
+**Add a language model.** Install [Foundry Local](https://learn.microsoft.com/en-us/azure/foundry-local/reference/reference-cli)
+(`winget install Microsoft.FoundryLocal` on Windows), then:
 
 ```bash
-foundry model run phi-4-mini    # downloads ~3.7 GB the first time; Ctrl+C once it is loaded
-python run.py --controller slm --model phi-4-mini
+foundry model download phi-4-mini   # about 3.7 GB
+foundry model load phi-4-mini
+python run.py --controller slm --model phi-4-mini --end 300
 ```
+
+Everything here was tested with Foundry Local **0.8.119**. The current preview CLI renamed a few
+commands (`foundry model run` became `foundry run`, `foundry service status` became
+`foundry server status`); the controller finds the local endpoint under either name.
 
 **Use the fine-tuned 0.6B model** from the dissertation (about 390 MB), from
 [Hugging Face](https://huggingface.co/ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1) or the

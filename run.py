@@ -35,7 +35,7 @@ def main() -> int:
         agent = SLMAgent(alias=args.model)
         if agent.choose_phase("PROBE", 2, [8, 0]) is None:
             print(f"Model '{agent.model}' did not return a valid phase. Is it loaded? "
-                  f"Try: foundry model run {args.model}", file=sys.stderr)
+                  f"Try: foundry model load {args.model}  (and check it with `foundry server status`, or `foundry service status` on Foundry Local 0.8.x)", file=sys.stderr)
             return 1
         print(f"SLM proposer: {agent.model}")
     else:

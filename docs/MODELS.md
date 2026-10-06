@@ -18,21 +18,33 @@ Why not the catalog `qwen3-0.6b`? On the RTX 2060 the catalog WebGPU build of Qw
 garbage tokens (try it: `foundry model run qwen3-0.6b`). `ft0` is the same stock weights through the
 pipeline that works, and it is the control the dissertation compares against.
 
+The same models are on Hugging Face, one repo each:
+[ft1](https://huggingface.co/ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1),
+[ft2](https://huggingface.co/ebnezr-isaac/qwen3-0.6b-traffic-signal-ft2),
+[ft0](https://huggingface.co/ebnezr-isaac/qwen3-0.6b-traffic-signal-ft0-stock),
+[Phi-4-mini](https://huggingface.co/ebnezr-isaac/phi-4-mini-traffic-signal), and the
+[dataset](https://huggingface.co/datasets/ebnezr-isaac/traffic-signal-distillation).
+
 ## Install one
 
 ```bash
-# 1. where Foundry Local keeps its models
+# 1. where Foundry Local keeps its models; it prints e.g. "Cache directory path: %USERPROFILE%\.cache\foundry-local"
 foundry cache location
 
-# 2. unzip into a folder named after the model id, inside that location
-#    (Windows example; on macOS/Linux use the path printed above)
+# 2a. from Hugging Face, into a subfolder named after the model id
+pip install -U huggingface_hub
+hf download ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1 --local-dir "<cache folder>/qwen3-0.6b-ft1"
+
+# 2b. or from the GitHub Release (the zip already contains the qwen3-0.6b-ft1/ folder)
 curl -LO https://github.com/ebenezer-isaac/edge-traffic-negotiator/releases/download/v1.0/qwen3-0.6b-ft1.zip
-tar -xf qwen3-0.6b-ft1.zip -C "%USERPROFILE%\.cache\foundry-local"
+tar -xf qwen3-0.6b-ft1.zip -C "<cache folder>"
 
 # 3. load it and check it is listed
 foundry model load qwen3-0.6b-ft1
 foundry service ps
 ```
+
+On Windows, use the built-in `tar` (PowerShell or cmd), which reads zip files. Git Bash's `tar` does not.
 
 Then drive a simulation with it:
 

@@ -39,13 +39,19 @@ foundry model run phi-4-mini    # downloads ~3.7 GB the first time; Ctrl+C once 
 python run.py --controller slm --model phi-4-mini
 ```
 
-**Use the fine-tuned 0.6B model** from the dissertation: download it from the
-[release](https://github.com/ebenezer-isaac/edge-traffic-negotiator/releases/tag/v1.0) and follow
-[docs/MODELS.md](docs/MODELS.md). It is about 390 MB.
+**Use the fine-tuned 0.6B model** from the dissertation (about 390 MB), from
+[Hugging Face](https://huggingface.co/ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1) or the
+[GitHub release](https://github.com/ebenezer-isaac/edge-traffic-negotiator/releases/tag/v1.0):
 
 ```bash
+foundry cache location          # note the folder it prints
+pip install -U huggingface_hub
+hf download ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1 --local-dir "<that folder>/qwen3-0.6b-ft1"
+foundry model load qwen3-0.6b-ft1
 python run.py --controller slm --model qwen3-0.6b-ft1
 ```
+
+[docs/MODELS.md](docs/MODELS.md) lists every model and explains how to build your own.
 
 Other networks: `--topology euston_peakhour_calibrated`, `oldstreet_junction`, `grid4x4` and more
 (`python run.py --help`). Run the test suite with `pytest` (about 2 minutes, 819 tests).

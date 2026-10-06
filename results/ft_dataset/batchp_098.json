@@ -1,0 +1,756 @@
+{
+ "system": "You control one traffic-signal junction. You will be given the number of waiting vehicles for each green phase. Decide which phase to serve next. Reply with ONLY JSON {\"phase\": <index>} and nothing else. /no_think",
+ "n": 150,
+ "tasks": [
+  {
+   "id": 14700,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (3 total): phase 0 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14701,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 3, phase 1 = 21. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (14 total): phase 0 +7, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +8, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14702,
+   "prompt": "Junction D1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +6, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14703,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 9, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +5, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14704,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +1, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14705,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +6, phase 1 +1. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14706,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 12, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +4, phase 1 +8. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14707,
+   "prompt": "Junction A3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +3, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14708,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 15, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (14 total): phase 0 +9, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14709,
+   "prompt": "Junction D3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (2 total): phase 0 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14710,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (10 total): phase 0 +6, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14711,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 6, phase 1 = 24. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (17 total): phase 0 +5, phase 1 +12. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14712,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 21, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (10 total): phase 0 +3, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +8. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14713,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +4, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14714,
+   "prompt": "Junction D1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +3, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14715,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +6, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14716,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (2 total): phase 0 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14717,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 18, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (15 total): phase 0 +9, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14718,
+   "prompt": "Junction B0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +5, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14719,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +9, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +9, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14720,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +3, phase 1 +9. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14721,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (3 total): phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14722,
+   "prompt": "Junction D0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +6, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14723,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 12, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (17 total): phase 0 +8, phase 1 +9. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +8. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14724,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (1 total): phase 0 +1. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14725,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +4, phase 1 +9. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +7. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14726,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (2 total): phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14727,
+   "prompt": "Junction D1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +8, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14728,
+   "prompt": "Junction A3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +4, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14729,
+   "prompt": "Junction D3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +7, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14730,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 12. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (14 total): phase 0 +6, phase 1 +8. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +11, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14731,
+   "prompt": "Junction A0. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +4, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14732,
+   "prompt": "Junction B0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +3, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14733,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 24, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (14 total): phase 0 +8, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14734,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 15, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +4, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14735,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (15 total): phase 0 +8, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14736,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +5, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14737,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 21. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +4, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14738,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +4, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14739,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 12, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (10 total): phase 0 +4, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +7. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14740,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +7, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14741,
+   "prompt": "Junction D3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (4 total): phase 0 +3, phase 1 +1. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14742,
+   "prompt": "Junction D1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +1, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14743,
+   "prompt": "Junction A3. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +4, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14744,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 24, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +8, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14745,
+   "prompt": "Junction A0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (3 total): phase 0 +2, phase 1 +1. Serve the phase facing the worst combined pressure.",
+   "num_phases": 2
+  },
+  {
+   "id": 14746,
+   "prompt": "Junction B0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +4, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14747,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +7, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +6, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14748,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +5, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14749,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +5, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14750,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +3, phase 1 +4. Serve the phase facing the worst combined pressure.",
+   "num_phases": 2
+  },
+  {
+   "id": 14751,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +4, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14752,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (10 total): phase 0 +6, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14753,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 18. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (14 total): phase 0 +8, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +7, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14754,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +6, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +6, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14755,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (20 total): phase 0 +11, phase 1 +9. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14756,
+   "prompt": "Junction D1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (3 total): phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14757,
+   "prompt": "Junction A3. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14758,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 3, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +7, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +7, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14759,
+   "prompt": "Junction B0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +4, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14760,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 18, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +6, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14761,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +7, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14762,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +3, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14763,
+   "prompt": "Junction D0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +7, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14764,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 12. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +7, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14765,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 3, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +6, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14766,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 18. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +3, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14767,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 15, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (18 total): phase 0 +11, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +6, phase 1 +9. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14768,
+   "prompt": "Junction D1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (2 total): phase 0 +1, phase 1 +1. Serve the phase facing the worst combined pressure.",
+   "num_phases": 2
+  },
+  {
+   "id": 14769,
+   "prompt": "Junction A3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14770,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (10 total): phase 0 +5, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14771,
+   "prompt": "Junction D3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (16 total): phase 0 +13, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14772,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +3, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +6, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14773,
+   "prompt": "Junction B0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +3, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14774,
+   "prompt": "Junction D0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (4 total): phase 0 +1, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14775,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (10 total): phase 0 +7, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +9, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14776,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +5, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14777,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 12, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +5, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14778,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (17 total): phase 0 +12, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14779,
+   "prompt": "Junction A3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +3, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14780,
+   "prompt": "Junction D3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +8. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14781,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 9, phase 1 = 27. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (19 total): phase 0 +11, phase 1 +8. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14782,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (4 total): phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14783,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 6, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14784,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +7, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14785,
+   "prompt": "Junction B0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +2, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14786,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 18, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (14 total): phase 0 +10, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +7, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14787,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 12, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +4, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14788,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (20 total): phase 0 +10, phase 1 +10. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +7. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14789,
+   "prompt": "Junction D3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 12. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (3 total): phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14790,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +7, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14791,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +6, phase 1 +1. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14792,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 9, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +5, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14793,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 9, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +4, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14794,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 12, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +8, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +8. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14795,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +5, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14796,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 33, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +5, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14797,
+   "prompt": "Junction A0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +1, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14798,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +5, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14799,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 9, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +5, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14800,
+   "prompt": "Junction D0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14801,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +4, phase 1 +9. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14802,
+   "prompt": "Junction D1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +3, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14803,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 12. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (3 total): phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14804,
+   "prompt": "Junction D3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (12 total): phase 0 +7, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14805,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +3, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14806,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +3, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14807,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 3, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +5, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14808,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (14 total): phase 0 +4, phase 1 +10. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14809,
+   "prompt": "Junction A0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Approaching (in motion, not yet queued): phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14810,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 24, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (10 total): phase 0 +4, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +6, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14811,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +6, phase 1 +1. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14812,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (17 total): phase 0 +4, phase 1 +13. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14813,
+   "prompt": "Junction D0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +2, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14814,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (4 total): phase 0 +2, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14815,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 6, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +3, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14816,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +3, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14817,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 6, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +4, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14818,
+   "prompt": "Junction A3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (15 total): phase 0 +6, phase 1 +9. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14819,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +2, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14820,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 15, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (15 total): phase 0 +7, phase 1 +8. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14821,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 3, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (16 total): phase 0 +6, phase 1 +10. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14822,
+   "prompt": "Junction A0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (1 total): phase 0 +1. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14823,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14824,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (10 total): phase 0 +1, phase 1 +9. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +7, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14825,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 9, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +4, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14826,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (15 total): phase 0 +2, phase 1 +13. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14827,
+   "prompt": "Junction D0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14828,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +3, phase 1 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +6, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14829,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +3, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14830,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 9, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +5, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +8. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14831,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 9. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +2, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14832,
+   "prompt": "Junction B0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (15 total): phase 0 +3, phase 1 +12. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14833,
+   "prompt": "Junction C0. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (7 total): phase 0 +2, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +5. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14834,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 18. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (19 total): phase 0 +9, phase 1 +10. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14835,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 24, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (9 total): phase 0 +3, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14836,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (2 total): phase 0 +2. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14837,
+   "prompt": "Junction A2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (11 total): phase 0 +6, phase 1 +5. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14838,
+   "prompt": "Junction B3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 12. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (16 total): phase 0 +3, phase 1 +13. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +4. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14839,
+   "prompt": "Junction D2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (3 total): phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +5, phase 1 +1. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14840,
+   "prompt": "Junction D1. Waiting vehicles per phase: phase 0 = 12, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (25 total): phase 0 +17, phase 1 +8. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14841,
+   "prompt": "Junction D3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +5, phase 1 +8. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14842,
+   "prompt": "Junction C1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +3, phase 1 +10. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +7. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14843,
+   "prompt": "Junction C2. Waiting vehicles per phase: phase 0 = 0, phase 1 = 15. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (14 total): phase 0 +4, phase 1 +10. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +7. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14844,
+   "prompt": "Junction A0. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (3 total): phase 0 +2, phase 1 +1. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +2, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14845,
+   "prompt": "Junction A1. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +7, phase 1 +6. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +4, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14846,
+   "prompt": "Junction A3. Waiting vehicles per phase: phase 0 = 3, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (5 total): phase 0 +2, phase 1 +3. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14847,
+   "prompt": "Junction B2. Waiting vehicles per phase: phase 0 = 12, phase 1 = 0. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (13 total): phase 0 +6, phase 1 +7. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +1, phase 1 +6. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14848,
+   "prompt": "Junction B1. Waiting vehicles per phase: phase 0 = 0, phase 1 = 6. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (6 total): phase 0 +2, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +8, phase 1 +2. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  },
+  {
+   "id": 14849,
+   "prompt": "Junction C3. Waiting vehicles per phase: phase 0 = 0, phase 1 = 3. Which phase should get green now? Reply ONLY {\"phase\": <index>}. Incoming from neighbours toward this junction (8 total): phase 0 +4, phase 1 +4. Serve the phase facing the worst combined pressure. Approaching (in motion, not yet queued): phase 0 +3, phase 1 +3. Weight imminent arrivals, not just current queues.",
+   "num_phases": 2
+  }
+ ]
+}

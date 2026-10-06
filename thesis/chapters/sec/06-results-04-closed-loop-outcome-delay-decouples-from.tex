@@ -1,0 +1,86 @@
+\subsection{Closed-loop outcome: delay decouples from accuracy}\label{sec:res-closedloop}
+Table~\ref{tab:closedloop-full} reports the Qwen3-0.6B closed-loop sweep:
+fine-tuned (ft) versus identically-compiled stock, three topologies
+$\times$ 30 training-disjoint seeds, paired per seed against \emph{both}
+classical comparators (\S\ref{sec:res-maxpressure}).
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{llrrrrrr}
+\toprule
+Topology & Arm & vs fixed-time & vs MaxPr. & auth & a-s & acc & div \\
+\midrule
+Euston peak-hour & ft & $+15.5\%$ & $-3.8\%$ & 0.64 & 0.36 & 0.70 & 0.12 \\
+ & stock & $+7.6\%$ & $-6.2\%$ & 0.62 & 0.38 & 0.68 & 0.46 \\
+Bloomsbury grid & ft & $+0.8\%$ & $+0.7\%$ & 0.70 & 0.29 & 0.73 & 0.17 \\
+ & stock & $+2.8\%$ & $+2.6\%$ & 0.62 & 0.38 & 0.65 & 0.46 \\
+Old Street & ft & $\mathbf{-11.6\%}$ & $-3.1\%$ & 0.56 & 0.44 & 0.90 & 0.11 \\
+ & stock & $\mathbf{-9.7\%}$ & $-1.1\%$ & 0.39 & 0.61 & 0.54 & 0.60 \\
+\midrule
+Pooled ($n{=}90$) & ft & $+1.6\%$ & $-2.1\%$ & & & & \\
+ & stock & $+0.2\%$ & $-1.6\%$ & & & & \\
+\midrule
+Euston & phi ft & $+16.2\%$ & $-3.8\%$ & 0.64 & 0.36 & 0.70 & 0.13 \\
+Bloomsbury & phi ft & $+0.8\%$ & $+0.6\%$ & 0.70 & 0.30 & 0.73 & 0.17 \\
+Old Street & phi ft & $\mathbf{-9.7\%}$ & $-1.0\%$ & 0.57 & 0.43 & 0.88 & 0.12 \\
+Pooled ($n{=}90$) & phi ft & $+2.4\%$ & $-1.4\%$ & & & & \\
+\bottomrule
+\end{tabular}
+\caption{Closed-loop delay against both classical comparators and decision
+composition ($n{=}30$ disjoint seeds per cell); negative $\Delta$ favours
+the controller; bold marks a significant improvement over the fixed-time
+floor ($p<.05$, full tests in Table~\ref{tab:robust}). \emph{auth}:
+SLM-authored share of actuations; \emph{a-s}: anti-starvation share;
+\emph{acc}: proposal acceptance; \emph{div}: divergence from MaxPressure
+among SLM-authored decisions.}
+\label{tab:closedloop-full}
+\end{table*}
+
+\finding{The comparator decides the outcome.} Against the fixed-time floor
+every arm significantly beats it on Old Street and none does on the other
+two maps; against MaxPressure the only arm in this table to reach
+significance is stock on the Bloomsbury grid ($+2.6\%$,
+$p{=}1.3{\times}10^{-3}$), a harm and not a gain, though one catalogue
+stock arm does beat MaxPressure on Old Street (\S\ref{sec:res-factorial}),
+and the calibrated regime changes both pictures (\S\ref{sec:res-calib}).
+Comparator-invariant is the negative that matters: a $+42$-point offline
+accuracy gain produces no consistent delay change in these three regimes,
+and the pooled effect is indistinguishable from zero under either
+comparator, the \finding{delay-decoupling paradox} the decision battery
+anticipated. Fine-tuning's one significant effect is protective: stock
+control significantly \emph{harms} the congested Bloomsbury grid where the
+fine-tuned controller is neutral, the head-to-head favouring fine-tuning by
+$-1.8\%$ ($p{=}.022$). \S\ref{sec:dis-decoupling} takes up the mechanism:
+masking confines both arms to one conflict-free menu and the
+anti-starvation floor serves 23--61\% of ticks, though the floor's share
+varies with the arm (\S\ref{sec:res-authorship}), so much served behaviour
+is identical by construction whatever the proposal quality. I ran no
+unmasked arm, so this is a design-level reading, not a measurement, and
+the headroom may be small to begin with: external calibration puts the
+whole LLM-vs-MaxPressure gap at 1--2\% \cite{dglight2026}.
+
+Because paired $t$-tests on means hide the skew the catastrophic tail of
+\S\ref{sec:res-forensics} puts into the per-seed distributions,
+Table~\ref{tab:robust} (Appendix~\ref{app:tables}) adds 95\% CIs and a
+Wilcoxon signed-rank test on the \emph{typical} seed. \finding{The Old
+Street win holds on the typical seed} as well as the mean ($p\le.002$ both
+tests); the Euston intervals are wide and zero-straddling on the topology
+with the heaviest failure tail, so the characterisation is
+\emph{typical-case behaviour with a catastrophic tail}, pointing at tail
+control (a per-decision timeout, or an outlier detector reverting to the
+classical policy) rather than at better average decisions. The rank-test
+results are not confirmatory and would not survive a Holm correction
+across the roughly forty paired comparisons in this report; the
+fine-tuned-versus-stock head-to-head, the study's primary contrast by
+design, does (Appendix~\ref{app:holm}).
+
+The Phi-4-mini confirmation arm (final rows of
+Table~\ref{tab:closedloop-full}) extends saturation end-to-end: the 3.8B
+fine-tuned student's closed-loop profile is not distinguishable from the
+0.6B's on either comparator, with the same divergence band (0.11 to 0.17)
+and authorship profile, and on the calibrated grid the intervals bound any
+difference within $\pm0.38\%$ of delay; it serves at the lowest latency of
+my compiled arms (Table~\ref{tab:latency}, Appendix~\ref{app:tables}). On
+the scale-threshold question that is a bounded non-difference, not a
+demonstrated equivalence (\S\ref{sec:res-calib}).

@@ -1,0 +1,293 @@
+{
+  "experiment": "lee_fair_retest_slm_auth",
+  "gold": "deterministic KB gate (experiment_vehicle_auth)",
+  "model": "Phi-4-mini-instruct-generic-gpu:5",
+  "dataset_size": 26,
+  "arms": {
+    "scaffold": {
+      "n": 26,
+      "class_accuracy": 0.6923,
+      "grant_accuracy": 0.8462,
+      "parse_fail": 0,
+      "precision": 0.7778,
+      "recall": 1.0,
+      "false_positive_rate": 0.3333,
+      "false_negative_rate": 0.0,
+      "dangerous_false_grants": 4,
+      "latency_p50": 2.396,
+      "latency_p95": 3.405,
+      "latency_p99": 3.457,
+      "misses": [
+        {
+          "category": "valid_fire_lanehold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_maintenance_hold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_maintenance_hold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_civilian",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "contradictory",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "contradictory",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        }
+      ]
+    },
+    "bare": {
+      "n": 26,
+      "class_accuracy": 0.4231,
+      "grant_accuracy": 0.7692,
+      "parse_fail": 0,
+      "precision": 0.7778,
+      "recall": 0.875,
+      "false_positive_rate": 0.4,
+      "false_negative_rate": 0.125,
+      "dangerous_false_grants": 4,
+      "latency_p50": 1.439,
+      "latency_p95": 2.466,
+      "latency_p99": 2.469,
+      "misses": [
+        {
+          "category": "valid_fire",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_fire",
+          "expected": [
+            "LEGITIMATE",
+            true
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_fire_lanehold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_maintenance_hold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_maintenance_hold",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "valid_civilian",
+          "expected": [
+            "LEGITIMATE",
+            false
+          ],
+          "got": [
+            "UNKNOWN",
+            false
+          ]
+        },
+        {
+          "category": "unknown_vehicle",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "unknown_vehicle",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "unknown_vehicle",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "signal_tampering",
+          "expected": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "missing_metadata",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "LEGITIMATE",
+            true
+          ]
+        },
+        {
+          "category": "contradictory",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        },
+        {
+          "category": "contradictory",
+          "expected": [
+            "UNKNOWN",
+            false
+          ],
+          "got": [
+            "SPOOFED_OR_FAULTY",
+            false
+          ]
+        }
+      ]
+    }
+  }
+}

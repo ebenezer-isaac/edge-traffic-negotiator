@@ -1,0 +1,73 @@
+\chapter*{Terms used in this dissertation}
+\addcontentsline{toc}{chapter}{Terms used in this dissertation}
+
+The first three are measured quantities this dissertation turns on, and they have
+different denominators; confusing them is the easiest way to misread the results. The
+one-line forms below are for reference while reading. Their formulae, denominators and
+caveats are given where they are derived, in \S\ref{sec:des-shield}.
+
+\begin{description}[leftmargin=0pt, itemsep=2pt]
+
+\item[Authored share.] Of logged decision ticks, the fraction whose served phase
+originated with the model. The accountability number.
+
+\item[Proposal acceptance.] Of ticks where the model returned a well-formed proposal,
+the fraction served. Not a measure of authorship: the model is not consulted on every
+tick.
+
+\item[Divergence rate.] Of the decisions the model authored, the fraction that differ
+from MaxPressure's choice.
+
+\item[Congestion gate.] The rule deciding whether the model is consulted at all. Below a
+threshold of halting demand, MaxPressure serves the tick directly.
+
+\item[Anti-starvation floor.] A best-effort minimum-service rule that force-serves any
+approach passed over beyond a bounded window, overriding both the model and
+MaxPressure. It is suspended during an admissible emergency preemption, and records a
+violation when two phases reach the threshold together. It authors a substantial
+minority of logged decision ticks.
+
+\item[Shield.] The safety layer: phase masking, MaxPressure substitution for invalid
+output, and the floor. A sound heuristic composite, not correct-by-construction in the
+formal sense (\S\ref{sec:bg-shields}).
+
+\item[Substitution path.] The part of the shield replacing an invalid or absent
+proposal. Measured at $0.0\%$ of decisions almost everywhere, which is what stops
+``the model matches MaxPressure'' from being circular.
+
+\item[MaxPressure.] The classical adaptive baseline. It serves the phase of greatest
+\emph{pressure}, upstream queue minus the downstream queue it would discharge into, so
+it declines to serve a long queue whose exit is blocked.
+
+\item[Fixed-time floor.] The naive comparator: each network's own default cyclic
+program, with no adaptive controller. The standard every deployed junction already meets.
+
+\item[Longest-queue-first.] A third classical baseline serving the largest upstream
+queue with no downstream term. A different rule from MaxPressure, though measured
+indistinguishable from it here.
+
+\item[Teleport.] SUMO's gridlock-escape mechanism, which removes a vehicle stuck beyond
+a timeout. A high count means the network is failing rather than flowing.
+
+\item[Demand calibration.] Subsampling demand until the network clears, so controller
+differences are measurable rather than compressed by gridlock.
+
+\item[QLoRA.] The fine-tuning method: low-rank adapters trained against a 4-bit
+quantised base, which makes training feasible on the GPU that also serves the model.
+
+\item[int4 ONNX.] The served weight format, compiled to fit the 6\,GB envelope.
+
+\item[Foundry Local.] Microsoft's on-device serving runtime, and a fixed constraint of
+this project rather than a choice.
+
+\item[Ed25519 hash chain.] The audit structure. Each decision record is signed and
+linked to its predecessor by a hash, so later alteration breaks the chain detectably.
+
+\item[LOTO.] Leave-one-topology-out: a control student trained with one network's states
+removed, testing whether gains are topology memorisation.
+
+\item[Stock, ft.] \emph{Stock} is the same base model through the identical compilation
+pipeline but not fine-tuned; \emph{ft} is the fine-tuned student. Comparisons are always
+against the identically-compiled control, never the vendor artifact.
+
+\end{description}

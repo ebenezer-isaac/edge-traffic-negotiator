@@ -1,0 +1,52 @@
+% Preamble for the SEIoT MSc report template (article + twocolceurws, loaded in main.tex).
+% Fonts: Times (newtx) per the template; Helvetica only for figure labels.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{microtype}
+\usepackage{textcomp}
+\providecommand{\euro}{\texteuro}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+% Template default: biblatex numeric style, alphabetical by first author (sorting=nty).
+\usepackage[backend=biber]{biblatex}
+
+\definecolor{nbblue}{HTML}{1F4E79}
+\definecolor{nbteal}{HTML}{2E8B8B}
+\definecolor{nbred}{HTML}{B83227}
+\definecolor{nbgrey}{HTML}{555555}
+\definecolor{nbband}{HTML}{EAF0F6}
+
+\setlength{\emergencystretch}{2em}
+\setlist[itemize]{leftmargin=1.4em,itemsep=1pt,topsep=2pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.6em,itemsep=1pt,topsep=2pt,parsep=0pt}
+\setlist[description]{leftmargin=0pt,itemsep=2pt}
+\renewcommand{\arraystretch}{1.08}
+
+% Inline emphasis helpers.
+\newcommand{\hd}[1]{{\color{nbblue}\textbf{#1}}}
+\newcommand{\finding}[1]{{\color{nbteal}\textbf{#1}}}
+\newcommand{\risk}[1]{{\color{nbred}\textbf{#1}}}
+
+% Draft scaffolding, disabled for submission.
+\newif\ifdraft\draftfalse
+\newcommand{\todo}[1]{\ifdraft{\color{nbred}\sffamily\small [TODO: #1]}\fi}
+\newcommand{\evidence}[1]{\ifdraft{\color{nbgrey}\sffamily\footnotesize [evidence: \detokenize{#1}]}\fi}
+
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,
+  framerule=0.3pt,rulecolor=\color{nbgrey},backgroundcolor=\color{nbband}}

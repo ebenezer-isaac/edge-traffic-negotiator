@@ -1,0 +1,406 @@
+{
+  "system": "You control ONE traffic-signal junction (this junction only; no neighbour information). For each green phase you are given: queued vehicles, their TOTAL accumulated waiting time (s), and whether it is currently green. Choose the phase to serve next to MINIMISE total waiting time and unnecessary stops -- not simply the longest queue. Prefer a phase with both many waiting vehicles AND high accumulated waiting; avoid starving a long-waiting phase; keep the current phase unless another is clearly worse-off (switching makes a queue stop/restart). Reply with ONLY JSON {\"phase\": <index>}.",
+  "n": 80,
+  "tasks": [
+    {
+      "id": 0,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_6985146843 (2 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=2, waiting_s=16. Which phase?"
+    },
+    {
+      "id": 1,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=2, waiting_s=22; phase 1: queue=2, waiting_s=22; phase 2: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 2,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_cluster_110097_110098 (3 phases). phase 0: queue=0, waiting_s=0; phase 1: queue=0, waiting_s=0, CURRENT; phase 2: queue=7, waiting_s=56. Which phase?"
+    },
+    {
+      "id": 3,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_cluster_110097_110098 (3 phases). phase 0: queue=2, waiting_s=24; phase 1: queue=0, waiting_s=0, CURRENT; phase 2: queue=7, waiting_s=28. Which phase?"
+    },
+    {
+      "id": 4,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=7, waiting_s=118; phase 1: queue=2, waiting_s=23; phase 2: queue=2, waiting_s=23, CURRENT. Which phase?"
+    },
+    {
+      "id": 5,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=0, waiting_s=0; phase 2: queue=12, waiting_s=81. Which phase?"
+    },
+    {
+      "id": 6,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=0, waiting_s=0; phase 2: queue=14, waiting_s=852. Which phase?"
+    },
+    {
+      "id": 7,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=0, waiting_s=0; phase 2: queue=15, waiting_s=882. Which phase?"
+    },
+    {
+      "id": 8,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=5, waiting_s=29; phase 1: queue=1, waiting_s=4, CURRENT; phase 2: queue=11, waiting_s=75. Which phase?"
+    },
+    {
+      "id": 9,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=2, waiting_s=16, CURRENT; phase 1: queue=2, waiting_s=16; phase 2: queue=14, waiting_s=269. Which phase?"
+    },
+    {
+      "id": 10,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=12, waiting_s=173; phase 1: queue=4, waiting_s=42; phase 2: queue=3, waiting_s=30, CURRENT. Which phase?"
+    },
+    {
+      "id": 11,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_cluster_13249075_6985146839_6985146845 (2 phases). phase 0: queue=11, waiting_s=629; phase 1: queue=10, waiting_s=360, CURRENT. Which phase?"
+    },
+    {
+      "id": 12,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_6985146843 (2 phases). phase 0: queue=11, waiting_s=294, CURRENT; phase 1: queue=11, waiting_s=178. Which phase?"
+    },
+    {
+      "id": 13,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=15, waiting_s=369; phase 1: queue=6, waiting_s=120; phase 2: queue=4, waiting_s=112, CURRENT. Which phase?"
+    },
+    {
+      "id": 14,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=7, waiting_s=47; phase 1: queue=3, waiting_s=20; phase 2: queue=16, waiting_s=3421, CURRENT. Which phase?"
+    },
+    {
+      "id": 15,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_6985146843 (2 phases). phase 0: queue=14, waiting_s=664; phase 1: queue=15, waiting_s=669, CURRENT. Which phase?"
+    },
+    {
+      "id": 16,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_6985146843 (2 phases). phase 0: queue=15, waiting_s=1450; phase 1: queue=17, waiting_s=1538, CURRENT. Which phase?"
+    },
+    {
+      "id": 17,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_cluster_13249075_6985146839_6985146845 (2 phases). phase 0: queue=18, waiting_s=2305; phase 1: queue=16, waiting_s=2301, CURRENT. Which phase?"
+    },
+    {
+      "id": 18,
+      "topology": "euston_corridor",
+      "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more (3 phases). phase 0: queue=16, waiting_s=264; phase 1: queue=6, waiting_s=84, CURRENT; phase 2: queue=16, waiting_s=186. Which phase?"
+    },
+    {
+      "id": 19,
+      "topology": "euston_corridor",
+      "prompt": "Junction GS_cluster_13249075_6985146839_6985146845 (2 phases). phase 0: queue=24, waiting_s=2437; phase 1: queue=23, waiting_s=2433, CURRENT. Which phase?"
+    },
+    {
+      "id": 20,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_107992 (2 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=2, waiting_s=20. Which phase?"
+    },
+    {
+      "id": 21,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction cluster_107879_2440630566_2440633802_9092918246 (2 phases). phase 0: queue=4, waiting_s=22; phase 1: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 22,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_cluster_11866625772_11866625773 (3 phases). phase 0: queue=6, waiting_s=88; phase 1: queue=0, waiting_s=0, CURRENT; phase 2: queue=1, waiting_s=6. Which phase?"
+    },
+    {
+      "id": 23,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_107865 (2 phases). phase 0: queue=4, waiting_s=231, CURRENT; phase 1: queue=5, waiting_s=493. Which phase?"
+    },
+    {
+      "id": 24,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_107992 (2 phases). phase 0: queue=12, waiting_s=88; phase 1: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 25,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_107865 (2 phases). phase 0: queue=9, waiting_s=590, CURRENT; phase 1: queue=5, waiting_s=263. Which phase?"
+    },
+    {
+      "id": 26,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_1953893735 (3 phases). phase 0: queue=16, waiting_s=276; phase 1: queue=0, waiting_s=0; phase 2: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 27,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction cluster_107864_4360460586_4360460587 (2 phases). phase 0: queue=21, waiting_s=1221, CURRENT; phase 1: queue=0, waiting_s=0. Which phase?"
+    },
+    {
+      "id": 28,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction cluster_107864_4360460586_4360460587 (2 phases). phase 0: queue=24, waiting_s=1713; phase 1: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 29,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_107992 (2 phases). phase 0: queue=26, waiting_s=1294, CURRENT; phase 1: queue=2, waiting_s=172. Which phase?"
+    },
+    {
+      "id": 30,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_11863161 (3 phases). phase 0: queue=4, waiting_s=74, CURRENT; phase 1: queue=0, waiting_s=0; phase 2: queue=30, waiting_s=462. Which phase?"
+    },
+    {
+      "id": 31,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_11863161 (3 phases). phase 0: queue=18, waiting_s=244; phase 1: queue=1, waiting_s=1, CURRENT; phase 2: queue=19, waiting_s=94. Which phase?"
+    },
+    {
+      "id": 32,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_107839 (2 phases). phase 0: queue=26, waiting_s=2976, CURRENT; phase 1: queue=19, waiting_s=2520. Which phase?"
+    },
+    {
+      "id": 33,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_107992 (2 phases). phase 0: queue=52, waiting_s=8428, CURRENT; phase 1: queue=2, waiting_s=540. Which phase?"
+    },
+    {
+      "id": 34,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_1953893735 (3 phases). phase 0: queue=36, waiting_s=2584; phase 1: queue=8, waiting_s=492, CURRENT; phase 2: queue=15, waiting_s=60. Which phase?"
+    },
+    {
+      "id": 35,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_cluster_11866625772_11866625773 (3 phases). phase 0: queue=26, waiting_s=3518; phase 1: queue=24, waiting_s=6708; phase 2: queue=14, waiting_s=1739, CURRENT. Which phase?"
+    },
+    {
+      "id": 36,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_1953893735 (3 phases). phase 0: queue=33, waiting_s=4593; phase 1: queue=7, waiting_s=411; phase 2: queue=27, waiting_s=4038, CURRENT. Which phase?"
+    },
+    {
+      "id": 37,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_cluster_11866625772_11866625773 (3 phases). phase 0: queue=28, waiting_s=1690; phase 1: queue=24, waiting_s=3972, CURRENT; phase 2: queue=22, waiting_s=3225. Which phase?"
+    },
+    {
+      "id": 38,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_1953893735 (3 phases). phase 0: queue=42, waiting_s=5792, CURRENT; phase 1: queue=14, waiting_s=1544; phase 2: queue=27, waiting_s=2226. Which phase?"
+    },
+    {
+      "id": 39,
+      "topology": "bloomsbury_grid",
+      "prompt": "Junction GS_11863161 (3 phases). phase 0: queue=71, waiting_s=1865, CURRENT; phase 1: queue=16, waiting_s=411; phase 2: queue=41, waiting_s=2207. Which phase?"
+    },
+    {
+      "id": 40,
+      "topology": "grid3x3",
+      "prompt": "Junction A2 (2 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=3, waiting_s=0. Which phase?"
+    },
+    {
+      "id": 41,
+      "topology": "grid3x3",
+      "prompt": "Junction C1 (2 phases). phase 0: queue=9, waiting_s=30, CURRENT; phase 1: queue=6, waiting_s=30. Which phase?"
+    },
+    {
+      "id": 42,
+      "topology": "grid3x3",
+      "prompt": "Junction B2 (2 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=24, waiting_s=123. Which phase?"
+    },
+    {
+      "id": 43,
+      "topology": "grid3x3",
+      "prompt": "Junction C0 (2 phases). phase 0: queue=21, waiting_s=153; phase 1: queue=6, waiting_s=27, CURRENT. Which phase?"
+    },
+    {
+      "id": 44,
+      "topology": "grid3x3",
+      "prompt": "Junction B0 (2 phases). phase 0: queue=6, waiting_s=12, CURRENT; phase 1: queue=27, waiting_s=120. Which phase?"
+    },
+    {
+      "id": 45,
+      "topology": "grid3x3",
+      "prompt": "Junction A2 (2 phases). phase 0: queue=15, waiting_s=615; phase 1: queue=24, waiting_s=126, CURRENT. Which phase?"
+    },
+    {
+      "id": 46,
+      "topology": "grid3x3",
+      "prompt": "Junction C0 (2 phases). phase 0: queue=30, waiting_s=810, CURRENT; phase 1: queue=15, waiting_s=309. Which phase?"
+    },
+    {
+      "id": 47,
+      "topology": "grid3x3",
+      "prompt": "Junction B0 (2 phases). phase 0: queue=21, waiting_s=510; phase 1: queue=30, waiting_s=165, CURRENT. Which phase?"
+    },
+    {
+      "id": 48,
+      "topology": "grid3x3",
+      "prompt": "Junction A2 (2 phases). phase 0: queue=15, waiting_s=117; phase 1: queue=42, waiting_s=753, CURRENT. Which phase?"
+    },
+    {
+      "id": 49,
+      "topology": "grid3x3",
+      "prompt": "Junction C0 (2 phases). phase 0: queue=57, waiting_s=2061; phase 1: queue=6, waiting_s=99, CURRENT. Which phase?"
+    },
+    {
+      "id": 50,
+      "topology": "grid3x3",
+      "prompt": "Junction B0 (2 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=69, waiting_s=681. Which phase?"
+    },
+    {
+      "id": 51,
+      "topology": "grid3x3",
+      "prompt": "Junction A1 (2 phases). phase 0: queue=45, waiting_s=267; phase 1: queue=30, waiting_s=246, CURRENT. Which phase?"
+    },
+    {
+      "id": 52,
+      "topology": "grid3x3",
+      "prompt": "Junction C1 (2 phases). phase 0: queue=45, waiting_s=213, CURRENT; phase 1: queue=36, waiting_s=315. Which phase?"
+    },
+    {
+      "id": 53,
+      "topology": "grid3x3",
+      "prompt": "Junction A0 (2 phases). phase 0: queue=78, waiting_s=2310, CURRENT; phase 1: queue=9, waiting_s=228. Which phase?"
+    },
+    {
+      "id": 54,
+      "topology": "grid3x3",
+      "prompt": "Junction A1 (2 phases). phase 0: queue=39, waiting_s=411, CURRENT; phase 1: queue=60, waiting_s=900. Which phase?"
+    },
+    {
+      "id": 55,
+      "topology": "grid3x3",
+      "prompt": "Junction B1 (2 phases). phase 0: queue=78, waiting_s=660, CURRENT; phase 1: queue=33, waiting_s=150. Which phase?"
+    },
+    {
+      "id": 56,
+      "topology": "grid3x3",
+      "prompt": "Junction B0 (2 phases). phase 0: queue=36, waiting_s=306, CURRENT; phase 1: queue=84, waiting_s=876. Which phase?"
+    },
+    {
+      "id": 57,
+      "topology": "grid3x3",
+      "prompt": "Junction B0 (2 phases). phase 0: queue=39, waiting_s=387; phase 1: queue=93, waiting_s=1422, CURRENT. Which phase?"
+    },
+    {
+      "id": 58,
+      "topology": "grid3x3",
+      "prompt": "Junction B1 (2 phases). phase 0: queue=63, waiting_s=534, CURRENT; phase 1: queue=87, waiting_s=897. Which phase?"
+    },
+    {
+      "id": 59,
+      "topology": "grid3x3",
+      "prompt": "Junction B1 (2 phases). phase 0: queue=72, waiting_s=702; phase 1: queue=96, waiting_s=1335, CURRENT. Which phase?"
+    },
+    {
+      "id": 60,
+      "topology": "grid4x4",
+      "prompt": "Junction D0 (2 phases). phase 0: queue=3, waiting_s=0, CURRENT; phase 1: queue=0, waiting_s=0. Which phase?"
+    },
+    {
+      "id": 61,
+      "topology": "grid4x4",
+      "prompt": "Junction A1 (2 phases). phase 0: queue=6, waiting_s=15; phase 1: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 62,
+      "topology": "grid4x4",
+      "prompt": "Junction A0 (2 phases). phase 0: queue=0, waiting_s=0, CURRENT; phase 1: queue=9, waiting_s=48. Which phase?"
+    },
+    {
+      "id": 63,
+      "topology": "grid4x4",
+      "prompt": "Junction A1 (2 phases). phase 0: queue=9, waiting_s=99, CURRENT; phase 1: queue=3, waiting_s=27. Which phase?"
+    },
+    {
+      "id": 64,
+      "topology": "grid4x4",
+      "prompt": "Junction B2 (2 phases). phase 0: queue=12, waiting_s=150, CURRENT; phase 1: queue=3, waiting_s=24. Which phase?"
+    },
+    {
+      "id": 65,
+      "topology": "grid4x4",
+      "prompt": "Junction B2 (2 phases). phase 0: queue=3, waiting_s=6, CURRENT; phase 1: queue=12, waiting_s=72. Which phase?"
+    },
+    {
+      "id": 66,
+      "topology": "grid4x4",
+      "prompt": "Junction B2 (2 phases). phase 0: queue=12, waiting_s=33, CURRENT; phase 1: queue=6, waiting_s=36. Which phase?"
+    },
+    {
+      "id": 67,
+      "topology": "grid4x4",
+      "prompt": "Junction B2 (2 phases). phase 0: queue=21, waiting_s=117; phase 1: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 68,
+      "topology": "grid4x4",
+      "prompt": "Junction B1 (2 phases). phase 0: queue=18, waiting_s=108; phase 1: queue=3, waiting_s=3, CURRENT. Which phase?"
+    },
+    {
+      "id": 69,
+      "topology": "grid4x4",
+      "prompt": "Junction B2 (2 phases). phase 0: queue=15, waiting_s=288, CURRENT; phase 1: queue=9, waiting_s=87. Which phase?"
+    },
+    {
+      "id": 70,
+      "topology": "grid4x4",
+      "prompt": "Junction C1 (2 phases). phase 0: queue=21, waiting_s=111; phase 1: queue=3, waiting_s=6, CURRENT. Which phase?"
+    },
+    {
+      "id": 71,
+      "topology": "grid4x4",
+      "prompt": "Junction C1 (2 phases). phase 0: queue=12, waiting_s=78; phase 1: queue=12, waiting_s=45, CURRENT. Which phase?"
+    },
+    {
+      "id": 72,
+      "topology": "grid4x4",
+      "prompt": "Junction B1 (2 phases). phase 0: queue=27, waiting_s=168; phase 1: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 73,
+      "topology": "grid4x4",
+      "prompt": "Junction C2 (2 phases). phase 0: queue=3, waiting_s=21, CURRENT; phase 1: queue=24, waiting_s=168. Which phase?"
+    },
+    {
+      "id": 74,
+      "topology": "grid4x4",
+      "prompt": "Junction B1 (2 phases). phase 0: queue=18, waiting_s=186; phase 1: queue=12, waiting_s=144, CURRENT. Which phase?"
+    },
+    {
+      "id": 75,
+      "topology": "grid4x4",
+      "prompt": "Junction C2 (2 phases). phase 0: queue=30, waiting_s=150; phase 1: queue=0, waiting_s=0, CURRENT. Which phase?"
+    },
+    {
+      "id": 76,
+      "topology": "grid4x4",
+      "prompt": "Junction C2 (2 phases). phase 0: queue=15, waiting_s=57, CURRENT; phase 1: queue=18, waiting_s=102. Which phase?"
+    },
+    {
+      "id": 77,
+      "topology": "grid4x4",
+      "prompt": "Junction C2 (2 phases). phase 0: queue=3, waiting_s=12, CURRENT; phase 1: queue=30, waiting_s=192. Which phase?"
+    },
+    {
+      "id": 78,
+      "topology": "grid4x4",
+      "prompt": "Junction C2 (2 phases). phase 0: queue=24, waiting_s=192; phase 1: queue=12, waiting_s=39, CURRENT. Which phase?"
+    },
+    {
+      "id": 79,
+      "topology": "grid4x4",
+      "prompt": "Junction C2 (2 phases). phase 0: queue=21, waiting_s=129, CURRENT; phase 1: queue=21, waiting_s=216. Which phase?"
+    }
+  ]
+}

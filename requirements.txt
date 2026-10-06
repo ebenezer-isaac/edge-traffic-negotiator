@@ -1,0 +1,19 @@
+# Runtime: simulation, controllers, audit trail, SLM client, analysis, tests.
+# SUMO itself comes from the eclipse-sumo wheel (no separate install needed).
+eclipse-sumo>=1.20
+traci>=1.20
+sumolib>=1.20
+pycryptodome>=3.20      # Ed25519 junction identities + audit signatures
+openai>=1.40            # client for Foundry Local's OpenAI-compatible endpoint
+pyyaml>=6.0
+numpy>=1.26
+scipy>=1.11
+pandas>=2.1
+paho-mqtt>=2.0          # MQTT transport (tests skip the live-broker cases)
+pytest>=8.0
+
+# Optional extras:
+#   matplotlib, imageio-ffmpeg     -> src/demo_render.py (demo video)
+#   web3, py-solc-x                -> src/registry_service.py (on-chain registry, needs a local Besu node)
+#   training/requirements.txt      -> QLoRA fine-tuning + int4 ONNX compile
+# requirements-frozen.txt is the exact Windows environment the dissertation results were produced in.

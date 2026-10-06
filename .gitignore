@@ -1,0 +1,32 @@
+__pycache__/
+*.pyc
+.venv*/
+.pytest_cache/
+
+# simulation outputs written next to the networks on every run
+sumo/**/tripinfo_*
+sumo/**/*.tripinfo.xml
+sumo/**/_cal_tmp*
+realdemand/results/sweep_routes/
+
+# model binaries live in GitHub Release assets, not git
+*.onnx
+*.onnx.data
+*.safetensors
+*.gguf
+
+# raw TfL data (supplied under the Environmental Information Regulations, ref. 1453-2627) is not redistributable
+*Scoot Data.csv
+
+# LaTeX build products
+thesis/*.aux
+thesis/*.log
+thesis/*.out
+thesis/*.bbl
+thesis/*.blg
+thesis/*.fdb_latexmk
+thesis/*.fls
+article/*.aux
+article/*.log
+article/*.bbl
+article/*.blg

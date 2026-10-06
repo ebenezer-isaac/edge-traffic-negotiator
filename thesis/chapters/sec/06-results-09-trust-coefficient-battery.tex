@@ -1,0 +1,19 @@
+\subsection{Trust-coefficient battery}\label{sec:res-trust}
+The mechanism passes its 9/9 property battery (\S\ref{sec:des-trust}). In
+closed-loop traffic I ran it against fine-tuned 3.8B, stock 0.6B and
+fine-tuned 0.6B controllers, at three seeds per cell and with gating off,
+so the figures are descriptive and not comparable cell-for-cell with
+Table~\ref{tab:closedloop-full}. Appendix~\ref{app:trust} gives the
+detail. Three findings follow. \finding{Detection is
+controller-independent by design and in measurement}: every controller
+catches and collapses a blatant liar where lies are injectable, while a
+calibrated stealth attacker evades essentially everywhere, an open
+limitation. \finding{The delay cost of blatant lying survives detection},
+adding $+2.7$ to $+11.5$ points on the synthetic grids, because detection
+bounds future influence without undoing congestion. And
+\finding{stealth's harm is positional, not congestive}. The threat model
+for a fine-tuned deployment is therefore asymmetric, and that is the
+deployment that matters, since a controller acting on its coordination
+inputs is what poisoned inputs can move (\S\ref{sec:res-authorship}).
+Distributional detection is the right next defence
+(\S\ref{sec:dis-future}).

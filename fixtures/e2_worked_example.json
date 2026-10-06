@@ -1,0 +1,270 @@
+{
+  "_doc": "E2 worked-example fixture - FROZEN, READ-ONLY oracle. Pins the E2 tie-break expected origins for the assessment.py/fault_report rewrite (MASTER-SPEC v7 §3,§6.3,§6.4,§11, build F3). Generated deterministically by an OUT-OF-TREE builder (scratchpad build_e2.py, NOT shipped in the repo) then FROZEN + hash-pinned by the §10 gate; once pinned a build phase MUST NOT regenerate or edit it (the §10 hash check + out-of-tree builder enforce this). Loader contract: IGNORE keys beginning with '_'; consume only registry/records/outcomes; hold `expected` OUT-OF-BAND (feed the impl only registry+records+outcomes, compare its output to `expected`).",
+  "_scope": "Exercises the POST-VERIFICATION causal-selector + two-feature attribution sub-function ONLY. Cryptographic verification (identity.verify/verify_chain) is OUT OF SCOPE here (signatures/DER are deterministic placeholders); a test treats crypto as pre-verified. The verify-before-attribute crypto path + the wrong-key tamper case are the SEPARATE tamper fixture (build F4).",
+  "_purpose": "THREE scored outcomes (all false_preemption) with a NON-MONOTONE id->causal-seq permutation, plus a distractor decision. Origins: two attacker-key (signed uncorroborated phantoms; one with an attacker SELF-sighting) and one sensor-fed-spoof (keyless lone sighting). Because 3 outcomes map to causal seqs in a non-monotone order (o1->8 mid, o2->10 max, o3->4 min) AND a distractor sits among the decisions, NO positional/index/zip/sort-by-id(asc or desc)/drop-extreme/drop-middle scheme recovers the mapping - ONLY an ev_id-matched causal selector (covering message AND sighting inputs, §6.3) + the §2/§3 TWO-FEATURE partition (signing-key-count AND recomputed-independent-corroboration) passes all three. See _discrimination.",
+  "_consume": {
+    "causal_selector": "per outcome, select the causal decision by walking driving_input_seqs -> input record -> its ev id == outcome.ev_id, where ev id = signed_payload.payload.ev_claim.ev_id for a message input OR ev_id for a sighting input (§6.3). NOT by recency/junction/seq/index/order/input-count/timestamp.",
+    "attribution_rule": "over the causal decision's driving_input_seqs compute BOTH features: (a) signing-key-count = distinct non-null signing keys; (b) independent-corroboration count = signed inputs whose key differs from the claimer's key (a self-sighting under the claimer's own key does NOT count). key-count==0 -> keyless-lone-sighting -> sensor-fed-spoof; key-count>=1 AND indep-corrob==0 -> uncorroborated-signed -> attacker-key (attributed to the claimer key); key-count>=1 AND indep-corrob>=1 (>=2 keys) -> corroborated -> legitimate.",
+    "keyless_input": "a KEYLESS local sensor reading is a kind:'sighting' with sighter_key=null and signature=null (§11); NOT missing_metadata - it is a recognised input with signing-key-count 0 -> sensor-fed-spoof (§6.4). Its driving_input_seqs pair is [seq, null].",
+    "origin_is_class_independent": "origin is decided ONLY from verified provenance (key-count + recomputed corroboration + ev_id link); NOT from the runtime `classification` field, the `outcome.type`, nor the claimer's entity-class.",
+    "clocks": "signed_payload.t / sighting.t = logical (100-105); decision.t = sim (150); outcome.t = harm-detection sim (160, after all decisions).",
+    "scored_origins": "the 3 provenance-decidable classes (§2/§3): keyless-lone-sighting->sensor-fed-spoof, uncorroborated-signed->attacker-key, corroborated->legitimate. This fixture asserts sensor-fed-spoof (o1) + attacker-key (o2, o3); all three false_preemption so outcome.type carries NO origin signal."
+  },
+  "registry": [
+    {
+      "kind": "registry",
+      "seq": 0,
+      "entity_id": "J-ATT",
+      "key_fingerprint": "att-fpr",
+      "key_der": "DER-ATT",
+      "action": "enrol",
+      "external_root_sig": "PLACEHOLDER",
+      "self_sig": "PLACEHOLDER",
+      "admin_sig": "PLACEHOLDER"
+    },
+    {
+      "kind": "registry",
+      "seq": 1,
+      "entity_id": "J-HONEST-A",
+      "key_fingerprint": "hA-fpr",
+      "key_der": "DER-HA",
+      "action": "enrol",
+      "external_root_sig": "PLACEHOLDER",
+      "self_sig": "PLACEHOLDER",
+      "admin_sig": "PLACEHOLDER"
+    }
+  ],
+  "records": [
+    {
+      "kind": "message",
+      "seq": 2,
+      "sender": "J-ATT",
+      "sender_pubkey_fpr": "att-fpr",
+      "sender_pubkey_der": "DER-ATT",
+      "signed_payload": {
+        "sender": "J-ATT",
+        "t": 100,
+        "payload": {
+          "ev_claim": {
+            "ev_id": "EV-PH1",
+            "target": "J1",
+            "approach": "in_A"
+          }
+        }
+      },
+      "sender_signature": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "_note": "attacker phantom advance-claim #1 (EV-PH1)"
+    },
+    {
+      "kind": "sighting",
+      "seq": 3,
+      "sighter_key": "att-fpr",
+      "ev_id": "EV-PH1",
+      "approach": "in_A",
+      "t": 101,
+      "position": "local_in_A",
+      "signature": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "_note": "attacker SELF-sighting for EV-PH1 (same key att-fpr; distinct kind from seq2, no B5-nonce collision; tests independence recompute -> NOT independent)"
+    },
+    {
+      "kind": "decision",
+      "seq": 4,
+      "driving_input_seqs": [
+        [
+          2,
+          "att-fpr"
+        ],
+        [
+          3,
+          "att-fpr"
+        ]
+      ],
+      "junction": "J1",
+      "t": 150,
+      "executed": "preempt_in_A",
+      "classification": "LEGITIMATE",
+      "policies_applied": [
+        "corroboration"
+      ],
+      "_note": "D_ATT1 (causal for o3): key-count 1, indep-corrob 0 -> attacker-key. MIN decision seq."
+    },
+    {
+      "kind": "message",
+      "seq": 5,
+      "sender": "J-HONEST-A",
+      "sender_pubkey_fpr": "hA-fpr",
+      "sender_pubkey_der": "DER-HA",
+      "signed_payload": {
+        "sender": "J-HONEST-A",
+        "t": 102,
+        "payload": {
+          "ev_claim": {
+            "ev_id": "EV-OTHER",
+            "target": "J1",
+            "approach": "in_C"
+          }
+        }
+      },
+      "sender_signature": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "_note": "distractor claim (EV-OTHER)"
+    },
+    {
+      "kind": "decision",
+      "seq": 6,
+      "driving_input_seqs": [
+        [
+          5,
+          "hA-fpr"
+        ]
+      ],
+      "junction": "J1",
+      "t": 150,
+      "executed": "preempt_in_C",
+      "classification": "LEGITIMATE",
+      "policies_applied": [
+        "corroboration"
+      ],
+      "_note": "D_DISTRACTOR (no outcome matches EV-OTHER): among the decision seqs. Only ev_id marks it as the distractor."
+    },
+    {
+      "kind": "sighting",
+      "seq": 7,
+      "sighter_key": null,
+      "ev_id": "EV-KL",
+      "approach": "in_B",
+      "t": 103,
+      "position": "local_in_B",
+      "signature": null,
+      "_note": "KEYLESS local sensor reading (sighter_key/signature null) for EV-KL -> signing-key-count 0"
+    },
+    {
+      "kind": "decision",
+      "seq": 8,
+      "driving_input_seqs": [
+        [
+          7,
+          null
+        ]
+      ],
+      "junction": "J1",
+      "t": 150,
+      "executed": "preempt_in_B",
+      "classification": "LEGITIMATE",
+      "policies_applied": [
+        "corroboration"
+      ],
+      "_note": "D_KEYLESS (causal for o1): key-count 0 -> keyless-lone-sighting -> sensor-fed-spoof. MID decision seq."
+    },
+    {
+      "kind": "message",
+      "seq": 9,
+      "sender": "J-ATT",
+      "sender_pubkey_fpr": "att-fpr",
+      "sender_pubkey_der": "DER-ATT",
+      "signed_payload": {
+        "sender": "J-ATT",
+        "t": 104,
+        "payload": {
+          "ev_claim": {
+            "ev_id": "EV-PH2",
+            "target": "J1",
+            "approach": "in_D"
+          }
+        }
+      },
+      "sender_signature": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "_note": "attacker phantom advance-claim #2 (EV-PH2, distinct ev_id/approach from EV-PH1)"
+    },
+    {
+      "kind": "decision",
+      "seq": 10,
+      "driving_input_seqs": [
+        [
+          9,
+          "att-fpr"
+        ]
+      ],
+      "junction": "J1",
+      "t": 150,
+      "executed": "preempt_in_D",
+      "classification": "LEGITIMATE",
+      "policies_applied": [
+        "corroboration"
+      ],
+      "_note": "D_ATT2 (causal for o2): key-count 1, indep-corrob 0 -> attacker-key. MAX decision seq."
+    }
+  ],
+  "outcomes": [
+    {
+      "kind": "outcome",
+      "id": "o1",
+      "type": "false_preemption",
+      "junction": "J1",
+      "t": 160,
+      "ev_id": "EV-KL",
+      "metrics": {},
+      "_note": "causal seq8 (MID) -> sensor-fed-spoof"
+    },
+    {
+      "kind": "outcome",
+      "id": "o2",
+      "type": "false_preemption",
+      "junction": "J1",
+      "t": 160,
+      "ev_id": "EV-PH2",
+      "metrics": {},
+      "_note": "causal seq10 (MAX) -> attacker-key"
+    },
+    {
+      "kind": "outcome",
+      "id": "o3",
+      "type": "false_preemption",
+      "junction": "J1",
+      "t": 160,
+      "ev_id": "EV-PH1",
+      "metrics": {},
+      "_note": "causal seq4 (MIN) -> attacker-key. id-order [o1,o2,o3] -> causal seqs [8,10,4] = NON-MONOTONE (mid,max,min): no ascending or descending positional map recovers it."
+    }
+  ],
+  "expected": [
+    {
+      "outcome_id": "o1",
+      "causal_decision_seq": 8,
+      "origin": "sensor-fed-spoof",
+      "culprit_key_fpr": null,
+      "rationale": "o1.ev_id EV-KL matches the KEYLESS sighting seq7 driving decision seq8; sighter_key null -> signing-key-count 0 -> sensor-fed-spoof, culprit null. A rule that ignores key-count (counts only corroboration, which is 0) wrongly returns attacker-key here."
+    },
+    {
+      "outcome_id": "o2",
+      "causal_decision_seq": 10,
+      "origin": "attacker-key",
+      "culprit_key_fpr": "att-fpr",
+      "rationale": "o2.ev_id EV-PH2 matches message seq9 driving decision seq10; key-count 1, indep-corrob 0 -> attacker-key, attributed to att-fpr."
+    },
+    {
+      "outcome_id": "o3",
+      "causal_decision_seq": 4,
+      "origin": "attacker-key",
+      "culprit_key_fpr": "att-fpr",
+      "rationale": "o3.ev_id EV-PH1 matches message seq2 + self-sighting seq3 driving decision seq4; key-count 1, indep-corrob 0 (the self-sighting shares the claimer key so does NOT count) -> attacker-key, attributed to att-fpr. Counting the self-sighting as corroboration wrongly flips this off attacker-key."
+    }
+  ],
+  "_discrimination": {
+    "correct_map": "o1->seq8 (sensor-fed-spoof), o2->seq10 (attacker-key), o3->seq4 (attacker-key). id-order [o1,o2,o3] -> causal-seq [8,10,4] = NON-MONOTONE (mid,max,min).",
+    "kills": [
+      "sort-by-id-asc + map to seq-asc positions -> o1:4/o2:8(or 10)/o3:10: WRONG (correct is 8/10/4)",
+      "sort-by-id-asc + map to seq-DESC positions -> o1:10/o2:8/o3:4: WRONG (correct is 8/10/4) - the non-monotone permutation defeats BOTH orderings",
+      "positional zip(file order [o1,o2,o3], decisions seq order [4,6,8,10]) -> mispairs (incl. the distractor seq6)",
+      "drop-any-single-decision-as-distractor by position -> only ev_id (EV-OTHER matches no outcome) identifies seq6 as the distractor",
+      "latest/highest-seq -> seq10: right o2 only; earliest/lowest-seq -> seq4: right o3 only; each wrong on the other two",
+      "time-window recency / t-exact-match (outcome.t=160, no decision at 160) -> picks nothing or the wrong extreme",
+      "fewest-driving-inputs -> ties at 1 (seq6,8,10): wrong",
+      "key on outcome.type -> all false_preemption: no origin signal",
+      "always-attacker-key -> WRONG o1 (sensor-fed-spoof)",
+      "corroboration-count-only, ignoring key-count -> attacker-key for all (all corrob 0): WRONG o1",
+      "count the claimer self-sighting as corroboration -> seq4 corrob 0->1: flips o3 off attacker-key: WRONG o3",
+      "length==1 -> attacker-key -> seq4 has 2 inputs (wrong for o3) and seq8 has 1 (attacker for o1, wrong): WRONG",
+      "read runtime classification for origin -> all causal decisions LEGITIMATE, origins differ: cannot produce them"
+    ]
+  }
+}

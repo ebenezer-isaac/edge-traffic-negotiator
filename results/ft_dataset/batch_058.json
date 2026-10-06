@@ -1,0 +1,756 @@
+{
+ "system": "You control ONE traffic-signal junction (this junction only; no neighbour information). For each green phase you are given: the number of waiting (queued) vehicles, the TOTAL accumulated waiting time of those vehicles in seconds, and whether it is the phase currently green. Choose the phase to serve next to MINIMISE total vehicle waiting time and unnecessary stops -- not simply the longest queue.\nGuidance: (1) prefer a phase that has BOTH many waiting vehicles AND a high accumulated waiting time, because long-waiting vehicles contribute the most delay; (2) never leave a phase that has already waited a long time unserved (avoid starvation); (3) keep the CURRENT phase unless another phase is clearly worse-off, because switching makes a whole queue stop and restart, adding delay. Reply with ONLY JSON {\"phase\": <index>} and nothing else. /no_think",
+ "n": 150,
+ "tasks": [
+  {
+   "id": 8700,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=16, wait=1033s; phase 1: queued=16, wait=1033s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8701,
+   "prompt": "Junction GS_6985146843. phase 0: queued=10, wait=2403s (CURRENT); phase 1: queued=13, wait=2632s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8702,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=2, wait=14s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=12, wait=87s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8703,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=16, wait=1193s; phase 1: queued=16, wait=1193s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8704,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=1, wait=110s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=336s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8705,
+   "prompt": "Junction GS_6985146843. phase 0: queued=10, wait=2533s; phase 1: queued=13, wait=2801s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8706,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=8, wait=71s; phase 1: queued=3, wait=12s; phase 2: queued=1, wait=4s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8707,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=16, wait=1401s (CURRENT); phase 1: queued=16, wait=1401s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8708,
+   "prompt": "Junction GS_6985146843. phase 0: queued=10, wait=2633s; phase 1: queued=13, wait=2931s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8709,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=1, wait=123s (CURRENT); phase 1: queued=0, wait=0s; phase 2: queued=7, wait=427s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8710,
+   "prompt": "Junction GS_6985146843. phase 0: queued=10, wait=2733s; phase 1: queued=13, wait=3061s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8711,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=16, wait=1609s; phase 1: queued=16, wait=1609s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8712,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=137s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=518s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8713,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=16, wait=1769s; phase 1: queued=16, wait=1769s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8714,
+   "prompt": "Junction GS_6985146843. phase 0: queued=10, wait=2863s (CURRENT); phase 1: queued=13, wait=3230s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8715,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=163s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=7, wait=609s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8716,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=2, wait=20s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=6, wait=48s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8717,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=16, wait=1929s; phase 1: queued=16, wait=1929s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8718,
+   "prompt": "Junction GS_6985146843. phase 0: queued=5, wait=1487s; phase 1: queued=8, wait=1893s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8719,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=189s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=700s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8720,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=16, wait=2137s (CURRENT); phase 1: queued=16, wait=2137s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8721,
+   "prompt": "Junction GS_6985146843. phase 0: queued=6, wait=17s; phase 1: queued=9, wait=453s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8722,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=215s (CURRENT); phase 1: queued=0, wait=0s; phase 2: queued=7, wait=791s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8723,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=95s; phase 1: queued=11, wait=561s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8724,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=17, wait=2346s; phase 1: queued=17, wait=2346s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8725,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=241s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=882s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8726,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=17, wait=2516s; phase 1: queued=17, wait=2516s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8727,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=199s (CURRENT); phase 1: queued=11, wait=704s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8728,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=2, wait=6s; phase 1: queued=2, wait=6s; phase 2: queued=6, wait=114s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8729,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=267s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=7, wait=973s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8730,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=18, wait=2739s (CURRENT); phase 1: queued=18, wait=2739s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8731,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=303s; phase 1: queued=11, wait=847s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8732,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=0, wait=0s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=6, wait=192s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8733,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=19, wait=2920s (CURRENT); phase 1: queued=19, wait=2920s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8734,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=383s; phase 1: queued=11, wait=957s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8735,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=293s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1064s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8736,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=2, wait=16s; phase 1: queued=2, wait=16s; phase 2: queued=7, wait=279s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8737,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=19, wait=3110s (CURRENT); phase 1: queued=19, wait=3110s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8738,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=463s; phase 1: queued=11, wait=1067s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8739,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=319s (CURRENT); phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1155s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8740,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=0, wait=0s; phase 2: queued=7, wait=370s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8741,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=19, wait=3357s; phase 1: queued=19, wait=3357s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8742,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=567s (CURRENT); phase 1: queued=11, wait=1210s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8743,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=345s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1246s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8744,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=0, wait=0s; phase 1: queued=0, wait=0s; phase 2: queued=8, wait=463s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8745,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=20, wait=3552s; phase 1: queued=20, wait=3552s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8746,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=671s; phase 1: queued=11, wait=1353s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8747,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=371s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=7, wait=1337s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8748,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=20, wait=3752s; phase 1: queued=20, wait=3752s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8749,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=0, wait=0s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=8, wait=567s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8750,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=751s; phase 1: queued=11, wait=1463s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8751,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=397s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1428s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8752,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=12, wait=1362s (CURRENT); phase 1: queued=12, wait=1362s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8753,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=831s; phase 1: queued=11, wait=1573s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8754,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=0, wait=0s; phase 1: queued=0, wait=0s; phase 2: queued=9, wait=677s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8755,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=2, wait=423s (CURRENT); phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1519s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8756,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=15, wait=157s; phase 1: queued=15, wait=157s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8757,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=935s (CURRENT); phase 1: queued=11, wait=1716s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8758,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=2, wait=18s (CURRENT); phase 1: queued=2, wait=18s; phase 2: queued=9, wait=794s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8759,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=3, wait=454s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1610s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8760,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=24, wait=375s; phase 1: queued=22, wait=361s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8761,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=1039s; phase 1: queued=9, wait=1258s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8762,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=2, wait=1s; phase 1: queued=0, wait=0s; phase 2: queued=3, wait=96s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8763,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=0, wait=0s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=7, wait=1701s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8764,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=22, wait=647s (CURRENT); phase 1: queued=22, wait=647s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8765,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=1119s; phase 1: queued=10, wait=1356s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8766,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=1199s; phase 1: queued=10, wait=1456s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8767,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=3, wait=26s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1792s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8768,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=23, wait=938s; phase 1: queued=23, wait=938s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8769,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=6, wait=41s; phase 1: queued=3, wait=7s; phase 2: queued=10, wait=31s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8770,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=23, wait=1168s; phase 1: queued=23, wait=1168s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8771,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=1303s (CURRENT); phase 1: queued=10, wait=1586s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8772,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=3, wait=65s (CURRENT); phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1883s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8773,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=2, wait=16s (CURRENT); phase 1: queued=2, wait=16s; phase 2: queued=13, wait=176s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8774,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=25, wait=1411s; phase 1: queued=25, wait=1411s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8775,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=1407s; phase 1: queued=10, wait=1716s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8776,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=3, wait=104s; phase 1: queued=0, wait=0s; phase 2: queued=7, wait=1974s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8777,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=2, wait=42s; phase 1: queued=2, wait=42s; phase 2: queued=14, wait=351s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8778,
+   "prompt": "Junction GS_cluster_13249075_6985146839_6985146845. phase 0: queued=25, wait=1736s (CURRENT); phase 1: queued=25, wait=1736s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8779,
+   "prompt": "Junction GS_6985146843. phase 0: queued=8, wait=1487s; phase 1: queued=10, wait=1816s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8780,
+   "prompt": "Junction GS_cluster_110097_110098. phase 0: queued=3, wait=143s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=7, wait=2065s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8781,
+   "prompt": "Junction cluster_2440680097_253308874_3837973624_427931760_#2more. phase 0: queued=0, wait=0s; phase 1: queued=0, wait=0s (CURRENT); phase 2: queued=14, wait=533s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 3
+  },
+  {
+   "id": 8782,
+   "prompt": "Junction A2. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=0s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8783,
+   "prompt": "Junction C1. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=0s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8784,
+   "prompt": "Junction C2. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=24s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8785,
+   "prompt": "Junction A0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=6, wait=24s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8786,
+   "prompt": "Junction A1. phase 0: queued=3, wait=0s (CURRENT); phase 1: queued=0, wait=0s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8787,
+   "prompt": "Junction C0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=6, wait=42s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8788,
+   "prompt": "Junction C1. phase 0: queued=3, wait=21s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8789,
+   "prompt": "Junction A2. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=18s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8790,
+   "prompt": "Junction A0. phase 0: queued=3, wait=3s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8791,
+   "prompt": "Junction A1. phase 0: queued=3, wait=15s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8792,
+   "prompt": "Junction B1. phase 0: queued=6, wait=21s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8793,
+   "prompt": "Junction C0. phase 0: queued=3, wait=21s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8794,
+   "prompt": "Junction A2. phase 0: queued=3, wait=24s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8795,
+   "prompt": "Junction A0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=3s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8796,
+   "prompt": "Junction B0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=3s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8797,
+   "prompt": "Junction B1. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=27s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8798,
+   "prompt": "Junction B2. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=9, wait=69s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8799,
+   "prompt": "Junction C0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=21s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8800,
+   "prompt": "Junction C1. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=9, wait=51s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8801,
+   "prompt": "Junction C2. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=6, wait=39s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8802,
+   "prompt": "Junction A1. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=30s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8803,
+   "prompt": "Junction A0. phase 0: queued=12, wait=36s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8804,
+   "prompt": "Junction B0. phase 0: queued=3, wait=9s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8805,
+   "prompt": "Junction B1. phase 0: queued=3, wait=27s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8806,
+   "prompt": "Junction B2. phase 0: queued=3, wait=6s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8807,
+   "prompt": "Junction C0. phase 0: queued=3, wait=15s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8808,
+   "prompt": "Junction C1. phase 0: queued=6, wait=33s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8809,
+   "prompt": "Junction C2. phase 0: queued=3, wait=24s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8810,
+   "prompt": "Junction A2. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=27s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8811,
+   "prompt": "Junction A1. phase 0: queued=6, wait=24s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8812,
+   "prompt": "Junction A0. phase 0: queued=3, wait=0s (CURRENT); phase 1: queued=3, wait=6s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8813,
+   "prompt": "Junction B0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=27s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8814,
+   "prompt": "Junction B1. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=12, wait=51s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8815,
+   "prompt": "Junction B2. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=9, wait=36s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8816,
+   "prompt": "Junction C1. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=6, wait=42s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8817,
+   "prompt": "Junction A0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=9, wait=69s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8818,
+   "prompt": "Junction A1. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=6, wait=51s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8819,
+   "prompt": "Junction A2. phase 0: queued=6, wait=15s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8820,
+   "prompt": "Junction B1. phase 0: queued=9, wait=90s; phase 1: queued=9, wait=39s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8821,
+   "prompt": "Junction B2. phase 0: queued=0, wait=0s; phase 1: queued=3, wait=3s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8822,
+   "prompt": "Junction C1. phase 0: queued=12, wait=75s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8823,
+   "prompt": "Junction C2. phase 0: queued=3, wait=6s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8824,
+   "prompt": "Junction A0. phase 0: queued=6, wait=33s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8825,
+   "prompt": "Junction A1. phase 0: queued=9, wait=87s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8826,
+   "prompt": "Junction B0. phase 0: queued=0, wait=0s; phase 1: queued=3, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8827,
+   "prompt": "Junction B1. phase 0: queued=24, wait=237s; phase 1: queued=9, wait=42s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8828,
+   "prompt": "Junction B2. phase 0: queued=3, wait=0s (CURRENT); phase 1: queued=15, wait=117s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8829,
+   "prompt": "Junction C2. phase 0: queued=3, wait=3s (CURRENT); phase 1: queued=3, wait=0s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8830,
+   "prompt": "Junction A0. phase 0: queued=3, wait=0s (CURRENT); phase 1: queued=9, wait=69s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8831,
+   "prompt": "Junction B0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=21, wait=147s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8832,
+   "prompt": "Junction B1. phase 0: queued=12, wait=24s (CURRENT); phase 1: queued=21, wait=138s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8833,
+   "prompt": "Junction B2. phase 0: queued=3, wait=9s; phase 1: queued=9, wait=30s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8834,
+   "prompt": "Junction C1. phase 0: queued=3, wait=6s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8835,
+   "prompt": "Junction C2. phase 0: queued=9, wait=27s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8836,
+   "prompt": "Junction A1. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=3, wait=9s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8837,
+   "prompt": "Junction A2. phase 0: queued=3, wait=36s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8838,
+   "prompt": "Junction B0. phase 0: queued=6, wait=36s; phase 1: queued=3, wait=6s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8839,
+   "prompt": "Junction B1. phase 0: queued=42, wait=210s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8840,
+   "prompt": "Junction B2. phase 0: queued=9, wait=78s; phase 1: queued=18, wait=186s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8841,
+   "prompt": "Junction C0. phase 0: queued=6, wait=27s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8842,
+   "prompt": "Junction C1. phase 0: queued=3, wait=36s; phase 1: queued=3, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8843,
+   "prompt": "Junction C2. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=9, wait=42s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8844,
+   "prompt": "Junction A1. phase 0: queued=6, wait=30s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8845,
+   "prompt": "Junction B2. phase 0: queued=9, wait=168s; phase 1: queued=0, wait=0s (CURRENT). Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8846,
+   "prompt": "Junction A2. phase 0: queued=3, wait=0s (CURRENT); phase 1: queued=0, wait=0s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8847,
+   "prompt": "Junction B0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=21, wait=93s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8848,
+   "prompt": "Junction B1. phase 0: queued=15, wait=72s (CURRENT); phase 1: queued=18, wait=129s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  },
+  {
+   "id": 8849,
+   "prompt": "Junction C0. phase 0: queued=0, wait=0s (CURRENT); phase 1: queued=9, wait=18s. Which phase should get green now? Reply ONLY {\"phase\": <index>}.",
+   "num_phases": 2
+  }
+ ]
+}

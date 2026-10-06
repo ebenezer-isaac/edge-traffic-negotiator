@@ -1,0 +1,37 @@
+% ==================== ABSTRACT (template: ~250 words, hard max 300) ====================
+\begin{abstract}
+When a signalised junction is involved in a collision, someone must prove
+what the controller knew and what it decided. Published language-model
+controllers are cloud-served and cannot answer that question. This
+report asks whether a cabinet-sized language model can control real London
+junctions competently and bind every actuation into a record an
+investigator can trust, and what fine-tuning contributes. The answer,
+inside a deterministic shield, is that what fine-tuning reliably moves is
+\emph{authorship}, not delay.
+
+The full stack runs on one consumer device: a small language model
+served by Microsoft Foundry Local within 6\,GB proposes phases behind a
+MaxPressure shield and anti-starvation floor, and every decision is
+Ed25519-signed into a per-junction hash chain, reconstructable after a
+collision into a cited UK-law evidence pack. A frontier teacher is distilled
+into 0.6B and 3.8B students with QLoRA, compiled to int4 ONNX, and evaluated
+offline on a hash-frozen holdout and closed-loop in SUMO on measured London
+topologies over thirty training-disjoint seeds.
+
+The model's share of logged decision ticks rises from
+0.39--0.62 to 0.56--0.77, while its divergence from MaxPressure among the
+decisions it authors falls from 0.37--0.60 to 0.04--0.17, a deflationary
+reading I bound. Delay moves only
+where the network can clear: on a Bloomsbury grid calibrated so that 87\%
+of vehicles complete, the distilled controller beats the fixed-time floor
+by 8.8\% where the stock one loses by 11.9\%, an 18.3\% head-to-head gain
+on 30 of 30 seeds ($p{=}2.0{\times}10^{-21}$); the same calibration on the
+Euston corridor does not reproduce it. Distillation saturates at 0.6B, a
+three-seed MaxPressure result is retracted at thirty seeds, seven collision
+scenarios reconstruct with tampering caught, and a trust ledger catches
+blatant but not calibrated stealth misreporting.
+\end{abstract}
+
+\noindent\textbf{Author Keywords}\\
+Small language models; traffic signal control; on-device inference;
+knowledge distillation; safety shield; audit trail; Foundry Local.\\

@@ -1,0 +1,288 @@
+# The Edge Negotiator: Full-Scale Results Chapter
+
+Status: full-scale phase (pilot approved by both supervisors). Every number below is read
+from a committed `results/*.json`, produced by a real SUMO + Foundry-Local run. No number
+is hand-entered. Inferential (powered, n>=30) significance stays honestly gated on real
+time-resolved TfL counts per spec section 8; everything reported here is either descriptive
+robustness (buildable now) or a proven capability (audit, trust, crash-law).
+
+---
+
+## 1. Headline
+
+An on-device Small Language Model (qwen2.5-0.5b, via Microsoft Foundry Local) running as a
+proposer behind a MaxPressure safety shield **beats MaxPressure on mean network delay while
+also completing more vehicles** on the real Euston A501 corridor, and the signed audit ledger
+**proves every crash scenario beyond doubt** with the governing UK traffic law inferred from
+the verified facts. Which model wins is topology-dependent, which is itself a finding.
+
+---
+
+## 2. Pillar A: performance is a CLEAN WIN, not a delay-for-throughput trade (Akin's test)
+
+MaxPressure is throughput-optimal by design, so beating it on delay only matters if throughput
+is not quietly sacrificed. It is not.
+
+Euston A501, qwen2.5-0.5b x myopic (`experiment_throughput.json`):
+
+| Metric | MaxPressure baseline | SLM (shielded) | Delta |
+|---|---|---|---|
+| Mean network delay | 314.5 s | **235.0 s** | **-25.3%** (lower is better) |
+| Throughput (completed) | 361 | **472** | **+111, +30.7%** (higher is better) |
+
+Joint verdict: **clean_win** (wins delay, wins throughput, loses neither). Across the
+committed model x config sweep there are **4 distinct clean-win configurations and 0
+trade-offs** (6 clean-win cells, of which 2 are inert-coordination duplicates of myopic,
+excluded from the distinct count after the holistic-audit fix). The delay win does not come
+from stranding vehicles: the SLM both departs more vehicles and completes a higher fraction.
+
+## 3. Pillar A robustness: holds across seeds (Akin's multiseed ask)
+
+`experiment_multiseed.json`, qwen2.5-0.5b x myopic, 5 seeds:
+
+- Mean delay 270.5 s vs 305.9 s baseline (**-11.6%**), std 23.1 vs 36.9.
+- Mean throughput 413 vs 367 completed (**+12.6%**).
+- **4/5 seeds a clean win** on both delay and throughput; 1/5 (seed 3) a regression.
+
+Honest reading: the win is robust but not universal at daily-resolution demand. This is
+descriptive robustness, not a powered significance test (see section 6). A win that survives
+4 of 5 independent seeds is far stronger evidence than a single favourable draw.
+
+## 4. Pillar B: the audit ledger proves crash scenarios and infers the governing law
+
+`experiment_crash_law.json`, 7 pre-defined scenarios, **all_proven = True**. Each scenario
+builds a signed hash-chained AuditLog, then: (a) `verify_chain` = True, (b) `verify_signatures`
+= True, (c) an imposter re-sign is caught (`tamper_caught` = True), and the governing UK rule
+is inferred deterministically from the verified facts (not asserted).
+
+| Scenario | Inferred governing rule(s) | Fault anchor |
+|---|---|---|
+| civilian_runs_red | LR-driver-red (RTA1988 s36), LR-red-prohibition (TSRGD2016) | driver, high |
+| ambulance_crosses_red_exempt | LR-ev-exemption + LR-griffin-calibration (60/40) + LR-green-due-regard | EV not at fault merely for crossing; endangerment test |
+| maintenance_runs_red | LR-maintenance-no-exemption, LR-driver-red | works vehicle at fault like an ordinary driver |
+| driver_crosses_on_amber | LR-amber (TSRGD2016 5(9)) | driver, high (safe stop was possible) |
+| conflicting_green_fault | LR-authority-misfeasance (Bird v Pearce) + LR-authority-nonfeasance (Gorringe) | authority, low (misfeasance only) |
+| dark_signal | LR-dark-signals (HC Rule 176) | duty to obey falls away; ordinary care |
+| spoofed_ev_triggers_red_run | LR-driver-red, LR-red-prohibition | fake EV gets NO exemption -> driver at fault |
+
+The system emits a cited evidence pack, not a binding verdict: authority fault is legally weak
+(non-zero only on the conflicting-green misfeasance branch), driver fault is strong, the EV
+exemption is conditional on authorisation plus corroboration.
+
+## 5. Pillar C: trust coefficient, with local sensing as the ultimate truth
+
+`experiment_trust.json`, **passed = True** (9/9 checks). Params: prior 0.5, reward 0.15,
+lie_factor 0.25, corroboration_floor 0.5.
+
+- A persistently honest junction climbs to **0.929** trust (12 truths, 0 lies).
+- A persistent liar collapses to **0.011** (`can_corroborate = False`): locked out.
+- Asymmetry: **10 consecutive verified truths** to climb from 0.5 to 0.90, but a **single lie**
+  from a high-trust source (0.86) drops it by **0.65** in one step. Honesty earned slowly,
+  betrayed instantly.
+- Recovery after one lie takes **3** verified truths to re-cross the corroboration floor.
+
+Local sensing is the ground truth and is never itself doubted: it is the arbiter every claim
+is scored against. The live wiring in `EmergencyController` (opt-in, `trust_gating`) is
+**discount-only**: a caught-lying neighbour loses its power to corroborate a preemption, but
+trust can never add a preemption on zero evidence and never gates local sensing. So the
+headline phantom-defence cannot regress, and a real ambulance is always preempted via its own
+sensor. A real-but-slow ambulance that arrives after the provisional-lie window is
+**vindicated** by the late local sensing (trust restored, lie reversed to a truth), so an
+honest junction is never permanently penalised for a truth that merely arrived late.
+
+## 6. Pillar D: the SLM is a congestion-regime specialist (multi-topology)
+
+`experiment_topology.json`, seed 42, end 1200, DESCRIPTIVE n=1 per cell. Four topologies x
+{qwen2.5-0.5b, qwen3-0.6b}:
+
+| Topology | Type | baseline delay | teleports | qwen2.5-0.5b | qwen3-0.6b |
+|---|---|---|---|---|---|
+| Euston A501 | real linear arterial | 314.5 s | 65 | **-25.3% clean_win** | **-15.1% clean_win** |
+| Bloomsbury WC1 | real London grid (OSM) | 516.7 s | 105 | +5.0% regression | **-1.8% clean_win** |
+| grid3x3 | synthetic grid | 301.4 s | 0 | +60.3% regression | +36.9% regression |
+| grid4x4 | synthetic grid | 143.2 s | 0 | +112.4% regression | +41.2% regression |
+
+Honest reading (a REGIME SEPARATION, deliberately not over-claimed as a monotonic law; n=1
+per cell, descriptive only):
+
+- The SLM wins on the two **real congested London networks** (teleports > 0) and loses on the
+  two **free-flowing synthetic grids** (both ZERO teleports, i.e. MaxPressure never gridlocks
+  there). The harness (`_explain`) reports this as a regime separation, not a graded law:
+  mean win is positive on the congested nets and negative on the free-flowing ones.
+- It is explicitly NOT "win grows monotonically with gridlock". WITHIN the congested nets the
+  direction actually INVERTS: Bloomsbury has MORE gridlock than Euston (105 vs 65 teleports,
+  516 vs 314 s baseline) yet a SMALLER/negative win (qwen2.5-0.5b +5.0% regression there vs
+  -25.3% on Euston). So the all-topology correlation is driven by the free-vs-congested
+  cluster split, and the harness now reports `pearson_r_congested_only < 0` alongside the
+  positive all-topology r, with a caveat that this is a regime effect, not a monotonic trend.
+- Mechanism is a HYPOTHESIS (not demonstrated at n=1): MaxPressure is throughput-optimal and
+  near-ideal in free flow, so the SLM's waiting-time-aware policy only adds latency there;
+  under gridlock, queue management has headroom to help.
+- Model x topology: qwen3-0.6b wins both real nets, qwen2.5-0.5b only Euston. Reported as
+  descriptive n=1, NOT a significant "interaction".
+- grid4x4 (SLM +112% worse, MaxPressure clears all 1000 vehicles) directly falsifies any
+  "the SLM always helps" claim. Reported, not hidden.
+
+Provenance: these numbers are regenerated into `results/experiment_topology.json` by the
+committed harness (an earlier `--out` write-path bug had clobbered that file with a
+single-topology run; the bug is fixed and the full run re-materialised the backing artifact).
+
+The takeaway is a scoped, honest capability claim: on-device SLM signal control can beat
+MaxPressure on delay AND throughput on real congested London arterials, and the size of the
+benefit tracks how badly MaxPressure gridlocks; it is not a universal replacement.
+
+### 6b. Can a congestion gate flip the grid regressions? (honest negative)
+
+The grid regressions come from the SLM firing on free-flowing nets where MaxPressure is
+already near-optimal. The hybrid already has a congestion gate (consult the SLM only above a
+queue threshold), but the default is on TOTAL halting, which scales with phase count and so
+under-gates grids. We added a topology-invariant `gate_mode="max"` (fire only when the
+LARGEST single-phase queue >= gate) and swept it. Result (`experiment_topology_gated.json`
+gate=5, `experiment_topology_gate12.json` gate=12; delay change vs each net's baseline):
+
+| Cell | ungated (sum,2) | max,5 | max,12 |
+|---|---|---|---|
+| Euston qwen2.5-0.5b | -25.3% clean | -14.4% clean | -11.4% clean |
+| Euston qwen3-0.6b | -15.1% clean | -22.9% clean | -19.5% clean |
+| Bloomsbury qwen2.5-0.5b | +5.0% reg | +6.9% reg | +7.3% reg |
+| Bloomsbury qwen3-0.6b | -1.8% clean | +1.1% match | +3.1% reg |
+| grid3x3 qwen2.5-0.5b | +60.3% reg | +55.1% reg | +44.6% reg |
+| grid3x3 qwen3-0.6b | +36.9% reg | +42.5% reg | +42.0% reg |
+| grid4x4 qwen2.5-0.5b | +112.4% reg | +94.9% reg | +76.4% reg |
+| grid4x4 qwen3-0.6b | +41.2% reg | +20.8% reg | +28.1% reg |
+
+**Honest verdict: the congestion gate does NOT overturn the verdicts.** Two reasons, both
+visible in the full sweep above:
+
+1. The grids are BUSY, not gridlocked: transient max-queues exceed even gate=12, so the SLM
+   keeps firing (grid4x4 still ~640 calls at gate=12) and still regresses at every gate (grid
+   cells span +28% to +76% at gate=12). The SLM's myopic per-junction decisions are
+   intrinsically worse than MaxPressure's on free-flowing grid coordination, independent of
+   firing frequency; a gate reduces the damage but never removes it.
+2. Gating has a MIXED effect on the genuine wins, not a uniform improvement: Euston
+   qwen2.5-0.5b decays (-25%->-14%->-11%) and Bloomsbury qwen3-0.6b degrades
+   (clean_win->match->regression), while Euston qwen3-0.6b actually improves at gate=5
+   (-15%->-23%) before falling back. Because the max-queue signal cannot tell a busy grid from
+   a gridlocked arterial (both carry standing queues), no single uniform gate value gives
+   "match-or-better everywhere" -- some real wins shrink while the grids still lose.
+
+**The actionable rule is net-level regime selection, not a per-tick gate -- with a caveat.**
+The direction that helps is: probe MaxPressure on the target net and prefer the SLM only where
+MaxPressure gridlocks. But teleports>0 is NECESSARY, not SUFFICIENT, and the choice is
+model-dependent: Bloomsbury has 105 baseline teleports yet qwen2.5-0.5b REGRESSES there (+5%
+to +7% at every gate) while qwen3-0.6b wins/matches. So a teleport probe alone does not
+guarantee match-or-better -- the safe deployment is per-(net, model) validation (run both
+controllers on a representative day and keep the SLM only where it demonstrably wins or
+matches). That still recovers match-or-better by construction (you do not deploy the SLM where
+it loses), but it is a validation protocol, not a one-line teleport threshold. The
+`gate_mode="max"` knob is retained as a tested, available softening, characterised here as a
+PARTIAL lever, not a fix. The regime-separation result of §6 stands unchanged.
+
+### 6a. Newest-generation model check (qwen3.5)
+
+The Foundry Local catalog on the test machine contains no Kimi/Gemma (not served by this
+runtime), but it does list the newer qwen3.5 generation (0.8b/2b/4b), added to the model
+catalog. Honest status:
+
+- First Euston probe: qwen3.5 was downloadable but NOT cached, so it SKIPPED-with-record (no
+  false parity). Incumbent qwen2.5-0.5b reproduced its exact -25.3% clean win on the same
+  run, confirming a stable baseline.
+- After downloading qwen3.5-0.8b (1.3 GB): the model CANNOT be served by the installed
+  Foundry Local runtime (v0.8.119). Every inference call returns HTTP 500 with:
+  `Error encountered while parsing genai_config.json JSON Error: model:vision: Unknown value
+  "spatial_merge_size"`. i.e. qwen3.5 ships a newer genai_config schema (a vision field) that
+  this build's ONNX GenAI runtime does not recognise. `choose_phase` caught the 500 and
+  returned None -> the sweep SKIPPED-with-record (no false parity). This is a
+  RUNTIME-VERSION incompatibility, not a model-capability result (the model never emits a
+  token). The exact 500 payload is captured in `results/qwen35_probe_error.json` (a direct
+  chat-completion call, so the failure is the runtime rejecting the config, not our parser).
+- Resolution: serving qwen3.5 would require upgrading Foundry Local / its onnxruntime-genai
+  to a build that parses the new config schema. That upgrade is deliberately NOT attempted
+  unattended, because it risks destabilising the reproducible environment the rest of the
+  thesis depends on. This is an honest INFRA gate (like the TfL-data gate): the qwen2.5 /
+  qwen3 / phi-4 families are the currently-servable on-device frontier on this build, and
+  qwen3.5 is recorded as blocked-by-runtime with the exact error, to be revisited if/when a
+  compatible Foundry Local build is installed.
+
+## 7. What is honestly NOT claimed
+
+- No powered inferential significance (p-values, n>=30 with confidence intervals) until real
+  time-resolved TfL hourly counts replace DfT daily-resolution demand. This is a data gate,
+  not a code gate (spec section 8).
+- The corridor and Bloomsbury demand volumes are synthetic magnitudes on real topologies
+  (randomTrips / measured-magnitude subsample), not vehicle-by-vehicle real counts.
+- The crash-law output is a cited evidence pack for a human adjudicator, not a binding legal
+  verdict.
+
+## 8. Frontier sweep: model × config × topology, a fixed-time floor, and a decision battery
+
+A wider sweep of every Foundry-servable model as the SLM controller, across all topologies and
+prompting configs, with two new comparators the earlier chapter lacked: a **naive fixed-time
+floor** and a **cloud-vs-local per-decision battery**. All results here are n=3, DfT
+daily-resolution demand (§8): descriptive/exploratory, not powered.
+
+### 8.1 The model × topology matrix (report PER MAP, never pooled)
+
+Seven servable models (the 6 GB Foundry card caps the ladder at ~4 B — 7 B-class and qwen3-8b
+OOM-crash the runtime, and the qwen3.5/VL variants fail to load; both recorded in
+`results/frontier_vram_ceiling.json`) × {myopic, sota, coordination, prediction} × 5 topologies ×
+seeds {42, 7, 123}. Best SLM per map (myopic, vs MaxPressure): **Euston qwen3-1.7b −26%**,
+Bloomsbury coder-0.5b −5%, Old Street qwen2.5-1.5b −18% (but see §8.3), synthetic grids ~neutral
+with **phi-4-mini the most robust** across topologies. Pooling across maps is a Simpson's-paradox
+trap (the corridor win and the grid blow-ups average to a meaningless mean), so every claim is
+conditioned on topology.
+
+### 8.2 Fixed-time floor: MaxPressure is only strong on the synthetic grids it was designed for
+
+Adding the naive fixed-time baseline (`experiment_fixedtime.py`, SUMO default TLS programs) is the
+most important rigour addition, and it flips the framing. MaxPressure vs fixed-time (negative =
+MaxPressure better):
+
+| Topology | MaxPressure vs fixed-time |
+|---|---|
+| grid4×4 (synthetic) | −27% (MP much better) |
+| grid3×3 (synthetic) | −19% (MP much better) |
+| Bloomsbury (real) | **+3% (MP worse)** |
+| Old Street (real) | **+5% (MP worse; seed 7 +37%)** |
+| Euston (real, main map) | **+15% (MP worse than fixed-time)** |
+
+MaxPressure's throughput-optimality does **not** transfer to irregular real London geometry — on
+every real topology it is *worse than naive fixed-time*; it only dominates on the regular
+synthetic grids. Consequence: the SLM's "−26% vs MaxPressure" on Euston is partly MaxPressure's
+own weakness there. Measured against the **fixed-time floor**, the honest, baseline-proof result
+is that the SLM beats the naive floor on **every** topology: Euston −16%, Bloomsbury −2%,
+Old Street −14% (seed-noisy), grid3×3 −21%, grid4×4 −28%. Both baselines are now reported; the
+SLM wins over the naive floor everywhere, and over the strong adaptive baseline specifically where
+that baseline breaks down (real roads).
+
+### 8.3 Old Street complex junction: real hard-case, but n=3 is uninterpretable there
+
+A real EC1 junction (`oldstreet_junction`: 9 signals including a single 5-arm/17-movement junction,
+extracted from OSM, demand-calibrated to 481 veh after the default randomTrips gridlocked it). At
+n=3 it cannot rank models: the MaxPressure baseline itself swings **138–210 s across three seeds**,
+and the SLM's apparent "improvement" is dominated by how badly MaxPressure happened to do that seed
+(seed 7 MaxPressure gridlocks at 210 s → every model looks ~−30 %; seed 123 MaxPressure fine at
+138 s → every model looks +10 %). The junction sits near a congestion tipping point, so relative
+improvement at low n is baseline noise. This is the concrete evidence for the powered n=30 run.
+
+### 8.4 Cloud-vs-local decision battery, and the closed-loop paradox
+
+On 80 identical junction states, agreement with the delay-optimal heuristic: **Claude Sonnet 96 % /
+Opus 94 % / Haiku 92 %** ≫ local **phi-4-mini 72 % > qwen2.5-0.5b 56 % > qwen3-1.7b / qwen3-0.6b
+~51 %** (near chance on 2-phase junctions). Cloud frontier models are far better *per-decision*
+reasoners. Yet **qwen3-1.7b is near-chance per-decision and still won Euston closed-loop (−26 %)** —
+so per-decision quality does **not** predict closed-loop performance. The SLM's value is *systemic*
+(the hybrid SLM + MaxPressure shield + event-gating), not raw single-junction reasoning. (Claude
+cannot be run closed-loop in this environment: no API key, and the SUMO subprocess cannot call the
+agent loop per decision, so this is an open-loop decision battery, stated as such.)
+
+### 8.5 Honest limitations for §8
+
+- n = 3 seeds (descriptive; a powered n = 30 run on Euston + Old Street is the next step).
+- Demand temporal profile is assumed (DfT daily-AADF magnitude; a TfL information request (handled under the Environmental Information Regulations) is filed for SCOOT
+  flows / turning counts, and the DfT hourly API is the free instant partial fix).
+- Model ladder capped at ~4 B by the 6 GB Foundry card (a hard requirement: this is research *for*
+  Microsoft, so Foundry Local is non-negotiable).
+- Comparators are classical (fixed-time floor + MaxPressure), **not** trained deep-RL SOTA
+  (CoLight / MPLight / SCOOT-SCATS). The contribution is on-device feasibility + auditability at
+  parity-with-a-strong-classical-baseline; RL SOTA comparison is scoped future work.

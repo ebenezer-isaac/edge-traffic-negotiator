@@ -1,0 +1,14 @@
+\subsection{The SLM decision agent}\label{sec:des-agent}
+The agent contract is minimal: given a system instruction and a rendered
+state, the model must return exactly \texttt{\{"phase": N\}}, at
+temperature zero over an OpenAI-compatible endpoint, with parsing falling
+through three tiers (braced JSON, keyed, bare integer); the offline
+evaluator adds a strict-JSON tier and records the tier per response, so
+format discipline is measured, not assumed. Four prompt formats act as
+graded capability probes: \textbf{myopic} exposes only per-phase halting
+counts, answerable by a counting heuristic; \textbf{sota} adds delay-aware
+context (accumulated waiting), the state a delay-optimal policy needs;
+\textbf{prediction} adds short-horizon arrival forecasts;
+\textbf{coordination} adds neighbour notes. The same rendering code serves
+offline evaluation and closed-loop control, and whether offline accuracy
+predicts loop outcome is itself a result (\S\ref{sec:res-closedloop}).

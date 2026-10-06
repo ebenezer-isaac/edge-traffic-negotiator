@@ -1,0 +1,191 @@
+{
+  "experiment": "demand_sweep",
+  "seeds": 3,
+  "scales": [
+    1.0,
+    2.0
+  ],
+  "modes": [
+    "nopreempt",
+    "maxpressure_preempt",
+    "defended",
+    "naive"
+  ],
+  "steps": 400,
+  "per_scale_mode_means": {
+    "1.0|nopreempt": {
+      "throughput": 265.333,
+      "net_mean_timeloss": 32.378,
+      "amb_duration": 174.667,
+      "jain": 0.987,
+      "gini": 0.057,
+      "rawlsian_worst_junction": 9.49,
+      "worst_max": 97.477,
+      "worst_p95": 83.41,
+      "worst_max_j2": 19.68
+    },
+    "1.0|maxpressure_preempt": {
+      "throughput": 265.333,
+      "net_mean_timeloss": 32.072,
+      "amb_duration": 143.0,
+      "jain": 0.966,
+      "gini": 0.097,
+      "rawlsian_worst_junction": 11.225,
+      "worst_max": 88.963,
+      "worst_p95": 77.536,
+      "worst_max_j2": 22.43
+    },
+    "1.0|defended": {
+      "throughput": 265.333,
+      "net_mean_timeloss": 31.363,
+      "amb_duration": 146.333,
+      "jain": 0.956,
+      "gini": 0.108,
+      "rawlsian_worst_junction": 13.754,
+      "worst_max": 90.353,
+      "worst_p95": 76.552,
+      "worst_max_j2": 51.713
+    },
+    "1.0|naive": {
+      "throughput": 265.333,
+      "net_mean_timeloss": 30.969,
+      "amb_duration": 131.667,
+      "jain": 0.813,
+      "gini": 0.238,
+      "rawlsian_worst_junction": 21.587,
+      "worst_max": 89.997,
+      "worst_p95": 71.06,
+      "worst_max_j2": 62.117
+    },
+    "2.0|nopreempt": {
+      "throughput": 455.333,
+      "net_mean_timeloss": 55.761,
+      "amb_duration": 230.667,
+      "jain": 0.937,
+      "gini": 0.129,
+      "rawlsian_worst_junction": 17.573,
+      "worst_max": 155.927,
+      "worst_p95": 140.001,
+      "worst_max_j2": 26.727
+    },
+    "2.0|maxpressure_preempt": {
+      "throughput": 462.333,
+      "net_mean_timeloss": 54.945,
+      "amb_duration": 205.333,
+      "jain": 0.948,
+      "gini": 0.121,
+      "rawlsian_worst_junction": 19.557,
+      "worst_max": 154.663,
+      "worst_p95": 134.089,
+      "worst_max_j2": 40.157
+    },
+    "2.0|defended": {
+      "throughput": 464.667,
+      "net_mean_timeloss": 53.731,
+      "amb_duration": 192.0,
+      "jain": 0.958,
+      "gini": 0.109,
+      "rawlsian_worst_junction": 22.402,
+      "worst_max": 146.977,
+      "worst_p95": 127.678,
+      "worst_max_j2": 69.913
+    },
+    "2.0|naive": {
+      "throughput": 468.333,
+      "net_mean_timeloss": 53.955,
+      "amb_duration": 192.0,
+      "jain": 0.933,
+      "gini": 0.137,
+      "rawlsian_worst_junction": 31.171,
+      "worst_max": 132.907,
+      "worst_p95": 118.175,
+      "worst_max_j2": 83.847
+    }
+  },
+  "headline_deltas_by_scale": {
+    "1.0": {
+      "ev_benefit_s (nopreempt-defended amb)": {
+        "n": 3,
+        "mean": 28.333,
+        "ci95": [
+          24.0,
+          32.0
+        ]
+      },
+      "coordination_gain_s (mpp-defended amb)": {
+        "n": 3,
+        "mean": -3.333,
+        "ci95": [
+          -8.0,
+          0.333
+        ]
+      },
+      "no_harm_netdelay_s (defended-mpp)": {
+        "n": 3,
+        "mean": -0.709,
+        "ci95": [
+          -1.674,
+          0.201
+        ]
+      },
+      "attack_worstcase_avoided_s (naive-defended, J2)": {
+        "n": 3,
+        "mean": 10.403,
+        "ci95": [
+          0.63,
+          19.973
+        ]
+      },
+      "fairness_gain_jain (defended-naive)": {
+        "n": 3,
+        "mean": 0.143,
+        "ci95": [
+          0.094,
+          0.177
+        ]
+      }
+    },
+    "2.0": {
+      "ev_benefit_s (nopreempt-defended amb)": {
+        "n": 3,
+        "mean": 38.667,
+        "ci95": [
+          13.0,
+          54.0
+        ]
+      },
+      "coordination_gain_s (mpp-defended amb)": {
+        "n": 3,
+        "mean": 13.333,
+        "ci95": [
+          1.0,
+          20.333
+        ]
+      },
+      "no_harm_netdelay_s (defended-mpp)": {
+        "n": 3,
+        "mean": -1.214,
+        "ci95": [
+          -2.929,
+          -0.284
+        ]
+      },
+      "attack_worstcase_avoided_s (naive-defended, J2)": {
+        "n": 3,
+        "mean": 13.933,
+        "ci95": [
+          -16.16,
+          43.457
+        ]
+      },
+      "fairness_gain_jain (defended-naive)": {
+        "n": 3,
+        "mean": 0.025,
+        "ci95": [
+          0.007,
+          0.036
+        ]
+      }
+    }
+  }
+}

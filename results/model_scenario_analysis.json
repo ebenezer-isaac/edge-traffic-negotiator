@@ -1,0 +1,298 @@
+{
+  "experiment": "model_scenario_differentiation",
+  "purpose": "WHY models differ across scenarios (supervisor request): interaction, Simpson's paradox, win rate, variance decomposition, activity -- methodology-grounded, DESCRIPTIVE (n=1/cell).",
+  "topology_matrix": {
+    "qwen2.5-0.5b": {
+      "euston_corridor": {
+        "delay_rel_pct": -25.3,
+        "joint_verdict": "clean_win"
+      },
+      "bloomsbury_grid": {
+        "delay_rel_pct": 5.0,
+        "joint_verdict": "regression"
+      },
+      "grid3x3": {
+        "delay_rel_pct": 60.3,
+        "joint_verdict": "regression"
+      },
+      "grid4x4": {
+        "delay_rel_pct": 112.4,
+        "joint_verdict": "regression"
+      }
+    },
+    "qwen3-0.6b": {
+      "euston_corridor": {
+        "delay_rel_pct": -15.1,
+        "joint_verdict": "clean_win"
+      },
+      "bloomsbury_grid": {
+        "delay_rel_pct": -1.8,
+        "joint_verdict": "clean_win"
+      },
+      "grid3x3": {
+        "delay_rel_pct": 36.9,
+        "joint_verdict": "regression"
+      },
+      "grid4x4": {
+        "delay_rel_pct": 41.2,
+        "joint_verdict": "regression"
+      }
+    }
+  },
+  "topology_substrate": {
+    "euston_corridor": {
+      "teleports": 65,
+      "baseline_delay_s": 314.54647435897436,
+      "stranded_frac": 0.421,
+      "gridlock_proxy": 107.1,
+      "free_flowing": false
+    },
+    "bloomsbury_grid": {
+      "teleports": 105,
+      "baseline_delay_s": 516.6812634601579,
+      "stranded_frac": 0.808,
+      "gridlock_proxy": 185.8,
+      "free_flowing": false
+    },
+    "grid3x3": {
+      "teleports": 0,
+      "baseline_delay_s": 301.37537840565085,
+      "stranded_frac": 0.364,
+      "gridlock_proxy": 36.4,
+      "free_flowing": true
+    },
+    "grid4x4": {
+      "teleports": 0,
+      "baseline_delay_s": 143.157,
+      "stranded_frac": 0.0,
+      "gridlock_proxy": 0.0,
+      "free_flowing": true
+    }
+  },
+  "topology_activity": {
+    "qwen2.5-0.5b": {
+      "euston_corridor": {
+        "slm_calls": 311,
+        "slm_authored": 157,
+        "authored_rate": 0.505
+      },
+      "bloomsbury_grid": {
+        "slm_calls": 677,
+        "slm_authored": 387,
+        "authored_rate": 0.572
+      },
+      "grid3x3": {
+        "slm_calls": 903,
+        "slm_authored": 674,
+        "authored_rate": 0.746
+      },
+      "grid4x4": {
+        "slm_calls": 1376,
+        "slm_authored": 1008,
+        "authored_rate": 0.733
+      }
+    },
+    "qwen3-0.6b": {
+      "euston_corridor": {
+        "slm_calls": 318,
+        "slm_authored": 217,
+        "authored_rate": 0.682
+      },
+      "bloomsbury_grid": {
+        "slm_calls": 686,
+        "slm_authored": 490,
+        "authored_rate": 0.714
+      },
+      "grid3x3": {
+        "slm_calls": 849,
+        "slm_authored": 732,
+        "authored_rate": 0.862
+      },
+      "grid4x4": {
+        "slm_calls": 1118,
+        "slm_authored": 1071,
+        "authored_rate": 0.958
+      }
+    }
+  },
+  "interaction": {
+    "models": [
+      "qwen2.5-0.5b",
+      "qwen3-0.6b"
+    ],
+    "scenarios": [
+      "euston_corridor",
+      "bloomsbury_grid",
+      "grid3x3",
+      "grid4x4"
+    ],
+    "rank_reversals": [
+      {
+        "scenario_1": "euston_corridor",
+        "scenario_2": "bloomsbury_grid",
+        "winner_1": "qwen2.5-0.5b",
+        "winner_2": "qwen3-0.6b"
+      },
+      {
+        "scenario_1": "euston_corridor",
+        "scenario_2": "grid3x3",
+        "winner_1": "qwen2.5-0.5b",
+        "winner_2": "qwen3-0.6b"
+      },
+      {
+        "scenario_1": "euston_corridor",
+        "scenario_2": "grid4x4",
+        "winner_1": "qwen2.5-0.5b",
+        "winner_2": "qwen3-0.6b"
+      }
+    ],
+    "eta_squared_descriptive": {
+      "model": 0.072,
+      "scenario": 0.801,
+      "interaction": 0.127
+    },
+    "note": "rank reversal == disordinal interaction (Loftus 1978); eta-squared is DESCRIPTIVE only -- at n=1/cell the interaction is not inferentially testable (Alin & Kurt 2006), residual is folded into 'interaction'."
+  },
+  "simpson": {
+    "qwen2.5-0.5b": {
+      "pearson_all": 0.809,
+      "spearman_all": 0.8,
+      "pearson_congested_only": -1.0,
+      "congested_note": "per-model congested r uses only 2 points -> trivially +/-1; use pooled below",
+      "leave_one_out_pearson_all": [
+        0.949,
+        0.999,
+        0.798,
+        0.613
+      ],
+      "n_points": 4,
+      "n_congested": 2
+    },
+    "qwen3-0.6b": {
+      "pearson_all": 0.819,
+      "spearman_all": 0.8,
+      "pearson_congested_only": -1.0,
+      "congested_note": "per-model congested r uses only 2 points -> trivially +/-1; use pooled below",
+      "leave_one_out_pearson_all": [
+        0.995,
+        0.963,
+        0.788,
+        0.694
+      ],
+      "n_points": 4,
+      "n_congested": 2
+    },
+    "_pooled": {
+      "pearson_all": 0.734,
+      "spearman_all": 0.732,
+      "pearson_congested_only": -0.929,
+      "n_congested_points": 4,
+      "note": "sign-reversing Simpson's paradox (Yule-Simpson): pooled ALL r is positive but the within-congested r (4 pooled points) is NEGATIVE -- Bloomsbury has more gridlock than Euston yet a smaller win. The pooled-all number is confounded by the free-vs-congested split; the within-congested r is the honest primary. An r on 4 points is uninterpretable alone (report Spearman + leave-one-out)."
+    }
+  },
+  "config_matrix": {
+    "qwen2.5-0.5b": {
+      "myopic": {
+        "delay_s": 235.0,
+        "delay_rel_pct": -25.3,
+        "status": "slm_beats"
+      },
+      "coordination": {
+        "delay_s": 235.0,
+        "delay_rel_pct": -25.3,
+        "status": "slm_beats"
+      },
+      "prediction": {
+        "delay_s": 297.9,
+        "delay_rel_pct": -5.3,
+        "status": "slm_beats"
+      }
+    },
+    "qwen2.5-1.5b": {
+      "myopic": {
+        "delay_s": 306.9,
+        "delay_rel_pct": -2.4,
+        "status": "slm_beats"
+      },
+      "coordination": {
+        "delay_s": 306.9,
+        "delay_rel_pct": -2.4,
+        "status": "slm_beats"
+      },
+      "prediction": {
+        "delay_s": 315.1,
+        "delay_rel_pct": 0.2,
+        "status": "match"
+      }
+    },
+    "phi-4-mini-reasoning": {
+      "myopic": {
+        "skipped": true
+      },
+      "coordination": {
+        "skipped": true
+      },
+      "prediction": {
+        "skipped": true
+      }
+    },
+    "phi-4-mini": {
+      "myopic": {
+        "delay_s": 314.7,
+        "delay_rel_pct": 0.1,
+        "status": "match"
+      },
+      "coordination": {
+        "delay_s": 314.7,
+        "delay_rel_pct": 0.1,
+        "status": "match"
+      },
+      "prediction": {
+        "delay_s": 295.8,
+        "delay_rel_pct": -5.9,
+        "status": "slm_beats"
+      }
+    }
+  },
+  "config_baseline_delay_s": 314.5,
+  "win_rates": {
+    "qwen2.5-0.5b": {
+      "topology": {
+        "wins": 1,
+        "n": 4,
+        "win_rate": 0.25
+      },
+      "config_euston": {
+        "wins": 3,
+        "n": 3,
+        "win_rate": 1.0
+      }
+    },
+    "qwen3-0.6b": {
+      "topology": {
+        "wins": 2,
+        "n": 4,
+        "win_rate": 0.5
+      }
+    },
+    "qwen2.5-1.5b": {
+      "config_euston": {
+        "wins": 2,
+        "n": 3,
+        "win_rate": 0.667
+      }
+    },
+    "phi-4-mini": {
+      "config_euston": {
+        "wins": 1,
+        "n": 3,
+        "win_rate": 0.333
+      }
+    }
+  },
+  "caveats": [
+    "Every cell is n=1 seed (except the separate 5-seed robustness axis). DESCRIPTIVE only; no inferential interaction test, no cross-seed CI (Agarwal 2021).",
+    "Topology axis covers 2 models (qwen2.5-0.5b, qwen3-0.6b); config axis covers 4 models on Euston. Coverage differs by axis -- not a single balanced grid.",
+    "A Pearson r on 4 topology points is reported only with Spearman + leave-one-out; the pooled-vs-stratified sign flip is Simpson's paradox, stratified is primary."
+  ]
+}

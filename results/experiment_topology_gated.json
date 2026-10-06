@@ -1,0 +1,260 @@
+{
+  "experiment": "H1_multi_topology",
+  "models": [
+    "qwen2.5-0.5b",
+    "qwen3-0.6b"
+  ],
+  "seed": 42,
+  "end": 1200,
+  "gate": 5,
+  "gate_mode": "max",
+  "topologies": [
+    "euston_corridor",
+    "bloomsbury_grid",
+    "grid3x3",
+    "grid4x4"
+  ],
+  "cells": [
+    {
+      "topology": "euston_corridor",
+      "structure": "real linear arterial (A501)",
+      "tls": 4,
+      "baseline": {
+        "delay_s": 314.54647435897436,
+        "completed": 361,
+        "departed": 624,
+        "teleports": 65
+      },
+      "models": {
+        "qwen2.5-0.5b": {
+          "delay_s": 269.355223880597,
+          "completed": 428,
+          "teleports": 46,
+          "delay_status": "slm_beats",
+          "throughput_status": "slm_beats",
+          "joint_verdict": "clean_win",
+          "delay_rel": -0.143671139759154,
+          "slm_authored": 145,
+          "slm_calls": 272,
+          "latency_p99": 0.23868259999653674
+        },
+        "qwen3-0.6b": {
+          "delay_s": 242.38760806916426,
+          "completed": 460,
+          "teleports": 33,
+          "delay_status": "slm_beats",
+          "throughput_status": "slm_beats",
+          "joint_verdict": "clean_win",
+          "delay_rel": -0.22940605656720606,
+          "slm_authored": 166,
+          "slm_calls": 240,
+          "latency_p99": 0.4748153000000457
+        }
+      }
+    },
+    {
+      "topology": "bloomsbury_grid",
+      "structure": "REAL London grid (Bloomsbury WC1, 9 signals)",
+      "tls": 9,
+      "baseline": {
+        "delay_s": 516.6812634601579,
+        "completed": 267,
+        "departed": 1393,
+        "teleports": 105
+      },
+      "models": {
+        "qwen2.5-0.5b": {
+          "delay_s": 552.2340425531914,
+          "completed": 208,
+          "teleports": 136,
+          "delay_status": "slm_loses",
+          "throughput_status": "slm_loses",
+          "joint_verdict": "regression",
+          "delay_rel": 0.06880988649547788,
+          "slm_authored": 357,
+          "slm_calls": 592,
+          "latency_p99": 0.24392269999952987
+        },
+        "qwen3-0.6b": {
+          "delay_s": 522.1957633308984,
+          "completed": 269,
+          "teleports": 101,
+          "delay_status": "match",
+          "throughput_status": "match",
+          "joint_verdict": "match",
+          "delay_rel": 0.010672924026334074,
+          "slm_authored": 418,
+          "slm_calls": 605,
+          "latency_p99": 0.46807709999848157
+        }
+      }
+    },
+    {
+      "topology": "grid3x3",
+      "structure": "synthetic 3x3 grid (more routes)",
+      "tls": 9,
+      "baseline": {
+        "delay_s": 301.37537840565085,
+        "completed": 630,
+        "departed": 991,
+        "teleports": 0
+      },
+      "models": {
+        "qwen2.5-0.5b": {
+          "delay_s": 467.5252873563218,
+          "completed": 320,
+          "teleports": 27,
+          "delay_status": "slm_loses",
+          "throughput_status": "slm_loses",
+          "joint_verdict": "regression",
+          "delay_rel": 0.5513055174899969,
+          "slm_authored": 628,
+          "slm_calls": 832,
+          "latency_p99": 0.23092060000271886
+        },
+        "qwen3-0.6b": {
+          "delay_s": 429.4188129899216,
+          "completed": 346,
+          "teleports": 32,
+          "delay_status": "slm_loses",
+          "throughput_status": "slm_loses",
+          "joint_verdict": "regression",
+          "delay_rel": 0.4248636211148094,
+          "slm_authored": 679,
+          "slm_calls": 793,
+          "latency_p99": 0.5016642000009597
+        }
+      }
+    },
+    {
+      "topology": "grid4x4",
+      "structure": "synthetic 4x4 grid (most routes)",
+      "tls": 16,
+      "baseline": {
+        "delay_s": 143.157,
+        "completed": 1000,
+        "departed": 1000,
+        "teleports": 0
+      },
+      "models": {
+        "qwen2.5-0.5b": {
+          "delay_s": 279.04522613065325,
+          "completed": 732,
+          "teleports": 5,
+          "delay_status": "slm_loses",
+          "throughput_status": "slm_loses",
+          "joint_verdict": "regression",
+          "delay_rel": 0.949225159305191,
+          "slm_authored": 789,
+          "slm_calls": 1060,
+          "latency_p99": 0.22266010000021197
+        },
+        "qwen3-0.6b": {
+          "delay_s": 172.924,
+          "completed": 933,
+          "teleports": 0,
+          "delay_status": "slm_loses",
+          "throughput_status": "slm_loses",
+          "joint_verdict": "regression",
+          "delay_rel": 0.20793254957843482,
+          "slm_authored": 690,
+          "slm_calls": 725,
+          "latency_p99": 0.49868179999975837
+        }
+      }
+    }
+  ],
+  "explanatory": {
+    "hypothesis": "the SLM's delay+throughput advantage appears where MaxPressure gridlocks (teleports>0) and disappears where the network self-regulates (free-flowing, zero teleports)",
+    "observations": [
+      {
+        "topology": "euston_corridor",
+        "model": "qwen2.5-0.5b",
+        "tls": 4,
+        "baseline_gridlock_proxy": 107.1,
+        "baseline_teleports": 65,
+        "baseline_stranded_frac": 0.421,
+        "delay_rel_pct": -14.4,
+        "joint": "clean_win"
+      },
+      {
+        "topology": "euston_corridor",
+        "model": "qwen3-0.6b",
+        "tls": 4,
+        "baseline_gridlock_proxy": 107.1,
+        "baseline_teleports": 65,
+        "baseline_stranded_frac": 0.421,
+        "delay_rel_pct": -22.9,
+        "joint": "clean_win"
+      },
+      {
+        "topology": "bloomsbury_grid",
+        "model": "qwen2.5-0.5b",
+        "tls": 9,
+        "baseline_gridlock_proxy": 185.8,
+        "baseline_teleports": 105,
+        "baseline_stranded_frac": 0.808,
+        "delay_rel_pct": 6.9,
+        "joint": "regression"
+      },
+      {
+        "topology": "bloomsbury_grid",
+        "model": "qwen3-0.6b",
+        "tls": 9,
+        "baseline_gridlock_proxy": 185.8,
+        "baseline_teleports": 105,
+        "baseline_stranded_frac": 0.808,
+        "delay_rel_pct": 1.1,
+        "joint": "match"
+      },
+      {
+        "topology": "grid3x3",
+        "model": "qwen2.5-0.5b",
+        "tls": 9,
+        "baseline_gridlock_proxy": 36.4,
+        "baseline_teleports": 0,
+        "baseline_stranded_frac": 0.364,
+        "delay_rel_pct": 55.1,
+        "joint": "regression"
+      },
+      {
+        "topology": "grid3x3",
+        "model": "qwen3-0.6b",
+        "tls": 9,
+        "baseline_gridlock_proxy": 36.4,
+        "baseline_teleports": 0,
+        "baseline_stranded_frac": 0.364,
+        "delay_rel_pct": 42.5,
+        "joint": "regression"
+      },
+      {
+        "topology": "grid4x4",
+        "model": "qwen2.5-0.5b",
+        "tls": 16,
+        "baseline_gridlock_proxy": 0.0,
+        "baseline_teleports": 0,
+        "baseline_stranded_frac": 0.0,
+        "delay_rel_pct": 94.9,
+        "joint": "regression"
+      },
+      {
+        "topology": "grid4x4",
+        "model": "qwen3-0.6b",
+        "tls": 16,
+        "baseline_gridlock_proxy": 0.0,
+        "baseline_teleports": 0,
+        "baseline_stranded_frac": 0.0,
+        "delay_rel_pct": 20.8,
+        "joint": "regression"
+      }
+    ],
+    "trend": "regime separation (n=8 cells, DESCRIPTIVE): the SLM WINS only where MaxPressure gridlocks (teleports>0) and LOSES on free-flowing nets (mean win congested 7.3% vs free-flowing -53.3%). Across all topologies r=0.67, but this is driven by the free-vs-congested split, NOT a graded law: WITHIN the congested nets the direction INVERTS (more gridlock -> smaller win) (r_congested=-0.95). So the honest claim is a congestion-REGIME effect, not 'win grows monotonically with gridlock'. n=1 seed/cell: not a significance test.",
+    "pearson_r_all_topologies": 0.674,
+    "pearson_r_congested_only": -0.952,
+    "mean_win_pct_congested": 7.3,
+    "mean_win_pct_free_flowing": -53.3,
+    "caveat": "Regime SEPARATION at n=4 topologies x n=1 seed, not a graded monotonic law and not a significance test. The all-topology correlation is dominated by the synthetic zero-teleport grids clustering at proxy~0; within the congested real nets the win does not grow with gridlock (Bloomsbury has more gridlock than Euston yet a smaller/negative win).",
+    "reading": "Mechanism HYPOTHESIS (not demonstrated at n=1): MaxPressure is throughput-optimal and near-ideal when traffic flows freely, so the SLM's waiting-time-aware policy only adds latency there; when MaxPressure gridlocks, queue management has headroom to help."
+  },
+  "note": "DESCRIPTIVE multi-topology pilot (n=1/cell); inferential significance \u00a78-gated. Grids are SYNTHETIC contrasts to the real Euston corridor; real-London multi-area OSM nets are the next infra step (harness is net-agnostic). Which model wins where + WHY, from the joint verdicts."
+}

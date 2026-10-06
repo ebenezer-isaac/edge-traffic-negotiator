@@ -1,0 +1,115 @@
+{
+  "experiment": "H2_trust_coefficient",
+  "mechanism": "per-source trust; verified against the recipient's LOCAL SENSING (ground truth); truth nudges up (diminishing), a lie collapses trust x0.25 (extreme, asymmetric)",
+  "params": {
+    "prior": 0.5,
+    "reward": 0.15,
+    "lie_factor": 0.25,
+    "corroboration_floor": 0.5
+  },
+  "trajectories": {
+    "honest": [
+      0.5,
+      0.575,
+      0.6387,
+      0.6929,
+      0.739,
+      0.7781,
+      0.8114,
+      0.8397,
+      0.8638,
+      0.8842,
+      0.9016,
+      0.9163,
+      0.9289
+    ],
+    "recovering": [
+      0.5,
+      0.575,
+      0.6387,
+      0.6929,
+      0.739,
+      0.7781,
+      0.8114,
+      0.8397,
+      0.8638,
+      0.2159,
+      0.3335,
+      0.4335,
+      0.5185
+    ],
+    "liar": [
+      0.5,
+      0.575,
+      0.6387,
+      0.6929,
+      0.1732,
+      0.0433,
+      0.0108
+    ],
+    "flaky": [
+      0.5,
+      0.575,
+      0.1437,
+      0.2722,
+      0.068,
+      0.2078,
+      0.052,
+      0.1942,
+      0.0485,
+      0.1913,
+      0.0478
+    ]
+  },
+  "recovery_steps_after_one_lie": 3,
+  "final": {
+    "junction-honest": {
+      "trust": 0.9289,
+      "truths": 12,
+      "lies": 0,
+      "claims": 12,
+      "can_corroborate": true
+    },
+    "junction-recovering": {
+      "trust": 0.5185,
+      "truths": 11,
+      "lies": 1,
+      "claims": 12,
+      "can_corroborate": true
+    },
+    "junction-liar": {
+      "trust": 0.0108,
+      "truths": 3,
+      "lies": 3,
+      "claims": 6,
+      "can_corroborate": false
+    },
+    "junction-flaky": {
+      "trust": 0.0478,
+      "truths": 5,
+      "lies": 5,
+      "claims": 10,
+      "can_corroborate": false
+    }
+  },
+  "asymmetry": {
+    "truths_to_reach_0.90": 10,
+    "trust_before_one_lie": 0.8638,
+    "trust_after_one_lie": 0.2159,
+    "single_lie_drop": 0.6479,
+    "reading": "10 consecutive verified truths to climb from the 0.5 prior to 0.90 trust; but a SINGLE lie from a high-trust source (here 0.86, after 8 truths) collapses it by 0.65 to 0.22, below the 0.5 corroboration floor. Honesty is earned slowly, betrayed instantly."
+  },
+  "checks": {
+    "honest_trust_rises": true,
+    "one_lie_collapses_below_floor": true,
+    "one_lie_undoes_many_truths": true,
+    "persistent_liar_cannot_corroborate": true,
+    "flaky_cannot_corroborate": true,
+    "honest_source_can_corroborate": true,
+    "recovery_is_slow": true,
+    "asymmetry_truths_up_gt_one_lie_down": true,
+    "local_sensing_is_arbiter": true
+  },
+  "passed": true,
+  "note": "Deterministic mechanism demonstration; parameters are pinned design choices, not fitted. Local sensing is the arbiter and is never doubted -- it is the ground truth an agent can always rely on."
+}

@@ -1,0 +1,15 @@
+\subsection{Serving reliability at the edge}\label{sec:res-reliability}
+Sustained on-device serving produced three documented reliability
+findings (a disk-full crash at 5{,}500 of 5{,}580 evaluation rows,
+undocumented manifest synthesis for builder-compiled models, and malformed
+output from the catalogue Qwen3-0.6B GPU artifact after extended uptime,
+the unlogged observation behind the pipeline-compiled control of
+\S\ref{sec:met-baselines}), each mitigated in harness
+(Appendix~\ref{app:serving}). Decision latency (Table~\ref{tab:latency},
+Appendix~\ref{app:tables}) is comfortable at the median and not guaranteed
+in the tail: p50 is 0.94--1.75\,s against the 10\,s decision interval,
+vendor catalogue builds are faster still (0.68\,s for the student's own
+weights, the 2.6$\times$ compile penalty of \S\ref{sec:imp-foundry} seen
+from the other side), but one 0.6B call took 13.79\,s, the criterion that
+excludes phi-4-mini-reasoning. A deployment would need a hard timeout with
+deterministic fallback, which the architecture already supports.

@@ -1,0 +1,15 @@
+{
+  "finding": "6GB_vram_ceiling",
+  "gpu": "NVIDIA GeForce RTX 2060, 6GB",
+  "servable_max_gb_approx": 4.0,
+  "blocked_models": {
+    "qwen2.5-7b": "5.20GB - OOM/crashes Foundry Local on load (service restarts on new port)",
+    "qwen2.5-coder-7b": "4.73GB - OOM/crashes Foundry on load",
+    "deepseek-r1-7b": "5.58GB - OOM/crashes Foundry on load",
+    "qwen3-8b": "6.00GB - does not cache/serve on a 6GB card"
+  },
+  "also_gated": {
+    "ministral-3-3b / qwen3.5-VL": "vision-language variants fail to load in this Foundry runtime (genai_config vision parse error)"
+  },
+  "note": "Honest hardware/runtime ceiling. Evaluated roster is the servable <=4GB set."
+}

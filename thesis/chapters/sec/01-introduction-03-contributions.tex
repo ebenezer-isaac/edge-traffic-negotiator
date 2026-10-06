@@ -1,0 +1,56 @@
+\subsection{Contributions}\label{sec:intro-contributions}
+\begin{enumerate}
+\item \textbf{The authorship finding.} Behind the shield's envelope, where
+delay effects are compressed, offline accuracy decouples from closed-loop
+delay, but fine-tuning raises the SLM's share of logged decision ticks
+from $0.39$--$0.62$ to $0.56$--$0.77$ and cuts its divergence from
+MaxPressure between roughly three- and fourteen-fold; the complement is the
+anti-starvation floor, which fires on 24 to 43\% of ticks with no SLM at
+all, so what fine-tuning removes is the stock proposer's excess above that
+rate. Authorship moves even where delay does not, and I report it with the
+rival imitation reading stated (\S\ref{sec:res-authorship}).
+\item \textbf{A large, seed-unanimous fine-tuning effect and the
+measurement condition needed to see it.} On a Bloomsbury grid at its
+default demand, where under 15\% of vehicles clear, distillation is worth
+under two points; calibrated so that 87\% clear, the distilled controller
+beats the fixed-time floor where the stock controller loses to it, an
+$18.3\%$ head-to-head improvement on 30 of 30 seeds. The same calibration
+on the corridor reproduces neither the size nor the significance of that
+effect, so I report a single-network result with its failed replication
+(\S\ref{sec:res-calib}). In the same spirit I retract my own earlier
+claim: a three-seed sweep showed MaxPressure worse than naive fixed-time
+on every real London topology, and at thirty paired seeds it is
+significantly better on Old Street, tied on Bloomsbury and significantly
+worse on Euston, so its advantage over a naive plan is unreliable on
+irregular real geometry rather than absent (\S\ref{sec:res-maxpressure}).
+\item \textbf{Scale saturation at 0.6B.} Frontier distillation lifts a
+0.6B student to the teacher-agreement ceiling and a 3.8B student lands on
+statistically indistinguishable numbers offline and closed-loop
+(\S\ref{sec:res-offline}); on the calibrated grid the two scales sit
+within $\pm0.38\%$ of each other on delay at 95\% confidence, a bounded
+difference rather than a bare non-rejection, and they reproduce each
+other's control trajectory exactly on a tenth of all cells
+(\S\ref{sec:res-forensics}). The bottleneck is the distillation ceiling,
+not capability.
+\item \textbf{The first documented end-to-end on-device chain} from QLoRA
+fine-tuning through int4 ONNX compilation to Foundry Local serving of a
+custom model, with equal aggregate holdout accuracy on the one artifact
+and format scored under both CPU and GPU execution providers
+(\S\ref{sec:imp-foundry}, \S\ref{sec:res-offline}). Supporting it: three
+serving-reliability findings with mitigations
+(\S\ref{sec:res-reliability}), and the negative that serving-artifact
+provenance alone shifts a headline delay result by nine points, which is
+why every comparison uses an identical-pipeline control
+(\S\ref{sec:res-factorial}).
+\item \textbf{An audit-to-law pipeline verified end-to-end on seven
+scenarios.} Seven collision scenarios
+reconstructed from signed, hash-chained records, with tampering caught and
+the governing UK rule inferred deterministically from verified facts into
+cited evidence packs rather than verdicts (\S\ref{sec:res-audit}).
+Supporting it: a scoped, discount-only trust mechanism whose ledger
+catches most blatant misreporting and is evaded by a calibrated stealth
+attacker, at three seeds and with gating off (\S\ref{sec:res-trust}); and
+the negative that explicit in-prompt policy rescues a stock model's recall
+but not its safety in an authorisation re-test, with the fine-tuned
+students format-captured on that adjacent task (\S\ref{sec:res-lee}).
+\end{enumerate}

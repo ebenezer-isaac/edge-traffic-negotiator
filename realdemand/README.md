@@ -36,6 +36,23 @@ MaxPressure's in 29 of 72 hours, and it completed about as many vehicles, but it
 teleports (vehicles SUMO removes from a jam). Every fine-tuned model completed fewer vehicles than
 MaxPressure (11–14 fewer per hour on average, out of about 441).
 
+### Against a fixed-time plan
+
+`run_scoot_fixedtime.py` re-runs the same 72 demand files under SUMO's default fixed-time signal
+programs for the network. These are not TfL's real signal plans. Before running, it reproduces
+three MaxPressure cells exactly, which confirms the demand files match the sweep.
+
+| Controller | Median change in delay vs fixed-time | Hours better than fixed-time (of 72) |
+|---|---|---|
+| MaxPressure | +8.0% | 8 |
+| Phi-4-mini, stock | +7.6% | 8 |
+| Phi-4-mini, fine-tuned | +9.0% | 8 |
+| Qwen3-0.6B v1 (headline student; sweep arm `ft2`) | +10.3% | 8 |
+| Qwen3-0.6B v2 generalist (sweep arm `ft1`) | +12.1% | 6 |
+
+On this corridor the fixed-time plan beat every adaptive controller, MaxPressure included. It
+also completed the most vehicles: 454.7 per run, against 440.6 for MaxPressure.
+
 ## Limits
 
 - Simulation only (SUMO).

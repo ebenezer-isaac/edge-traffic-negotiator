@@ -26,3 +26,18 @@ for arm in ARMS:
     dcomp = st.mean(s["completed"] - m["completed"] for m, s in pairs)
     print(f"{arm:24} {st.median(rel):+8.2f} {st.mean(rel):+7.2f} {ties:5d} {worse:6d} {dcomp:+10.1f} "
           f"{sum(s['teleports'] for _, s in pairs):9d}")
+
+
+ft_path = os.path.join(HERE, "results", "scoot_fixedtime.json")
+if os.path.exists(ft_path):
+    ft = json.load(open(ft_path, encoding="utf-8"))["cells"]
+    print("\n" f"fixed-time (SUMO default programs): mean delay {st.mean(c['delay_s'] for c in ft.values()):.1f}s "
+          f"completed/cell {st.mean(c['completed'] for c in ft.values()):.1f} teleports {sum(c['teleports'] for c in ft.values())}")
+    print(f"{'arm vs fixed-time':24} {'median%':>8} {'mean%':>7} {'better':>7} {'compl/cell':>10}")
+    for arm in ("maxpressure",) + ARMS:
+        rel, dc, better = [], [], 0
+        for k, f in ft.items():
+            c = cells[f"{arm}|{k.split('|', 1)[1]}"]
+            r = (c["delay_s"] - f["delay_s"]) / f["delay_s"] * 100
+            rel.append(r); dc.append(c["completed"] - f["completed"]); better += r < 0
+        print(f"{arm:24} {st.median(rel):+8.2f} {st.mean(rel):+7.2f} {better:4d}/72 {st.mean(dc):+10.1f}")

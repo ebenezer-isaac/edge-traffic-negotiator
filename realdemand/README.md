@@ -2,7 +2,8 @@
 
 The dissertation's Euston Road (A501) runs used real DfT traffic volumes but an **assumed** hourly
 shape (8.5% of daily traffic in the busiest hour). After submission, Transport for London released
-hourly SCOOT vehicle counts for the corridor in response to an information request handled under the Environmental Information Regulations (TfL ref. 1453-2627):
+hourly SCOOT vehicle counts for the corridor in response to an information request, handled under the
+Environmental Information Regulations (TfL ref. 1453-2627):
 three ordinary weekdays, 12–14 May 2026 (Tuesday to Thursday).
 
 This folder re-runs the controller comparison with that measured hourly profile.

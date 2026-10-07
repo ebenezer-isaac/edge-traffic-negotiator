@@ -19,7 +19,7 @@ releases renamed `foundry service ...` to `foundry server ...` and `foundry mode
 `foundry run`; other platforms and versions are untested.
 
 Why not the catalog `qwen3-0.6b`? On the RTX 2060 the catalog WebGPU build of Qwen3-0.6B emits
-garbage tokens . `ft0` is the same stock weights through the
+garbage tokens. `ft0` is the same stock weights through the
 pipeline that works, and it is the control the dissertation compares against.
 
 The same models are on Hugging Face, one repo each:
@@ -32,12 +32,12 @@ The same models are on Hugging Face, one repo each:
 ## Install one
 
 ```bash
-# 1. where Foundry Local keeps its models; it prints e.g. "Cache directory path: %USERPROFILE%\.cache\foundry-local"
+# 1. where Foundry Local keeps its models; 0.8.119 prints e.g. "Cache directory path: C:\Users\you\.cache\foundry-local" (use just the path)
 foundry cache location
 
 # 2a. from Hugging Face, into a subfolder named after the model id
 pip install -U huggingface_hub
-hf download ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1 --local-dir "<cache folder>/qwen3-0.6b-ft1"
+hf download ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1 --exclude "lora/*" --local-dir "<cache folder>/qwen3-0.6b-ft1"
 
 # 2b. or from the GitHub Release (the zip already contains the qwen3-0.6b-ft1/ folder)
 curl -LO https://github.com/ebenezer-isaac/edge-traffic-negotiator/releases/download/v1.0/qwen3-0.6b-ft1.zip

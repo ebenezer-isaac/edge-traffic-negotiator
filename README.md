@@ -52,7 +52,7 @@ commands (`foundry model run` became `foundry run`, `foundry service status` bec
 ```bash
 foundry cache location          # note the folder it prints
 pip install -U huggingface_hub
-hf download ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1 --local-dir "<that folder>/qwen3-0.6b-ft1"
+hf download ebnezr-isaac/qwen3-0.6b-traffic-signal-ft1 --exclude "lora/*" --local-dir "<that folder>/qwen3-0.6b-ft1"
 foundry model load qwen3-0.6b-ft1
 python run.py --controller slm --model qwen3-0.6b-ft1
 ```
@@ -86,7 +86,8 @@ confidence intervals and limitations.
   Phi-4-mini both matched MaxPressure to within 0.03% and beat a fixed-time plan by 8.8%.
 - The 0.6B and 3.8B students landed within ±0.38% of each other on that grid.
 - On the Euston Road (A501) corridor the approach did not help. Stock models were 7–20% worse than
-  fixed-time, and fine-tuning did not fix the average.
+  SUMO's default plan, and fine-tuning did not fix the average. (On this corridor that default is
+  vehicle-actuated, not fixed-time as the dissertation says.)
 - Re-running Euston with **measured TfL hourly counts** (post-submission) showed a flat, all-day load.
   No SLM beat MaxPressure; the best matched it on median delay. See [realdemand/](realdemand/).
 
@@ -117,8 +118,9 @@ confidence intervals and limitations.
 
 ## Licence
 
-Code: MIT. Dissertation, article and documents: CC BY 4.0. Third-party data keeps its own licence
-(OpenStreetMap ODbL, DfT Open Government Licence): see [NOTICE.md](NOTICE.md).
+Code: MIT. Dissertation, article and documents: CC BY 4.0. Third-party data keeps its own terms
+(OpenStreetMap ODbL; DfT Open Government Licence v3.0; Transport for London SCOOT-derived aggregates,
+published with attribution and not relicensed under MIT or CC BY): see [NOTICE.md](NOTICE.md).
 
 AI tools (Anthropic Claude) were used to help write code and documents in this project. All results
 come from the simulation outputs in `results/`.
